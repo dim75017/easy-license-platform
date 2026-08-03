@@ -9,7 +9,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
         <span />
       </span>
       <span className="brand-copy">
-        <span className="brand-name">easy license</span>
+        <span className="brand-name"><span>easy</span> <em>license</em></span>
         {!compact && <span className="brand-powered">powered by Lofi Girl</span>}
       </span>
     </Link>

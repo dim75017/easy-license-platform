@@ -70,6 +70,7 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
                 {isPlaying ? "Ⅱ" : "▶"}
               </button>
               <div className="track-title">
+                <small className="track-id">{track.id.replace("EL-", "EL-CAT-")}</small>
                 <strong>{track.title}</strong>
                 <span>{track.artist}</span>
               </div>

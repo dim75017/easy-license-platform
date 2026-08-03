@@ -27,7 +27,7 @@ export function HeroProductMockup() {
                 <strong>Window Seat</strong>
                 <small>Catalogue preview</small>
               </div>
-              <button className="round-play" type="button" aria-label="Play catalogue preview">▶</button>
+              <span className="round-play" aria-hidden="true">▶</span>
             </div>
             <div className="waveform" aria-hidden="true">
               {waveform.map((height, index) => (
@@ -46,7 +46,7 @@ export function HeroProductMockup() {
                 <span>Licence active</span>
                 <strong>Creator · 1 channel covered</strong>
               </div>
-              <button type="button">Copy credit</button>
+              <span className="mock-copy-credit">Copy credit</span>
             </div>
           </div>
         </div>

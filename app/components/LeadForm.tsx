@@ -110,7 +110,7 @@ export function LeadForm({ type }: { type: LeadType }) {
         </label>
       )}
       <button className="button button-primary button-full" type="submit" disabled={state === "sending"}>
-        {state === "sending" ? "Sending…" : isSync ? "Send project brief" : "Join early access"}
+        {state === "sending" ? "Sending…" : isSync ? "Send music brief" : "Join the first pilot"}
       </button>
       {state === "error" && <p className="form-error" role="alert">{message}</p>}
       <p className="form-privacy">No spam. Your information is only used to review this request.</p>

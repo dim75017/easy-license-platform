@@ -64,6 +64,33 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
 });
 
+test("ships the liner-notes identity with self-hosted type and licence-ticket controls", async () => {
+  const [css, brand, header, catalogue, page] = await Promise.all([
+    source("app/globals.css"),
+    source("app/components/Brand.tsx"),
+    source("app/components/SiteHeader.tsx"),
+    source("app/components/CatalogueExplorer.tsx"),
+    source("app/page.tsx"),
+  ]);
+
+  assert.match(css, /font-family:\s*"Newsreader"/);
+  assert.match(css, /font-family:\s*"IBM Plex Sans"/);
+  assert.match(css, /newsreader-var-latin\.woff2/);
+  assert.match(css, /ibm-plex-sans-var-latin\.woff2/);
+  assert.match(css, /Identity system — liner notes meet a rights ledger/);
+  assert.match(css, /\.public-shell \.button::after/);
+  assert.doesNotMatch(css, /--font-display:\s*Sora|--font-body:\s*Inter/);
+  assert.match(brand, /<em>license<\/em>/);
+  assert.match(header, /Licence workspace/);
+  assert.match(catalogue, /EL-CAT-/);
+  assert.match(page, /Find my creator licence/);
+  await Promise.all([
+    access(new URL("public/fonts/newsreader-var-latin.woff2", root)),
+    access(new URL("public/fonts/newsreader-var-italic-latin.woff2", root)),
+    access(new URL("public/fonts/ibm-plex-sans-var-latin.woff2", root)),
+  ]);
+});
+
 test("build emits product assets and removes starter artifacts", async () => {
   const [clientAssets, serverAssets] = await Promise.all([
     readdir(new URL("dist/client/assets/", root)),
