@@ -43,6 +43,27 @@ test("defines every public and connected product surface", async () => {
   }
 });
 
+test("ships progressive, accessible motion without an animation dependency", async () => {
+  const [page, shell, motion, css, packageJson] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/components/PublicShell.tsx"),
+    source("app/components/MotionLayer.tsx"),
+    source("app/globals.css"),
+    source("package.json"),
+  ]);
+
+  assert.match(page, /data-reveal="hero-title"/);
+  assert.match(page, /data-pointer-glow/);
+  assert.match(shell, /<MotionLayer/);
+  assert.match(motion, /IntersectionObserver/);
+  assert.match(motion, /requestAnimationFrame/);
+  assert.match(motion, /prefers-reduced-motion/);
+  assert.match(css, /\.motion-enhanced \[data-reveal\]/);
+  assert.match(css, /@keyframes productScan/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(packageJson, /framer-motion|gsap/);
+});
+
 test("build emits product assets and removes starter artifacts", async () => {
   const [clientAssets, serverAssets] = await Promise.all([
     readdir(new URL("dist/client/assets/", root)),

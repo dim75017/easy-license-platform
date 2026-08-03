@@ -15,12 +15,12 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
         <button type="button" className={annual ? "is-active" : ""} onClick={() => setAnnual(true)}>Yearly <span>2 months free</span></button>
       </div>
       <div className={expanded ? "pricing-grid pricing-grid-expanded" : "pricing-grid"}>
-        <article className="price-card">
+        <article className="price-card" data-pointer-glow="">
           <div className="price-card-top">
             <span className="plan-icon plan-creator">▶</span>
             <div><p>Creator</p><span>For your own content</span></div>
           </div>
-          <div className="price"><span>€</span><strong>{creatorPrice}</strong><small>/ month</small></div>
+          <div className="price"><span>€</span><strong key={creatorPrice}>{creatorPrice}</strong><small>/ month</small></div>
           {annual && <p className="billing-note">€79 billed yearly</p>}
           {!annual && <p className="billing-note">Cancel whenever you want</p>}
           <ul className="feature-list">
@@ -35,13 +35,13 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
           <p className="fine-print">For individual creators publishing their own content.</p>
         </article>
 
-        <article className="price-card price-card-featured">
+        <article className="price-card price-card-featured" data-pointer-glow="">
           <span className="popular-pill">Most flexible</span>
           <div className="price-card-top">
             <span className="plan-icon plan-pro">✦</span>
             <div><p>Pro</p><span>For multi-channel creators</span></div>
           </div>
-          <div className="price"><span>€</span><strong>{proPrice}</strong><small>/ month</small></div>
+          <div className="price"><span>€</span><strong key={proPrice}>{proPrice}</strong><small>/ month</small></div>
           {annual && <p className="billing-note">€197.90 billed yearly</p>}
           {!annual && <p className="billing-note">Cancel whenever you want</p>}
           <ul className="feature-list">
@@ -57,7 +57,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
         </article>
 
         {expanded && (
-          <article className="price-card price-card-business">
+          <article className="price-card price-card-business" data-pointer-glow="">
             <div className="price-card-top">
               <span className="plan-icon plan-business">◎</span>
               <div><p>Business</p><span>For brands & agencies</span></div>
