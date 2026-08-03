@@ -1,0 +1,165 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "33efe07a-1093-465b-834a-ebc2225278a7",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "leads": {
+      "name": "leads",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "company": {
+          "name": "company",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "project": {
+          "name": "project",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "use_case": {
+          "name": "use_case",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "budget": {
+          "name": "budget",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timeline": {
+          "name": "timeline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'new'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "idx_leads_created_at_id": {
+          "name": "idx_leads_created_at_id",
+          "columns": [
+            "created_at",
+            "id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "leads_type_check": {
+          "name": "leads_type_check",
+          "value": "\"leads\".\"type\" IN ('sync', 'retail_waitlist')"
+        },
+        "leads_status_check": {
+          "name": "leads_status_check",
+          "value": "\"leads\".\"status\" IN ('new', 'contacted', 'qualified', 'closed', 'archived')"
+        },
+        "leads_email_length_check": {
+          "name": "leads_email_length_check",
+          "value": "length(\"leads\".\"email\") BETWEEN 3 AND 254"
+        },
+        "leads_name_length_check": {
+          "name": "leads_name_length_check",
+          "value": "length(\"leads\".\"name\") BETWEEN 1 AND 120"
+        },
+        "leads_company_length_check": {
+          "name": "leads_company_length_check",
+          "value": "length(\"leads\".\"company\") BETWEEN 1 AND 160"
+        },
+        "leads_project_length_check": {
+          "name": "leads_project_length_check",
+          "value": "\"leads\".\"project\" IS NULL OR length(\"leads\".\"project\") BETWEEN 1 AND 4000"
+        },
+        "leads_use_case_length_check": {
+          "name": "leads_use_case_length_check",
+          "value": "\"leads\".\"use_case\" IS NULL OR length(\"leads\".\"use_case\") BETWEEN 1 AND 4000"
+        },
+        "leads_budget_length_check": {
+          "name": "leads_budget_length_check",
+          "value": "\"leads\".\"budget\" IS NULL OR length(\"leads\".\"budget\") BETWEEN 1 AND 120"
+        },
+        "leads_timeline_length_check": {
+          "name": "leads_timeline_length_check",
+          "value": "\"leads\".\"timeline\" IS NULL OR length(\"leads\".\"timeline\") BETWEEN 1 AND 120"
+        },
+        "leads_request_shape_check": {
+          "name": "leads_request_shape_check",
+          "value": "(\n        (\"leads\".\"type\" = 'sync' AND \"leads\".\"project\" IS NOT NULL AND \"leads\".\"use_case\" IS NULL)\n        OR\n        (\"leads\".\"type\" = 'retail_waitlist' AND \"leads\".\"use_case\" IS NOT NULL AND \"leads\".\"project\" IS NULL)\n      )"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
