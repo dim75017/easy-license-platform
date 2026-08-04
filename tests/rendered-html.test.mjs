@@ -153,3 +153,24 @@ test("ships a constrained D1 lead schema and current worker compatibility", asyn
   assert.match(wrangler, /"binding": "DB"/);
   assert.doesNotMatch(wrangler, /nodejs_compat/);
 });
+
+test("ships a public GitHub Pages mockup without collecting form data", async () => {
+  const [nextConfig, packageJson, pagesBuild, workflow, leadForm] = await Promise.all([
+    source("next.config.ts"),
+    source("package.json"),
+    source("scripts/build-pages.mjs"),
+    source(".github/workflows/deploy-pages.yml"),
+    source("app/components/LeadForm.tsx"),
+  ]);
+
+  assert.match(nextConfig, /output: "export"/);
+  assert.match(nextConfig, /basePath: pagesBasePath/);
+  assert.match(packageJson, /"build:pages": "node scripts\/build-pages\.mjs"/);
+  assert.match(pagesBuild, /NEXT_PUBLIC_STATIC_DEMO: "true"/);
+  assert.match(pagesBuild, /projectPath !== join\("app", "api"\)/);
+  assert.match(pagesBuild, /\.nojekyll/);
+  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /pages: write/);
+  assert.match(leadForm, /Public prototype: no information is sent or stored\./);
+  assert.match(leadForm, /nothing was sent or stored\./);
+});

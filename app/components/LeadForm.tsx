@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 
 type LeadType = "sync" | "retail_waitlist";
 
+const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
+
 export function LeadForm({ type }: { type: LeadType }) {
   const isSync = type === "sync";
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -28,6 +30,13 @@ export function LeadForm({ type }: { type: LeadType }) {
           }
         : { use_case: String(form.get("use_case") ?? "") }),
     };
+
+    if (isStaticDemo) {
+      setState("sent");
+      setMessage("Public demo only — nothing was sent or stored.");
+      event.currentTarget.reset();
+      return;
+    }
 
     try {
       const response = await fetch("/api/leads", {
@@ -113,7 +122,11 @@ export function LeadForm({ type }: { type: LeadType }) {
         {state === "sending" ? "Sending…" : isSync ? "Send music brief" : "Join the first pilot"}
       </button>
       {state === "error" && <p className="form-error" role="alert">{message}</p>}
-      <p className="form-privacy">No spam. Your information is only used to review this request.</p>
+      <p className="form-privacy">
+        {isStaticDemo
+          ? "Public prototype: no information is sent or stored."
+          : "No spam. Your information is only used to review this request."}
+      </p>
     </form>
   );
 }

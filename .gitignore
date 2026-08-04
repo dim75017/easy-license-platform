@@ -17,6 +17,7 @@
 /.next/
 /.vinext/
 /out/
+/.pages-staging-*/
 
 # misc
 .DS_Store
