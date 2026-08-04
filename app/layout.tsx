@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./home-v5.css";
+import "./home-v6.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),
@@ -29,8 +30,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#514cff",
-  colorScheme: "dark",
+  themeColor: "#f3ece0",
+  colorScheme: "light",
   width: "device-width",
   initialScale: 1,
 };

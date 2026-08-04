@@ -37,21 +37,21 @@ const artists = [
 export default function Home() {
   return (
     <PublicShell>
-      <div className="el-v5">
+      <div className="el-v5 el-v6">
         <section className="v5-hero">
           <div className="v5-hero-grid" aria-hidden="true" />
           <div className="v5-hero-copy">
-            <p className="v5-kicker" data-reveal="left"><span>Premium background music</span> Built for creators and brands</p>
+            <p className="v5-kicker" data-reveal="left"><span>Powered by Lofi Girl</span> 10,000+ human-made tracks · zero AI-generated music</p>
             <h1 data-reveal="hero-title">
-              <span>10,000+</span>
-              <span className="v5-hero-human">Human-made</span>
-              <span className="v5-outline">tracks.</span>
+              <span>Sound for</span>
+              <span>every story.</span>
+              <span className="v5-hero-human">Made by people.</span>
             </h1>
             <div className="v5-hero-intro" data-reveal="up" data-reveal-delay="2">
-              <p>A curated catalogue of premium instrumental and background music for videos, livestreams, podcasts, social, brands, films and games. Zero AI-generated music.</p>
+              <p>A deeply curated catalogue of instrumental and background music for videos, livestreams, podcasts, brands, films and games—licensed simply, with artists paid directly.</p>
               <div>
                 <Link className="v5-button v5-button-dark" href="/catalog"><span>Find your sound</span><i>↗</i></Link>
-                <Link className="v5-inline-link" href="/pricing">Plans from €7.99 <span>→</span></Link>
+                <Link className="v5-inline-link" href="/pricing">License from €7.99 <span>→</span></Link>
               </div>
             </div>
           </div>
@@ -61,8 +61,8 @@ export default function Home() {
           </div>
 
           <div className="v5-hero-code" aria-hidden="true">
-            <span>10K+ / HUMAN-MADE</span>
-            <span>0 AI-GENERATED</span>
+            <span>EASY LICENSE</span>
+            <span>BY LOFI GIRL</span>
           </div>
           <div className="v5-hero-ticker" aria-label="Easy License principles">
             <div>
@@ -246,7 +246,7 @@ export default function Home() {
             <Link className="v5-button v5-button-acid" href="/pricing"><span>Start licensing music</span><i>↗</i></Link>
             <Link className="v5-inline-link" href="/app">Already have an account? Log in <span>→</span></Link>
           </div>
-          <span className="v5-command-code" aria-hidden="true">EL<br />OK</span>
+          <span className="v5-command-code" aria-hidden="true">LG<br />EL</span>
         </section>
       </div>
     </PublicShell>

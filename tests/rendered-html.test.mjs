@@ -9,15 +9,16 @@ async function source(path) {
 }
 
 test("contains the finished Easy License landing experience", async () => {
-  const [page, layout, css, homeCss, packageJson] = await Promise.all([
+  const [page, layout, css, homeCss, cozyCss, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
     source("app/home-v5.css"),
+    source("app/home-v6.css"),
     source("package.json"),
   ]);
 
-  assert.match(page, /10,000\+[\s\S]*Human-made[\s\S]*tracks\./i);
+  assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by people\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
   assert.match(page, /Start at €7\.99\.[\s\S]*Scale when the work does\./i);
   assert.match(page, /Go beyond the subscription/i);
@@ -26,8 +27,12 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
+  assert.match(layout, /themeColor:\s*"#f3ece0"/i);
+  assert.match(layout, /colorScheme:\s*"light"/i);
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /--v5-blue:\s*#514cff/i);
+  assert.match(cozyCss, /--cozy-night:\s*#292832/i);
+  assert.match(cozyCss, /--cozy-oat:\s*#f3ece0/i);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -49,12 +54,13 @@ test("defines every public and connected product surface", async () => {
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
-  const [page, shell, motion, css, homeCss, booth, packageJson] = await Promise.all([
+  const [page, shell, motion, css, homeCss, cozyCss, booth, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/components/PublicShell.tsx"),
     source("app/components/MotionLayer.tsx"),
     source("app/globals.css"),
     source("app/home-v5.css"),
+    source("app/home-v6.css"),
     source("app/components/LicenseBooth.tsx"),
     source("package.json"),
   ]);
@@ -71,13 +77,15 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
   assert.match(homeCss, /@keyframes v5Scan/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(cozyCss, /animation:\s*none\s*!important/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
 });
 
-test("ships the signal-router identity, simple account navigation and real artist profiles", async () => {
-  const [css, homeCss, layout, brand, header, catalogue, page, booth] = await Promise.all([
+test("ships the cozy Lofi Girl identity, simple account navigation and real artist profiles", async () => {
+  const [css, homeCss, cozyCss, layout, brand, header, catalogue, page, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
+    source("app/home-v6.css"),
     source("app/layout.tsx"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
@@ -93,6 +101,9 @@ test("ships the signal-router identity, simple account navigation and real artis
   assert.match(homeCss, /Easy License V5 — the licensing signal router/);
   assert.match(homeCss, /\.v5-booth/);
   assert.match(homeCss, /clip-path:/);
+  assert.match(cozyCss, /Easy License V6 — warm, quiet and recognisably Lofi Girl/);
+  assert.match(cozyCss, /--font-display:\s*"Afacad Flux"/);
+  assert.match(cozyCss, /\.el-v6 \.v5-booth::before[\s\S]*display:\s*none/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
   assert.match(brand, /className="brand-accent">license<\/span>/);
   assert.match(header, /Log in/);
