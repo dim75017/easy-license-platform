@@ -33,7 +33,7 @@ export const useCategories = [
     slug: "podcasts",
     label: "Podcasts",
     description: "Openings, transitions, interviews and narrative episodes.",
-    image: "/images/unsplash/studio-artist.jpg",
+    image: "/images/stock/studio-artist.jpg",
   },
   {
     slug: "wellness",

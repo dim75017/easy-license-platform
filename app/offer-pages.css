@@ -787,7 +787,7 @@
 .business-option::after { background: linear-gradient(180deg, rgba(25,24,29,.24), rgba(25,24,29,.93)); }
 .business-option:hover::before { transform: scale(1.035); }
 .business-option-sync::before { background-image: url("/images/unsplash/filmmaker-desk.jpg"); }
-.business-option-custom::before { background-image: url("/images/unsplash/studio-artist.jpg"); }
+.business-option-custom::before { background-image: url("/images/unsplash/hero-producer.jpg"); }
 .business-option-retail::before { background-image: url("/images/unsplash/retail/cafe.jpg"); }
 
 .business-option > span { color: rgba(243,236,224,.72); font-size: 10px; font-weight: 800; letter-spacing: .07em; }

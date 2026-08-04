@@ -174,18 +174,12 @@ export default function Home() {
 
         <section className="home26-section home26-curation" aria-labelledby="home26-curation-title">
           <figure data-reveal="scale">
-            <img src="/images/unsplash/hero-producer.jpg" alt="A music professional reviewing a production in a recording studio" />
+            <img src="/images/stock/studio-artist.jpg" alt="Music producer working at a recording console" />
           </figure>
           <div className="home26-curation-copy" data-reveal="right">
-            <p className="home26-eyebrow">Professional curation</p>
-            <h2 id="home26-curation-title">Every track is reviewed by our music team.</h2>
-            <p>Easy License is not an open-upload marketplace. Our team builds the catalogue release by release and checks the composition, performance, recording and mix before a track is added.</p>
-            <p>Tracks are then tagged by mood, pace, instrumentation and project type. That work keeps searches consistent and helps creators and music supervisors reach a useful shortlist faster.</p>
-            <ol className="home26-review-list">
-              <li><span>01</span><div><strong>Composition and performance</strong><small>Musical ideas, arrangement and execution are reviewed by people who work with music every day.</small></div></li>
-              <li><span>02</span><div><strong>Recording and production</strong><small>We check that each master meets the level expected for professional content and commercial work.</small></div></li>
-              <li><span>03</span><div><strong>Useful, accurate tagging</strong><small>Mood, energy, instrumentation and common uses are described consistently across the catalogue.</small></div></li>
-            </ol>
+            <p className="home26-eyebrow">A considered catalogue</p>
+            <h2 id="home26-curation-title">Music that is easy to find and good to use.</h2>
+            <p>Every release is selected and organised with the people making the work in mind. Clear moods, genres and project filters make it easier to find music that supports the story instead of distracting from it.</p>
           </div>
         </section>
 

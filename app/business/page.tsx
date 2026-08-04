@@ -29,7 +29,7 @@ export default function BusinessPage() {
         </section>
 
         <section className="offer-curation offer-curation-reverse" aria-labelledby="business-curation-title">
-          <figure data-reveal="scale"><img src="/images/unsplash/studio-artist.jpg" alt="Music professional producing a track in a recording studio" /></figure>
+          <figure data-reveal="scale"><img src="/images/stock/studio-artist.jpg" alt="Music producer working at a recording console" /></figure>
           <div className="offer-curation-copy" data-reveal="left">
             <p className="offer-kicker"><span>01</span> How we select music</p>
             <h2 id="business-curation-title">A catalogue reviewed by<br />music professionals.</h2>

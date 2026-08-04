@@ -43,7 +43,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(page, /Easy License for Businesses/i);
   assert.match(page, /href="\/creators"/i);
   assert.match(page, /href="\/business"/i);
-  assert.match(page, /Every track is reviewed by our music team/i);
+  assert.match(page, /Music that is easy to find and good to use/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Creator plans start at .*6\.67 per month/i);
   assert.match(page, /What to know before using a track/i);
@@ -203,7 +203,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /Drifting away/);
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
-  assert.match(page, /Every track is reviewed by our music team/i);
+  assert.match(page, /Music that is easy to find and good to use/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(business, /\/artists\/dario-lessing\.jpg/);

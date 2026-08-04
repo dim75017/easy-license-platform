@@ -561,7 +561,7 @@
 }
 
 .home26-curation > figure {
-  min-height: 760px;
+  min-height: 520px;
   overflow: hidden;
   margin: 0;
   border-radius: 30px;
@@ -578,51 +578,6 @@
   display: flex;
   justify-content: center;
   flex-direction: column;
-}
-
-.home26-curation-copy > p {
-  margin-bottom: 18px;
-}
-
-.home26-review-list {
-  margin: 28px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home26-review-list li {
-  display: grid;
-  border-top: 1px solid var(--home26-rule);
-  padding: 22px 0;
-  grid-template-columns: 52px 1fr;
-  gap: 12px;
-}
-
-.home26-review-list li:last-child {
-  border-bottom: 1px solid var(--home26-rule);
-}
-
-.home26-review-list > li > span {
-  color: var(--home26-clay-dark);
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.home26-review-list div {
-  display: flex;
-  flex-direction: column;
-}
-
-.home26-review-list strong {
-  margin-bottom: 5px;
-  font-size: 19px;
-}
-
-.home26-review-list small {
-  max-width: 650px;
-  color: rgba(41, 40, 50, .66);
-  font-size: 15px;
-  line-height: 1.45;
 }
 
 .home26-artists {
@@ -1193,10 +1148,6 @@
   .home26-curation > figure {
     min-height: 420px;
     border-radius: 23px;
-  }
-
-  .home26-review-list li {
-    grid-template-columns: 40px 1fr;
   }
 
   .home26-artists {
