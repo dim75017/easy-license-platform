@@ -16,11 +16,12 @@ test("contains the finished Easy License landing experience", async () => {
     source("package.json"),
   ]);
 
-  assert.match(page, /License music\./);
+  assert.match(page, /Real music\./);
   assert.match(page, /Powered by Lofi Girl/i);
-  assert.match(page, /For creators/i);
+  assert.match(page, /One platform[\s\S]*Four ways to use music/i);
   assert.match(page, /Sync & custom music/i);
-  assert.match(page, /Music for spaces/i);
+  assert.match(page, /Music for Business/i);
+  assert.match(page, /Artists paid directly/i);
   assert.match(layout, /Easy License — Music licensing made simple/);
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(css, /@media \(max-width: 640px\)/);
@@ -54,6 +55,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
 
   assert.match(page, /data-reveal="hero-title"/);
   assert.match(page, /data-pointer-glow/);
+  assert.match(page, /HorizontalRailControls/);
   assert.match(shell, /<MotionLayer/);
   assert.match(motion, /IntersectionObserver/);
   assert.match(motion, /requestAnimationFrame/);
@@ -64,13 +66,14 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
 });
 
-test("ships the liner-notes identity with self-hosted type and licence-ticket controls", async () => {
-  const [css, brand, header, catalogue, page] = await Promise.all([
+test("ships the editorial identity, simple account navigation and real artist profiles", async () => {
+  const [css, brand, header, catalogue, page, rail] = await Promise.all([
     source("app/globals.css"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
     source("app/components/CatalogueExplorer.tsx"),
     source("app/page.tsx"),
+    source("app/components/HorizontalRailControls.tsx"),
   ]);
 
   assert.match(css, /font-family:\s*"Newsreader"/);
@@ -78,16 +81,29 @@ test("ships the liner-notes identity with self-hosted type and licence-ticket co
   assert.match(css, /newsreader-var-latin\.woff2/);
   assert.match(css, /ibm-plex-sans-var-latin\.woff2/);
   assert.match(css, /Identity system — liner notes meet a rights ledger/);
+  assert.match(css, /Easy License V4 — editorial storefront/);
   assert.match(css, /\.public-shell \.button::after/);
   assert.doesNotMatch(css, /--font-display:\s*Sora|--font-body:\s*Inter/);
   assert.match(brand, /<em>license<\/em>/);
-  assert.match(header, /Licence workspace/);
+  assert.match(header, /Log in/);
+  assert.match(header, /Create account/);
+  assert.match(header, /mobile-account-actions/);
+  assert.match(header, /aria-controls="site-navigation"/);
+  assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
-  assert.match(page, /Find my creator licence/);
+  assert.match(page, /The people behind/);
+  assert.match(page, /\/artists\/charlee\.jpg/);
+  assert.match(page, /\/artists\/project-aer\.jpg/);
+  assert.match(rail, /ResizeObserver/);
+  assert.match(rail, /scrollBy/);
   await Promise.all([
     access(new URL("public/fonts/newsreader-var-latin.woff2", root)),
     access(new URL("public/fonts/newsreader-var-italic-latin.woff2", root)),
     access(new URL("public/fonts/ibm-plex-sans-var-latin.woff2", root)),
+    access(new URL("public/artists/charlee.jpg", root)),
+    access(new URL("public/artists/project-aer.jpg", root)),
+    access(new URL("public/artists/amies.jpg", root)),
+    access(new URL("public/artists/meadow.jpg", root)),
   ]);
 });
 

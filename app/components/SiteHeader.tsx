@@ -6,10 +6,12 @@ import { useState } from "react";
 import { Brand } from "./Brand";
 
 const navItems = [
-  { href: "/pricing", label: "Creator licences" },
-  { href: "/sync", label: "Sync & custom music" },
-  { href: "/retail", label: "Music for spaces" },
-  { href: "/catalog", label: "Music catalogue" },
+  { href: "/catalog", label: "Music" },
+  { href: "/#creators", label: "Creators" },
+  { href: "/sync", label: "Sync" },
+  { href: "/retail", label: "Music for Business" },
+  { href: "/#artists", label: "Artists" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function SiteHeader() {
@@ -24,19 +26,20 @@ export function SiteHeader() {
         <button
           className="nav-toggle"
           type="button"
-          aria-label="Toggle navigation"
+          aria-label={open ? "Close navigation" : "Open navigation"}
           aria-expanded={open}
+          aria-controls="site-navigation"
           onClick={() => setOpen((value) => !value)}
         >
           <span />
           <span />
         </button>
-        <nav className={open ? "site-nav is-open" : "site-nav"} aria-label="Main navigation">
+        <nav id="site-navigation" className={open ? "site-nav is-open" : "site-nav"} aria-label="Main navigation">
           {navItems.map((item, index) => (
             <Link
               className={pathname === item.href ? "is-active" : ""}
               href={item.href}
-              key={item.href}
+              key={`${item.href}-${item.label}`}
               onClick={() => setOpen(false)}
             >
               <span className="nav-index">0{index + 1}</span>
@@ -44,10 +47,14 @@ export function SiteHeader() {
               {item.href === "/retail" && <span className="nav-soon">Soon</span>}
             </Link>
           ))}
+          <div className="mobile-account-actions">
+            <Link className="header-login" href="/app" onClick={() => setOpen(false)}>Log in</Link>
+            <Link className="button button-small button-primary" href="/pricing" onClick={() => setOpen(false)}>Create account</Link>
+          </div>
         </nav>
         <div className="site-header-actions">
-          <Link className="text-link" href="/admin">Admin / demo</Link>
-          <Link className="button button-small button-ghost" href="/app">Licence workspace</Link>
+          <Link className="header-login" href="/app">Log in</Link>
+          <Link className="button button-small button-primary" href="/pricing">Create account</Link>
         </div>
       </div>
     </header>
