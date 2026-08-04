@@ -47,7 +47,6 @@ export function DashboardShell({
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="prototype-note"><span>◉</span><p><strong>Interactive prototype</strong>Demo data only</p></div>
           <Link href="/">← Back to website</Link>
         </div>
       </aside>

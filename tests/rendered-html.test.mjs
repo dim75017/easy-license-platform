@@ -157,7 +157,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(layout, /workspace-v2\.css/);
   assert.match(workspaceCss, /studio-artist\.jpg/);
-  assert.match(workspaceCss, /font-size:\s*34px/);
+  assert.match(workspaceCss, /font-size:\s*36px/);
 });
 
 test("build emits product assets and removes starter artifacts", async () => {

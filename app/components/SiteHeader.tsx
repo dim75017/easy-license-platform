@@ -20,7 +20,6 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <div className="prototype-bar"><span>Public preview</span><p>Licences are not issued through this demo.</p></div>
       <div className="site-header-inner">
         <Brand />
         <button
