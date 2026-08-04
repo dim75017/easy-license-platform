@@ -49,7 +49,7 @@ test("defines every public and connected product surface", async () => {
     ["app/catalog/page.tsx", /Find the right feeling/i],
     ["app/pricing/page.tsx", /One clear plan/i],
     ["app/sync/page.tsx", /One brief/i],
-    ["app/retail/page.tsx", /Give every space/i],
+    ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
     ["app/admin/page.tsx", /AdminWorkspace/],
   ];
@@ -141,6 +141,9 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
+    access(new URL("public/images/unsplash/retail/cafe.jpg", root)),
+    access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
+    access(new URL("public/images/unsplash/retail/hotel.jpg", root)),
   ]);
 });
 

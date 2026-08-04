@@ -2,8 +2,66 @@ import type { Metadata } from "next";
 import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
-export const metadata: Metadata = { title: "Music for spaces — Coming soon", description: "Licensed music for cafés, hotels, retail stores and offices." };
+export const metadata: Metadata = {
+  title: "Music for Business — Coming soon",
+  description: "Human-made music for cafés, hotels, retail stores and workspaces. Simple monthly access, curated for real spaces.",
+};
 
 export default function RetailPage() {
-  return <PublicShell><section className="retail-hero section-shell"><div className="retail-copy"><span className="coming-label"><i /> In development</span><span className="eyebrow"><span>EL/03</span> Music for spaces</span><h1>Give every space<br /><em>the right atmosphere.</em></h1><p>Curated, licensed music for cafés, hotels, stores, offices and multi-location businesses. Designed as Easy License&apos;s second phase.</p><div className="retail-pills"><span>☕ Cafés</span><span>⌂ Hotels</span><span>▦ Retail</span><span>◫ Offices</span></div></div><div className="retail-visual" aria-hidden="true"><div className="space-window"><div className="space-scene"><span className="sun" /><span className="plant">♧</span><span className="table"><i /><i /></span><span className="speaker">♫</span></div><div className="space-player"><span className="space-cover">♫</span><p><small>MORNING FOCUS</small><strong>Warm, calm & familiar</strong></p><button type="button" tabIndex={-1}>Ⅱ</button></div></div><div className="location-card"><span>▦</span><p><small>PARIS · LOCATION 01</small><strong>Morning schedule active</strong></p><i /></div></div></section><section className="section section-shell retail-concept"><div className="section-heading centered"><span className="section-kicker">THE PRODUCT VISION</span><h2>Music that adapts<br />to the place and the moment.</h2><p>One workspace to curate the atmosphere, manage locations and keep music rights readable.</p></div><div className="retail-feature-grid"><article><span>◴</span><h3>Daypart programming</h3><p>Shape morning, lunch, afternoon and evening with deliberate energy shifts.</p></article><article><span>▦</span><h3>Multi-location control</h3><p>Keep brand consistency while giving each space room for local nuance.</p></article><article><span>◇</span><h3>Clear rights framework</h3><p>Build the product around the correct public-performance and territory rules.</p></article><article><span>♫</span><h3>Artist-made catalogue</h3><p>A curated environment built from real music and a transparent artist model.</p></article></div></section><section className="section section-shell retail-roadmap"><div><span className="section-kicker">WHY “COMING SOON”</span><h2>We&apos;re validating the hard parts first.</h2><p>Public-performance rights, pricing, multi-location controls and artist reporting need to be designed correctly before the player goes live.</p></div><div className="roadmap-list"><span className="done"><i>✓</i><p><strong>Product concept</strong><small>Core experience and target users</small></p></span><span className="current"><i>2</i><p><strong>Customer discovery</strong><small>Cafés, hospitality, retail and offices</small></p></span><span><i>3</i><p><strong>Rights framework</strong><small>Territories and public-performance scope</small></p></span><span><i>4</i><p><strong>Pilot locations</strong><small>Real-world test before broader launch</small></p></span></div></section><section className="section section-shell retail-waitlist"><div><span className="section-kicker">EARLY ACCESS</span><h2>Bring your space<br />into the first pilot.</h2><p>Join the list if you run a physical location or a multi-site brand and want to help shape the product.</p><div className="waitlist-proof"><span><strong>41</strong><small>demo waitlist leads</small></span><i /><span><strong>4</strong><small>priority segments</small></span></div></div><div className="form-panel"><div className="form-panel-head"><span>JOIN THE PILOT LIST</span><small>No commitment</small></div><LeadForm type="retail_waitlist" /></div></section></PublicShell>;
+  return (
+    <PublicShell>
+      <main className="retail-v2">
+        <section className="retail-v2-hero">
+          <div className="retail-v2-hero-copy" data-reveal="left">
+            <p className="retail-v2-kicker"><span>COMING SOON</span> Music for Business</p>
+            <h1>Good music.<br />One less thing<br /><em>to think about.</em></h1>
+            <p className="retail-v2-lead">A simple way for cafés, stores, hotels and workspaces to sound as considered as they look. Human-made music, curated for the room, without the headache.</p>
+            <div className="retail-v2-actions">
+              <a className="v5-button v5-button-dark" href="#retail-access"><span>Get early access</span><i>↓</i></a>
+              <span>Built for real spaces, not enterprise dashboards.</span>
+            </div>
+          </div>
+          <figure className="retail-v2-hero-image" data-reveal="scale">
+            <img src="/images/unsplash/retail/cafe.jpg" alt="Warmly lit café interior" />
+            <figcaption><span>NOW PLAYING</span><strong>Easy mornings</strong><small>Human-made music for your space</small></figcaption>
+          </figure>
+        </section>
+
+        <section className="retail-v2-proof" aria-label="Music for Business principles" data-reveal="group">
+          <div><strong>Easy to run</strong><span>Set the mood once. Let it carry the room.</span></div>
+          <div><strong>Made by people</strong><span>Zero AI music. Real artists, paid fairly.</span></div>
+          <div><strong>Priced for places</strong><span>Clear monthly plans, built to stay affordable.</span></div>
+        </section>
+
+        <section className="retail-v2-easy">
+          <div className="retail-v2-section-intro" data-reveal="left">
+            <p className="retail-v2-kicker"><span>01</span> Less admin. Better atmosphere.</p>
+            <h2>Music should not become another job.</h2>
+            <p>Tell us about your space, choose the feeling you want and let the day flow. No agency retainer, no endless playlist hunting and no complicated setup.</p>
+          </div>
+          <div className="retail-v2-steps" data-reveal="group">
+            <article><span>01</span><h3>Choose your room</h3><p>Café, store, hotel, office or somewhere in between.</p></article>
+            <article><span>02</span><h3>Choose the feeling</h3><p>Warm mornings, focused afternoons, softer evenings.</p></article>
+            <article><span>03</span><h3>Keep it simple</h3><p>A considered soundtrack that keeps showing up for your guests.</p></article>
+          </div>
+        </section>
+
+        <section className="retail-v2-spaces" data-reveal="group">
+          <figure className="retail-v2-space-large"><img src="/images/unsplash/retail/restaurant.jpg" alt="Warm restaurant interior at night" /><figcaption>Restaurants & cafés</figcaption></figure>
+          <figure><img src="/images/unsplash/retail/hotel.jpg" alt="Warm modern hotel lobby" /><figcaption>Hotels & hospitality</figcaption></figure>
+          <div className="retail-v2-space-copy"><p className="retail-v2-kicker"><span>02</span> Made for the room</p><h2>From first coffee to last guest.</h2><p>Every space has its own rhythm. Easy License helps make it intentional, whether people are stopping by, staying a while or coming back tomorrow.</p></div>
+        </section>
+
+        <section className="retail-v2-artists">
+          <div data-reveal="left"><p className="retail-v2-kicker"><span>03</span> A better kind of background music</p><h2>Human-made music belongs in human spaces.</h2></div>
+          <div className="retail-v2-artist-copy" data-reveal="right"><p>Every track begins with a real artist, never a prompt. Our model is designed so the people who make the music are credited and paid directly when their work is used.</p><div><span>0</span><p><strong>AI-generated tracks</strong><small>Only music made by people.</small></p></div><div><span>10,000+</span><p><strong>Premium tracks</strong><small>Curated for feeling, not filler.</small></p></div></div>
+        </section>
+
+        <section className="retail-v2-access" id="retail-access">
+          <div data-reveal="left"><p className="retail-v2-kicker"><span>EARLY ACCESS</span> Be part of the first rooms</p><h2>Make your space<br />sound like yours.</h2><p>We are opening the first pilot with venues that care about their atmosphere. Join the list and help shape the simple, affordable version of Music for Business.</p><small>No commitment. We will only use your details to contact you about the pilot.</small></div>
+          <div className="retail-v2-form" data-reveal="scale"><div><span>FIRST PILOT</span><small>Opening soon</small></div><LeadForm type="retail_waitlist" /></div>
+        </section>
+      </main>
+    </PublicShell>
+  );
 }
