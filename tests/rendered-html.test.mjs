@@ -8,45 +8,65 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("contains the focused Easy License brand gateway", async () => {
-  const [page, layout, css, homeCss, cozyCss, offerCss, packageJson] = await Promise.all([
+test("contains the complete Easy License music licensing homepage", async () => {
+  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
-    source("app/home-v5.css"),
-    source("app/home-v6.css"),
+    source("app/home-v26.css"),
+    source("app/catalog-v26.css"),
     source("app/offer-pages.css"),
     source("package.json"),
   ]);
 
-  assert.match(page, /Human-made music\.[\s\S]*Curated to belong\./i);
+  assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /selected by music professionals for quality, consistency and real-world use/i);
-  assert.match(page, /Two offers\.[\s\S]*Two clear places to start\./i);
-  assert.match(page, /EASY LICENSE FOR CREATORS/i);
-  assert.match(page, /EASY LICENSE FOR BUSINESS/i);
+  assert.match(page, /Browse more than 10,000 instrumental and background tracks selected by our music team/i);
+  assert.match(page, /<CatalogueExplorer compact \/>/i);
+  assert.match(page, /Listen to the catalogue before choosing a licence/i);
+  for (const useCase of [
+    "Travel & Outdoors",
+    "Vlogs & Everyday Life",
+    "Study, Focus & Tutorials",
+    "Livestreams & Gaming",
+    "Podcasts & Interviews",
+    "Film, Documentary & Brand",
+    "Wellness & Slow Living",
+    "Food & Hospitality",
+  ]) {
+    assert.match(page, new RegExp(useCase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), useCase);
+  }
+  for (const useRoute of ["travel", "lifestyle-vlogs", "study-focus", "gaming-streaming", "podcasts", "cinematic", "wellness", "food-hospitality"]) {
+    assert.match(page, new RegExp(`slug: "${useRoute}"`), useRoute);
+  }
+  assert.match(page, /Easy License for Creators/i);
+  assert.match(page, /Easy License for Businesses/i);
   assert.match(page, /href="\/creators"/i);
   assert.match(page, /href="\/business"/i);
-  assert.match(page, /Not an upload dump\.[\s\S]*A catalogue with a point of view\./i);
-  assert.match(page, /Artists are credited and paid directly and fairly/i);
-  assert.doesNotMatch(page, /PricingCards|CatalogueExplorer|v5-offer-group|offer-faq/i);
-  assert.doesNotMatch(page, /Custom quote|Per project|EL \/ CREATOR|EL \/ BUSINESS/i);
-  assert.doesNotMatch(page, /Music for Business/i);
-  assert.match(page, /10,000\+[\s\S]*Human-made tracks/i);
-  assert.match(page, /0[\s\S]*AI-generated tracks/i);
-  assert.match(page, /1,000\+[\s\S]*Artists worldwide/i);
+  assert.match(page, /Every track is reviewed by our music team/i);
+  assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
+  assert.match(page, /Creator plans start at .*6\.67 per month/i);
+  assert.match(page, /What to know before using a track/i);
+  assert.match(page, /Commercial Sync for existing music/i);
+  assert.match(page, /Custom Commission for original music/i);
+  assert.match(page, /Music for Retail coming soon/i);
+  assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
+  assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
+  assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
   assert.doesNotMatch(page, /Genre families/i);
-  assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
+  assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
+  assert.match(layout, /Easy License .* Human-made music licensing/);
   assert.match(layout, /offer-pages\.css/);
+  assert.match(layout, /catalog-v26\.css/);
+  assert.match(layout, /home-v26\.css/);
   assert.match(layout, /themeColor:\s*"#f3ece0"/i);
   assert.match(layout, /colorScheme:\s*"light"/i);
   assert.match(css, /--bg:\s*#07080d/i);
-  assert.match(homeCss, /--v5-blue:\s*#514cff/i);
-  assert.match(cozyCss, /--cozy-night:\s*#292832/i);
-  assert.match(cozyCss, /--cozy-oat:\s*#f3ece0/i);
-  assert.match(cozyCss, /hero-producer\.jpg/);
-  assert.match(cozyCss, /campaign-filmset\.jpg/);
-  assert.match(cozyCss, /retail\/spa\.jpg/);
+  assert.match(homeCss, /\.home26-hero/);
+  assert.match(homeCss, /\.home26-collection-grid/);
+  assert.match(homeCss, /\.home26-price-grid/);
+  assert.match(catalogueCss, /\.catalogue-v26/);
+  assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
   assert.match(offerCss, /\.gateway-page/);
   assert.match(offerCss, /\.creators-landing/);
   assert.match(offerCss, /\.business-landing/);
@@ -59,10 +79,10 @@ test("contains the focused Easy License brand gateway", async () => {
 
 test("defines every public and connected product surface", async () => {
   const routes = [
-    ["app/creators/page.tsx", /Make every upload/i],
-    ["app/business/page.tsx", /curated for work that matters/i],
-    ["app/catalog/page.tsx", /Find the right feeling/i],
-    ["app/pricing/page.tsx", /Two creator plans/i],
+    ["app/creators/page.tsx", /Human-made music for/i],
+    ["app/business/page.tsx", /Commercial music licensing/i],
+    ["app/catalog/page.tsx", /Music for videos, streams and stories of every kind/i],
+    ["app/pricing/page.tsx", /Pricing for creators/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
@@ -81,17 +101,21 @@ test("defines every public and connected product surface", async () => {
     source("app/retail/page.tsx"),
     source("app/sync/page.tsx"),
   ]);
-  assert.match(creators, /Professionally curated/i);
+  assert.match(creators, /Every track is reviewed/i);
   assert.match(creators, /<CatalogueExplorer compact \/>/i);
   assert.match(creators, /<PricingCards expanded \/>/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
   assert.match(business, /Commercial Sync/i);
   assert.match(business, /Custom Commission/i);
   assert.match(business, /Music for Retail · Coming soon/i);
-  assert.match(business, /By music professionals/i);
+  assert.match(business, /A catalogue reviewed by/i);
+  assert.match(business, /Shortlists built for the brief/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
-  assert.match(pricing, /Easy License for Creators/i);
-  assert.doesNotMatch(pricing, /<strong>Business<\/strong>|data-label="Business"/i);
+  assert.match(pricing, /CREATOR SUBSCRIPTIONS/i);
+  assert.match(pricing, /Business pricing depends on the rights you need/i);
+  assert.match(pricing, /Commercial Sync/i);
+  assert.match(pricing, /Custom Commission/i);
+  assert.match(pricing, /MUSIC FOR RETAIL/i);
   assert.doesNotMatch(pricingCards, /EL–03 \/ BUSINESS/i);
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);
@@ -157,20 +181,30 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(header, /Create account/);
   assert.match(header, /For Creators/);
   assert.match(header, /For Businesses/);
-  assert.doesNotMatch(header, /href: "\/catalog", label: "Music"/);
+  assert.match(header, /href:\s*"\/catalog",\s*label:\s*"Music"/);
   assert.match(header, /href:\s*"\/creators"/);
   assert.match(header, /href:\s*"\/business"/);
+  assert.match(header, /href:\s*"\/pricing",\s*label:\s*"Pricing"/);
   assert.doesNotMatch(header, /\/#creators|\/#business/);
-  assert.match(header, /Start a brief/);
+  assert.doesNotMatch(header, /Start a brief/);
   assert.match(header, /mobile-account-actions/);
   assert.match(header, /aria-controls="site-navigation"/);
-  assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"|label: "Pricing"/);
+  assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
-  assert.match(catalogue, /EL-CAT-/);
   assert.match(catalogue, /featured-track/);
+  assert.match(catalogue, /<iframe/);
+  assert.match(catalogue, /open\.spotify\.com\/embed\/track/);
+  assert.match(catalogue, /Listen here through Spotify/i);
+  assert.match(catalogue, /Search the catalogue/i);
+  assert.doesNotMatch(catalogue, /EL-CAT-|download=|Download track|Fake player|Prototype data|Demo tracks/i);
   assert.match(catalogueData, /Melting Snowman/);
+  assert.match(catalogueData, /5:32pm/);
+  assert.match(catalogueData, /Blue and Green/);
   assert.match(catalogueData, /Drifting away/);
-  assert.match(page, /Selected by professionals\.[\s\S]*Created by people\./i);
+  assert.match(catalogueData, /spotifyId/);
+  assert.doesNotMatch(catalogueData, /EL-CAT-/);
+  assert.match(page, /Every track is reviewed by our music team/i);
+  assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(business, /\/artists\/dario-lessing\.jpg/);
   assert.match(booth, /My channel/);

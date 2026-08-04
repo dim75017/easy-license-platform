@@ -5,14 +5,16 @@ import "./home-v6.css";
 import "./workspace-v2.css";
 import "./retail-v2.css";
 import "./offer-pages.css";
+import "./catalog-v26.css";
+import "./home-v26.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),
   title: {
-    default: "Easy License — 10,000+ human-made tracks",
+    default: "Easy License — Human-made music licensing",
     template: "%s — Easy License",
   },
-  description: "Professionally curated instrumental and background music for creators and businesses. Explore 10,000+ human-made tracks, with zero AI-generated music and clear licensing. Powered by Lofi Girl.",
+  description: "Browse more than 10,000 human-made instrumental and background tracks for videos, streams and commercial projects. Professionally curated and powered by Lofi Girl.",
   applicationName: "Easy License",
   keywords: ["music licensing", "background music", "instrumental music", "human-made music", "creator music", "sync licensing", "Lofi Girl"],
   robots: { index: true, follow: true },

@@ -1,148 +1,147 @@
+export const useCategories = [
+  {
+    slug: "travel",
+    label: "Travel",
+    description: "Road trips, city guides and slow journeys.",
+    image: "/images/unsplash/hero-listening.jpg",
+  },
+  {
+    slug: "cinematic",
+    label: "Cinematic",
+    description: "Short films, trailers, documentaries and visual essays.",
+    image: "/images/unsplash/campaign-filmset.jpg",
+  },
+  {
+    slug: "lifestyle-vlogs",
+    label: "Lifestyle & Vlogs",
+    description: "Everyday edits, routines, interiors and personal stories.",
+    image: "/images/unsplash/creator-edit.jpg",
+  },
+  {
+    slug: "study-focus",
+    label: "Study & Focus",
+    description: "Long-form work, study sessions and calm tutorials.",
+    image: "/images/stock/cozy-workspace.jpg",
+  },
+  {
+    slug: "gaming-streaming",
+    label: "Gaming & Streaming",
+    description: "Gameplay, live sessions and community content.",
+    image: "/images/unsplash/editing-desk.jpg",
+  },
+  {
+    slug: "podcasts",
+    label: "Podcasts",
+    description: "Openings, transitions, interviews and narrative episodes.",
+    image: "/images/unsplash/studio-artist.jpg",
+  },
+  {
+    slug: "wellness",
+    label: "Wellness",
+    description: "Meditation, movement, rest and quiet rituals.",
+    image: "/images/unsplash/retail/spa.jpg",
+  },
+  {
+    slug: "food-hospitality",
+    label: "Food & Hospitality",
+    description: "Recipes, cafés, restaurants and welcoming spaces.",
+    image: "/images/unsplash/retail/cafe.jpg",
+  },
+] as const;
+
+export type MusicUseSlug = (typeof useCategories)[number]["slug"];
+
 export type Track = {
   id: string;
-  title: string;
-  artist: string;
-  mood: string;
-  use: string;
-  bpm: number;
-  duration: string;
-  accent: string;
-  new?: boolean;
-};
-
-export type FeaturedTrack = {
-  id: string;
+  spotifyId: string;
   title: string;
   artist: string;
   genre: string;
   streams: string;
   cover: string;
   spotifyUrl: string;
+  suggestedUses: MusicUseSlug[];
+  moods: string[];
+  /** Compatibility fields used by the signed-in workspace preview. */
+  mood: string;
+  use: string;
+  bpm: "—";
+  duration: string;
+  accent: string;
 };
 
-export const featuredTracks: FeaturedTrack[] = [
+export const tracks: Track[] = [
   {
     id: "EL-FEAT-001",
+    spotifyId: "5Nsf7Z3GKvdWj2FEP12QUy",
     title: "Melting Snowman",
     artist: "Mujo",
     genre: "Lofi",
     streams: "1.1M streams",
     cover: "/images/catalogue/melting-snowman.jpg",
     spotifyUrl: "https://open.spotify.com/track/5Nsf7Z3GKvdWj2FEP12QUy",
+    suggestedUses: ["study-focus", "gaming-streaming", "wellness", "lifestyle-vlogs"],
+    moods: ["Warm", "Calm", "Cozy"],
+    mood: "Warm",
+    use: "Study & Focus",
+    bpm: "—",
+    duration: "Spotify",
+    accent: "violet",
   },
   {
     id: "EL-FEAT-002",
+    spotifyId: "0Q2LHrREFF9rtX3PuMUoNL",
     title: "5:32pm",
     artist: "The Deli",
     genre: "Jazzhop",
     streams: "167.9M streams",
     cover: "/images/catalogue/532pm.jpg",
     spotifyUrl: "https://open.spotify.com/track/0Q2LHrREFF9rtX3PuMUoNL",
+    suggestedUses: ["travel", "lifestyle-vlogs", "food-hospitality", "gaming-streaming"],
+    moods: ["Bright", "Easygoing", "Warm"],
+    mood: "Easygoing",
+    use: "Travel",
+    bpm: "—",
+    duration: "Spotify",
+    accent: "peach",
   },
   {
     id: "EL-FEAT-003",
+    spotifyId: "6BFm6CduJnfZ1RsMYjWO9G",
     title: "Blue and Green",
     artist: "Aso",
     genre: "Chillhop",
     streams: "35.7M streams",
     cover: "/images/catalogue/blue-and-green.jpg",
     spotifyUrl: "https://open.spotify.com/track/6BFm6CduJnfZ1RsMYjWO9G",
+    suggestedUses: ["travel", "cinematic", "study-focus", "lifestyle-vlogs"],
+    moods: ["Reflective", "Open", "Calm"],
+    mood: "Reflective",
+    use: "Cinematic",
+    bpm: "—",
+    duration: "Spotify",
+    accent: "blue",
   },
   {
     id: "EL-FEAT-004",
+    spotifyId: "4aw3VYsMAEhqaq87YXyvKA",
     title: "Drifting away",
     artist: "Charlee Nguyen",
     genre: "Ambient",
     streams: "5.9M streams",
     cover: "/images/catalogue/drifting-away.jpg",
     spotifyUrl: "https://open.spotify.com/track/4aw3VYsMAEhqaq87YXyvKA",
-  },
-];
-
-export const tracks: Track[] = [
-  {
-    id: "EL-001",
-    title: "Window Seat",
-    artist: "Catalogue preview",
-    mood: "Dreamy",
-    use: "Study",
-    bpm: 76,
-    duration: "2:41",
-    accent: "violet",
-    new: true,
-  },
-  {
-    id: "EL-002",
-    title: "Soft Focus",
-    artist: "Catalogue preview",
-    mood: "Warm",
-    use: "Vlog",
-    bpm: 82,
-    duration: "2:18",
-    accent: "peach",
-  },
-  {
-    id: "EL-003",
-    title: "After the Rain",
-    artist: "Catalogue preview",
-    mood: "Nostalgic",
-    use: "Storytelling",
-    bpm: 70,
-    duration: "3:06",
-    accent: "blue",
-  },
-  {
-    id: "EL-004",
-    title: "Quiet Momentum",
-    artist: "Catalogue preview",
-    mood: "Focused",
-    use: "Coding",
-    bpm: 88,
-    duration: "2:52",
+    suggestedUses: ["cinematic", "podcasts", "wellness", "study-focus"],
+    moods: ["Gentle", "Intimate", "Dreamy"],
+    mood: "Gentle",
+    use: "Podcasts",
+    bpm: "—",
+    duration: "Spotify",
     accent: "mint",
-    new: true,
-  },
-  {
-    id: "EL-005",
-    title: "Corner Café",
-    artist: "Catalogue preview",
-    mood: "Cozy",
-    use: "Podcast",
-    bpm: 74,
-    duration: "2:33",
-    accent: "amber",
-  },
-  {
-    id: "EL-006",
-    title: "Neon Notebook",
-    artist: "Catalogue preview",
-    mood: "Night",
-    use: "Streaming",
-    bpm: 92,
-    duration: "2:27",
-    accent: "pink",
-  },
-  {
-    id: "EL-007",
-    title: "Small Hours",
-    artist: "Catalogue preview",
-    mood: "Calm",
-    use: "Sleep",
-    bpm: 64,
-    duration: "3:22",
-    accent: "indigo",
-  },
-  {
-    id: "EL-008",
-    title: "Day One",
-    artist: "Catalogue preview",
-    mood: "Hopeful",
-    use: "Lifestyle",
-    bpm: 86,
-    duration: "2:49",
-    accent: "lime",
   },
 ];
 
-export const moods = ["All moods", ...Array.from(new Set(tracks.map((track) => track.mood)))];
-export const uses = ["All uses", ...Array.from(new Set(tracks.map((track) => track.use)))];
+export const featuredTracks = tracks;
+export const genres = ["All genres", ...Array.from(new Set(tracks.map((track) => track.genre)))];
+export const moods = ["All moods", ...Array.from(new Set(tracks.flatMap((track) => track.moods)))];
+export const uses = ["All uses", ...useCategories.map((category) => category.label)];

@@ -1,126 +1,198 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { featuredTracks, moods, tracks, uses } from "../data/catalog";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { genres, tracks, useCategories, type MusicUseSlug, type Track } from "../data/catalog";
+import "../catalog-v26.css";
 
-const wave = [22, 58, 36, 76, 48, 64, 30, 84, 44, 66, 34, 54, 72, 40, 60, 26];
+const useNames = new Map(useCategories.map((category) => [category.slug, category.label]));
+
+function subscribeToLocation(onStoreChange: () => void) {
+  window.addEventListener("popstate", onStoreChange);
+  window.addEventListener("easy-license-urlchange", onStoreChange);
+  return () => {
+    window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener("easy-license-urlchange", onStoreChange);
+  };
+}
+
+function getLocationSearch() {
+  return window.location.search;
+}
+
+function getServerLocationSearch() {
+  return "";
+}
 
 export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
-  const [query, setQuery] = useState("");
-  const [mood, setMood] = useState("All moods");
-  const [use, setUse] = useState("All uses");
-  const [playing, setPlaying] = useState<string | null>(null);
-  const [downloaded, setDownloaded] = useState<string[]>([]);
+  const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
+  const urlParams = useMemo(() => new URLSearchParams(locationSearch), [locationSearch]);
+  const urlUse = urlParams.get("use");
+  const validUrlUse = useCategories.some((category) => category.slug === urlUse) ? urlUse as MusicUseSlug : "all";
+  const [queryDraft, setQueryDraft] = useState<string | null>(null);
+  const [useDraft, setUseDraft] = useState<MusicUseSlug | "all" | null>(null);
+  const [genre, setGenre] = useState("All genres");
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const query = queryDraft ?? urlParams.get("q") ?? "";
+  const activeUse = useDraft ?? validUrlUse;
+
+  const updateLocation = (nextQuery: string, nextUse: MusicUseSlug | "all") => {
+    if (compact) return;
+    const url = new URL(window.location.href);
+    if (nextQuery.trim()) url.searchParams.set("q", nextQuery.trim());
+    else url.searchParams.delete("q");
+    if (nextUse !== "all") url.searchParams.set("use", nextUse);
+    else url.searchParams.delete("use");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    window.dispatchEvent(new Event("easy-license-urlchange"));
+  };
+
+  const updateQuery = (nextQuery: string) => {
+    setQueryDraft(nextQuery);
+    updateLocation(nextQuery, activeUse);
+  };
+
+  const updateUse = (nextUse: MusicUseSlug | "all") => {
+    setUseDraft(nextUse);
+    updateLocation(query, nextUse);
+  };
 
   const results = useMemo(() => {
-    const filtered = tracks.filter((track) => {
-      const haystack = `${track.title} ${track.artist} ${track.mood} ${track.use}`.toLowerCase();
+    const normalizedQuery = query.trim().toLowerCase();
+    return tracks.filter((track) => {
+      const suggestedUses = track.suggestedUses.map((slug) => useNames.get(slug) ?? slug).join(" ");
+      const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${suggestedUses}`.toLowerCase();
       return (
-        haystack.includes(query.toLowerCase()) &&
-        (mood === "All moods" || track.mood === mood) &&
-        (use === "All uses" || track.use === use)
+        (!normalizedQuery || haystack.includes(normalizedQuery)) &&
+        (genre === "All genres" || track.genre === genre) &&
+        (activeUse === "all" || track.suggestedUses.includes(activeUse))
       );
     });
-    return compact ? filtered.slice(0, 4) : filtered;
-  }, [compact, mood, query, use]);
+  }, [activeUse, genre, query]);
 
-  const toggleDownload = (id: string) => {
-    setDownloaded((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? null;
+  const chooseTrack = (track: Track) => setSelectedTrackId((current) => current === track.id ? null : track.id);
+  const resetFilters = () => {
+    setQueryDraft("");
+    setGenre("All genres");
+    setUseDraft("all");
+    updateLocation("", "all");
   };
 
   if (compact) {
     return (
-      <div className="catalogue-featured" aria-label="Featured tracks from the Easy License catalogue">
-        {featuredTracks.map((track) => (
-          <a className="featured-track" href={track.spotifyUrl} target="_blank" rel="noreferrer" key={track.id}>
-            <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
-            <span className="featured-track-meta"><small>{track.genre} · {track.streams}</small><strong>{track.title}</strong><em>{track.artist}</em></span>
-            <i aria-hidden="true">↗</i>
-          </a>
-        ))}
+      <div className="catalogue-v26 catalogue-v26-compact">
+        <div className="catalogue-featured" aria-label="Featured tracks from the Easy License catalogue">
+          {tracks.map((track) => (
+            <button
+              className={selectedTrackId === track.id ? "featured-track is-selected" : "featured-track"}
+              type="button"
+              onClick={() => chooseTrack(track)}
+              aria-expanded={selectedTrackId === track.id}
+              key={track.id}
+            >
+              <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
+              <span className="featured-track-meta"><small>{track.genre} · {track.streams}</small><strong>{track.title}</strong><em>{track.artist}</em></span>
+              <i aria-hidden="true">Listen</i>
+            </button>
+          ))}
+        </div>
+        {selectedTrack && <SpotifyPlayer track={selectedTrack} compact onClose={() => setSelectedTrackId(null)} />}
       </div>
     );
   }
 
   return (
-    <div className="catalogue-explorer">
-      <div className="catalogue-toolbar">
-        <label className="search-field">
-          <span aria-hidden="true">⌕</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by mood, track or use"
-            aria-label="Search catalogue"
-          />
-          <kbd>⌘ K</kbd>
+    <div className="catalogue-v26">
+      <div className="catalogue-v26-search-row">
+        <label className="catalogue-v26-search">
+          <span>Search the catalogue</span>
+          <div><i aria-hidden="true">⌕</i><input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Track, artist, mood or use" /></div>
         </label>
-        <label className="select-field">
-          <span>Mood</span>
-          <select value={mood} onChange={(event) => setMood(event.target.value)}>
-            {moods.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </label>
-        <label className="select-field">
-          <span>Use</span>
-          <select value={use} onChange={(event) => setUse(event.target.value)}>
-            {uses.map((item) => <option key={item}>{item}</option>)}
+        <label className="catalogue-v26-select">
+          <span>Genre</span>
+          <select value={genre} onChange={(event) => setGenre(event.target.value)}>
+            {genres.map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
       </div>
 
-      <div className="track-list" aria-live="polite">
-        {results.map((track) => {
-          const isPlaying = playing === track.id;
-          const isDownloaded = downloaded.includes(track.id);
-          return (
-            <article className={isPlaying ? `track-row accent-${track.accent} is-playing` : `track-row accent-${track.accent}`} key={track.id}>
-              <button
-                className="track-play"
-                type="button"
-                aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title}`}
-                onClick={() => setPlaying(isPlaying ? null : track.id)}
-              >
-                {isPlaying ? "Ⅱ" : "▶"}
-              </button>
-              <div className="track-title">
-                <small className="track-id">{track.id.replace("EL-", "EL-CAT-")}</small>
-                <strong>{track.title}</strong>
-                <span>{track.artist}</span>
-              </div>
-              {!compact && <div className="track-wave" aria-hidden="true">
-                {wave.map((height, index) => (
-                  <i key={index} style={{ height: `${height}%` }} className={isPlaying && index < 7 ? "active" : ""} />
-                ))}
-              </div>}
-              <div className="track-tag"><span>{track.mood}</span><small>{track.use}</small></div>
-              <div className="track-bpm"><strong>{track.bpm}</strong><small>BPM</small></div>
-              <span className="track-duration">{track.duration}</span>
-              <button
-                className={isDownloaded ? "track-download is-done" : "track-download"}
-                type="button"
-                onClick={() => toggleDownload(track.id)}
-                aria-label={`${isDownloaded ? "Remove" : "Add"} ${track.title} ${isDownloaded ? "from" : "to"} downloads`}
-              >
-                {isDownloaded ? "✓" : "↓"}
-              </button>
-            </article>
-          );
-        })}
-        {results.length === 0 && (
-          <div className="empty-state">
-            <span>⌕</span>
-            <strong>No track found</strong>
-            <p>Try another mood or remove a filter.</p>
-          </div>
-        )}
-      </div>
-      {!compact && (
-        <div className="catalogue-footnote">
-          <span><i /> Catalogue data shown for product demonstration.</span>
-          <span>{results.length} of {tracks.length} preview tracks</span>
+      <section className="catalogue-v26-uses" aria-labelledby="catalogue-use-heading">
+        <div className="catalogue-v26-subhead">
+          <div><span>Browse by use</span><h3 id="catalogue-use-heading">Start with what you&apos;re making.</h3></div>
+          {activeUse !== "all" && <button type="button" onClick={() => updateUse("all")}>Show every use</button>}
         </div>
-      )}
+        <div className="catalogue-v26-use-grid">
+          {useCategories.map((category) => (
+            <button
+              className={activeUse === category.slug ? "catalogue-v26-use is-active" : "catalogue-v26-use"}
+              type="button"
+              onClick={() => updateUse(activeUse === category.slug ? "all" : category.slug)}
+              aria-pressed={activeUse === category.slug}
+              key={category.slug}
+            >
+              <img src={category.image} alt="" />
+              <span><strong>{category.label}</strong><small>{category.description}</small></span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="catalogue-v26-results" aria-labelledby="catalogue-results-heading">
+        <div className="catalogue-v26-subhead catalogue-v26-results-head">
+          <div>
+            <span>{activeUse === "all" ? "Curated selection" : useNames.get(activeUse)}</span>
+            <h3 id="catalogue-results-heading">{results.length} {results.length === 1 ? "track" : "tracks"}</h3>
+          </div>
+          <p>Listen here through Spotify. Licensing availability is confirmed for the intended use before download.</p>
+        </div>
+
+        <div className="catalogue-v26-track-list" aria-live="polite">
+          {results.map((track) => (
+            <article className={selectedTrackId === track.id ? "catalogue-v26-track is-open" : "catalogue-v26-track"} key={track.id}>
+              <img className="catalogue-v26-track-cover" src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
+              <div className="catalogue-v26-track-copy">
+                <span>{track.genre}</span>
+                <h4>{track.title}</h4>
+                <p>{track.artist}</p>
+              </div>
+              <div className="catalogue-v26-track-uses" aria-label="Suggested uses">
+                {track.suggestedUses.slice(0, 3).map((slug) => <span key={slug}>{useNames.get(slug)}</span>)}
+              </div>
+              <span className="catalogue-v26-streams">{track.streams}</span>
+              <button className="catalogue-v26-listen" type="button" onClick={() => chooseTrack(track)} aria-expanded={selectedTrackId === track.id}>
+                {selectedTrackId === track.id ? "Close player" : "Listen"}
+              </button>
+              <a className="catalogue-v26-spotify-link" href={track.spotifyUrl} target="_blank" rel="noreferrer">Open in Spotify ↗</a>
+              {selectedTrackId === track.id && <SpotifyPlayer track={track} onClose={() => setSelectedTrackId(null)} />}
+            </article>
+          ))}
+          {results.length === 0 && (
+            <div className="catalogue-v26-empty">
+              <span aria-hidden="true">⌕</span><h4>No track matches these filters.</h4><p>Try a broader search or return to the full selection.</p>
+              <button type="button" onClick={resetFilters}>Clear filters</button>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SpotifyPlayer({ track, compact = false, onClose }: { track: Track; compact?: boolean; onClose: () => void }) {
+  return (
+    <div className={compact ? "catalogue-v26-player is-compact" : "catalogue-v26-player"}>
+      <div className="catalogue-v26-player-head">
+        <span><small>LISTEN ON SPOTIFY</small><strong>{track.title}</strong><em>{track.artist}</em></span>
+        <button type="button" onClick={onClose} aria-label={`Close ${track.title} player`}>Close</button>
+      </div>
+      <iframe
+        src={`https://open.spotify.com/embed/track/${track.spotifyId}?utm_source=generator&theme=0`}
+        title={`Spotify player for ${track.title} by ${track.artist}`}
+        width="100%"
+        height="152"
+        loading="lazy"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      />
     </div>
   );
 }
