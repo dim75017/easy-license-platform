@@ -98,19 +98,16 @@ export default function Home() {
             <article className="v5-route-step v5-step-acid" data-reveal="right">
               <div className="v5-step-index"><span>01</span><small>CREATE DAILY</small></div>
               <div className="v5-step-copy"><h3>Sound better on<br />every upload.</h3><p>YouTube videos, Shorts, Reels, livestreams, podcasts and social content—without generic background music.</p></div>
-              <figure className="v5-step-visual v6-step-photo v6-step-creator"><img src="/images/unsplash/creator-edit.jpg" alt="" /><figcaption>For the next upload</figcaption></figure>
             </article>
 
             <article className="v5-route-step v5-step-blue" data-reveal="right">
               <div className="v5-step-index"><span>02</span><small>CLIENT WORK</small></div>
               <div className="v5-step-copy"><h3>Give every brief<br />a real soundtrack.</h3><p>Clear music for freelance edits, branded content, product films and agency work from one place.</p></div>
-              <figure className="v5-step-visual v6-step-photo v6-step-client"><img src="/images/unsplash/filmmaker-desk.jpg" alt="" /><figcaption>For the client brief</figcaption></figure>
             </article>
 
             <article className="v5-route-step v5-step-coral" data-reveal="right">
               <div className="v5-step-index"><span>03</span><small>GO BIGGER</small></div>
               <div className="v5-step-copy"><h3>Scale from content<br />to campaigns.</h3><p>License existing tracks or commission original music for films, games, campaigns and brand worlds.</p></div>
-              <figure className="v5-step-visual v6-step-photo v6-step-sync"><img src="/images/unsplash/editing-desk.jpg" alt="" /><figcaption>For the bigger picture</figcaption></figure>
             </article>
           </div>
         </section>
@@ -159,7 +156,7 @@ export default function Home() {
             <div className="v5-catalogue-head" data-reveal="group">
               <p className="v5-kicker"><span>03 / The catalogue</span> Premium sound, without the filler</p>
               <h2 id="catalogue-title">The right feeling.<br />Every time.</h2>
-              <div><p>Lofi, ambient, jazz, piano, cinematic, electronic, chill, focus, sleep and more—curated to support the work without making it sound generic.</p><Link className="v5-button v5-button-acid" href="/catalog"><span>Explore 10,000+ tracks</span><i>↗</i></Link><figure className="v6-catalogue-photo"><img src="/images/unsplash/studio-artist.jpg" alt="Music producer wearing headphones in a studio" /><figcaption>Human-made. Curated with care.</figcaption></figure></div>
+              <div><p>Lofi, ambient, jazz, piano, cinematic, electronic, chill, focus, sleep and more—curated to support the work without making it sound generic.</p><Link className="v5-button v5-button-acid" href="/catalog"><span>Explore 10,000+ tracks</span><i>↗</i></Link></div>
             </div>
             <div className="v5-catalogue-console" data-reveal="scale">
               <div className="v5-console-bar"><span>CATALOGUE / LIVE INDEX</span><span><i /> 10,000+ HUMAN-MADE TRACKS</span><span>FILTER · PLAY · CLEAR</span></div>
@@ -176,7 +173,7 @@ export default function Home() {
           </div>
 
           <div className="v6-artist-statement" data-reveal="group">
-            <figure><img src="/images/unsplash/studio-artist.jpg" alt="Music producer wearing headphones in a studio" /></figure>
+            <figure><img src="/artists/charlee.jpg" alt="Charlee, an Easy License artist, playing guitar" /></figure>
             <div><span>MADE BY REAL ARTISTS</span><h3>When music is licensed, the artist is paid directly and fairly.</h3><p>That is the point of Easy License: more clarity for the person using music, and more respect for the person who made it.</p></div>
           </div>
 

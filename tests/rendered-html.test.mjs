@@ -25,12 +25,12 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(page, /Music for Business/i);
   assert.match(page, /Artist paid directly/i);
   assert.match(page, /Paid directly[\s\S]*Fairer by design/i);
-  assert.match(page, /v6-catalogue-photo/);
   assert.match(page, /v6-artist-statement/);
-  assert.match(page, /v6-step-photo/);
   assert.match(page, /data-plan-glide/);
   assert.doesNotMatch(page, /v5-catalogue-side/);
   assert.doesNotMatch(page, /v5-hero-ticker/);
+  assert.doesNotMatch(page, /v6-catalogue-photo/);
+  assert.doesNotMatch(page, /v6-step-photo/);
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
@@ -40,6 +40,7 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(homeCss, /--v5-blue:\s*#514cff/i);
   assert.match(cozyCss, /--cozy-night:\s*#292832/i);
   assert.match(cozyCss, /--cozy-oat:\s*#f3ece0/i);
+  assert.match(cozyCss, /hero-turntable\.jpg/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -143,6 +144,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
+    access(new URL("public/images/unsplash/hero-turntable.jpg", root)),
     access(new URL("public/images/unsplash/retail/cafe.jpg", root)),
     access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
     access(new URL("public/images/unsplash/retail/hotel.jpg", root)),
