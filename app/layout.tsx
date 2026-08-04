@@ -4,6 +4,7 @@ import "./home-v5.css";
 import "./home-v6.css";
 import "./workspace-v2.css";
 import "./retail-v2.css";
+import "./offer-pages.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     default: "Easy License — 10,000+ human-made tracks",
     template: "%s — Easy License",
   },
-  description: "Premium instrumental and background music for creators and brands. Explore 10,000+ human-made tracks, with zero AI-generated music and clear licensing. Powered by Lofi Girl.",
+  description: "Professionally curated instrumental and background music for creators and businesses. Explore 10,000+ human-made tracks, with zero AI-generated music and clear licensing. Powered by Lofi Girl.",
   applicationName: "Easy License",
   keywords: ["music licensing", "background music", "instrumental music", "human-made music", "creator music", "sync licensing", "Lofi Girl"],
   robots: { index: true, follow: true },
@@ -20,13 +21,13 @@ export const metadata: Metadata = {
     url: "https://dim75017.github.io/easy-license-platform/",
     siteName: "Easy License",
     title: "10,000+ human-made tracks. Zero AI-generated music.",
-    description: "Premium instrumental and background music for videos, livestreams, podcasts, brands, films and games. Artists are credited and paid directly.",
+    description: "10,000+ human-made tracks selected by music professionals for quality, consistency and real-world use. For creators and businesses.",
     images: [{ url: "https://dim75017.github.io/easy-license-platform/og.png", width: 1732, height: 876, alt: "Easy License premium human-made music catalogue" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "10,000+ human-made tracks. Zero AI-generated music.",
-    description: "Premium instrumental and background music for creators and brands. Real artists, credited and paid directly.",
+    description: "Professionally curated instrumental and background music for creators and businesses. Real artists, credited and paid directly.",
     images: ["https://dim75017.github.io/easy-license-platform/og.png"],
   },
 };

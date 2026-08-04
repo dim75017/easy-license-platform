@@ -7,14 +7,22 @@ import { Brand } from "./Brand";
 
 const navItems = [
   { href: "/catalog", label: "Music" },
-  { href: "/#creators", label: "For Creators" },
-  { href: "/#business", label: "For Business" },
-  { href: "/#artists", label: "Artists" },
+  { href: "/creators", label: "For Creators" },
+  { href: "/business", label: "For Business" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const isBusinessSurface = ["/business", "/sync", "/retail"].includes(pathname);
+  const accountHref = isBusinessSurface ? "/sync#brief" : "/creators#creator-plans";
+  const accountLabel = isBusinessSurface ? "Start a brief" : "Create account";
+
+  const isActive = (href: string) => {
+    if (href === "/creators") return pathname === "/creators" || pathname === "/pricing";
+    if (href === "/business") return isBusinessSurface;
+    return pathname === href;
+  };
 
   return (
     <header className="site-header">
@@ -34,7 +42,7 @@ export function SiteHeader() {
         <nav id="site-navigation" className={open ? "site-nav is-open" : "site-nav"} aria-label="Main navigation">
           {navItems.map((item, index) => (
             <Link
-              className={pathname === item.href ? "is-active" : ""}
+              className={isActive(item.href) ? "is-active" : ""}
               href={item.href}
               key={`${item.href}-${item.label}`}
               onClick={() => setOpen(false)}
@@ -45,12 +53,12 @@ export function SiteHeader() {
           ))}
           <div className="mobile-account-actions">
             <Link className="header-login" href="/app" onClick={() => setOpen(false)}>Log in</Link>
-            <Link className="button button-small button-primary" href="/pricing" onClick={() => setOpen(false)}>Create account</Link>
+            <Link className="button button-small button-primary" href={accountHref} onClick={() => setOpen(false)}>{accountLabel}</Link>
           </div>
         </nav>
         <div className="site-header-actions">
           <Link className="header-login" href="/app">Log in</Link>
-          <Link className="button button-small button-primary" href="/pricing">Create account</Link>
+          <Link className="button button-small button-primary" href={accountHref}>{accountLabel}</Link>
         </div>
       </div>
     </header>

@@ -8,50 +8,36 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("contains the finished Easy License landing experience", async () => {
-  const [page, layout, css, homeCss, cozyCss, packageJson] = await Promise.all([
+test("contains the focused Easy License brand gateway", async () => {
+  const [page, layout, css, homeCss, cozyCss, offerCss, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
+    source("app/offer-pages.css"),
     source("package.json"),
   ]);
 
-  assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by real artists\./i);
+  assert.match(page, /Human-made music\.[\s\S]*Curated to belong\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /One human-made catalogue\.[\s\S]*Two simple ways to license it/i);
-  assert.match(page, /Two offers\.[\s\S]*That&apos;s it\./i);
+  assert.match(page, /selected by music professionals for quality, consistency and real-world use/i);
+  assert.match(page, /Two offers\.[\s\S]*Two clear places to start\./i);
   assert.match(page, /EASY LICENSE FOR CREATORS/i);
   assert.match(page, /EASY LICENSE FOR BUSINESS/i);
-  assert.match(page, /artists are credited and paid directly/i);
-  assert.match(page, /€6\.67[\s\S]*€79\.99 billed yearly/i);
-  assert.match(page, /€16\.67[\s\S]*€199\.99 billed yearly/i);
-  assert.match(page, /Custom commission/i);
-  assert.match(page, /Commercial sync/i);
-  assert.match(page, /physical spaces/i);
-  assert.match(page, /Coming soon/i);
-  assert.match(page, /Music for Retail/i);
-  assert.match(page, /v5-offer-creators/);
-  assert.match(page, /v5-offer-business/);
-  assert.match(page, /v6-artist-statement/);
-  assert.match(page, /data-plan-glide/);
-  assert.doesNotMatch(page, /v5-catalogue-side/);
-  assert.doesNotMatch(page, /v5-hero-ticker/);
-  assert.doesNotMatch(page, /v6-catalogue-photo/);
-  assert.doesNotMatch(page, /v6-step-photo/);
-  assert.doesNotMatch(page, /v5-console-bar/);
-  assert.doesNotMatch(page, /v5-payout/);
-  assert.doesNotMatch(page, /v5-command/);
-  assert.doesNotMatch(page, /v5-sync"/);
-  assert.doesNotMatch(page, /v6-business"/);
+  assert.match(page, /href="\/creators"/i);
+  assert.match(page, /href="\/business"/i);
+  assert.match(page, /Not an upload dump\.[\s\S]*A catalogue with a point of view\./i);
+  assert.match(page, /Artists are credited and paid directly and fairly/i);
+  assert.doesNotMatch(page, /PricingCards|CatalogueExplorer|v5-offer-group|offer-faq/i);
+  assert.doesNotMatch(page, /Custom quote|Per project|EL \/ CREATOR|EL \/ BUSINESS/i);
   assert.doesNotMatch(page, /Music for Business/i);
-  assert.doesNotMatch(page, /Everyday → major/i);
-  assert.match(page, /Zero AI-generated music/i);
-  assert.match(page, /1,000\+[\s\S]*Artists around the world/i);
+  assert.match(page, /10,000\+[\s\S]*Human-made tracks/i);
+  assert.match(page, /0[\s\S]*AI-generated tracks/i);
+  assert.match(page, /1,000\+[\s\S]*Artists worldwide/i);
   assert.doesNotMatch(page, /Genre families/i);
-  assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
+  assert.match(layout, /offer-pages\.css/);
   assert.match(layout, /themeColor:\s*"#f3ece0"/i);
   assert.match(layout, /colorScheme:\s*"light"/i);
   assert.match(css, /--bg:\s*#07080d/i);
@@ -61,6 +47,11 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(cozyCss, /hero-producer\.jpg/);
   assert.match(cozyCss, /campaign-filmset\.jpg/);
   assert.match(cozyCss, /retail\/spa\.jpg/);
+  assert.match(offerCss, /\.gateway-page/);
+  assert.match(offerCss, /\.creators-landing/);
+  assert.match(offerCss, /\.business-landing/);
+  assert.match(offerCss, /offer-hero-creators/);
+  assert.match(offerCss, /offer-hero-business/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -68,6 +59,8 @@ test("contains the finished Easy License landing experience", async () => {
 
 test("defines every public and connected product surface", async () => {
   const routes = [
+    ["app/creators/page.tsx", /Make every upload/i],
+    ["app/business/page.tsx", /curated for work that matters/i],
     ["app/catalog/page.tsx", /Find the right feeling/i],
     ["app/pricing/page.tsx", /Two creator plans/i],
     ["app/sync/page.tsx", /One brief/i],
@@ -80,12 +73,23 @@ test("defines every public and connected product surface", async () => {
     assert.match(await source(path), expected, path);
   }
 
-  const [pricing, pricingCards, retail, sync] = await Promise.all([
+  const [creators, business, pricing, pricingCards, retail, sync] = await Promise.all([
+    source("app/creators/page.tsx"),
+    source("app/business/page.tsx"),
     source("app/pricing/page.tsx"),
     source("app/components/PricingCards.tsx"),
     source("app/retail/page.tsx"),
     source("app/sync/page.tsx"),
   ]);
+  assert.match(creators, /Professionally curated/i);
+  assert.match(creators, /<CatalogueExplorer compact \/>/i);
+  assert.match(creators, /<PricingCards expanded \/>/i);
+  assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
+  assert.match(business, /Commercial Sync/i);
+  assert.match(business, /Custom Commission/i);
+  assert.match(business, /Music for Retail · Coming soon/i);
+  assert.match(business, /By music professionals/i);
+  assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.match(pricing, /Easy License for Creators/i);
   assert.doesNotMatch(pricing, /<strong>Business<\/strong>|data-label="Business"/i);
   assert.doesNotMatch(pricingCards, /EL–03 \/ BUSINESS/i);
@@ -122,8 +126,8 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
 });
 
-test("ships the cozy Lofi Girl identity, simple account navigation and real artist profiles", async () => {
-  const [css, homeCss, cozyCss, layout, brand, header, catalogue, catalogueData, page, booth] = await Promise.all([
+test("ships the cozy Lofi Girl identity, focused navigation and real artist profiles", async () => {
+  const [css, homeCss, cozyCss, layout, brand, header, catalogue, catalogueData, page, business, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
@@ -133,6 +137,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     source("app/components/CatalogueExplorer.tsx"),
     source("app/data/catalog.ts"),
     source("app/page.tsx"),
+    source("app/business/page.tsx"),
     source("app/components/LicenseBooth.tsx"),
   ]);
 
@@ -152,6 +157,10 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(header, /Create account/);
   assert.match(header, /For Creators/);
   assert.match(header, /For Business/);
+  assert.match(header, /href:\s*"\/creators"/);
+  assert.match(header, /href:\s*"\/business"/);
+  assert.doesNotMatch(header, /\/#creators|\/#business/);
+  assert.match(header, /Start a brief/);
   assert.match(header, /mobile-account-actions/);
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"|label: "Pricing"/);
@@ -160,10 +169,9 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(catalogue, /featured-track/);
   assert.match(catalogueData, /Melting Snowman/);
   assert.match(catalogueData, /Drifting away/);
-  assert.match(page, /No prompts\.[\s\S]*Just people\./i);
+  assert.match(page, /Selected by professionals\.[\s\S]*Created by people\./i);
   assert.match(page, /\/artists\/charlee\.jpg/);
-  assert.match(page, /\/artists\/dario-lessing\.jpg/);
-  assert.match(page, /\/artists\/project-aer\.jpg/);
+  assert.match(business, /\/artists\/dario-lessing\.jpg/);
   assert.match(booth, /My channel/);
   assert.match(layout, /openGraph/);
   assert.match(layout, /og\.png/);

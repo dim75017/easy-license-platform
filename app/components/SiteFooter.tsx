@@ -11,21 +11,22 @@ export function SiteFooter() {
         </div>
         <div className="footer-links">
           <div>
-            <p className="footer-label">Product</p>
-            <Link href="/catalog">Catalogue</Link>
-            <Link href="/#creators">Creator plans</Link>
+            <p className="footer-label">Creators</p>
+            <Link href="/creators">Overview</Link>
+            <Link href="/creators#creator-plans">Creator &amp; Pro plans</Link>
             <Link href="/app">Client area</Link>
           </div>
           <div>
-            <p className="footer-label">Offers</p>
-            <Link href="/#creators">For Creators</Link>
-            <Link href="/#business">For Business</Link>
-            <Link href="/retail">Business: Retail · Coming soon</Link>
+            <p className="footer-label">Business</p>
+            <Link href="/business">Overview</Link>
+            <Link href="/sync">Commercial Sync &amp; Custom</Link>
+            <Link href="/retail">Music for Retail · Coming soon</Link>
           </div>
           <div>
-            <p className="footer-label">Legal</p>
+            <p className="footer-label">Music &amp; artists</p>
+            <Link href="/catalog">Catalogue</Link>
+            <Link href="/#artists">Our artists</Link>
             <a href="#">Licence terms</a>
-            <a href="#">Privacy</a>
             <a href="#">Artist policy</a>
           </div>
         </div>
