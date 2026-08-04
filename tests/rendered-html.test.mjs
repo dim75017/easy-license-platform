@@ -147,9 +147,9 @@ test("ships a constrained D1 lead schema and current worker compatibility", asyn
   assert.match(migration, /CREATE TABLE `leads`/);
   assert.match(migration, /PRAGMA optimize/);
   assert.match(hosting, /"d1": "DB"/);
-  assert.match(vite, /compatibility_date: "2026-08-04"/);
+  assert.match(vite, /compatibility_date: "2026-08-03"/);
   assert.doesNotMatch(vite, /nodejs_compat/);
-  assert.match(wrangler, /"compatibility_date": "2026-08-04"/);
+  assert.match(wrangler, /"compatibility_date": "2026-08-03"/);
   assert.match(wrangler, /"binding": "DB"/);
   assert.doesNotMatch(wrangler, /nodejs_compat/);
 });
