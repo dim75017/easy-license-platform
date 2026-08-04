@@ -5,25 +5,25 @@ import "./home-v5.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),
   title: {
-    default: "Easy License — Clear the track",
+    default: "Easy License — 10,000+ human-made tracks",
     template: "%s — Easy License",
   },
-  description: "Artist-made music with clear licensing for creators, client work and commercial stories. Powered by Lofi Girl.",
+  description: "Premium instrumental and background music for creators and brands. Explore 10,000+ human-made tracks, with zero AI-generated music and clear licensing. Powered by Lofi Girl.",
   applicationName: "Easy License",
-  keywords: ["music licensing", "creator music", "sync licensing", "Lofi Girl"],
+  keywords: ["music licensing", "background music", "instrumental music", "human-made music", "creator music", "sync licensing", "Lofi Girl"],
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     url: "https://dim75017.github.io/easy-license-platform/",
     siteName: "Easy License",
-    title: "Easy License — Clear the track",
-    description: "Artist-made music, clear rights and a direct route from track to publish.",
-    images: [{ url: "https://dim75017.github.io/easy-license-platform/og.png", width: 1732, height: 876, alt: "Easy License music clearance signal router" }],
+    title: "10,000+ human-made tracks. Zero AI-generated music.",
+    description: "Premium instrumental and background music for videos, livestreams, podcasts, brands, films and games. Artists are credited and paid directly.",
+    images: [{ url: "https://dim75017.github.io/easy-license-platform/og.png", width: 1732, height: 876, alt: "Easy License premium human-made music catalogue" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Easy License — Clear the track",
-    description: "Artist-made music, clear rights and a direct route from track to publish.",
+    title: "10,000+ human-made tracks. Zero AI-generated music.",
+    description: "Premium instrumental and background music for creators and brands. Real artists, credited and paid directly.",
     images: ["https://dim75017.github.io/easy-license-platform/og.png"],
   },
 };

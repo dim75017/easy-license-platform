@@ -17,13 +17,15 @@ test("contains the finished Easy License landing experience", async () => {
     source("package.json"),
   ]);
 
-  assert.match(page, /Clear[\s\S]*the track\.[\s\S]*Keep moving\./i);
+  assert.match(page, /10,000\+[\s\S]*Human-made[\s\S]*tracks\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /Built around[\s\S]*how you publish/i);
-  assert.match(page, /One brief, two routes/i);
+  assert.match(page, /Start at €7\.99\.[\s\S]*Scale when the work does\./i);
+  assert.match(page, /Go beyond the subscription/i);
   assert.match(page, /Music for Business/i);
   assert.match(page, /Artist paid directly/i);
-  assert.match(layout, /Easy License — Clear the track/);
+  assert.match(page, /Zero AI-generated music/i);
+  assert.match(page, /className="v5-proof-band"/);
+  assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /--v5-blue:\s*#514cff/i);
   assert.match(css, /@media \(max-width: 640px\)/);
@@ -99,7 +101,7 @@ test("ships the signal-router identity, simple account navigation and real artis
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
-  assert.match(page, /Every track[\s\S]*has a name/i);
+  assert.match(page, /No prompts\.[\s\S]*Just people\./i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(page, /\/artists\/project-aer\.jpg/);
   assert.match(booth, /My channel/);
