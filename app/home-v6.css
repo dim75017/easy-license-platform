@@ -89,7 +89,7 @@
 .site-header-inner,
 .page-scrolled .site-header-inner {
   width: min(1500px, calc(100% - 64px));
-  min-height: 82px;
+  min-height: 88px;
 }
 
 .site-header .brand {
@@ -120,7 +120,7 @@
   gap: 5px;
   color: var(--cozy-night);
   font-family: "Unbounded", sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 580;
   letter-spacing: -.055em;
 }
@@ -131,7 +131,7 @@
 
 .site-header .brand-powered {
   color: rgba(41, 40, 50, .62);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 650;
   letter-spacing: .045em;
   text-transform: none;
@@ -146,7 +146,7 @@
   border-radius: 999px;
   padding: 11px 14px;
   color: rgba(41, 40, 50, .7);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 590;
 }
 
@@ -174,7 +174,7 @@
 .site-header .header-login {
   min-height: 44px;
   color: rgba(41, 40, 50, .76);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 620;
 }
 
@@ -189,7 +189,7 @@
   padding: 12px 20px;
   background: var(--cozy-night);
   color: var(--cozy-oat);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 720;
   letter-spacing: 0;
   text-transform: none;
@@ -951,6 +951,35 @@
   background: rgba(185, 120, 100, .09);
 }
 
+.el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-row {
+  grid-template-columns: 40px minmax(150px, 1fr) 110px 54px 48px 34px;
+}
+
+.el-v6 .v6-catalogue-photo {
+  width: 100%;
+  margin: 10px 0 0;
+  overflow: hidden;
+  border: 1px solid rgba(243, 236, 224, .16);
+  border-radius: 18px;
+  background: #15141a;
+}
+
+.el-v6 .v6-catalogue-photo img {
+  display: block;
+  width: 100%;
+  height: 136px;
+  object-fit: cover;
+  filter: sepia(.14) saturate(.72) contrast(.96);
+}
+
+.el-v6 .v6-catalogue-photo figcaption {
+  padding: 10px 12px;
+  color: rgba(243, 236, 224, .68);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* The artists provide the colour */
 
 .el-v6 .v5-artists {
@@ -961,6 +990,65 @@
 .el-v6 .v5-artist-header > p:last-child {
   color: rgba(41, 40, 50, .63);
   font-size: 17px;
+}
+
+.el-v6 .v6-artist-statement {
+  display: grid;
+  max-width: 1440px;
+  margin: -22px auto 64px;
+  grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr);
+  overflow: hidden;
+  border: 1px solid var(--cozy-rule);
+  border-radius: 26px;
+  background: var(--cozy-paper);
+  box-shadow: 0 18px 50px rgba(41, 40, 50, .07);
+}
+
+.el-v6 .v6-artist-statement figure {
+  min-height: 280px;
+  margin: 0;
+}
+
+.el-v6 .v6-artist-statement img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 36%;
+  filter: saturate(.72) sepia(.08) contrast(.96);
+}
+
+.el-v6 .v6-artist-statement > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  padding: 42px clamp(30px, 5vw, 78px);
+}
+
+.el-v6 .v6-artist-statement span {
+  color: #8e5546;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: .08em;
+}
+
+.el-v6 .v6-artist-statement h3 {
+  max-width: 760px;
+  margin: 16px 0;
+  color: var(--cozy-night);
+  font-size: clamp(31px, 3vw, 50px);
+  font-weight: 630;
+  letter-spacing: -.052em;
+  line-height: .98;
+}
+
+.el-v6 .v6-artist-statement p {
+  max-width: 650px;
+  margin: 0;
+  color: rgba(41, 40, 50, .66);
+  font-size: 17px;
+  line-height: 1.5;
 }
 
 .el-v6 .v5-artist-wall {
@@ -1095,7 +1183,9 @@
 }
 
 .el-v6 .v5-sync-custom {
-  background: var(--cozy-night);
+  background:
+    linear-gradient(92deg, rgba(41, 40, 50, .98) 0%, rgba(41, 40, 50, .9) 52%, rgba(41, 40, 50, .42) 100%),
+    url("/images/stock/cozy-workspace.jpg") center / cover;
   color: var(--cozy-oat);
 }
 
@@ -1242,6 +1332,35 @@
   border-radius: 12px;
 }
 
+.site-footer .footer-main {
+  padding-top: 6px;
+}
+
+.site-footer .footer-brand > p {
+  max-width: 350px;
+  color: rgba(243, 236, 224, .66);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.site-footer .footer-label {
+  color: rgba(243, 236, 224, .5);
+  font-size: 11px;
+}
+
+.site-footer .footer-links > div {
+  gap: 11px;
+}
+
+.site-footer .footer-links a {
+  font-size: 14px;
+}
+
+.site-footer .footer-bottom {
+  color: rgba(243, 236, 224, .5);
+  font-size: 12px;
+}
+
 @keyframes v6Breathe {
   0%, 100% { opacity: .55; scale: .98; }
   50% { opacity: 1; scale: 1.025; }
@@ -1294,6 +1413,10 @@
 
   .el-v6 .v5-artist-wall {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .el-v6 .v6-artist-statement {
+    grid-template-columns: .7fr 1.3fr;
   }
 }
 
@@ -1393,6 +1516,15 @@
     grid-template-columns: 1fr;
     gap: 52px;
   }
+
+  .el-v6 .v6-artist-statement {
+    margin-top: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .el-v6 .v6-artist-statement figure {
+    min-height: 340px;
+  }
 }
 
 @media (max-width: 700px) {
@@ -1468,6 +1600,37 @@
   .el-v6 .v5-hero-ticker {
     height: 46px;
     font-size: 9px;
+  }
+
+  .el-v6 .v6-artist-statement {
+    margin-bottom: 44px;
+    border-radius: 22px;
+  }
+
+  .el-v6 .v6-artist-statement figure {
+    min-height: 265px;
+  }
+
+  .el-v6 .v6-artist-statement > div {
+    padding: 30px 24px 34px;
+  }
+
+  .el-v6 .v6-artist-statement h3 {
+    font-size: 34px;
+  }
+
+  .el-v6 .v6-artist-statement p {
+    font-size: 16px;
+  }
+
+  .el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+  }
+
+  .el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-tag,
+  .el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-bpm,
+  .el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-duration {
+    display: none;
   }
 
   .el-v6 .v5-proof-band {

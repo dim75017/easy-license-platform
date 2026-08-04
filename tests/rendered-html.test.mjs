@@ -18,12 +18,16 @@ test("contains the finished Easy License landing experience", async () => {
     source("package.json"),
   ]);
 
-  assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by people\./i);
+  assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by real artists\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
   assert.match(page, /Start at €7\.99\.[\s\S]*Scale when the work does\./i);
   assert.match(page, /Go beyond the subscription/i);
   assert.match(page, /Music for Business/i);
   assert.match(page, /Artist paid directly/i);
+  assert.match(page, /Paid directly[\s\S]*Fairer by design/i);
+  assert.match(page, /v6-catalogue-photo/);
+  assert.match(page, /v6-artist-statement/);
+  assert.doesNotMatch(page, /v5-hero-ticker/);
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
@@ -112,6 +116,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
+  assert.match(catalogue, /no-waveform/);
   assert.match(page, /No prompts\.[\s\S]*Just people\./i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(page, /\/artists\/project-aer\.jpg/);
@@ -126,7 +131,22 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/artists/project-aer.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
     access(new URL("public/artists/meadow.jpg", root)),
+    access(new URL("public/images/stock/vinyl-turntable.jpg", root)),
+    access(new URL("public/images/stock/studio-artist.jpg", root)),
+    access(new URL("public/images/stock/cozy-workspace.jpg", root)),
+    access(new URL("public/images/stock/ATTRIBUTION.md", root)),
   ]);
+});
+
+test("keeps the connected workspace readable and artist-led", async () => {
+  const [layout, workspaceCss] = await Promise.all([
+    source("app/layout.tsx"),
+    source("app/workspace-v2.css"),
+  ]);
+
+  assert.match(layout, /workspace-v2\.css/);
+  assert.match(workspaceCss, /studio-artist\.jpg/);
+  assert.match(workspaceCss, /font-size:\s*34px/);
 });
 
 test("build emits product assets and removes starter artifacts", async () => {

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./home-v5.css";
 import "./home-v6.css";
+import "./workspace-v2.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),

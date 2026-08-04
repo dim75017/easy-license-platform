@@ -29,7 +29,7 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <div className={compact ? "catalogue-explorer is-compact" : "catalogue-explorer"}>
+    <div className={compact ? "catalogue-explorer is-compact no-waveform" : "catalogue-explorer"}>
       <div className="catalogue-toolbar">
         <label className="search-field">
           <span aria-hidden="true">⌕</span>
@@ -74,11 +74,11 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
                 <strong>{track.title}</strong>
                 <span>{track.artist}</span>
               </div>
-              <div className="track-wave" aria-hidden="true">
+              {!compact && <div className="track-wave" aria-hidden="true">
                 {wave.map((height, index) => (
                   <i key={index} style={{ height: `${height}%` }} className={isPlaying && index < 7 ? "active" : ""} />
                 ))}
-              </div>
+              </div>}
               <div className="track-tag"><span>{track.mood}</span><small>{track.use}</small></div>
               <div className="track-bpm"><strong>{track.bpm}</strong><small>BPM</small></div>
               <span className="track-duration">{track.duration}</span>

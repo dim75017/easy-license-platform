@@ -46,7 +46,7 @@ export function CreatorWorkspace() {
         {active === "overview" && (
           <>
             <div className="welcome-row">
-              <div><p>Good evening 👋</p><h2>Your music rights, all clear.</h2><span>Everything you need before your next upload.</span></div>
+              <div><p>Made by real artists</p><h2>Ready for your next upload.</h2><span>Your music, your rights and your proof of licence in one calm place.</span></div>
               <button className="button button-primary" type="button" onClick={() => setActive("catalogue")}>Browse catalogue</button>
             </div>
             <div className="metric-grid creator-metrics">

@@ -29,7 +29,7 @@ export function DashboardShell({
       <aside className="dashboard-sidebar">
         <div className="dashboard-brand-row">
           <Brand compact />
-          <span className={area === "admin" ? "area-pill area-admin" : "area-pill"}>{area}</span>
+          <span className={area === "admin" ? "area-pill area-admin" : "area-pill"}>{area === "admin" ? "Admin" : "Creator"}</span>
         </div>
         <nav className="dashboard-nav" aria-label={`${area} navigation`}>
           <span className="dashboard-nav-label">Workspace</span>
