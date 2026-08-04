@@ -126,7 +126,7 @@ export function AdminWorkspace() {
         {active === "catalogue" && <CatalogueAdmin />}
         {active === "retail" && (
           <section className="dashboard-panel detail-view">
-            <div className="panel-heading"><div><span>EARLY ACCESS</span><h3>Music for spaces interest</h3></div><button className="button button-small button-primary" type="button">Export 41 leads</button></div>
+            <div className="panel-heading"><div><span>EARLY ACCESS</span><h3>Music for Retail interest</h3></div><button className="button button-small button-primary" type="button">Export 41 leads</button></div>
             <div className="retail-kpis"><div><span>☕</span><strong>17</strong><small>Cafés & restaurants</small></div><div><span>▦</span><strong>11</strong><small>Retail stores</small></div><div><span>⌂</span><strong>8</strong><small>Hotels & offices</small></div><div><span>◎</span><strong>5</strong><small>Multi-location</small></div></div>
             <div className="notice-card"><span>↗</span><p><strong>Second-phase product</strong>Use this demand signal to validate pricing, public-performance rights and multi-location controls before development starts.</p></div>
           </section>

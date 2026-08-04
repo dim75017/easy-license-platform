@@ -5,8 +5,8 @@ import { useState } from "react";
 
 export function PricingCards({ expanded = false }: { expanded?: boolean }) {
   const [annual, setAnnual] = useState(true);
-  const creatorPrice = annual ? "6.58" : "7.99";
-  const proPrice = annual ? "16.49" : "19.99";
+  const creatorPrice = annual ? "6.67" : "7.99";
+  const proPrice = annual ? "16.67" : "19.99";
 
   return (
     <div className="pricing-block">
@@ -22,7 +22,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <div><p>Creator</p><span>For your own content</span></div>
           </div>
           <div className="price"><span>€</span><strong key={creatorPrice}>{creatorPrice}</strong><small>/ month</small></div>
-          {annual && <p className="billing-note">€79 billed yearly</p>}
+          {annual && <p className="billing-note">€79.99 billed yearly</p>}
           {!annual && <p className="billing-note">Cancel whenever you want</p>}
           <ul className="feature-list">
             <li><i>✓</i> 1 channel per platform</li>
@@ -44,41 +44,20 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <div><p>Pro</p><span>For multi-channel creators</span></div>
           </div>
           <div className="price"><span>€</span><strong key={proPrice}>{proPrice}</strong><small>/ month</small></div>
-          {annual && <p className="billing-note">€197.90 billed yearly</p>}
+          {annual && <p className="billing-note">€199.99 billed yearly</p>}
           {!annual && <p className="billing-note">Cancel whenever you want</p>}
           <ul className="feature-list">
             <li><i>✓</i> Up to 3 channels per platform</li>
             <li><i>✓</i> YouTube, Twitch, podcasts & social</li>
-            <li><i>✓</i> Freelance client work</li>
+            <li><i>✓</i> Cross-platform social publishing</li>
             <li><i>✓</i> Team-ready licence workspace</li>
             <li><i>✓</i> Priority Content ID support</li>
             {expanded && <li><i>✓</i> Centralised downloads and licences</li>}
           </ul>
           <Link className="button button-light button-full" href="/app">License my channels</Link>
-          <p className="fine-print">For small teams and freelancers. Large agencies need a business licence.</p>
+          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Easy License for Business.</p>
         </article>
 
-        {expanded && (
-          <article className="price-card price-card-business" data-pointer-glow="">
-            <span className="plan-code">EL–03 / BUSINESS</span>
-            <div className="price-card-top">
-              <span className="plan-icon plan-business">B</span>
-              <div><p>Business</p><span>For brands & agencies</span></div>
-            </div>
-            <div className="price price-custom"><strong>Let&apos;s talk</strong></div>
-            <p className="billing-note">A licence shaped around the project</p>
-            <ul className="feature-list">
-              <li><i>✓</i> Brand campaigns & paid media</li>
-              <li><i>✓</i> Multiple clients and markets</li>
-              <li><i>✓</i> Existing catalogue sync</li>
-              <li><i>✓</i> Custom composition available</li>
-              <li><i>✓</i> Dedicated rights support</li>
-              <li><i>✓</i> Project-based clearances</li>
-            </ul>
-            <Link className="button button-ghost button-full" href="/sync">Scope a music project</Link>
-            <p className="fine-print">Quoted according to media, territory, term and exclusivity.</p>
-          </article>
-        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
-  title: "Music for Business — Coming soon",
+  title: "Music for Retail — Coming soon",
   description: "Human-made music for cafés, hotels, retail stores and workspaces. Simple monthly access, curated for real spaces.",
 };
 
@@ -13,7 +13,7 @@ export default function RetailPage() {
       <main className="retail-v2">
         <section className="retail-v2-hero">
           <div className="retail-v2-hero-copy" data-reveal="left">
-            <p className="retail-v2-kicker"><span>COMING SOON</span> Music for Business</p>
+            <p className="retail-v2-kicker"><span>COMING SOON</span> Music for Retail</p>
             <h1>Good music.<br />One less thing<br /><em>to think about.</em></h1>
             <p className="retail-v2-lead">A simple way for cafés, stores, hotels and workspaces to sound as considered as they look. Human-made music, curated for the room, without the headache.</p>
             <div className="retail-v2-actions">
@@ -27,7 +27,7 @@ export default function RetailPage() {
           </figure>
         </section>
 
-        <section className="retail-v2-proof" aria-label="Music for Business principles" data-reveal="group">
+        <section className="retail-v2-proof" aria-label="Music for Retail principles" data-reveal="group">
           <div><strong>Easy to run</strong><span>Set the mood once. Let it carry the room.</span></div>
           <div><strong>Made by people</strong><span>Zero AI music. Real artists, paid fairly.</span></div>
           <div><strong>Priced for places</strong><span>Clear monthly plans, built to stay affordable.</span></div>
@@ -58,7 +58,7 @@ export default function RetailPage() {
         </section>
 
         <section className="retail-v2-access" id="retail-access">
-          <div data-reveal="left"><p className="retail-v2-kicker"><span>EARLY ACCESS</span> Be part of the first rooms</p><h2>Make your space<br />sound like yours.</h2><p>We are opening the first pilot with venues that care about their atmosphere. Join the list and help shape the simple, affordable version of Music for Business.</p><small>No commitment. We will only use your details to contact you about the pilot.</small></div>
+          <div data-reveal="left"><p className="retail-v2-kicker"><span>EARLY ACCESS</span> Be part of the first rooms</p><h2>Make your space<br />sound like yours.</h2><p>We are opening the first pilot with venues that care about their atmosphere. Join the list and help shape the simple, affordable version of Music for Retail.</p><small>No commitment. We will only use your details to contact you about the pilot.</small></div>
           <div className="retail-v2-form" data-reveal="scale"><div><span>FIRST PILOT</span><small>Opening soon</small></div><LeadForm type="retail_waitlist" /></div>
         </section>
       </main>

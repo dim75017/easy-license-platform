@@ -20,9 +20,10 @@ test("contains the finished Easy License landing experience", async () => {
 
   assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by real artists\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /From €6\.67\/month\.[\s\S]*Choose the rights you need\./i);
-  assert.match(page, /Go beyond the subscription/i);
-  assert.match(page, /Music for Business/i);
+  assert.match(page, /One human-made catalogue\.[\s\S]*Two simple ways to license it/i);
+  assert.match(page, /Two offers\.[\s\S]*That&apos;s it\./i);
+  assert.match(page, /EASY LICENSE FOR CREATORS/i);
+  assert.match(page, /EASY LICENSE FOR BUSINESS/i);
   assert.match(page, /artists are credited and paid directly/i);
   assert.match(page, /€6\.67[\s\S]*€79\.99 billed yearly/i);
   assert.match(page, /€16\.67[\s\S]*€199\.99 billed yearly/i);
@@ -30,7 +31,9 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(page, /Commercial sync/i);
   assert.match(page, /physical spaces/i);
   assert.match(page, /Coming soon/i);
-  assert.match(page, /Music for Business\.\s*<br \/>Made simple/i);
+  assert.match(page, /Music for Retail/i);
+  assert.match(page, /v5-offer-creators/);
+  assert.match(page, /v5-offer-business/);
   assert.match(page, /v6-artist-statement/);
   assert.match(page, /data-plan-glide/);
   assert.doesNotMatch(page, /v5-catalogue-side/);
@@ -40,6 +43,9 @@ test("contains the finished Easy License landing experience", async () => {
   assert.doesNotMatch(page, /v5-console-bar/);
   assert.doesNotMatch(page, /v5-payout/);
   assert.doesNotMatch(page, /v5-command/);
+  assert.doesNotMatch(page, /v5-sync"/);
+  assert.doesNotMatch(page, /v6-business"/);
+  assert.doesNotMatch(page, /Music for Business/i);
   assert.doesNotMatch(page, /Everyday → major/i);
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /1,000\+[\s\S]*Artists around the world/i);
@@ -63,7 +69,7 @@ test("contains the finished Easy License landing experience", async () => {
 test("defines every public and connected product surface", async () => {
   const routes = [
     ["app/catalog/page.tsx", /Find the right feeling/i],
-    ["app/pricing/page.tsx", /One clear plan/i],
+    ["app/pricing/page.tsx", /Two creator plans/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
@@ -73,6 +79,19 @@ test("defines every public and connected product surface", async () => {
   for (const [path, expected] of routes) {
     assert.match(await source(path), expected, path);
   }
+
+  const [pricing, pricingCards, retail, sync] = await Promise.all([
+    source("app/pricing/page.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("app/retail/page.tsx"),
+    source("app/sync/page.tsx"),
+  ]);
+  assert.match(pricing, /Easy License for Creators/i);
+  assert.doesNotMatch(pricing, /<strong>Business<\/strong>|data-label="Business"/i);
+  assert.doesNotMatch(pricingCards, /EL–03 \/ BUSINESS/i);
+  assert.match(retail, /Music for Retail — Coming soon/i);
+  assert.doesNotMatch(retail, /Music for Business/i);
+  assert.match(sync, /Easy License for Business/i);
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
@@ -131,8 +150,11 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(brand, /className="brand-accent">license<\/span>/);
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
+  assert.match(header, /For Creators/);
+  assert.match(header, /For Business/);
   assert.match(header, /mobile-account-actions/);
   assert.match(header, /aria-controls="site-navigation"/);
+  assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"|label: "Pricing"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
   assert.match(catalogue, /featured-track/);

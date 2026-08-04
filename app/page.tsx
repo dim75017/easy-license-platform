@@ -47,10 +47,10 @@ export default function Home() {
               <span className="v5-hero-human">Made by real artists.</span>
             </h1>
             <div className="v5-hero-intro" data-reveal="up" data-reveal-delay="2">
-              <p>A deeply curated catalogue of instrumental and background music for videos, livestreams, podcasts, brands, films and games—all licensed simply in one place.</p>
+              <p>One human-made catalogue. Two simple ways to license it: for creators publishing online, and for businesses using music commercially or in physical spaces.</p>
               <div>
-                <Link className="v5-button v5-button-dark" href="/catalog"><span>Find your sound</span><i>↗</i></Link>
-                <Link className="v5-inline-link" href="/pricing">Plans from €6.67/month <span>→</span></Link>
+                <Link className="v5-button v5-button-dark" href="#creators"><span>For Creators</span><i>↓</i></Link>
+                <Link className="v5-inline-link" href="#business">For Business <span>↓</span></Link>
               </div>
             </div>
           </div>
@@ -83,74 +83,85 @@ export default function Home() {
         <section className="v5-route" aria-labelledby="route-title">
           <div className="v5-route-intro">
             <div className="v5-route-sticky" data-reveal="left">
-              <p className="v5-kicker"><span>01 / Built for every brief</span> One catalogue, countless uses</p>
-              <h2 id="route-title">One catalogue.<br />Every kind of work.</h2>
-              <p>From tomorrow&apos;s upload to a major campaign, find music that fits the feeling, the format and the rights you need.</p>
-              <Link className="v5-inline-link" href="/app">See how it works <span>→</span></Link>
+              <p className="v5-kicker"><span>01 / Choose your path</span> One catalogue, two clear offers</p>
+              <h2 id="route-title">For creators.<br />For businesses.</h2>
+              <p>Start with how you plan to use the music. We&apos;ll take you straight to the right licence.</p>
             </div>
           </div>
 
-          <div className="v5-route-steps">
-            <article className="v5-route-step v5-step-acid" data-reveal="right">
-              <div className="v5-step-index"><span>01</span><small>CREATE DAILY</small></div>
-              <div className="v5-step-copy"><h3>Sound better on<br />every upload.</h3><p>YouTube videos, Shorts, Reels, livestreams, podcasts and social content—without generic background music.</p></div>
-            </article>
+          <div className="v5-route-steps v5-route-choices">
+            <Link className="v5-route-step v5-step-acid" href="#creators" data-reveal="right">
+              <div className="v5-step-index"><span>01</span><small>EASY LICENSE FOR CREATORS</small></div>
+              <div className="v5-step-copy"><h3>Music for every<br />upload and live.</h3><p>For YouTubers, streamers, influencers, podcasters and everyone publishing on social platforms.</p><strong className="v5-step-cta">See Creator &amp; Pro plans →</strong></div>
+            </Link>
 
-            <article className="v5-route-step v5-step-blue" data-reveal="right">
-              <div className="v5-step-index"><span>02</span><small>CLIENT WORK</small></div>
-              <div className="v5-step-copy"><h3>Give every brief<br />a real soundtrack.</h3><p>Clear music for freelance edits, branded content, product films and agency work from one place.</p></div>
-            </article>
-
-            <article className="v5-route-step v5-step-coral" data-reveal="right">
-              <div className="v5-step-index"><span>03</span><small>GO BIGGER</small></div>
-              <div className="v5-step-copy"><h3>Scale from content<br />to campaigns.</h3><p>License existing tracks or commission original music for films, games, campaigns and brand worlds.</p></div>
-            </article>
+            <Link className="v5-route-step v5-step-business" href="#business" data-reveal="right">
+              <div className="v5-step-index"><span>02</span><small>EASY LICENSE FOR BUSINESS</small></div>
+              <div className="v5-step-copy"><h3>Music for commercial<br />work and spaces.</h3><p>For campaigns, films, games, custom commissions and physical locations, with Music for Retail coming soon.</p><strong className="v5-step-cta">Explore business licensing →</strong></div>
+            </Link>
           </div>
         </section>
 
-        <section className="v5-plans" id="creators" aria-labelledby="plans-title">
+        <section className="v5-plans" id="offers" aria-labelledby="plans-title">
           <div className="v5-section-head" data-reveal="group">
-            <p className="v5-kicker"><span>02 / Simple access</span> Choose the licence that fits</p>
-            <h2 id="plans-title">From €6.67/month.<br />Choose the rights you need.</h2>
-            <p>Simple subscriptions for creators, project licences for commercial work, and original music made to order.</p>
+            <p className="v5-kicker"><span>02 / The offers</span> Two ways to use Easy License</p>
+            <h2 id="plans-title">Two offers.<br />That&apos;s it.</h2>
+            <p>One for people publishing content online. One for companies using music commercially or in physical spaces.</p>
           </div>
 
-          <div className="v5-plan-board" data-reveal="group">
-            <Link className="v5-plan-row v5-plan-creator" href="/pricing" data-plan-glide="">
-              <span className="v5-plan-number">01</span>
-              <div className="v5-plan-name"><small>VIDEOS · LIVE · PODCASTS · SOCIAL</small><strong>Creator</strong></div>
-              <p>License music for one channel per supported platform, including eligible monetised content.</p>
-              <div className="v5-plan-cost"><strong>€6.67</strong><span>/ month · €79.99 billed yearly</span></div>
-              <i aria-hidden="true">↗</i>
-            </Link>
-            <Link className="v5-plan-row v5-plan-pro" href="/pricing" data-plan-glide="">
-              <span className="v5-plan-number">02</span>
-              <div className="v5-plan-name"><small>MORE CHANNELS · CLIENT WORK</small><strong>Pro</strong></div>
-              <p>Cover up to three channels plus eligible freelance and client projects.</p>
-              <div className="v5-plan-cost"><strong>€16.67</strong><span>/ month · €199.99 billed yearly</span></div>
-              <i aria-hidden="true">↗</i>
-            </Link>
-            <Link className="v5-plan-row v5-plan-sync" href="/sync" data-plan-glide="">
-              <span className="v5-plan-number">03</span>
-              <div className="v5-plan-name"><small>COMMERCIAL USE · FILM · ADS · GAMES</small><strong>Commercial sync</strong></div>
-              <p>License an existing catalogue track for a commercial production, campaign, film or game.</p>
-              <div className="v5-plan-cost"><strong>Per project</strong><span>rights + clear quote</span></div>
-              <i aria-hidden="true">↗</i>
-            </Link>
-            <Link className="v5-plan-row v5-plan-custom" href="/sync" data-plan-glide="">
-              <span className="v5-plan-number">04</span>
-              <div className="v5-plan-name"><small>EXCLUSIVE MUSIC · MADE TO ORDER</small><strong>Custom commission</strong></div>
-              <p>Commission original music created around your story, edit, timing and brand world.</p>
-              <div className="v5-plan-cost"><strong>Custom quote</strong><span>built from your brief</span></div>
-              <i aria-hidden="true">↗</i>
-            </Link>
-            <Link className="v5-plan-row v5-plan-retail" href="/retail" data-plan-glide="">
-              <span className="v5-plan-number">05</span>
-              <div className="v5-plan-name"><small>CAFÉS · RETAIL · HOTELS · SPAS</small><strong>Music for Business</strong></div>
-              <p>Human-made music for physical spaces: cafés, shops, restaurants, hotels, studios and spas.</p>
-              <div className="v5-plan-cost"><strong>Coming soon</strong><span>join early access</span></div>
-              <i aria-hidden="true">↗</i>
-            </Link>
+          <div className="v5-offer-stack">
+            <article className="v5-offer-group v5-offer-creators" id="creators" aria-labelledby="creators-title" data-reveal="group">
+              <div className="v5-offer-group-head">
+                <div><span>01</span><small>EASY LICENSE FOR CREATORS</small></div>
+                <div><h3 id="creators-title">For YouTubers, streamers and social creators.</h3><p>Publish on YouTube, Twitch, TikTok, Instagram, podcasts and other social platforms with one simple subscription.</p></div>
+              </div>
+              <div className="v5-plan-board" data-reveal="group">
+                <Link className="v5-plan-row v5-plan-creator" href="/pricing" data-plan-glide="">
+                  <span className="v5-plan-number">01</span>
+                  <div className="v5-plan-name"><small>VIDEOS · LIVE · PODCASTS · SOCIAL</small><strong>Creator</strong></div>
+                  <p>License music for one channel per supported platform, including eligible monetised content.</p>
+                  <div className="v5-plan-cost"><strong>€6.67</strong><span>/ month · €79.99 billed yearly</span></div>
+                  <i aria-hidden="true">↗</i>
+                </Link>
+                <Link className="v5-plan-row v5-plan-pro" href="/pricing" data-plan-glide="">
+                  <span className="v5-plan-number">02</span>
+                  <div className="v5-plan-name"><small>MORE CHANNELS · CREATOR TEAMS</small><strong>Pro</strong></div>
+                  <p>Cover up to three channels for creators publishing across multiple profiles and platforms.</p>
+                  <div className="v5-plan-cost"><strong>€16.67</strong><span>/ month · €199.99 billed yearly</span></div>
+                  <i aria-hidden="true">↗</i>
+                </Link>
+              </div>
+            </article>
+
+            <article className="v5-offer-group v5-offer-business" id="business" aria-labelledby="business-offer-title" data-reveal="group">
+              <div className="v5-offer-group-head">
+                <div><span>02</span><small>EASY LICENSE FOR BUSINESS</small></div>
+                <div><h3 id="business-offer-title">For commercial projects and physical spaces.</h3><p>License existing music, commission something original, or prepare the soundtrack for your venue.</p></div>
+              </div>
+              <div className="v5-plan-board" data-reveal="group">
+                <Link className="v5-plan-row v5-plan-sync" href="/sync" data-plan-glide="">
+                  <span className="v5-plan-number">01</span>
+                  <div className="v5-plan-name"><small>EXISTING MUSIC · FILM · ADS · GAMES</small><strong>Commercial sync</strong></div>
+                  <p>License an existing catalogue track for a commercial production, campaign, film or game.</p>
+                  <div className="v5-plan-cost"><strong>Per project</strong><span>rights + clear quote</span></div>
+                  <i aria-hidden="true">↗</i>
+                </Link>
+                <Link className="v5-plan-row v5-plan-custom" href="/sync" data-plan-glide="">
+                  <span className="v5-plan-number">02</span>
+                  <div className="v5-plan-name"><small>ORIGINAL MUSIC · MADE TO ORDER</small><strong>Custom commission</strong></div>
+                  <p>Commission original music created around your story, edit, timing and brand world.</p>
+                  <div className="v5-plan-cost"><strong>Custom quote</strong><span>built from your brief</span></div>
+                  <i aria-hidden="true">↗</i>
+                </Link>
+                <Link className="v5-plan-row v5-plan-retail" href="/retail" data-plan-glide="">
+                  <span className="v5-plan-number">03</span>
+                  <div className="v5-plan-name"><small>CAFÉS · RETAIL · HOTELS · SPAS</small><strong>Music for Retail</strong></div>
+                  <p>Human-made music for cafés, shops, restaurants, hotels, studios and spas.</p>
+                  <div className="v5-plan-cost"><strong>Coming soon</strong><span>join early access</span></div>
+                  <i aria-hidden="true">↗</i>
+                </Link>
+              </div>
+            </article>
           </div>
         </section>
 
@@ -197,38 +208,10 @@ export default function Home() {
 
         </section>
 
-        <section className="v5-sync" aria-labelledby="sync-title">
-          <div className="v5-sync-title" data-reveal="left">
-            <p className="v5-kicker"><span>05 / Sync</span> Go beyond the subscription</p>
-            <h2 id="sync-title">Need a sound<br />no one else has?</h2>
-            <p>That is a custom commission: original music, created from the ground up with an artist around your brief. Existing catalogue tracks are cleared separately through Sync licensing.</p>
-          </div>
-          <div className="v5-sync-paths" data-reveal="group">
-            <Link href="/sync" className="v5-sync-path v5-sync-custom">
-              <span>ORIGINAL MUSIC / EXCLUSIVE TO YOUR BRIEF</span><strong>Commission<br />custom music.</strong><p>From first reference to final master: an original soundtrack shaped around your edit, timing, territory and identity.</p><i>Start a custom commission ↗</i>
-            </Link>
-          </div>
-        </section>
-
-        <section className="v6-business" aria-labelledby="business-title">
-          <div className="v6-business-head" data-reveal="group">
-            <p className="v5-kicker"><span>06 / Music for Business</span> For places people remember</p>
-            <h2 id="business-title">Music for Business.<br />Made simple.</h2>
-            <p>Human-made music for cafés, retail, hotels, studios and spas. One clear monthly service, built to sound good without becoming another thing to manage.</p>
-            <Link className="v5-inline-link" href="/retail">Explore Music for Business <span>→</span></Link>
-          </div>
-          <div className="v6-business-spaces" data-reveal="group">
-            <Link href="/retail" className="v6-business-space v6-business-cafe"><span>Cafés</span><small>Warm, easy, all day</small></Link>
-            <Link href="/retail" className="v6-business-space v6-business-restaurant"><span>Restaurants</span><small>Easy, warm, never generic</small></Link>
-            <Link href="/retail" className="v6-business-space v6-business-hotel"><span>Hotels</span><small>Every room, one atmosphere</small></Link>
-            <Link href="/retail" className="v6-business-space v6-business-spa"><span>Spas</span><small>Calm, immersive, uninterrupted</small></Link>
-          </div>
-        </section>
-
         <section className="v5-faq" id="faq" aria-labelledby="faq-title">
-          <div className="v5-faq-title" data-reveal="left"><p className="v5-kicker"><span>07 / Fine print</span> The useful answers</p><h2 id="faq-title">Before you<br />press publish.</h2></div>
+          <div className="v5-faq-title" data-reveal="left"><p className="v5-kicker"><span>05 / Fine print</span> The useful answers</p><h2 id="faq-title">Before you<br />press publish.</h2></div>
           <div className="v5-faq-list" data-reveal="group">
-            <details open><summary><span>01</span>What does Creator cover?<i>+</i></summary><p>One connected channel or profile per supported platform for eligible monetised videos, livestreams and social content. Client work needs Pro or a Sync agreement.</p></details>
+            <details open><summary><span>01</span>What does Creator cover?<i>+</i></summary><p>One connected channel or profile per supported platform for eligible monetised videos, livestreams and social content. Multi-channel publishing uses Pro; paid campaigns, advertising, films, games and broader commercial uses need Easy License for Business.</p></details>
             <details><summary><span>02</span>Can a Content ID claim still appear?<i>+</i></summary><p>Yes. Automated claims can happen even with a valid licence. Your workspace keeps the track and licence information ready for support.</p></details>
             <details><summary><span>03</span>Is any music AI-generated?<i>+</i></summary><p>No. The catalogue contains zero AI-generated music. Every track is made by a human artist, who is credited and paid directly when it is licensed.</p></details>
             <details><summary><span>04</span>Is every track eligible everywhere?<i>+</i></summary><p>Eligibility can vary by track, plan, platform, territory and use. Each production track page shows the coverage before download.</p></details>

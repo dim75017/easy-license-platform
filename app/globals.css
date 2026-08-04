@@ -1174,8 +1174,8 @@ button {
 }
 
 .pricing-grid-expanded {
-  max-width: none;
-  grid-template-columns: repeat(3, 1fr);
+  max-width: 920px;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .price-card {
@@ -2274,7 +2274,7 @@ button {
 .comparison-head,
 .comparison-row {
   display: grid;
-  grid-template-columns: 1.35fr repeat(3, 1fr);
+  grid-template-columns: 1.35fr repeat(2, 1fr);
   align-items: center;
 }
 

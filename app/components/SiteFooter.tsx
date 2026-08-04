@@ -7,20 +7,20 @@ export function SiteFooter() {
       <div className="footer-main">
         <div className="footer-brand">
           <Brand />
-          <p>Music rights made clear for creators, brands and spaces.</p>
+          <p>Music rights made clear for creators and businesses.</p>
         </div>
         <div className="footer-links">
           <div>
             <p className="footer-label">Product</p>
             <Link href="/catalog">Catalogue</Link>
-            <Link href="/pricing">Pricing</Link>
+            <Link href="/#creators">Creator plans</Link>
             <Link href="/app">Client area</Link>
           </div>
           <div>
-            <p className="footer-label">Solutions</p>
-            <Link href="/pricing">Creators</Link>
-            <Link href="/sync">Sync & custom</Link>
-            <Link href="/retail">Music for spaces</Link>
+            <p className="footer-label">Offers</p>
+            <Link href="/#creators">For Creators</Link>
+            <Link href="/#business">For Business</Link>
+            <Link href="/retail">Business: Retail · Coming soon</Link>
           </div>
           <div>
             <p className="footer-label">Legal</p>

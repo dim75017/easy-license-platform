@@ -7,11 +7,9 @@ import { Brand } from "./Brand";
 
 const navItems = [
   { href: "/catalog", label: "Music" },
-  { href: "/#creators", label: "Creators" },
-  { href: "/sync", label: "Sync" },
-  { href: "/retail", label: "Music for Business" },
+  { href: "/#creators", label: "For Creators" },
+  { href: "/#business", label: "For Business" },
   { href: "/#artists", label: "Artists" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 export function SiteHeader() {
@@ -43,7 +41,6 @@ export function SiteHeader() {
             >
               <span className="nav-index">0{index + 1}</span>
               {item.label}
-              {item.href === "/retail" && <span className="nav-soon">Soon</span>}
             </Link>
           ))}
           <div className="mobile-account-actions">
