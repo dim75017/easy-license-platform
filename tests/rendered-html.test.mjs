@@ -20,11 +20,13 @@ test("contains the finished Easy License landing experience", async () => {
 
   assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by real artists\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /Start at €7\.99\.[\s\S]*Scale when the work does\./i);
+  assert.match(page, /One clear licence\.[\s\S]*Annual by default\./i);
   assert.match(page, /Go beyond the subscription/i);
   assert.match(page, /Music for Business/i);
   assert.match(page, /Artist paid directly/i);
-  assert.match(page, /Paid directly[\s\S]*Fairer by design/i);
+  assert.match(page, /Annual by default/i);
+  assert.match(page, /Custom commission/i);
+  assert.match(page, /Music for Business\.\s*<br \/>Made simple/i);
   assert.match(page, /v6-artist-statement/);
   assert.match(page, /data-plan-glide/);
   assert.doesNotMatch(page, /v5-catalogue-side/);
@@ -40,7 +42,7 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(homeCss, /--v5-blue:\s*#514cff/i);
   assert.match(cozyCss, /--cozy-night:\s*#292832/i);
   assert.match(cozyCss, /--cozy-oat:\s*#f3ece0/i);
-  assert.match(cozyCss, /hero-turntable\.jpg/);
+  assert.match(cozyCss, /vinyl-turntable\.jpg/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -90,7 +92,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
 });
 
 test("ships the cozy Lofi Girl identity, simple account navigation and real artist profiles", async () => {
-  const [css, homeCss, cozyCss, layout, brand, header, catalogue, page, booth] = await Promise.all([
+  const [css, homeCss, cozyCss, layout, brand, header, catalogue, catalogueData, page, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
@@ -98,6 +100,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
     source("app/components/CatalogueExplorer.tsx"),
+    source("app/data/catalog.ts"),
     source("app/page.tsx"),
     source("app/components/LicenseBooth.tsx"),
   ]);
@@ -120,7 +123,9 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
-  assert.match(catalogue, /no-waveform/);
+  assert.match(catalogue, /featured-track/);
+  assert.match(catalogueData, /Melting Snowman/);
+  assert.match(catalogueData, /Drifting away/);
   assert.match(page, /No prompts\.[\s\S]*Just people\./i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(page, /\/artists\/project-aer\.jpg/);
@@ -132,6 +137,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
     access(new URL("public/og.png", root)),
     access(new URL("public/artists/charlee.jpg", root)),
+    access(new URL("public/artists/mujo.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
     access(new URL("public/artists/meadow.jpg", root)),
@@ -148,6 +154,10 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/unsplash/retail/cafe.jpg", root)),
     access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
     access(new URL("public/images/unsplash/retail/hotel.jpg", root)),
+    access(new URL("public/images/catalogue/melting-snowman.jpg", root)),
+    access(new URL("public/images/catalogue/532pm.jpg", root)),
+    access(new URL("public/images/catalogue/blue-and-green.jpg", root)),
+    access(new URL("public/images/catalogue/drifting-away.jpg", root)),
   ]);
 });
 

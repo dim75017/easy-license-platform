@@ -4,10 +4,10 @@ import { PublicShell } from "./components/PublicShell";
 
 const artists = [
   {
-    name: "Charlee Nguyen",
-    role: "Producer · Instrumentalist",
-    image: "/artists/charlee.jpg",
-    href: "https://open.spotify.com/artist/5ffORofXMmNRRtwIeQsyW3",
+    name: "Mujo",
+    role: "Producer · Lofi",
+    image: "/artists/mujo.jpg",
+    href: "https://open.spotify.com/artist/0vg08N1z9G9LrGLkG1nNDS",
     color: "coral",
   },
   {
@@ -61,26 +61,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="v5-proof-band" aria-label="Easy License catalogue in numbers" data-reveal="group">
+        <section className="v5-proof-band" aria-label="Easy License catalogue essentials" data-reveal="group">
           <article className="v5-proof-stat v5-proof-stat-size">
             <strong>10,000+</strong>
             <span>Human-made tracks</span>
-            <small>A deep catalogue, curated to keep growing</small>
           </article>
           <article className="v5-proof-stat v5-proof-stat-zero">
             <strong>0</strong>
             <span>AI-generated tracks</span>
-            <small>Every piece starts with a real artist</small>
           </article>
           <article className="v5-proof-stat v5-proof-stat-quality">
-            <strong>Premium</strong>
-            <span>Instrumental + background</span>
-            <small>Selected for quality, feeling and versatility</small>
-          </article>
-          <article className="v5-proof-stat v5-proof-stat-uses">
-            <strong>Paid directly</strong>
-            <span>Fairer by design</span>
-            <small>Each licence supports the artist behind the music, directly and fairly</small>
+            <strong>Everyday → major</strong>
+            <span>From your next upload to a brand film</span>
           </article>
         </section>
 
@@ -115,8 +107,8 @@ export default function Home() {
         <section className="v5-plans" id="creators" aria-labelledby="plans-title">
           <div className="v5-section-head" data-reveal="group">
             <p className="v5-kicker"><span>02 / Simple access</span> Choose the licence that fits</p>
-            <h2 id="plans-title">Start at €7.99.<br />Scale when the work does.</h2>
-            <p>License premium music for your own channels, client work or larger productions—without paying for more than you need.</p>
+            <h2 id="plans-title">One clear licence.<br />Annual by default.</h2>
+            <p>Choose the rights you need. Creator and Pro show their annual price first, with the lower monthly equivalent right below.</p>
           </div>
 
           <div className="v5-plan-board" data-reveal="group">
@@ -124,28 +116,28 @@ export default function Home() {
               <span className="v5-plan-number">01</span>
               <div className="v5-plan-name"><small>VIDEOS · LIVE · PODCASTS · SOCIAL</small><strong>Creator</strong></div>
               <p>License music for one channel per supported platform, including eligible monetised content.</p>
-              <div className="v5-plan-cost"><strong>€7.99</strong><span>/ month</span></div>
+              <div className="v5-plan-cost"><strong>€79.99</strong><span>/ year · €6.67 / month</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
             <Link className="v5-plan-row v5-plan-pro" href="/pricing" data-plan-glide="">
               <span className="v5-plan-number">02</span>
               <div className="v5-plan-name"><small>MORE CHANNELS · CLIENT WORK</small><strong>Pro</strong></div>
               <p>Cover up to three channels plus eligible freelance and client projects.</p>
-              <div className="v5-plan-cost"><strong>€19.99</strong><span>/ month</span></div>
+              <div className="v5-plan-cost"><strong>€199.99</strong><span>/ year · €16.67 / month</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
             <Link className="v5-plan-row v5-plan-sync" href="/sync" data-plan-glide="">
               <span className="v5-plan-number">03</span>
-              <div className="v5-plan-name"><small>CAMPAIGNS · FILMS · GAMES</small><strong>Sync</strong></div>
-              <p>Clear a catalogue track or commission original music for a larger commercial brief.</p>
-              <div className="v5-plan-cost"><strong>Project</strong><span>brief + quote</span></div>
+              <div className="v5-plan-name"><small>CAMPAIGNS · FILMS · GAMES</small><strong>Sync licence</strong></div>
+              <p>Clear an existing catalogue track for one defined project, territory and usage.</p>
+              <div className="v5-plan-cost"><strong>Per project</strong><span>clear quote</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
-            <Link className="v5-plan-row v5-plan-retail" href="/retail" data-plan-glide="">
+            <Link className="v5-plan-row v5-plan-custom" href="/sync" data-plan-glide="">
               <span className="v5-plan-number">04</span>
-              <div className="v5-plan-name"><small>PHYSICAL SPACES · COMING SOON</small><strong>Music for Business</strong></div>
-              <p>Curated music for cafés, stores, hotels and other customer-facing spaces.</p>
-              <div className="v5-plan-cost"><strong>Soon</strong><span>join early access</span></div>
+              <div className="v5-plan-name"><small>ONE-OF-ONE · ORIGINAL MUSIC</small><strong>Custom commission</strong></div>
+              <p>Commission an original track written around your story, edit, timing and brand world.</p>
+              <div className="v5-plan-cost"><strong>From a brief</strong><span>custom quote</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
           </div>
@@ -205,20 +197,31 @@ export default function Home() {
           <div className="v5-sync-title" data-reveal="left">
             <p className="v5-kicker"><span>05 / Sync</span> Go beyond the subscription</p>
             <h2 id="sync-title">Need a sound<br />no one else has?</h2>
-            <p>License a standout catalogue track or build an original soundtrack with an artist around your brief.</p>
+            <p>That is a custom commission: original music, created from the ground up with an artist around your brief. Existing catalogue tracks are cleared separately through Sync licensing.</p>
           </div>
           <div className="v5-sync-paths" data-reveal="group">
-            <Link href="/sync" className="v5-sync-path v5-sync-existing">
-              <span>PATH A / CATALOGUE</span><strong>License<br />an existing track.</strong><p>Campaigns, films, games, podcasts and branded work—cleared for the specific project.</p><i>Start a clearance ↗</i>
-            </Link>
             <Link href="/sync" className="v5-sync-path v5-sync-custom">
-              <span>PATH B / ORIGINAL</span><strong>Commission<br />custom music.</strong><p>Original music shaped around your edit, timing, territory and identity.</p><i>Start a commission ↗</i>
+              <span>ORIGINAL MUSIC / EXCLUSIVE TO YOUR BRIEF</span><strong>Commission<br />custom music.</strong><p>From first reference to final master: an original soundtrack shaped around your edit, timing, territory and identity.</p><i>Start a custom commission ↗</i>
             </Link>
           </div>
         </section>
 
+        <section className="v6-business" aria-labelledby="business-title">
+          <div className="v6-business-head" data-reveal="group">
+            <p className="v5-kicker"><span>06 / Music for Business</span> For places people remember</p>
+            <h2 id="business-title">Music for Business.<br />Made simple.</h2>
+            <p>Human-made music for cafés, retail, hotels, studios and spas. One clear monthly service, built to sound good without becoming another thing to manage.</p>
+            <Link className="v5-inline-link" href="/retail">Explore Music for Business <span>→</span></Link>
+          </div>
+          <div className="v6-business-spaces" data-reveal="group">
+            <Link href="/retail" className="v6-business-space v6-business-cafe"><span>Cafés</span><small>Warm, easy, all day</small></Link>
+            <Link href="/retail" className="v6-business-space v6-business-restaurant"><span>Restaurants</span><small>Easy, warm, never generic</small></Link>
+            <Link href="/retail" className="v6-business-space v6-business-hotel"><span>Hotels</span><small>Every room, one atmosphere</small></Link>
+          </div>
+        </section>
+
         <section className="v5-faq" id="faq" aria-labelledby="faq-title">
-          <div className="v5-faq-title" data-reveal="left"><p className="v5-kicker"><span>06 / Fine print</span> The useful answers</p><h2 id="faq-title">Before you<br />press publish.</h2></div>
+          <div className="v5-faq-title" data-reveal="left"><p className="v5-kicker"><span>07 / Fine print</span> The useful answers</p><h2 id="faq-title">Before you<br />press publish.</h2></div>
           <div className="v5-faq-list" data-reveal="group">
             <details open><summary><span>01</span>What does Creator cover?<i>+</i></summary><p>One connected channel or profile per supported platform for eligible monetised videos, livestreams and social content. Client work needs Pro or a Sync agreement.</p></details>
             <details><summary><span>02</span>Can a Content ID claim still appear?<i>+</i></summary><p>Yes. Automated claims can happen even with a valid licence. Your workspace keeps the track and licence information ready for support.</p></details>

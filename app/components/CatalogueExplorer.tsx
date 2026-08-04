@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { moods, tracks, uses } from "../data/catalog";
+import { featuredTracks, moods, tracks, uses } from "../data/catalog";
 
 const wave = [22, 58, 36, 76, 48, 64, 30, 84, 44, 66, 34, 54, 72, 40, 60, 26];
 
@@ -28,8 +28,22 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
     setDownloaded((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   };
 
+  if (compact) {
+    return (
+      <div className="catalogue-featured" aria-label="Featured tracks from the Easy License catalogue">
+        {featuredTracks.map((track) => (
+          <a className="featured-track" href={track.spotifyUrl} target="_blank" rel="noreferrer" key={track.id}>
+            <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
+            <span className="featured-track-meta"><small>{track.genre} · {track.streams}</small><strong>{track.title}</strong><em>{track.artist}</em></span>
+            <i aria-hidden="true">↗</i>
+          </a>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className={compact ? "catalogue-explorer is-compact no-waveform" : "catalogue-explorer"}>
+    <div className="catalogue-explorer">
       <div className="catalogue-toolbar">
         <label className="search-field">
           <span aria-hidden="true">⌕</span>

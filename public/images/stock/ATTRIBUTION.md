@@ -25,3 +25,14 @@ All three are marked free to use on Pexels. Pexels permits free personal and com
 | `retail/hotel.jpg` | Frames For Your Heart | https://unsplash.com/photos/modern-hotel-lobby-with-designer-furniture-and-wood-walls-zSG-kd-L6vw |
 
 All four Unsplash photographs are marked free to use under the Unsplash License: https://unsplash.com/license
+
+## Featured catalogue artwork
+
+These are official Spotify cover thumbnails for tracks selected from the local catalogue database, retained solely for the Easy License product prototype.
+
+| File | Track | Spotify source |
+| --- | --- | --- |
+| `catalogue/melting-snowman.jpg` | Mujo — Melting Snowman | https://open.spotify.com/track/5Nsf7Z3GKvdWj2FEP12QUy |
+| `catalogue/532pm.jpg` | The Deli — 5:32pm | https://open.spotify.com/track/0Q2LHrREFF9rtX3PuMUoNL |
+| `catalogue/blue-and-green.jpg` | Aso — Blue and Green | https://open.spotify.com/track/6BFm6CduJnfZ1RsMYjWO9G |
+| `catalogue/drifting-away.jpg` | Charlee Nguyen — Drifting away | https://open.spotify.com/track/4aw3VYsMAEhqaq87YXyvKA |

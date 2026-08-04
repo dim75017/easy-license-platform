@@ -10,6 +10,55 @@ export type Track = {
   new?: boolean;
 };
 
+export type FeaturedTrack = {
+  id: string;
+  title: string;
+  artist: string;
+  genre: string;
+  streams: string;
+  cover: string;
+  spotifyUrl: string;
+};
+
+export const featuredTracks: FeaturedTrack[] = [
+  {
+    id: "EL-FEAT-001",
+    title: "Melting Snowman",
+    artist: "Mujo",
+    genre: "Lofi",
+    streams: "1.1M streams",
+    cover: "/images/catalogue/melting-snowman.jpg",
+    spotifyUrl: "https://open.spotify.com/track/5Nsf7Z3GKvdWj2FEP12QUy",
+  },
+  {
+    id: "EL-FEAT-002",
+    title: "5:32pm",
+    artist: "The Deli",
+    genre: "Jazzhop",
+    streams: "167.9M streams",
+    cover: "/images/catalogue/532pm.jpg",
+    spotifyUrl: "https://open.spotify.com/track/0Q2LHrREFF9rtX3PuMUoNL",
+  },
+  {
+    id: "EL-FEAT-003",
+    title: "Blue and Green",
+    artist: "Aso",
+    genre: "Chillhop",
+    streams: "35.7M streams",
+    cover: "/images/catalogue/blue-and-green.jpg",
+    spotifyUrl: "https://open.spotify.com/track/6BFm6CduJnfZ1RsMYjWO9G",
+  },
+  {
+    id: "EL-FEAT-004",
+    title: "Drifting away",
+    artist: "Charlee Nguyen",
+    genre: "Ambient",
+    streams: "5.9M streams",
+    cover: "/images/catalogue/drifting-away.jpg",
+    spotifyUrl: "https://open.spotify.com/track/4aw3VYsMAEhqaq87YXyvKA",
+  },
+];
+
 export const tracks: Track[] = [
   {
     id: "EL-001",
