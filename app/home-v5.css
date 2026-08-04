@@ -396,6 +396,11 @@
   -webkit-text-stroke: 1.8px var(--v5-black);
 }
 
+.v5-hero-copy h1 .v5-hero-human {
+  font-size: .76em;
+  letter-spacing: -.065em;
+}
+
 .v5-hero-intro {
   display: grid;
   max-width: 690px;
@@ -473,6 +478,133 @@
 .v5-hero-ticker i {
   font-size: 7px;
   font-style: normal;
+}
+
+/* Commercial proof wall */
+
+.v5-proof-band {
+  display: grid;
+  grid-template-areas:
+    "size zero quality"
+    "size uses uses";
+  grid-template-columns: 1.35fr .65fr 1fr;
+  border-bottom: 1px solid var(--v5-black);
+  background: var(--v5-paper);
+}
+
+.v5-proof-stat {
+  position: relative;
+  display: flex;
+  min-height: 215px;
+  overflow: hidden;
+  flex-direction: column;
+  border-right: 1px solid var(--v5-black);
+  border-bottom: 1px solid var(--v5-black);
+  padding: 30px 3vw;
+}
+
+.v5-proof-stat::after {
+  position: absolute;
+  top: -48px;
+  right: -48px;
+  width: 112px;
+  height: 112px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  opacity: .18;
+  transition: scale 500ms var(--motion-ease);
+}
+
+.v5-proof-stat:hover::after {
+  scale: 2.4;
+}
+
+.v5-proof-stat strong {
+  display: block;
+  margin-top: auto;
+  font-family: var(--font-display);
+  font-size: clamp(43px, 5vw, 84px);
+  font-weight: 620;
+  letter-spacing: -.075em;
+  line-height: .9;
+  text-transform: uppercase;
+}
+
+.v5-proof-stat > span {
+  margin-top: 15px;
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.2vw, 20px);
+  font-weight: 600;
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.v5-proof-stat > small {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .045em;
+  line-height: 1.4;
+  opacity: .64;
+  text-transform: uppercase;
+}
+
+.v5-proof-stat-size {
+  grid-area: size;
+  min-height: 430px;
+  background: var(--v5-black);
+  color: var(--v5-paper);
+}
+
+.v5-proof-stat-size strong {
+  color: var(--v5-acid);
+  font-size: clamp(70px, 8.4vw, 150px);
+}
+
+.v5-proof-stat-zero {
+  grid-area: zero;
+  background: var(--v5-acid);
+}
+
+.v5-proof-stat-zero strong {
+  font-size: clamp(76px, 7vw, 120px);
+}
+
+.v5-proof-stat-quality {
+  grid-area: quality;
+  background: var(--v5-paper);
+}
+
+.v5-proof-stat-uses {
+  grid-area: uses;
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: minmax(220px, .65fr) 1fr;
+  align-items: center;
+  gap: 2.5vw;
+  border-bottom: 0;
+  background: var(--v5-coral);
+}
+
+.v5-proof-stat-uses strong,
+.v5-proof-stat-uses > span,
+.v5-proof-stat-uses > small {
+  margin: 0;
+}
+
+.v5-proof-stat-uses strong {
+  grid-row: 1 / span 2;
+  font-size: clamp(30px, 3.6vw, 62px);
+}
+
+.v5-proof-stat-uses > span {
+  align-self: end;
+}
+
+.v5-proof-stat-uses > small {
+  align-self: start;
 }
 
 /* Interactive clearance booth */
@@ -1918,6 +2050,22 @@
     display: none;
   }
 
+  .v5-proof-band {
+    grid-template-areas:
+      "size zero"
+      "size quality"
+      "uses uses";
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v5-proof-stat {
+    min-height: 220px;
+  }
+
+  .v5-proof-stat-size {
+    min-height: 440px;
+  }
+
   .v5-route {
     grid-template-columns: 1fr;
   }
@@ -2068,6 +2216,10 @@
     -webkit-text-stroke-width: 1px;
   }
 
+  .v5-hero-copy h1 .v5-hero-human {
+    font-size: .72em;
+  }
+
   .v5-hero-intro {
     margin-top: 32px;
     grid-template-columns: 1fr;
@@ -2138,6 +2290,55 @@
   .v5-hero-ticker {
     height: 42px;
     font-size: 8px;
+  }
+
+  .v5-proof-band {
+    grid-template-areas:
+      "size size"
+      "zero quality"
+      "uses uses";
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v5-proof-stat {
+    min-height: 205px;
+    padding: 24px 20px;
+  }
+
+  .v5-proof-stat-size {
+    min-height: 265px;
+  }
+
+  .v5-proof-stat-size strong {
+    font-size: clamp(56px, 18vw, 80px);
+  }
+
+  .v5-proof-stat-zero strong {
+    font-size: clamp(62px, 18vw, 82px);
+  }
+
+  .v5-proof-stat-quality strong {
+    font-size: clamp(28px, 8vw, 38px);
+  }
+
+  .v5-proof-stat > span {
+    font-size: 12px;
+  }
+
+  .v5-proof-stat > small {
+    font-size: 7px;
+  }
+
+  .v5-proof-stat-uses {
+    min-height: 210px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .v5-proof-stat-uses strong,
+  .v5-proof-stat-uses > span,
+  .v5-proof-stat-uses > small {
+    grid-row: auto;
   }
 
   .v5-route-intro,
