@@ -6,9 +6,8 @@ import { useState } from "react";
 import { Brand } from "./Brand";
 
 const navItems = [
-  { href: "/catalog", label: "Music" },
   { href: "/creators", label: "For Creators" },
-  { href: "/business", label: "For Business" },
+  { href: "/business", label: "For Businesses" },
 ];
 
 export function SiteHeader() {

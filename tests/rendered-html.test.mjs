@@ -156,7 +156,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
   assert.match(header, /For Creators/);
-  assert.match(header, /For Business/);
+  assert.match(header, /For Businesses/);
+  assert.doesNotMatch(header, /href: "\/catalog", label: "Music"/);
   assert.match(header, /href:\s*"\/creators"/);
   assert.match(header, /href:\s*"\/business"/);
   assert.doesNotMatch(header, /\/#creators|\/#business/);
