@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CatalogueExplorer } from "./components/CatalogueExplorer";
-import { LicenseBooth } from "./components/LicenseBooth";
 import { PublicShell } from "./components/PublicShell";
 
 const artists = [
@@ -54,10 +53,6 @@ export default function Home() {
                 <Link className="v5-inline-link" href="/pricing">License from €7.99 <span>→</span></Link>
               </div>
             </div>
-          </div>
-
-          <div className="v5-hero-booth" data-reveal="hero-product" data-parallax="14">
-            <LicenseBooth />
           </div>
 
           <div className="v5-hero-code" aria-hidden="true">

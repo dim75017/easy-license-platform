@@ -74,7 +74,6 @@ test("ships progressive, accessible motion without an animation dependency", asy
 
   assert.match(page, /data-reveal="hero-title"/);
   assert.match(page, /data-pointer-glow/);
-  assert.match(page, /LicenseBooth/);
   assert.match(booth, /useState/);
   assert.match(booth, /role="tablist"/);
   assert.match(shell, /<MotionLayer/);
@@ -143,6 +142,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
+    access(new URL("public/images/unsplash/hero-listening.jpg", root)),
     access(new URL("public/images/unsplash/retail/cafe.jpg", root)),
     access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
     access(new URL("public/images/unsplash/retail/hotel.jpg", root)),

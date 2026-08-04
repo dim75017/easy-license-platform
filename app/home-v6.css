@@ -310,34 +310,23 @@
   min-height: min(860px, calc(100svh - 110px));
   border-bottom: 0;
   background:
-    radial-gradient(circle at 78% 34%, rgba(209, 162, 94, .16), transparent 25%),
-    radial-gradient(circle at 92% 86%, rgba(185, 120, 100, .17), transparent 32%),
-    linear-gradient(135deg, #302f39 0%, var(--cozy-night) 58%, #332b31 100%);
+    linear-gradient(90deg, rgba(34, 33, 41, .99) 0%, rgba(34, 33, 41, .95) 37%, rgba(34, 33, 41, .62) 62%, rgba(34, 33, 41, .18) 100%),
+    url("/images/unsplash/hero-listening.jpg") right center / auto 100% no-repeat,
+    var(--cozy-night);
   color: var(--cozy-oat);
 }
 
 .el-v6 .v5-hero-grid {
-  background-image:
-    linear-gradient(rgba(243, 236, 224, .035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(243, 236, 224, .035) 1px, transparent 1px);
-  background-size: 100px 100px;
-  opacity: .55;
-  mask-image: linear-gradient(90deg, black 0%, rgba(0,0,0,.5) 68%, transparent 100%);
+  display: none;
 }
 
 .el-v6 .v5-hero::before {
-  top: auto;
-  right: 5vw;
-  bottom: 8%;
-  width: min(34vw, 520px);
-  border-color: rgba(209, 162, 94, .08);
-  box-shadow: 0 0 110px rgba(209, 162, 94, .09);
-  animation: v6Breathe 8s ease-in-out infinite;
+  display: none;
 }
 
 .el-v6 .v5-hero-copy {
-  min-height: 760px;
-  grid-column: 1 / span 7;
+  min-height: 720px;
+  grid-column: 1 / -1;
   padding: 92px 4vw 112px 5vw;
 }
 
@@ -376,10 +365,12 @@
 }
 
 .el-v6 .v5-hero-intro {
-  max-width: 760px;
+  display: flex;
+  max-width: 650px;
   margin-top: 40px;
-  grid-template-columns: minmax(260px, 1fr) auto;
-  gap: 42px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 25px;
 }
 
 .el-v6 .v5-hero-intro > p {
@@ -387,6 +378,13 @@
   font-size: clamp(17px, 1.35vw, 20px);
   font-weight: 440;
   line-height: 1.52;
+}
+
+.el-v6 .v5-hero-intro > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
 }
 
 .el-v6 .v5-hero-intro .v5-inline-link {
