@@ -74,10 +74,6 @@ export default function Home() {
             <strong>1,000+</strong>
             <span>Artists around the world</span>
           </article>
-          <article className="v5-proof-stat v5-proof-stat-genres">
-            <strong>6+</strong>
-            <span>Genre families</span>
-          </article>
         </section>
 
         <section className="v5-route" aria-labelledby="route-title">

@@ -49,7 +49,7 @@ test("contains the finished Easy License landing experience", async () => {
   assert.doesNotMatch(page, /Everyday → major/i);
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /1,000\+[\s\S]*Artists around the world/i);
-  assert.match(page, /6\+[\s\S]*Genre families/i);
+  assert.doesNotMatch(page, /Genre families/i);
   assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
   assert.match(layout, /themeColor:\s*"#f3ece0"/i);

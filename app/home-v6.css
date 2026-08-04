@@ -577,14 +577,14 @@
   border-left-color: rgba(243, 236, 224, .18);
 }
 
-/* Four proofs, one visual voice */
+/* Three proofs, one visual voice */
 
 .el-v6 .v5-proof-band {
   width: min(1440px, calc(100% - 10vw));
   margin: 86px auto 112px;
   overflow: hidden;
   grid-template-areas: none;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--cozy-rule);
   border-radius: 30px;
   background: var(--cozy-paper);
@@ -2267,14 +2267,13 @@
 
 .el-v6 .v5-proof-band {
   max-width: 1440px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .el-v6 .v5-proof-stat,
 .el-v6 .v5-proof-stat-size,
 .el-v6 .v5-proof-stat-zero,
-.el-v6 .v5-proof-stat-quality,
-.el-v6 .v5-proof-stat-genres {
+.el-v6 .v5-proof-stat-quality {
   min-height: 174px;
   justify-content: center;
   padding: 30px;
@@ -2286,7 +2285,6 @@
 .el-v6 .v5-proof-stat-size span { color: #f3ece0; }
 .el-v6 .v5-proof-stat-zero { background: #e9ded3; }
 .el-v6 .v5-proof-stat-quality { background: #dfe7e0; }
-.el-v6 .v5-proof-stat-genres { background: #dce5ea; }
 
 .el-v6 .v5-route-step::before {
   filter: saturate(.82) brightness(.7) contrast(.98);
@@ -2417,8 +2415,7 @@
   .el-v6 .v5-proof-stat,
   .el-v6 .v5-proof-stat-size,
   .el-v6 .v5-proof-stat-zero,
-  .el-v6 .v5-proof-stat-quality,
-  .el-v6 .v5-proof-stat-genres {
+  .el-v6 .v5-proof-stat-quality {
     min-height: 126px;
     border-right: 0;
     border-bottom: 1px solid var(--cozy-rule);
