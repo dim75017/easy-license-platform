@@ -20,12 +20,16 @@ test("contains the finished Easy License landing experience", async () => {
 
   assert.match(page, /Sound for[\s\S]*every story\.[\s\S]*Made by real artists\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /One clear licence\.[\s\S]*Annual by default\./i);
+  assert.match(page, /From €6\.67\/month\.[\s\S]*Choose the rights you need\./i);
   assert.match(page, /Go beyond the subscription/i);
   assert.match(page, /Music for Business/i);
-  assert.match(page, /Artist paid directly/i);
-  assert.match(page, /Annual by default/i);
+  assert.match(page, /artists are credited and paid directly/i);
+  assert.match(page, /€6\.67[\s\S]*€79\.99 billed yearly/i);
+  assert.match(page, /€16\.67[\s\S]*€199\.99 billed yearly/i);
   assert.match(page, /Custom commission/i);
+  assert.match(page, /Commercial sync/i);
+  assert.match(page, /physical spaces/i);
+  assert.match(page, /Coming soon/i);
   assert.match(page, /Music for Business\.\s*<br \/>Made simple/i);
   assert.match(page, /v6-artist-statement/);
   assert.match(page, /data-plan-glide/);
@@ -33,7 +37,13 @@ test("contains the finished Easy License landing experience", async () => {
   assert.doesNotMatch(page, /v5-hero-ticker/);
   assert.doesNotMatch(page, /v6-catalogue-photo/);
   assert.doesNotMatch(page, /v6-step-photo/);
+  assert.doesNotMatch(page, /v5-console-bar/);
+  assert.doesNotMatch(page, /v5-payout/);
+  assert.doesNotMatch(page, /v5-command/);
+  assert.doesNotMatch(page, /Everyday → major/i);
   assert.match(page, /Zero AI-generated music/i);
+  assert.match(page, /1,000\+[\s\S]*Artists around the world/i);
+  assert.match(page, /6\+[\s\S]*Genre families/i);
   assert.match(page, /className="v5-proof-band"/);
   assert.match(layout, /Easy License — 10,000\+ human-made tracks/);
   assert.match(layout, /themeColor:\s*"#f3ece0"/i);
@@ -42,7 +52,9 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(homeCss, /--v5-blue:\s*#514cff/i);
   assert.match(cozyCss, /--cozy-night:\s*#292832/i);
   assert.match(cozyCss, /--cozy-oat:\s*#f3ece0/i);
-  assert.match(cozyCss, /vinyl-turntable\.jpg/);
+  assert.match(cozyCss, /hero-producer\.jpg/);
+  assert.match(cozyCss, /campaign-filmset\.jpg/);
+  assert.match(cozyCss, /retail\/spa\.jpg/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -76,7 +88,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
   ]);
 
   assert.match(page, /data-reveal="hero-title"/);
-  assert.match(page, /data-pointer-glow/);
+  assert.doesNotMatch(page, /data-pointer-glow/);
   assert.match(booth, /useState/);
   assert.match(booth, /role="tablist"/);
   assert.match(shell, /<MotionLayer/);
@@ -128,6 +140,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
   assert.match(catalogueData, /Drifting away/);
   assert.match(page, /No prompts\.[\s\S]*Just people\./i);
   assert.match(page, /\/artists\/charlee\.jpg/);
+  assert.match(page, /\/artists\/dario-lessing\.jpg/);
   assert.match(page, /\/artists\/project-aer\.jpg/);
   assert.match(booth, /My channel/);
   assert.match(layout, /openGraph/);
@@ -137,6 +150,7 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
     access(new URL("public/og.png", root)),
     access(new URL("public/artists/charlee.jpg", root)),
+    access(new URL("public/artists/dario-lessing.jpg", root)),
     access(new URL("public/artists/mujo.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
@@ -151,9 +165,12 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
     access(new URL("public/images/unsplash/hero-turntable.jpg", root)),
+    access(new URL("public/images/unsplash/hero-producer.jpg", root)),
+    access(new URL("public/images/unsplash/campaign-filmset.jpg", root)),
     access(new URL("public/images/unsplash/retail/cafe.jpg", root)),
     access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
     access(new URL("public/images/unsplash/retail/hotel.jpg", root)),
+    access(new URL("public/images/unsplash/retail/spa.jpg", root)),
     access(new URL("public/images/catalogue/melting-snowman.jpg", root)),
     access(new URL("public/images/catalogue/532pm.jpg", root)),
     access(new URL("public/images/catalogue/blue-and-green.jpg", root)),

@@ -20,11 +20,14 @@ All three are marked free to use on Pexels. Pexels permits free personal and com
 | `studio-artist.jpg` | Siednji Leon | https://unsplash.com/photos/a-man-wearing-headphones-INNeP8g_BOw |
 | `hero-listening.jpg` | Pew Nguyen | https://unsplash.com/photos/a-woman-sitting-on-a-window-sill-talking-on-a-cell-phone-N_CP2tUr1Nk |
 | `hero-turntable.jpg` | Unsplash contributor | https://unsplash.com/photos/an-artwork-is-displayed-above-a-record-player-D6yDtSouBTM |
+| `hero-producer.jpg` | Paul Einerhand | https://unsplash.com/photos/a-man-sitting-in-front-of-a-mixing-desk-with-headphones-on-22ff877xeNk |
+| `campaign-filmset.jpg` | Cemrecan Yurtman | https://unsplash.com/photos/film-crew-working-with-a-professional-camera-on-set-NAoSEZonwZY |
 | `retail/cafe.jpg` | Phước Sang | https://unsplash.com/photos/interior-of-a-cozy-coffee-shop-with-hanging-lamps-YbFn6s1LEso |
 | `retail/restaurant.jpg` | Nithin M R | https://unsplash.com/photos/warmly-lit-restaurant-interior-with-modern-design-lpRhkkAWqZQ |
 | `retail/hotel.jpg` | Frames For Your Heart | https://unsplash.com/photos/modern-hotel-lobby-with-designer-furniture-and-wood-walls-zSG-kd-L6vw |
+| `retail/spa.jpg` | Jakub Klucký | https://unsplash.com/photos/a-massage-room-is-clean-and-ready-for-a-session-oAvwAKFiU7Q |
 
-All four Unsplash photographs are marked free to use under the Unsplash License: https://unsplash.com/license
+All listed Unsplash photographs are marked free to use under the Unsplash License: https://unsplash.com/license
 
 ## Featured catalogue artwork
 
