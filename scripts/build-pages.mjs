@@ -50,7 +50,8 @@ async function prefixPublicAssets() {
     const source = await readFile(path, "utf8");
     const updated = source
       .replaceAll("/fonts/", `${basePath}/fonts/`)
-      .replaceAll("/artists/", `${basePath}/artists/`);
+      .replaceAll("/artists/", `${basePath}/artists/`)
+      .replaceAll("/images/", `${basePath}/images/`);
     if (updated !== source) await writeFile(path, updated);
   }
 

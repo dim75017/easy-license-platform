@@ -149,7 +149,7 @@
   padding: 35px 38px;
   background:
     linear-gradient(90deg, #302e38 0%, rgba(48, 46, 56, .96) 48%, rgba(48, 46, 56, .32) 100%),
-    url("/images/stock/studio-artist.jpg") 92% 40% / min(410px, 36%) auto no-repeat,
+    url("/images/unsplash/studio-artist.jpg") 92% 40% / min(410px, 36%) auto no-repeat,
     #302e38;
   box-shadow: 0 22px 55px rgba(10, 10, 14, .18);
 }
@@ -211,7 +211,7 @@
 .dashboard-shell .dashboard-search { width: min(600px, 100%); min-height: 52px; }
 .dashboard-shell .workspace-track-grid { gap: 16px; }
 .dashboard-shell .workspace-track { border-color: rgba(243, 236, 224, .1); border-radius: 18px; padding: 14px; background: rgba(48, 46, 55, .78); }
-.dashboard-shell .workspace-cover { border-radius: 14px; background: linear-gradient(135deg, rgba(185, 120, 100, .2), rgba(41, 40, 50, .3)), url("/images/stock/vinyl-turntable.jpg") center / cover; }
+.dashboard-shell .workspace-cover { border-radius: 14px; background: linear-gradient(135deg, rgba(185, 120, 100, .2), rgba(41, 40, 50, .3)), url("/images/unsplash/creator-edit.jpg") center / cover; }
 .dashboard-shell .workspace-cover::before,
 .dashboard-shell .workspace-cover::after { border-color: rgba(243, 236, 224, .22); }
 .dashboard-shell .workspace-cover button { width: 44px; height: 44px; background: rgba(41, 40, 50, .78); color: var(--cozy-oat); font-size: 12px; }
@@ -243,7 +243,7 @@
   .dashboard-shell .dashboard-topbar h1 { font-size: 27px; }
   .dashboard-shell .dashboard-overline { font-size: 9px; }
   .dashboard-shell .dashboard-content { padding: 18px 16px 94px; }
-  .dashboard-shell .welcome-row { min-height: 240px; padding: 25px; background: linear-gradient(180deg, rgba(48, 46, 56, .94), rgba(48, 46, 56, .74)), url("/images/stock/studio-artist.jpg") center / cover; }
+  .dashboard-shell .welcome-row { min-height: 240px; padding: 25px; background: linear-gradient(180deg, rgba(48, 46, 56, .94), rgba(48, 46, 56, .74)), url("/images/unsplash/studio-artist.jpg") center / cover; }
   .dashboard-shell .welcome-row h2 { font-size: 36px; }
   .dashboard-shell .welcome-row > div > span { font-size: 15px; }
   .dashboard-shell .welcome-row .button { width: 100%; }

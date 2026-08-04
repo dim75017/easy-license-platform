@@ -759,6 +759,7 @@
 
 .el-v6 .v5-step-visual {
   min-height: 215px;
+  overflow: hidden;
   margin-top: auto;
   border-color: rgba(41, 40, 50, .16);
   border-radius: 20px;
@@ -770,6 +771,53 @@
 .el-v6 .v5-step-coral .v5-step-visual {
   background: #e5d6cb;
 }
+
+.el-v6 .v6-step-photo {
+  position: relative;
+  margin: auto 0 0;
+  isolation: isolate;
+}
+
+.el-v6 .v6-step-photo::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(41, 40, 50, 0) 36%, rgba(41, 40, 50, .68) 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.el-v6 .v6-step-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 215px;
+  object-fit: cover;
+  filter: saturate(.66) sepia(.08) contrast(.98);
+  transition: transform 600ms var(--motion-ease), filter 400ms ease;
+}
+
+.el-v6 .v6-step-photo:hover img {
+  filter: saturate(.8) sepia(.04) contrast(1);
+  transform: scale(1.035);
+}
+
+.el-v6 .v6-step-photo figcaption {
+  position: absolute;
+  z-index: 2;
+  right: 17px;
+  bottom: 15px;
+  left: 17px;
+  color: var(--cozy-paper);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 680;
+  letter-spacing: .02em;
+}
+
+.el-v6 .v6-step-creator img { object-position: center 68%; }
+.el-v6 .v6-step-client img { object-position: center 62%; }
+.el-v6 .v6-step-sync img { object-position: center; }
 
 .el-v6 .v5-search-visual::before,
 .el-v6 .v5-search-visual::after {
@@ -878,7 +926,7 @@
 /* One dark listening-room section */
 
 .el-v6 .v5-catalogue {
-  grid-template-columns: 58px minmax(0, 1fr);
+  display: block;
   border-bottom-color: rgba(243, 236, 224, .12);
   background:
     radial-gradient(circle at 78% 12%, rgba(209, 162, 94, .09), transparent 24%),
@@ -887,9 +935,7 @@
 }
 
 .el-v6 .v5-catalogue-side {
-  border-right-color: rgba(243, 236, 224, .15);
-  background: var(--cozy-clay);
-  color: var(--cozy-night);
+  display: none;
 }
 
 .el-v6 .v5-catalogue-main {
@@ -1185,7 +1231,7 @@
 .el-v6 .v5-sync-custom {
   background:
     linear-gradient(92deg, rgba(41, 40, 50, .98) 0%, rgba(41, 40, 50, .9) 52%, rgba(41, 40, 50, .42) 100%),
-    url("/images/stock/cozy-workspace.jpg") center / cover;
+    url("/images/unsplash/filmmaker-desk.jpg") center / cover;
   color: var(--cozy-oat);
 }
 
@@ -1713,7 +1759,7 @@
   }
 
   .el-v6 .v5-catalogue {
-    grid-template-columns: 30px minmax(0, 1fr);
+    display: block;
   }
 
   .el-v6 .v5-catalogue-main {
@@ -1721,7 +1767,7 @@
   }
 
   .el-v6 .v5-catalogue-side {
-    font-size: 6px;
+    display: none;
   }
 
   .el-v6 .v5-catalogue-console {

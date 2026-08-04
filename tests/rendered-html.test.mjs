@@ -27,6 +27,8 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(page, /Paid directly[\s\S]*Fairer by design/i);
   assert.match(page, /v6-catalogue-photo/);
   assert.match(page, /v6-artist-statement/);
+  assert.match(page, /v6-step-photo/);
+  assert.doesNotMatch(page, /v5-catalogue-side/);
   assert.doesNotMatch(page, /v5-hero-ticker/);
   assert.match(page, /Zero AI-generated music/i);
   assert.match(page, /className="v5-proof-band"/);
@@ -135,6 +137,10 @@ test("ships the cozy Lofi Girl identity, simple account navigation and real arti
     access(new URL("public/images/stock/studio-artist.jpg", root)),
     access(new URL("public/images/stock/cozy-workspace.jpg", root)),
     access(new URL("public/images/stock/ATTRIBUTION.md", root)),
+    access(new URL("public/images/unsplash/creator-edit.jpg", root)),
+    access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
+    access(new URL("public/images/unsplash/editing-desk.jpg", root)),
+    access(new URL("public/images/unsplash/studio-artist.jpg", root)),
   ]);
 });
 
