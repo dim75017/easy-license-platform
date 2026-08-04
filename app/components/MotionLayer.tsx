@@ -11,6 +11,7 @@ export function MotionLayer() {
     const parallaxNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
     const glowNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-pointer-glow]"));
     const tiltNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-tilt]"));
+    const planGlideNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-plan-glide]"));
     const cleanups: Array<() => void> = [];
     let observer: IntersectionObserver | null = null;
     let animationFrame = 0;
@@ -74,11 +75,12 @@ export function MotionLayer() {
     };
 
     const resetInteractiveMotion = () => {
-      [...tiltNodes, ...glowNodes].forEach((node) => {
+      [...tiltNodes, ...glowNodes, ...planGlideNodes].forEach((node) => {
         node.style.removeProperty("--tilt-x");
         node.style.removeProperty("--tilt-y");
         node.style.removeProperty("--pointer-x");
         node.style.removeProperty("--pointer-y");
+        node.style.removeProperty("--plan-x");
       });
     };
 
@@ -129,6 +131,48 @@ export function MotionLayer() {
         node.addEventListener("pointermove", move);
         node.addEventListener("pointerleave", leave);
         cleanups.push(() => {
+          node.removeEventListener("pointermove", move);
+          node.removeEventListener("pointerleave", leave);
+        });
+      });
+
+      planGlideNodes.forEach((node) => {
+        let target = 50;
+        let current = 50;
+        let glideFrame = 0;
+
+        const render = () => {
+          current += (target - current) * .075;
+          node.style.setProperty("--plan-x", `${current.toFixed(2)}%`);
+          if (Math.abs(target - current) > .08) {
+            glideFrame = window.requestAnimationFrame(render);
+          } else {
+            current = target;
+            node.style.setProperty("--plan-x", `${current.toFixed(2)}%`);
+            glideFrame = 0;
+          }
+        };
+
+        const scheduleGlide = () => {
+          if (!glideFrame) glideFrame = window.requestAnimationFrame(render);
+        };
+
+        const move = (event: PointerEvent) => {
+          if (reducedMotion.matches) return;
+          const rect = node.getBoundingClientRect();
+          target = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+          scheduleGlide();
+        };
+
+        const leave = () => {
+          target = 50;
+          scheduleGlide();
+        };
+
+        node.addEventListener("pointermove", move);
+        node.addEventListener("pointerleave", leave);
+        cleanups.push(() => {
+          if (glideFrame) window.cancelAnimationFrame(glideFrame);
           node.removeEventListener("pointermove", move);
           node.removeEventListener("pointerleave", leave);
         });

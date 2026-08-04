@@ -28,6 +28,7 @@ test("contains the finished Easy License landing experience", async () => {
   assert.match(page, /v6-catalogue-photo/);
   assert.match(page, /v6-artist-statement/);
   assert.match(page, /v6-step-photo/);
+  assert.match(page, /data-plan-glide/);
   assert.doesNotMatch(page, /v5-catalogue-side/);
   assert.doesNotMatch(page, /v5-hero-ticker/);
   assert.match(page, /Zero AI-generated music/i);
@@ -78,6 +79,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(booth, /role="tablist"/);
   assert.match(shell, /<MotionLayer/);
   assert.match(motion, /IntersectionObserver/);
+  assert.match(motion, /data-plan-glide/);
   assert.match(motion, /requestAnimationFrame/);
   assert.match(motion, /prefers-reduced-motion/);
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);

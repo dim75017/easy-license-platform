@@ -128,28 +128,28 @@ export default function Home() {
           </div>
 
           <div className="v5-plan-board" data-reveal="group">
-            <Link className="v5-plan-row v5-plan-creator" href="/pricing">
+            <Link className="v5-plan-row v5-plan-creator" href="/pricing" data-plan-glide="">
               <span className="v5-plan-number">01</span>
               <div className="v5-plan-name"><small>VIDEOS · LIVE · PODCASTS · SOCIAL</small><strong>Creator</strong></div>
               <p>License music for one channel per supported platform, including eligible monetised content.</p>
               <div className="v5-plan-cost"><strong>€7.99</strong><span>/ month</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
-            <Link className="v5-plan-row v5-plan-pro" href="/pricing">
+            <Link className="v5-plan-row v5-plan-pro" href="/pricing" data-plan-glide="">
               <span className="v5-plan-number">02</span>
               <div className="v5-plan-name"><small>MORE CHANNELS · CLIENT WORK</small><strong>Pro</strong></div>
               <p>Cover up to three channels plus eligible freelance and client projects.</p>
               <div className="v5-plan-cost"><strong>€19.99</strong><span>/ month</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
-            <Link className="v5-plan-row v5-plan-sync" href="/sync">
+            <Link className="v5-plan-row v5-plan-sync" href="/sync" data-plan-glide="">
               <span className="v5-plan-number">03</span>
               <div className="v5-plan-name"><small>CAMPAIGNS · FILMS · GAMES</small><strong>Sync</strong></div>
               <p>Clear a catalogue track or commission original music for a larger commercial brief.</p>
               <div className="v5-plan-cost"><strong>Project</strong><span>brief + quote</span></div>
               <i aria-hidden="true">↗</i>
             </Link>
-            <Link className="v5-plan-row v5-plan-retail" href="/retail">
+            <Link className="v5-plan-row v5-plan-retail" href="/retail" data-plan-glide="">
               <span className="v5-plan-number">04</span>
               <div className="v5-plan-name"><small>PHYSICAL SPACES · COMING SOON</small><strong>Music for Business</strong></div>
               <p>Curated music for cafés, stores, hotels and other customer-facing spaces.</p>
