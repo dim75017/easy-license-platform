@@ -9,21 +9,23 @@ async function source(path) {
 }
 
 test("contains the finished Easy License landing experience", async () => {
-  const [page, layout, css, packageJson] = await Promise.all([
+  const [page, layout, css, homeCss, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
+    source("app/home-v5.css"),
     source("package.json"),
   ]);
 
-  assert.match(page, /Real music\./);
-  assert.match(page, /Powered by Lofi Girl/i);
-  assert.match(page, /One platform[\s\S]*Four ways to use music/i);
-  assert.match(page, /Sync & custom music/i);
+  assert.match(page, /Clear[\s\S]*the track\.[\s\S]*Keep moving\./i);
+  assert.match(layout, /Powered by Lofi Girl/i);
+  assert.match(page, /Built around[\s\S]*how you publish/i);
+  assert.match(page, /One brief, two routes/i);
   assert.match(page, /Music for Business/i);
-  assert.match(page, /Artists paid directly/i);
-  assert.match(layout, /Easy License — Music licensing made simple/);
+  assert.match(page, /Artist paid directly/i);
+  assert.match(layout, /Easy License — Clear the track/);
   assert.match(css, /--bg:\s*#07080d/i);
+  assert.match(homeCss, /--v5-blue:\s*#514cff/i);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -45,61 +47,68 @@ test("defines every public and connected product surface", async () => {
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
-  const [page, shell, motion, css, packageJson] = await Promise.all([
+  const [page, shell, motion, css, homeCss, booth, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/components/PublicShell.tsx"),
     source("app/components/MotionLayer.tsx"),
     source("app/globals.css"),
+    source("app/home-v5.css"),
+    source("app/components/LicenseBooth.tsx"),
     source("package.json"),
   ]);
 
   assert.match(page, /data-reveal="hero-title"/);
   assert.match(page, /data-pointer-glow/);
-  assert.match(page, /HorizontalRailControls/);
+  assert.match(page, /LicenseBooth/);
+  assert.match(booth, /useState/);
+  assert.match(booth, /role="tablist"/);
   assert.match(shell, /<MotionLayer/);
   assert.match(motion, /IntersectionObserver/);
   assert.match(motion, /requestAnimationFrame/);
   assert.match(motion, /prefers-reduced-motion/);
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
-  assert.match(css, /@keyframes productScan/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(homeCss, /@keyframes v5Scan/);
+  assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
 });
 
-test("ships the editorial identity, simple account navigation and real artist profiles", async () => {
-  const [css, brand, header, catalogue, page, rail] = await Promise.all([
+test("ships the signal-router identity, simple account navigation and real artist profiles", async () => {
+  const [css, homeCss, layout, brand, header, catalogue, page, booth] = await Promise.all([
     source("app/globals.css"),
+    source("app/home-v5.css"),
+    source("app/layout.tsx"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
     source("app/components/CatalogueExplorer.tsx"),
     source("app/page.tsx"),
-    source("app/components/HorizontalRailControls.tsx"),
+    source("app/components/LicenseBooth.tsx"),
   ]);
 
-  assert.match(css, /font-family:\s*"Newsreader"/);
-  assert.match(css, /font-family:\s*"IBM Plex Sans"/);
-  assert.match(css, /newsreader-var-latin\.woff2/);
-  assert.match(css, /ibm-plex-sans-var-latin\.woff2/);
-  assert.match(css, /Identity system — liner notes meet a rights ledger/);
-  assert.match(css, /Easy License V4 — editorial storefront/);
-  assert.match(css, /\.public-shell \.button::after/);
-  assert.doesNotMatch(css, /--font-display:\s*Sora|--font-body:\s*Inter/);
-  assert.match(brand, /<em>license<\/em>/);
+  assert.match(css, /font-family:\s*"Unbounded"/);
+  assert.match(css, /font-family:\s*"Afacad Flux"/);
+  assert.match(css, /unbounded-var-latin\.woff2/);
+  assert.match(css, /afacad-flux-var-latin\.woff2/);
+  assert.match(homeCss, /Easy License V5 — the licensing signal router/);
+  assert.match(homeCss, /\.v5-booth/);
+  assert.match(homeCss, /clip-path:/);
+  assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
+  assert.match(brand, /className="brand-accent">license<\/span>/);
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
   assert.match(header, /mobile-account-actions/);
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
   assert.match(catalogue, /EL-CAT-/);
-  assert.match(page, /The people behind/);
+  assert.match(page, /Every track[\s\S]*has a name/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(page, /\/artists\/project-aer\.jpg/);
-  assert.match(rail, /ResizeObserver/);
-  assert.match(rail, /scrollBy/);
+  assert.match(booth, /My channel/);
+  assert.match(layout, /openGraph/);
+  assert.match(layout, /og\.png/);
   await Promise.all([
-    access(new URL("public/fonts/newsreader-var-latin.woff2", root)),
-    access(new URL("public/fonts/newsreader-var-italic-latin.woff2", root)),
-    access(new URL("public/fonts/ibm-plex-sans-var-latin.woff2", root)),
+    access(new URL("public/fonts/unbounded-var-latin.woff2", root)),
+    access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
+    access(new URL("public/og.png", root)),
     access(new URL("public/artists/charlee.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
