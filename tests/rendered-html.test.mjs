@@ -134,11 +134,12 @@ test("validates lead payloads before writing to D1", async () => {
 });
 
 test("ships a constrained D1 lead schema and current worker compatibility", async () => {
-  const [schema, migration, hosting, vite] = await Promise.all([
+  const [schema, migration, hosting, vite, wrangler] = await Promise.all([
     source("db/schema.ts"),
     source("drizzle/0000_charming_boomerang.sql"),
     source(".openai/hosting.json"),
     source("vite.config.ts"),
+    source("wrangler.jsonc"),
   ]);
 
   assert.match(schema, /leads_request_shape_check/);
@@ -148,4 +149,7 @@ test("ships a constrained D1 lead schema and current worker compatibility", asyn
   assert.match(hosting, /"d1": "DB"/);
   assert.match(vite, /compatibility_date: "2026-08-04"/);
   assert.doesNotMatch(vite, /nodejs_compat/);
+  assert.match(wrangler, /"compatibility_date": "2026-08-04"/);
+  assert.match(wrangler, /"binding": "DB"/);
+  assert.doesNotMatch(wrangler, /nodejs_compat/);
 });
