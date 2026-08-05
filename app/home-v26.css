@@ -1290,3 +1290,22 @@
   .home26-hero-wash { background: linear-gradient(90deg, rgba(27, 25, 31, .95), rgba(27, 25, 31, .56)); }
   .home26-hero-credit { right: 24px; bottom: 24px; left: 24px; max-width: 240px; font-size: 12px; text-align: left; }
 }
+
+/* V30: hero photography belongs to the page canvas, while its text stays on the shared content grid. */
+.home26-hero {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  padding-right: max(36px, calc((100vw - 1440px) / 2));
+  padding-left: max(36px, calc((100vw - 1440px) / 2));
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .home26-hero {
+    width: 100%;
+    min-height: 620px;
+    border-radius: 0;
+    padding: 62px 24px 100px;
+  }
+}
