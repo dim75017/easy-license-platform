@@ -8545,3 +8545,26 @@ button {
   .public-shell .site-header .site-nav > a:last-of-type { border-color: rgba(151, 181, 255, .14); }
   .public-shell .site-footer { width: calc(100% - 32px); }
 }
+
+/* V32: a warm footer closes the navy page without introducing another visual language. */
+.public-shell .site-footer {
+  border-top-color: rgba(9, 28, 61, .16);
+  background: #efe8dc;
+  box-shadow: 0 0 0 100vmax #efe8dc;
+  color: #071b3c;
+}
+.public-shell .site-footer .brand-mark {
+  border-color: rgba(7, 27, 60, .26);
+  background: linear-gradient(145deg, rgba(95, 137, 226, .18), rgba(7, 27, 60, .03));
+  box-shadow: inset 3px 0 #315dba;
+}
+.public-shell .site-footer .brand-mark::after { border-color: rgba(7, 27, 60, .16); }
+.public-shell .site-footer .brand-mark span { background: #071b3c; }
+.public-shell .site-footer .brand-name { color: #071b3c; }
+.public-shell .site-footer .brand-name em { color: #315dba; }
+.public-shell .site-footer .brand-powered { color: rgba(7, 27, 60, .55); }
+.public-shell .footer-brand > p { color: rgba(7, 27, 60, .68); }
+.public-shell .footer-label { color: #315dba; }
+.public-shell .footer-links a { color: rgba(7, 27, 60, .76); }
+.public-shell .footer-links a:hover { color: #071b3c; }
+.public-shell .footer-bottom { border-top-color: rgba(7, 27, 60, .13); color: rgba(7, 27, 60, .56); }
