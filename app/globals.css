@@ -8568,3 +8568,28 @@ button {
 .public-shell .footer-links a { color: rgba(7, 27, 60, .76); }
 .public-shell .footer-links a:hover { color: #071b3c; }
 .public-shell .footer-bottom { border-top-color: rgba(7, 27, 60, .13); color: rgba(7, 27, 60, .56); }
+
+/* V33: public navigation and footer are comfortably readable at normal viewing distance. */
+.public-shell .site-header-inner { min-height: 82px; }
+.public-shell .site-header .site-nav > a { min-height: 50px; padding-inline: 18px; font-size: 14px; }
+.public-shell .header-login { min-height: 42px; font-size: 14px; }
+.public-shell .site-header .button-primary { min-height: 46px; padding-inline: 21px; font-size: 14px; }
+.public-shell .site-footer { padding-top: 74px; padding-bottom: 30px; }
+.public-shell .footer-main { grid-template-columns: minmax(240px, .8fr) minmax(0, 2.2fr); gap: clamp(48px, 7vw, 130px); }
+.public-shell .footer-links { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px; }
+.public-shell .footer-brand > p { max-width: 330px; font-size: 14px; }
+.public-shell .footer-label { margin-bottom: 10px; font-size: 11px; }
+.public-shell .footer-links a { font-size: 14px; line-height: 1.5; }
+.public-shell .footer-bottom { margin-top: 56px; padding-top: 24px; font-size: 12px; }
+
+@media (max-width: 980px) {
+  .public-shell .site-header .site-nav > a { padding-inline: 12px; font-size: 12px; }
+  .public-shell .footer-main { grid-template-columns: 1fr; gap: 44px; }
+  .public-shell .footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 24px; }
+}
+
+@media (max-width: 800px) {
+  .public-shell .site-header-inner { min-height: 68px; }
+  .public-shell .site-header .site-nav > a { min-height: 52px; font-size: 14px; }
+  .public-shell .footer-links { grid-template-columns: 1fr 1fr; }
+}

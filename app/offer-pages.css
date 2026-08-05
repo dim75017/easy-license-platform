@@ -1085,3 +1085,42 @@
 .offer-landing .creator-pricing .price-card .feature-list { border-color: var(--marketing-rule); }
 .offer-landing .creator-pricing .price-card .button-primary { background: #91b0ff; color: #071225; }
 .offer-landing .creator-pricing .price-card-featured .button-light { background: #edf4ff; color: #071225; }
+
+/* V33: keep all copy and actions legible on the navy offer surfaces. */
+.offer-landing .offer-hero,
+.offer-landing .offer-final-cta { color: #edf4ff; }
+.offer-landing .offer-hero::after {
+  background:
+    linear-gradient(90deg, rgba(3, 10, 24, .96) 0%, rgba(3, 10, 24, .86) 46%, rgba(3, 10, 24, .42) 76%, rgba(3, 10, 24, .14) 100%),
+    linear-gradient(180deg, rgba(3, 10, 24, .08), rgba(3, 10, 24, .62));
+}
+.offer-landing .offer-hero-copy h1,
+.offer-landing .offer-final-cta h2,
+.offer-landing .offer-hero-proof strong { color: #edf4ff; }
+.offer-landing .offer-hero-copy h1 em,
+.offer-landing .offer-hero-copy .offer-kicker > span,
+.offer-landing .offer-final-cta > p { color: #a8c2ff; }
+.offer-landing .offer-hero-copy .offer-kicker,
+.offer-landing .offer-hero-copy > p:not(.offer-kicker),
+.offer-landing .offer-hero-proof span { color: rgba(229, 238, 255, .76); }
+.offer-landing .offer-hero-proof { border-color: rgba(174, 199, 255, .26); background: rgba(5, 16, 34, .68); }
+.offer-landing .offer-hero-proof > div { border-color: rgba(174, 199, 255, .18); }
+.offer-landing .offer-button-light {
+  border-color: #edf4ff;
+  background: #edf4ff;
+  color: #071225;
+}
+.offer-landing .offer-button-light span:last-child { background: rgba(7, 18, 37, .1); }
+.offer-landing .offer-inline-light { border-bottom-color: rgba(237, 244, 255, .45); color: #edf4ff; }
+.offer-landing .offer-catalogue .featured-track { color: #edf4ff; }
+.offer-landing .offer-catalogue .featured-track-meta em { color: rgba(229, 238, 255, .68); }
+.offer-landing .offer-catalogue .featured-track-meta small { color: #a8c2ff; }
+.offer-landing .offer-section-head-light h2 { color: #edf4ff; }
+.offer-landing .offer-section-head-light .offer-kicker { color: rgba(229, 238, 255, .68); }
+.offer-landing .offer-section-head-light > p:last-child { color: rgba(229, 238, 255, .72); }
+.offer-landing .business-option { color: #edf4ff; }
+.offer-landing .business-option::after { background: linear-gradient(180deg, rgba(3, 10, 24, .28), rgba(3, 10, 24, .94)); }
+.offer-landing .business-option > span { color: rgba(229, 238, 255, .76); }
+.offer-landing .business-option p { color: rgba(229, 238, 255, .76); }
+.offer-landing .business-option strong { color: #a8c2ff; }
+.offer-landing .business-retail .offer-inline-link { border-bottom-color: rgba(237, 244, 255, .42); color: #edf4ff; }
