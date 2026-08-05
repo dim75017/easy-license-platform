@@ -16,8 +16,8 @@ export default function CataloguePage() {
         <section className="music-v26-hero">
           <div className="music-v26-hero-copy" data-reveal="left">
             <p className="music-v26-kicker"><span>Easy License</span> Music library</p>
-            <h1>Music for videos, streams and stories of every kind.</h1>
-            <p>Explore instrumental and background music selected by music professionals. Search by project, mood or genre, listen to the original recording and choose the licence that matches how the music will be used.</p>
+            <h1>A working music library<br />for people making things.</h1>
+            <p>Start with the project in front of you, then search by use, mood, artist or genre. Listen to the original recording, build a shortlist and only then choose the licence that matches how the music will appear.</p>
             <div className="music-v26-hero-actions">
               <a className="music-v26-button music-v26-button-light" href="#music-library">Browse the library <span>↓</span></a>
               <Link className="music-v26-text-link music-v26-text-link-light" href="/pricing">See creator pricing <span>→</span></Link>
@@ -49,14 +49,14 @@ export default function CataloguePage() {
 
         <section className="music-v26-curation" aria-labelledby="music-curation-title">
           <div className="music-v26-curation-intro" data-reveal="left">
-            <p className="music-v26-kicker"><span>02</span> Professional curation</p>
-            <h2 id="music-curation-title">Why the catalogue feels consistent.</h2>
-            <p>Easy License is not an open upload platform. Music is reviewed and organised by people who understand composition, production and the practical needs of editors, creators and brands.</p>
+            <p className="music-v26-kicker"><span>02</span> A library with an editorial point of view</p>
+            <h2 id="music-curation-title">Less searching.<br />More good first options.</h2>
+            <p>Easy License is designed as a working library, not an endless upload feed. The structure helps editors, creators and teams get to a small number of relevant tracks before the search becomes tiring.</p>
           </div>
           <div className="music-v26-curation-grid" data-reveal="group">
-            <article><span>01</span><h3>Selected for quality</h3><p>Every addition is reviewed for musical craft, production quality and usefulness in real projects.</p></article>
-            <article><span>02</span><h3>Made by real artists</h3><p>The catalogue contains human-made music only. Artists are credited and paid directly when their work is licensed.</p></article>
-            <article><span>03</span><h3>Organised around use</h3><p>Collections, moods and use cases help you reach a focused shortlist without searching through irrelevant uploads.</p></article>
+            <article><span>01</span><h3>Start from the work</h3><p>Project collections provide a useful first route when you know what you are making but not the genre you need.</p></article>
+            <article><span>02</span><h3>Follow the feeling</h3><p>Energy, mood and instrumentation give a second route when the picture is clear but the format is open.</p></article>
+            <article><span>03</span><h3>Know who made it</h3><p>Every track is attached to a real artist, with the information needed to make a considered choice.</p></article>
           </div>
         </section>
 

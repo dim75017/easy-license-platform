@@ -8680,3 +8680,26 @@ button {
 .public-shell .site-footer .footer-label { color: #955a49 !important; }
 .public-shell .site-footer .brand-powered,
 .public-shell .site-footer .footer-bottom { color: rgba(41, 40, 50, .64) !important; }
+
+/* V37: navigation uses one clear hover treatment — a soft frame, never a competing underline. */
+.public-shell .site-header .site-nav {
+  gap: 7px;
+  border: 0;
+}
+.public-shell .site-header .site-nav > a,
+.public-shell .site-header .site-nav > a:last-of-type {
+  border: 0;
+  border-radius: 12px;
+}
+.public-shell .site-header .site-nav > a:hover,
+.public-shell .site-header .site-nav > a.is-active {
+  background: rgba(185, 120, 100, .08);
+  box-shadow: inset 0 0 0 1px rgba(149, 90, 73, .5);
+  color: #292832;
+}
+
+@media (max-width: 800px) {
+  .public-shell .site-header .site-nav { gap: 4px; padding: 6px; }
+  .public-shell .site-header .site-nav > a,
+  .public-shell .site-header .site-nav > a:last-of-type { border: 0; border-radius: 9px; }
+}

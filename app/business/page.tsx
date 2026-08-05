@@ -14,8 +14,8 @@ export default function BusinessPage() {
         <section className="offer-hero offer-hero-business">
           <div className="offer-hero-copy" data-reveal="left">
             <p className="offer-kicker"><span>EL / BUSINESS</span> Powered by Lofi Girl</p>
-            <h1 data-reveal="hero-title">Commercial music licensing<br /><em>and original composition.</em></h1>
-            <p>License an existing track for advertising, branded content, film, series, games, trailers and events, or commission original music from our artist network. Our team can prepare a curated shortlist and define the media, territory, term and exclusivity required for the project. Music for physical spaces is coming soon.</p>
+            <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
+            <p>For a campaign, film, product, event or client brief, we help you choose the right route: clear an existing track or commission something original. The scope is shaped around the media, territories, term and exclusivity of the work — before it goes live.</p>
             <div className="offer-actions">
               <Link className="offer-button offer-button-light" href="/sync#brief">Send a business brief <span>↗</span></Link>
               <a className="offer-inline-link offer-inline-light" href="#business-options">Review business services <span>↓</span></a>
@@ -31,13 +31,13 @@ export default function BusinessPage() {
         <section className="offer-curation offer-curation-reverse" aria-labelledby="business-curation-title">
           <figure data-reveal="scale"><img src="/images/stock/studio-artist.jpg" alt="Music producer working at a recording console" /></figure>
           <div className="offer-curation-copy" data-reveal="left">
-            <p className="offer-kicker"><span>01</span> How we select music</p>
-            <h2 id="business-curation-title">A catalogue reviewed by<br />music professionals.</h2>
-            <p>Our music team evaluates composition, performance, recording and production quality before a track enters the catalogue. When you send a brief, we review the mood, pace, instrumentation and intended media to prepare a shortlist that fits the project.</p>
+            <p className="offer-kicker"><span>01</span> Start from the brief</p>
+            <h2 id="business-curation-title">Music that can carry<br />a brand or a story.</h2>
+            <p>Commercial work needs more than a good track. We look at the mood, pace, instrument palette, media plan and practical rights together, then help prepare a shortlist that makes sense for the project rather than a generic playlist.</p>
             <div className="offer-principles">
-              <article><span>01</span><h3>Music and production review</h3><p>We assess the composition, performance, recording, mix and overall production quality.</p></article>
-              <article><span>02</span><h3>Human-made catalogue</h3><p>Every eligible track is created by an artist; AI-generated music is not accepted.</p></article>
-              <article><span>03</span><h3>Shortlists built for the brief</h3><p>Our team narrows the catalogue using the project context rather than broad, generic search terms.</p></article>
+              <article><span>01</span><h3>Creative fit</h3><p>We match the musical character to the story, audience and pace of the work.</p></article>
+              <article><span>02</span><h3>Rights fit</h3><p>Media, markets, duration and exclusivity are defined around the actual use.</p></article>
+              <article><span>03</span><h3>Artist-led options</h3><p>Existing tracks and original commissions both begin with people making the music.</p></article>
             </div>
           </div>
         </section>

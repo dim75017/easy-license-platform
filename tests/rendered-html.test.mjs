@@ -79,9 +79,9 @@ test("contains the complete Easy License music licensing homepage", async () => 
 
 test("defines every public and connected product surface", async () => {
   const routes = [
-    ["app/creators/page.tsx", /Human-made music for/i],
-    ["app/business/page.tsx", /Commercial music licensing/i],
-    ["app/catalog/page.tsx", /Music for videos, streams and stories of every kind/i],
+    ["app/creators/page.tsx", /Music that fits/i],
+    ["app/business/page.tsx", /Music with the rights/i],
+    ["app/catalog/page.tsx", /A working music library/i],
     ["app/pricing/page.tsx", /Pricing for creators/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
@@ -101,15 +101,15 @@ test("defines every public and connected product surface", async () => {
     source("app/retail/page.tsx"),
     source("app/sync/page.tsx"),
   ]);
-  assert.match(creators, /Every track is reviewed/i);
+  assert.match(creators, /Music that leaves room/i);
   assert.match(creators, /<CatalogueExplorer compact \/>/i);
   assert.match(creators, /<PricingCards expanded \/>/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
   assert.match(business, /Commercial Sync/i);
   assert.match(business, /Custom Commission/i);
   assert.match(business, /Music for Retail · Coming soon/i);
-  assert.match(business, /A catalogue reviewed by/i);
-  assert.match(business, /Shortlists built for the brief/i);
+  assert.match(business, /Music that can carry/i);
+  assert.match(business, /Rights fit/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.match(pricing, /CREATOR SUBSCRIPTIONS/i);
   assert.match(pricing, /Business pricing depends on the rights you need/i);

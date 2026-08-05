@@ -23,8 +23,8 @@ export default function CreatorsPage() {
         <section className="offer-hero offer-hero-creators">
           <div className="offer-hero-copy" data-reveal="left">
             <p className="offer-kicker"><span>EL / CREATORS</span> Powered by Lofi Girl</p>
-            <h1 data-reveal="hero-title">Human-made music for<br /><em>your videos, streams and podcasts.</em></h1>
-            <p>Browse more than 10,000 instrumental and background tracks made by artists and selected by our music team. Creator plans cover eligible use on your own YouTube, Twitch, podcast and social channels, with licence records kept in one account. No AI-generated music is accepted into the catalogue.</p>
+            <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
+            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Creator plans are built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
             <div className="offer-actions">
               <Link className="offer-button offer-button-light" href="/catalog">Explore the music <span>↗</span></Link>
               <a className="offer-inline-link offer-inline-light" href="#creator-plans">Compare Creator &amp; Pro <span>↓</span></a>
@@ -40,13 +40,13 @@ export default function CreatorsPage() {
         <section className="offer-curation" aria-labelledby="creator-curation-title">
           <figure data-reveal="scale"><img src="/images/unsplash/hero-producer.jpg" alt="Music professional working in a warm recording studio" /></figure>
           <div className="offer-curation-copy" data-reveal="right">
-            <p className="offer-kicker"><span>01</span> How the catalogue is built</p>
-            <h2 id="creator-curation-title">Every track is reviewed<br />before it is added.</h2>
-            <p>Our music team reviews each track for composition, performance, recording, mix quality and usefulness in edited or live content. The catalogue is then organised by mood, style and use so that searches return consistent, relevant music.</p>
+            <p className="offer-kicker"><span>01</span> Built for the cut and the stream</p>
+            <h2 id="creator-curation-title">Music that leaves room<br />for your voice.</h2>
+            <p>The catalogue is organised for the moments creators actually need to soundtrack: a long edit, a live intro, an explainer, a recap or a quiet background bed. Search by feeling, format or use rather than starting from a blank page.</p>
             <div className="offer-principles">
-              <article><span>01</span><h3>Music review</h3><p>We assess the composition, performance and whether the arrangement can support a creator&apos;s content.</p></article>
-              <article><span>02</span><h3>Production standards</h3><p>Recording, mix and master quality are checked before a track enters the catalogue.</p></article>
-              <article><span>03</span><h3>Human-made catalogue</h3><p>Every eligible track is created by an artist; AI-generated music is not accepted.</p></article>
+              <article><span>01</span><h3>Made for the background</h3><p>Arrangements that can support a voiceover, a conversation or a scene without taking it over.</p></article>
+              <article><span>02</span><h3>Easy to place</h3><p>Moods, energy and use tags help you move from a rough idea to a usable track quickly.</p></article>
+              <article><span>03</span><h3>Made by artists</h3><p>Every eligible track comes from a real artist, never an AI music generator.</p></article>
             </div>
           </div>
         </section>
