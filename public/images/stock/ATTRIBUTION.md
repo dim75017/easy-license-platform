@@ -37,6 +37,8 @@ All listed Unsplash photographs are marked free to use under the Unsplash Licens
 | `streamer.jpg` | Daniel Lincoln | https://unsplash.com/photos/VQj-pE0DyAw |
 | `vlogger.jpg` | Videodeck.co | https://unsplash.com/photos/GRUhkcD9k8o |
 | `massage.jpg` | Simon HUMLER | https://unsplash.com/s/photos/massage-therapist |
+| `retail/gym.jpg` | Sven Mieke | https://unsplash.com/photos/MsCgmHuirDo |
+| `retail/restaurant-new.jpg` | Jason Leung | https://unsplash.com/photos/poI7DelFiVA |
 
 ## Featured catalogue artwork
 
