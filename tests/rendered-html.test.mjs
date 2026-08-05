@@ -81,7 +81,7 @@ test("defines every public and connected product surface", async () => {
   const routes = [
     ["app/creators/page.tsx", /Music that fits/i],
     ["app/business/page.tsx", /Music with the rights/i],
-    ["app/catalog/page.tsx", /A working music library/i],
+    ["app/catalog/page.tsx", /Music for the/i],
     ["app/pricing/page.tsx", /Pricing for creators/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],

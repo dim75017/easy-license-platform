@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueExplorer } from "../components/CatalogueExplorer";
 import { PublicShell } from "../components/PublicShell";
-import { tracks } from "../data/catalog";
+import { genres, useCategories } from "../data/catalog";
 
 export const metadata: Metadata = {
   title: "Music library",
@@ -16,42 +16,60 @@ export default function CataloguePage() {
         <section className="music-v26-hero">
           <div className="music-v26-hero-copy" data-reveal="left">
             <p className="music-v26-kicker"><span>Easy License</span> Music library</p>
-            <h1>A working music library<br />for people making things.</h1>
-            <p>Start with the project in front of you, then search by use, mood, artist or genre. Listen to the original recording, build a shortlist and only then choose the licence that matches how the music will appear.</p>
+            <h1>Music for the<br />work in front of you.</h1>
+            <p>Browse a focused, human-made catalogue by project, feeling or genre. Listen to the original recording, make a shortlist, then choose the licence that fits where the music will appear.</p>
             <div className="music-v26-hero-actions">
               <a className="music-v26-button music-v26-button-light" href="#music-library">Browse the library <span>↓</span></a>
               <Link className="music-v26-text-link music-v26-text-link-light" href="/pricing">See creator pricing <span>→</span></Link>
             </div>
           </div>
-          <div className="music-v26-cover-stack" data-reveal="group" aria-label="A selection of music in the Easy License catalogue">
-            {tracks.map((track) => (
-              <figure key={track.id}>
-                <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
-                <figcaption><strong>{track.title}</strong><span>{track.artist}</span></figcaption>
-              </figure>
+          <div className="music-v26-hero-routes" data-reveal="group" aria-label="Ways to explore the Easy License catalogue">
+            <span>BY PROJECT</span><span>BY FEELING</span><span>BY GENRE</span>
+          </div>
+        </section>
+
+        <section className="music-v26-discovery" aria-labelledby="music-projects-title">
+          <div className="music-v26-section-head" data-reveal="group">
+            <p className="music-v26-kicker"><span>01</span> Browse by project</p>
+            <h2 id="music-projects-title">Start with what you&apos;re making.</h2>
+            <p>Pick a familiar format and begin with a shorter, more useful selection. From there, the library lets you refine by artist, mood or genre.</p>
+          </div>
+          <div className="music-v26-project-grid" data-reveal="group">
+            {useCategories.map((category) => (
+              <Link className="music-v26-project-card" href={`/catalog?use=${category.slug}#music-library`} key={category.slug}>
+                <img src={category.image} alt="" />
+                <span><strong>{category.label}</strong><small>{category.description}</small><em>Explore selection →</em></span>
+              </Link>
             ))}
           </div>
-          <div className="music-v26-hero-facts" data-reveal="group">
-            <div><strong>10,000+</strong><span>Human-made tracks</span></div>
-            <div><strong>0</strong><span>AI-generated tracks</span></div>
-            <div><strong>1,000+</strong><span>Artists worldwide</span></div>
+        </section>
+
+        <section className="music-v26-sound-map" aria-labelledby="music-sound-map-title">
+          <div data-reveal="left">
+            <p className="music-v26-kicker"><span>02</span> Browse by sound</p>
+            <h2 id="music-sound-map-title">A different route into the same catalogue.</h2>
+            <p>Sometimes the format is clear. Sometimes it is the feeling that leads. Use either to arrive at the right music more quickly.</p>
+          </div>
+          <div className="music-v26-sound-map-groups" data-reveal="group">
+            <div><span>GENRES</span>{genres.filter((item) => item !== "All genres").map((genre) => <Link href={`/catalog?genre=${encodeURIComponent(genre)}#music-library`} key={genre}>{genre}<b>→</b></Link>)}</div>
+            <div><span>MOODS</span>{["Warm", "Calm", "Bright", "Reflective", "Dreamy", "Easygoing"].map((mood) => <Link href={`/catalog?q=${encodeURIComponent(mood)}#music-library`} key={mood}>{mood}<b>→</b></Link>)}</div>
           </div>
         </section>
 
         <section className="music-v26-library" id="music-library" aria-labelledby="music-library-title">
           <div className="music-v26-section-head" data-reveal="group">
-            <p className="music-v26-kicker"><span>01</span> Explore the catalogue</p>
-            <h2 id="music-library-title">Start with the project. Then narrow the music.</h2>
-            <p>The editor&apos;s selection below is a first way into the wider catalogue. Search by track, artist, mood or project type, then confirm the intended use before licensing.</p>
+            <p className="music-v26-kicker"><span>03</span> Music library</p>
+            <h2 id="music-library-title">Search, listen and keep moving.</h2>
+            <p>Search a track, artist, mood or use. The collection below is a small, working preview of the wider Easy License catalogue.</p>
           </div>
-          <div data-reveal="scale"><CatalogueExplorer /></div>
+          <div data-reveal="scale"><CatalogueExplorer showUseCases={false} /></div>
         </section>
 
         <section className="music-v26-curation" aria-labelledby="music-curation-title">
           <div className="music-v26-curation-intro" data-reveal="left">
-            <p className="music-v26-kicker"><span>02</span> A library with an editorial point of view</p>
-            <h2 id="music-curation-title">Less searching.<br />More good first options.</h2>
-            <p>Easy License is designed as a working library, not an endless upload feed. The structure helps editors, creators and teams get to a small number of relevant tracks before the search becomes tiring.</p>
+            <p className="music-v26-kicker"><span>04</span> Made for considered choices</p>
+            <h2 id="music-curation-title">A library that stays<br />easy to navigate.</h2>
+            <p>The catalogue is deliberately organised to feel useful, not overwhelming. Every route starts with a human-made track and an artist behind it.</p>
           </div>
           <div className="music-v26-curation-grid" data-reveal="group">
             <article><span>01</span><h3>Start from the work</h3><p>Project collections provide a useful first route when you know what you are making but not the genre you need.</p></article>

@@ -34,37 +34,47 @@ function getServerLocationSearch() {
   return "";
 }
 
-export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
+export function CatalogueExplorer({ compact = false, showUseCases = true }: { compact?: boolean; showUseCases?: boolean }) {
   const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const urlParams = useMemo(() => new URLSearchParams(locationSearch), [locationSearch]);
   const urlUse = urlParams.get("use");
+  const urlGenre = urlParams.get("genre");
   const validUrlUse = useCategories.some((category) => category.slug === urlUse) ? urlUse as MusicUseSlug : "all";
+  const validUrlGenre = genres.includes(urlGenre ?? "") ? urlGenre! : "All genres";
   const [queryDraft, setQueryDraft] = useState<string | null>(null);
   const [useDraft, setUseDraft] = useState<MusicUseSlug | "all" | null>(null);
-  const [genre, setGenre] = useState("All genres");
+  const [genreDraft, setGenreDraft] = useState<string | null>(null);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const query = queryDraft ?? urlParams.get("q") ?? "";
   const activeUse = useDraft ?? validUrlUse;
+  const genre = genreDraft ?? validUrlGenre;
 
-  const updateLocation = (nextQuery: string, nextUse: MusicUseSlug | "all") => {
+  const updateLocation = (nextQuery: string, nextUse: MusicUseSlug | "all", nextGenre: string) => {
     if (compact) return;
     const url = new URL(window.location.href);
     if (nextQuery.trim()) url.searchParams.set("q", nextQuery.trim());
     else url.searchParams.delete("q");
     if (nextUse !== "all") url.searchParams.set("use", nextUse);
     else url.searchParams.delete("use");
+    if (nextGenre !== "All genres") url.searchParams.set("genre", nextGenre);
+    else url.searchParams.delete("genre");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     window.dispatchEvent(new Event("easy-license-urlchange"));
   };
 
   const updateQuery = (nextQuery: string) => {
     setQueryDraft(nextQuery);
-    updateLocation(nextQuery, activeUse);
+    updateLocation(nextQuery, activeUse, genre);
   };
 
   const updateUse = (nextUse: MusicUseSlug | "all") => {
     setUseDraft(nextUse);
-    updateLocation(query, nextUse);
+    updateLocation(query, nextUse, genre);
+  };
+
+  const updateGenre = (nextGenre: string) => {
+    setGenreDraft(nextGenre);
+    updateLocation(query, activeUse, nextGenre);
   };
 
   const results = useMemo(() => {
@@ -84,9 +94,9 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
   const chooseTrack = (track: Track) => setSelectedTrackId((current) => current === track.id ? null : track.id);
   const resetFilters = () => {
     setQueryDraft("");
-    setGenre("All genres");
+    setGenreDraft("All genres");
     setUseDraft("all");
-    updateLocation("", "all");
+    updateLocation("", "all", "All genres");
   };
 
   if (compact) {
@@ -124,13 +134,13 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
         </label>
         <label className="catalogue-v26-select">
           <span>Genre</span>
-          <select value={genre} onChange={(event) => setGenre(event.target.value)}>
+          <select value={genre} onChange={(event) => updateGenre(event.target.value)}>
             {genres.map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
       </div>
 
-      <section className="catalogue-v26-uses" aria-labelledby="catalogue-use-heading">
+      {showUseCases && <section className="catalogue-v26-uses" aria-labelledby="catalogue-use-heading">
         <div className="catalogue-v26-subhead">
           <div><span>Browse by use</span><h3 id="catalogue-use-heading">Start with what you&apos;re making.</h3></div>
           {activeUse !== "all" && <button type="button" onClick={() => updateUse("all")}>Show every use</button>}
@@ -149,7 +159,7 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
             </button>
           ))}
         </div>
-      </section>
+      </section>}
 
       <section className="catalogue-v26-results" aria-labelledby="catalogue-results-heading">
         <div className="catalogue-v26-subhead catalogue-v26-results-head">
