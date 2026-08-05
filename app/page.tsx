@@ -144,7 +144,7 @@ export default function Home() {
               </div>
             </article>
             <article className="home26-offer-card home26-offer-business">
-              <img src="/images/unsplash/campaign-filmset.jpg" alt="Commercial production taking place on a film set" />
+              <img src="/images/unsplash/filmmaker-desk.jpg" alt="Commercial production planned at a filmmaker's desk" />
               <div>
                 <p>Easy License for Businesses</p>
                 <h3>For campaigns, productions, client work and physical spaces.</h3>
@@ -161,7 +161,7 @@ export default function Home() {
 
         <section className="home26-section home26-curation" aria-labelledby="home26-curation-title">
           <figure data-reveal="scale">
-            <img src="/images/stock/studio-artist.jpg" alt="Music producer working at a recording console" />
+            <img src="/images/unsplash/studio-artist.jpg" alt="Music artist working in a recording studio" />
           </figure>
           <div className="home26-curation-copy" data-reveal="right">
             <p className="home26-eyebrow">A considered catalogue</p>

@@ -122,6 +122,46 @@ test("defines every public and connected product surface", async () => {
   assert.match(sync, /Easy License for Business/i);
 });
 
+function imagePaths(content) {
+  return [...content.matchAll(/(?:src|image)\s*[:=]\s*"([^"]+)"/g)].map((match) => match[1]);
+}
+
+function backgroundImage(css, selector) {
+  const start = css.indexOf(selector);
+  assert.notEqual(start, -1, `Missing visual selector ${selector}`);
+  const match = css.slice(start, start + 260).match(/url\("([^"]+)"\)/);
+  assert.ok(match, `Missing image for ${selector}`);
+  return match[1];
+}
+
+function assertUniquePageImages(page, images) {
+  const duplicates = images.filter((image, index) => images.indexOf(image) !== index);
+  assert.deepEqual(duplicates, [], `${page} repeats image assets: ${[...new Set(duplicates)].join(", ")}`);
+}
+
+test("keeps each public page free of repeated image assets", async () => {
+  const [home, creators, business, retail, catalogueData, offerCss] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/creators/page.tsx"),
+    source("app/business/page.tsx"),
+    source("app/retail/page.tsx"),
+    source("app/data/catalog.ts"),
+    source("app/offer-pages.css"),
+  ]);
+
+  assertUniquePageImages("Homepage", imagePaths(home));
+  assertUniquePageImages("Creators", [...imagePaths(creators), backgroundImage(offerCss, ".offer-hero-creators")]);
+  assertUniquePageImages("Business", [
+    ...imagePaths(business),
+    backgroundImage(offerCss, ".offer-hero-business"),
+    backgroundImage(offerCss, ".business-option-sync"),
+    backgroundImage(offerCss, ".business-option-custom"),
+    backgroundImage(offerCss, ".business-option-retail"),
+  ]);
+  assertUniquePageImages("Retail", imagePaths(retail));
+  assertUniquePageImages("Catalogue", imagePaths(catalogueData));
+});
+
 test("ships progressive, accessible motion without an animation dependency", async () => {
   const [page, shell, motion, css, homeCss, cozyCss, booth, packageJson] = await Promise.all([
     source("app/page.tsx"),
@@ -207,7 +247,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(page, /Music that is easy to find and good to use/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
-  assert.match(business, /\/artists\/dario-lessing\.jpg/);
+  assert.match(business, /\/artists\/meadow\.jpg/);
   assert.match(booth, /My channel/);
   assert.match(layout, /openGraph/);
   assert.match(layout, /og\.png/);
@@ -216,7 +256,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
     access(new URL("public/og.png", root)),
     access(new URL("public/artists/charlee.jpg", root)),
-    access(new URL("public/artists/dario-lessing.jpg", root)),
+    access(new URL("public/artists/meadow.jpg", root)),
     access(new URL("public/artists/mujo.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),

@@ -91,7 +91,7 @@ export default function BusinessPage() {
         </section>
 
         <section className="offer-human offer-human-business" aria-labelledby="business-human-title">
-          <figure data-reveal="scale"><img src="/artists/dario-lessing.jpg" alt="Portrait of Easy License artist Dario Lessing" /></figure>
+          <figure data-reveal="scale"><img src="/artists/meadow.jpg" alt="Portrait of Easy License artist M e a d o w" /></figure>
           <div data-reveal="right">
             <p className="offer-kicker"><span>05</span> Artists and music team</p>
             <h2 id="business-human-title">More than 1,000 artists<br />contribute to the catalogue.</h2>
