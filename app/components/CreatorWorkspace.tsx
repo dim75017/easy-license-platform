@@ -1,158 +1,247 @@
 "use client";
 
-import { useState } from "react";
-import { DashboardShell } from "./DashboardShell";
-import { tracks } from "../data/catalog";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { Brand } from "./Brand";
+import { genres, moods, playlists, tracks, type MusicUseSlug, type Track } from "../data/catalog";
+import "../workspace-music.css";
 
-const items = [
-  { id: "overview", icon: "⌂", label: "Overview" },
-  { id: "catalogue", icon: "♫", label: "Catalogue" },
-  { id: "downloads", icon: "↓", label: "Downloads", badge: "4" },
-  { id: "channels", icon: "▶", label: "Channels" },
-  { id: "licences", icon: "◇", label: "Licences" },
+type LibraryView = "music" | "playlists" | "downloads" | "channels" | "licences";
+
+const roles = ["Creator", "Streamer", "Filmmaker", "Brand / agency"];
+const destinations = ["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Podcasts", "Websites"];
+const quickMoods = ["Warm", "Calm", "Dreamy", "Reflective", "Bright", "Easygoing"];
+
+const navItems: Array<{ id: LibraryView; label: string; icon: string; badge?: string }> = [
+  { id: "music", label: "Music", icon: "♫" },
+  { id: "playlists", label: "Playlists", icon: "▤", badge: "6" },
+  { id: "downloads", label: "Downloads", icon: "↓", badge: "4" },
+  { id: "channels", label: "Channels", icon: "◉" },
+  { id: "licences", label: "Licences", icon: "◇" },
 ];
 
-export function CreatorWorkspace() {
-  const [active, setActive] = useState("overview");
-  const [copied, setCopied] = useState(false);
-  const [channelConnected, setChannelConnected] = useState(true);
+function Wave({ seed, dense = false }: { seed: string; dense?: boolean }) {
+  const heights = [34, 68, 43, 82, 56, 92, 47, 73, 39, 88, 51, 64, 31, 77, 46, 95, 58, 70, 37, 84, 49, 62, 42, 78];
+  const offset = seed.charCodeAt(seed.length - 1) % heights.length;
+  const count = dense ? heights.length : 12;
+  return (
+    <span className="music-wave" aria-hidden="true">
+      {heights.slice(0, count).map((_, index) => <i key={index} style={{ height: `${heights[(index + offset) % heights.length]}%` }} />)}
+    </span>
+  );
+}
 
-  async function copyCredit() {
-    const credit = 'Music: "Window Seat"\nArtist: Catalogue preview\nLicensed via Easy License';
+function ProductNavigation() {
+  return (
+    <div className="music-product-nav" aria-label="Easy License products">
+      <button className="is-active" type="button"><span>♫</span><strong>Music</strong></button>
+      <button type="button" aria-disabled="true"><span>⌁</span><strong>Sound effects</strong><small>Coming soon</small></button>
+      <button type="button" aria-disabled="true"><span>◌</span><strong>Voices</strong><small>Coming soon</small></button>
+    </div>
+  );
+}
+
+export function CreatorWorkspace() {
+  const [view, setView] = useState<LibraryView>("music");
+  const [query, setQuery] = useState("");
+  const [genre, setGenre] = useState("All genres");
+  const [mood, setMood] = useState("All moods");
+  const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
+  const [selectedTrackId, setSelectedTrackId] = useState(tracks[0]?.id ?? "");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [liked, setLiked] = useState<Set<string>>(() => new Set());
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("Creator");
+  const [selectedDestinations, setSelectedDestinations] = useState<Set<string>>(() => new Set(["YouTube"]));
+
+  useEffect(() => {
     try {
-      await navigator.clipboard.writeText(credit);
+      if (!window.localStorage.getItem("easy-license-library-tuned")) setSetupOpen(true);
     } catch {
-      // Clipboard can be unavailable in embedded previews; the UI remains demonstrative.
+      setSetupOpen(true);
     }
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+  }, []);
+
+  const visibleTracks = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return tracks.filter((track) => {
+      const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${track.suggestedUses.join(" ")}`.toLowerCase();
+      return (!needle || haystack.includes(needle))
+        && (genre === "All genres" || track.genre === genre)
+        && (mood === "All moods" || track.moods.includes(mood))
+        && (!activeUse || track.suggestedUses.includes(activeUse));
+    });
+  }, [activeUse, genre, mood, query]);
+
+  const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? tracks[0];
+
+  function openPlaylist(use: MusicUseSlug) {
+    setActiveUse(use);
+    setGenre("All genres");
+    setMood("All moods");
+    setView("music");
+    window.setTimeout(() => document.querySelector(".music-track-browser")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+  }
+
+  function openTrack(track: Track) {
+    setSelectedTrackId(track.id);
+    setPreviewOpen(true);
+  }
+
+  function toggleLiked(trackId: string) {
+    setLiked((current) => {
+      const next = new Set(current);
+      if (next.has(trackId)) next.delete(trackId);
+      else next.add(trackId);
+      return next;
+    });
+  }
+
+  function closeSetup() {
+    try { window.localStorage.setItem("easy-license-library-tuned", "1"); } catch { /* local storage can be unavailable in previews */ }
+    setSetupOpen(false);
+  }
+
+  function toggleDestination(destination: string) {
+    setSelectedDestinations((current) => {
+      const next = new Set(current);
+      if (next.has(destination)) next.delete(destination);
+      else next.add(destination);
+      return next;
+    });
   }
 
   return (
-    <DashboardShell area="client" items={items} active={active} onChange={setActive}>
-      <header className="dashboard-topbar">
-        <div>
-          <span className="dashboard-overline">Creator workspace</span>
-          <h1>{items.find((item) => item.id === active)?.label}</h1>
+    <div className="creator-music-app">
+      <aside className="music-app-sidebar">
+        <div className="music-app-brand"><Brand compact /><span>Creator</span></div>
+        <ProductNavigation />
+
+        <nav className="music-app-nav" aria-label="Creator library navigation">
+          <span>YOUR LIBRARY</span>
+          {navItems.slice(1).map((item) => (
+            <button className={view === item.id ? "is-active" : ""} type="button" onClick={() => setView(item.id)} key={item.id}>
+              <i aria-hidden="true">{item.icon}</i><strong>{item.label}</strong>{item.badge && <small>{item.badge}</small>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="music-app-sidebar-bottom">
+          <button className="tune-library-button" type="button" onClick={() => setSetupOpen(true)}><span>✦</span><strong>Tune my library</strong><small>Improve recommendations</small></button>
+          <div className="music-app-account"><span>DM</span><div><strong>Demo creator</strong><small>Creator plan</small></div><i>•••</i></div>
+          <Link href="/">← Back to website</Link>
         </div>
-        <div className="dashboard-user">
-          <span className="notification-dot">2</span>
-          <span className="user-avatar">DM</span>
-          <span><strong>Demo creator</strong><small>Creator plan</small></span>
-        </div>
-      </header>
+      </aside>
 
-      <div className="dashboard-content">
-        {active === "overview" && (
-          <>
-            <div className="welcome-row">
-              <div><p>Made by real artists</p><h2>Ready for your next upload.</h2><span>Your music, your rights and your proof of licence in one calm place.</span></div>
-              <button className="button button-primary" type="button" onClick={() => setActive("catalogue")}>Browse catalogue</button>
-            </div>
-            <div className="metric-grid creator-metrics">
-              <article><span className="metric-icon violet">✦</span><p>Current plan</p><strong>Creator</strong><small>€7.99 / month</small></article>
-              <article><span className="metric-icon green">▶</span><p>Connected channels</p><strong>{channelConnected ? "1 / 1" : "0 / 1"}</strong><small className={channelConnected ? "positive" : "warning"}>{channelConnected ? "Connection verified" : "Action needed"}</small></article>
-              <article><span className="metric-icon blue">↓</span><p>Downloads</p><strong>26</strong><small>This billing period</small></article>
-              <article><span className="metric-icon amber">◇</span><p>Licence</p><strong>Active</strong><small>Renews 08 Sep 2026</small></article>
-            </div>
+      <main className="music-app-main">
+        <header className="music-app-topbar">
+          <div><span>Easy License</span><h1>{view === "music" ? "Music library" : navItems.find((item) => item.id === view)?.label}</h1></div>
+          <label className="music-global-search">
+            <span aria-hidden="true">⌕</span>
+            <input value={query} onChange={(event) => { setQuery(event.target.value); setView("music"); }} placeholder="Search tracks, artists, moods or genres" />
+            <kbd>⌘ K</kbd>
+          </label>
+          <button className="music-topbar-action" type="button" onClick={() => setView("downloads")}>Downloads <span>4</span></button>
+        </header>
 
-            <div className="dashboard-two-columns">
-              <section className="dashboard-panel">
-                <div className="panel-heading"><div><span>RECENTLY ADDED</span><h3>Fresh for your next video</h3></div><button type="button" onClick={() => setActive("catalogue")}>View all →</button></div>
-                <div className="compact-track-list">
-                  {tracks.slice(0, 4).map((track, index) => (
-                    <div className={`compact-track accent-${track.accent}`} key={track.id}>
-                      <button type="button" aria-label={`Play ${track.title}`}>▶</button>
-                      <span><strong>{track.title}</strong><small>{track.mood} · {track.bpm} BPM</small></span>
-                      {index < 2 && <em>New</em>}
-                      <button type="button" aria-label={`Download ${track.title}`}>↓</button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-              <section className="dashboard-panel rights-panel">
-                <div className="panel-heading"><div><span>RIGHTS CENTRE</span><h3>Ready to publish</h3></div><span className="status-pill status-live"><i /> Active</span></div>
-                <div className="rights-orbit"><span>✓</span><i /><i /><i /></div>
-                <p>Your declared channel and active plan are recorded in this prototype workspace.</p>
-                <div className="rights-steps">
-                  <span className="done"><i>✓</i>Plan active</span>
-                  <span className="done"><i>✓</i>Channel verified</span>
-                  <span><i>3</i>Rights workflow</span>
-                </div>
-                <button className="button button-ghost button-full" type="button" onClick={() => setActive("channels")}>View channel status</button>
-              </section>
-            </div>
-
-            <section className="dashboard-panel attribution-panel">
-              <div><span className="metric-icon pink">▣</span><div><span>ATTRIBUTION HELPER</span><h3>Credit the music in one click</h3><p>Optional where your licence allows it. Always appreciated by artists.</p></div></div>
-              <code>Music: “Window Seat” · Licensed via Easy License</code>
-              <button className={copied ? "button button-light is-success" : "button button-light"} type="button" onClick={copyCredit}>{copied ? "✓ Copied" : "Copy credit"}</button>
+        {view === "music" && (
+          <div className="music-library-view">
+            <section className="music-discovery-intro">
+              <div><p>HUMAN-MADE MUSIC</p><h2>Find the right atmosphere,<br />then keep creating.</h2><span>Instrumental music from real artists, ready for videos, streams, podcasts and more.</span></div>
+              <div className="music-catalogue-proof"><strong>10,000+</strong><span>tracks in the full catalogue</span><i>0 AI-generated</i></div>
             </section>
-          </>
+
+            <section className="music-shelf" aria-labelledby="project-playlists-title">
+              <div className="music-shelf-head"><div><span>START WITH THE PROJECT</span><h3 id="project-playlists-title">Playlists made for the work.</h3></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
+              <div className="music-playlist-shelf">
+                {playlists.map((playlist, index) => (
+                  <button className={`workspace-playlist is-${playlist.accent}`} type="button" onClick={() => openPlaylist(playlist.use)} key={playlist.title}>
+                    <span className="workspace-playlist-art"><small>{String(index + 1).padStart(2, "0")}</small><Wave seed={playlist.title} /></span>
+                    <span><strong>{playlist.title}</strong><small>{playlist.subtitle}</small><em>{playlist.tracks}</em></span>
+                    <i aria-hidden="true">▶</i>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="music-mood-shelf" aria-labelledby="mood-title">
+              <div className="music-shelf-head"><div><span>FIND A FEELING</span><h3 id="mood-title">Browse by mood.</h3></div></div>
+              <div>{quickMoods.map((item) => <button className={mood === item ? "is-active" : ""} type="button" onClick={() => { setMood(item); setActiveUse(null); }} key={item}>{item}<span>→</span></button>)}</div>
+            </section>
+
+            <section className="music-track-browser" aria-labelledby="tracks-title">
+              <div className="music-track-browser-head">
+                <div><span>CATALOGUE PREVIEW</span><h3 id="tracks-title">{activeUse ? playlists.find((playlist) => playlist.use === activeUse)?.title : "All music"}</h3><p>{visibleTracks.length} tracks available in this preview</p></div>
+                <div className="music-filter-row">
+                  <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
+                  <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
+                  {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setQuery(""); }}>Clear filters</button>}
+                </div>
+              </div>
+
+              <div className="music-track-table" aria-live="polite">
+                <div className="music-track-table-head"><span>Track</span><span>Waveform</span><span>Genre / mood</span><span>Audience</span><span>Actions</span></div>
+                {visibleTracks.map((track, index) => (
+                  <article className={selectedTrackId === track.id ? "music-track-row is-selected" : "music-track-row"} key={track.id}>
+                    <div className="music-track-identity"><button type="button" onClick={() => openTrack(track)} aria-label={`Preview ${track.title}`}>{selectedTrackId === track.id && previewOpen ? "■" : "▶"}</button><img src={track.cover} alt="" /><span><strong>{track.title}</strong><small>{track.artist}</small></span></div>
+                    <Wave seed={track.id} dense />
+                    <div className="music-track-tags"><span>{track.genre}</span><small>{track.moods.slice(0, 2).join(" · ")}</small></div>
+                    <span className="music-track-streams">{track.streams}</span>
+                    <div className="music-track-actions"><button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`Like ${track.title}`}>{liked.has(track.id) ? "♥" : "♡"}</button><button type="button" aria-label={`Add ${track.title} to playlist`}>＋</button><button type="button" aria-label={`Download ${track.title}`}>↓</button></div>
+                    <span className="music-track-index">{String(index + 1).padStart(2, "0")}</span>
+                  </article>
+                ))}
+                {visibleTracks.length === 0 && <div className="music-no-results"><strong>No matching tracks yet.</strong><p>Try another mood or clear the filters to return to the full preview.</p><button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setQuery(""); }}>Reset library</button></div>}
+              </div>
+            </section>
+          </div>
         )}
 
-        {active === "catalogue" && <WorkspaceCatalogue />}
-        {active === "downloads" && <DownloadsView />}
-        {active === "channels" && (
-          <section className="dashboard-panel detail-view">
-            <div className="panel-heading"><div><span>CHANNEL MANAGEMENT</span><h3>Your declared channels</h3></div><button className="button button-small button-primary" type="button" onClick={() => setChannelConnected(!channelConnected)}>{channelConnected ? "Disconnect demo" : "Connect demo channel"}</button></div>
-            <div className="channel-card">
-              <span className="channel-avatar">▶</span>
-              <div><strong>Demo Creator Channel</strong><small>youtube.com/@demo-creator</small></div>
-              <span className={channelConnected ? "status-pill status-live" : "status-pill status-waiting"}><i /> {channelConnected ? "Connected" : "Not connected"}</span>
-              <button type="button">•••</button>
+        {view === "playlists" && <PlaylistLibrary onOpen={openPlaylist} />}
+        {view === "downloads" && <DownloadsLibrary onOpen={openTrack} />}
+        {view === "channels" && <ChannelsView />}
+        {view === "licences" && <LicencesView />}
+      </main>
+
+      {selectedTrack && (
+        <footer className={previewOpen ? "workspace-audio-player is-open" : "workspace-audio-player"}>
+          <div className="workspace-player-track"><img src={selectedTrack.cover} alt="" /><span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist} · {selectedTrack.genre}</small></span></div>
+          <button className="workspace-player-toggle" type="button" onClick={() => setPreviewOpen((open) => !open)} aria-label={previewOpen ? "Close preview" : "Open preview"}>{previewOpen ? "×" : "▶"}</button>
+          <Wave seed={selectedTrack.id} dense />
+          <span className="workspace-player-time">PREVIEW</span>
+          <div className="workspace-player-actions"><button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)}>♡</button><button type="button">＋ Playlist</button><button type="button">↓ Download</button></div>
+          {previewOpen && <iframe src={`https://open.spotify.com/embed/track/${selectedTrack.spotifyId}?utm_source=generator&theme=0`} title={`Spotify preview for ${selectedTrack.title} by ${selectedTrack.artist}`} width="100%" height="80" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" />}
+        </footer>
+      )}
+
+      {setupOpen && (
+        <div className="music-setup-backdrop" role="dialog" aria-modal="true" aria-labelledby="music-setup-title">
+          <div className="music-setup-panel">
+            <div className="music-setup-intro"><span>FIRST LISTEN</span><h2 id="music-setup-title">Tune the library<br />to your work.</h2><p>Two quick choices help Easy License put more useful playlists first. You can change this later.</p><button type="button" onClick={closeSetup}>Skip for now</button></div>
+            <div className="music-setup-form">
+              <section><span>01 · YOUR MAIN ROLE</span><h3>What are you creating as?</h3><div className="music-role-grid">{roles.map((role) => <button className={selectedRole === role ? "is-selected" : ""} type="button" onClick={() => setSelectedRole(role)} key={role}>{role}<i>{selectedRole === role ? "✓" : ""}</i></button>)}</div></section>
+              <section><span>02 · WHERE YOU PUBLISH</span><h3>Choose every destination that matters.</h3><div className="music-destination-grid">{destinations.map((destination) => <button className={selectedDestinations.has(destination) ? "is-selected" : ""} type="button" onClick={() => toggleDestination(destination)} key={destination}>{destination}<i>{selectedDestinations.has(destination) ? "✓" : "+"}</i></button>)}</div></section>
+              <button className="music-setup-submit" type="button" onClick={closeSetup}>Open my music library <span>→</span></button>
             </div>
-            <div className="notice-card"><span>ⓘ</span><p><strong>Content ID operations are not live in this prototype.</strong>The production workflow depends on the final YouTube / Content Manager architecture and human review.</p></div>
-          </section>
-        )}
-        {active === "licences" && (
-          <section className="dashboard-panel detail-view">
-            <div className="panel-heading"><div><span>DOCUMENTS</span><h3>Your licence centre</h3></div><span className="status-pill status-live"><i /> Up to date</span></div>
-            <div className="licence-document">
-              <span>◇</span><div><strong>Easy License · Creator</strong><small>EL-DEMO-2026-0001 · Active since 03 Aug 2026</small></div><button type="button">Preview</button><button type="button">↓ PDF</button>
-            </div>
-            <div className="licence-scope-grid">
-              <div><small>Covered</small><strong>Own monetised content</strong></div>
-              <div><small>Channels</small><strong>1 per platform</strong></div>
-              <div><small>Territory</small><strong>Worldwide</strong></div>
-              <div><small>Status</small><strong>Prototype terms</strong></div>
-            </div>
-          </section>
-        )}
-      </div>
-    </DashboardShell>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-function WorkspaceCatalogue() {
-  const [search, setSearch] = useState("");
-  const visible = tracks.filter((track) => `${track.title} ${track.mood} ${track.use}`.toLowerCase().includes(search.toLowerCase()));
-  return (
-    <section className="dashboard-panel detail-view">
-      <div className="panel-heading"><div><span>MUSIC DISCOVERY</span><h3>Find a track for the moment</h3></div><span className="status-pill status-neutral">{visible.length} previews</span></div>
-      <label className="dashboard-search"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Try “dreamy study”" /></label>
-      <div className="workspace-track-grid">
-        {visible.map((track) => (
-          <article className={`workspace-track accent-${track.accent}`} key={track.id}>
-            <div className="workspace-cover"><button type="button" aria-label={`Play ${track.title}`}>▶</button><span>{track.mood}</span></div>
-            <strong>{track.title}</strong><small>{track.artist}</small>
-            <div><span>{track.bpm} BPM</span><button type="button">↓</button></div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+function PlaylistLibrary({ onOpen }: { onOpen: (use: MusicUseSlug) => void }) {
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Playlists</h2><p>Start from a use case, then refine the sound inside the catalogue.</p></header><div className="music-secondary-playlists">{playlists.map((playlist) => <button className={`workspace-playlist is-${playlist.accent}`} type="button" onClick={() => onOpen(playlist.use)} key={playlist.title}><span className="workspace-playlist-art"><Wave seed={playlist.title} /></span><span><strong>{playlist.title}</strong><small>{playlist.subtitle}</small><em>{playlist.tracks}</em></span><i>▶</i></button>)}</div></div>;
 }
 
-function DownloadsView() {
-  return (
-    <section className="dashboard-panel detail-view">
-      <div className="panel-heading"><div><span>YOUR LIBRARY</span><h3>Recent downloads</h3></div><button type="button">Export list ↓</button></div>
-      <div className="download-table">
-        {tracks.slice(0, 4).map((track, index) => (
-          <div key={track.id}><span className={`download-art accent-${track.accent}`}>♫</span><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.mood}</span><span>{["Today", "Yesterday", "31 Jul", "29 Jul"][index]}</span><span>WAV + MP3</span><button type="button">•••</button></div>
-        ))}
-      </div>
-    </section>
-  );
+function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Your recent music downloads and their licence records.</p></header><div className="music-download-list">{tracks.map((track, index) => <article key={track.id}><button type="button" onClick={() => onOpen(track)}>▶</button><img src={track.cover} alt="" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><span>{["Today", "Yesterday", "31 Jul", "29 Jul"][index]}</span><strong>WAV + MP3</strong><button type="button">↓</button></article>)}</div></div>;
+}
+
+function ChannelsView() {
+  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Channels</h2><p>Creator plans cover the channels and profiles connected to your account.</p></header><section className="music-account-card"><span className="music-account-platform">▶</span><div><strong>Demo Creator Channel</strong><small>YouTube · Connected to Creator plan</small></div><span className="music-account-status">● Connected</span><button type="button">Manage</button></section></div>;
+}
+
+function LicencesView() {
+  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Licences</h2><p>Keep each track, channel and proof of licence in one place.</p></header><section className="music-account-card"><span className="music-account-platform">◇</span><div><strong>Easy License · Creator</strong><small>EL-DEMO-2026-0001 · Active since 03 Aug 2026</small></div><span className="music-account-status">● Active</span><button type="button">View licence</button></section></div>;
 }

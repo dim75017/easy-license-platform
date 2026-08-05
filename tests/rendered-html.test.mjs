@@ -285,14 +285,27 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss] = await Promise.all([
+  const [layout, workspaceCss, musicWorkspace, musicWorkspaceCss] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
+    source("app/components/CreatorWorkspace.tsx"),
+    source("app/workspace-music.css"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
   assert.match(workspaceCss, /studio-artist\.jpg/);
   assert.match(workspaceCss, /font-size:\s*36px/);
+  assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
+  assert.match(musicWorkspace, /Sound effects/);
+  assert.match(musicWorkspace, /Voices/);
+  assert.match(musicWorkspace, /Coming soon/);
+  assert.match(musicWorkspace, /Tune the library/);
+  assert.match(musicWorkspace, /music-track-table/);
+  assert.match(musicWorkspace, /open\.spotify\.com\/embed\/track/);
+  assert.match(musicWorkspace, /easy-license-library-tuned/);
+  assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
+  assert.match(musicWorkspaceCss, /\.music-track-identity strong\s*\{[^}]*font-size:\s*15px/s);
+  assert.match(musicWorkspaceCss, /\.creator-music-app/);
 });
 
 test("build emits product assets and removes starter artifacts", async () => {
