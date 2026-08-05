@@ -1292,3 +1292,44 @@
   .catalogue-v26-compact .featured-track-meta { grid-row: 1; }
   .featured-track-play { width: 34px; height: 34px; }
 }
+
+/* V29: catalogue panels live in the same midnight-blue system. */
+.music-v26-page,
+.catalogue-v26 {
+  --music-night: #050d1d;
+  --music-night-soft: #0a1930;
+  --music-paper: #edf4ff;
+  --music-cream: #0b1830;
+  --music-clay: #82a9ff;
+  --music-clay-deep: #9bb7ff;
+  --music-sage: #63d5ce;
+  --music-rule: rgba(152, 184, 255, .17);
+  --music-shadow: 0 28px 80px rgba(0, 0, 0, .28);
+}
+.music-v26-page { background: #040b18; color: var(--music-paper); }
+.music-v26-library,
+.music-v26-curation { background: #040b18; }
+.music-v26-section-head h2,
+.music-v26-curation h2 { color: var(--music-paper); }
+.music-v26-section-head > p:last-child,
+.music-v26-curation-intro > p:last-child,
+.music-v26-curation-grid p { color: rgba(224, 236, 255, .69); }
+.catalogue-v26 { border-color: var(--music-rule); background: #09172d; color: var(--music-paper); }
+.catalogue-v26-search-row { border-color: var(--music-rule); background: rgba(5, 13, 29, .52); }
+.catalogue-v26-search,
+.catalogue-v26-select,
+.catalogue-v26-results-head > p { color: rgba(224, 236, 255, .68); }
+.catalogue-v26-search input,
+.catalogue-v26-select select,
+.catalogue-v26-track { border-color: var(--music-rule); background: #0d1d35; color: var(--music-paper); }
+.catalogue-v26-track-copy p,
+.catalogue-v26-streams { color: rgba(224, 236, 255, .61); }
+.catalogue-v26-track-uses span { background: rgba(99, 213, 206, .11); color: #9ceae4; }
+.catalogue-v26-track:hover,
+.catalogue-v26-track.is-open { border-color: rgba(147, 179, 255, .56); box-shadow: 0 12px 30px rgba(0, 0, 0, .24); }
+.catalogue-v26-track-number { border-color: rgba(147, 179, 255, .38); color: #a9c2ff; }
+.catalogue-v26-empty { border-color: rgba(152, 184, 255, .3); color: rgba(224, 236, 255, .68); }
+.catalogue-v26-empty h4 { color: var(--music-paper); }
+.catalogue-v26-waveform i { background: linear-gradient(180deg, #9cc1ff, #5787e9); }
+.catalogue-v26-compact .catalogue-v26-waveform i { background: linear-gradient(180deg, #a4dfff, #5c88ed); }
+.music-v26-hero { background: radial-gradient(circle at 74% 23%, rgba(78, 133, 255, .22), transparent 30%), radial-gradient(circle at 12% 88%, rgba(80, 218, 207, .12), transparent 26%), #040b18; }

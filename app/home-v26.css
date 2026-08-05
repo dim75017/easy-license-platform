@@ -1203,6 +1203,39 @@
   }
 }
 
+/* V29: navy-first public surface. Warmth is now carried by the photography and soft blue light. */
+.home26 {
+  --home26-night: #050d1d;
+  --home26-night-soft: #0b1930;
+  --home26-paper: #eef5ff;
+  --home26-oat: #040b18;
+  --home26-clay: #7da6ff;
+  --home26-clay-dark: #aabfff;
+  --home26-sage: #71d7cf;
+  --home26-rule: rgba(154, 184, 255, .17);
+  background: radial-gradient(circle at 84% 4%, rgba(70, 123, 255, .17), transparent 25%), radial-gradient(circle at 10% 45%, rgba(66, 215, 204, .07), transparent 22%), var(--home26-oat);
+  color: var(--home26-paper);
+}
+.home26 .home26-section-heading h2, .home26 .home26-curation-copy h2, .home26 .home26-how-grid h3, .home26 .home26-offer-card h3, .home26 .home26-price-grid > article:not(.home26-price-business), .home26 .home26-faq-list summary { color: var(--home26-paper); }
+.home26 .home26-section-heading > p:last-of-type, .home26 .home26-curation-copy > p, .home26 .home26-how-grid li small, .home26 .home26-faq-list details p { color: rgba(222, 235, 255, .7); }
+.home26 .home26-eyebrow, .home26 .home26-offer-card > div > p, .home26 .home26-how-grid > article > p, .home26 .home26-price-grid > article > p { color: var(--home26-clay-dark); }
+.home26 .home26-facts { border-color: var(--home26-rule); background: rgba(11, 24, 44, .72); }
+.home26 .home26-facts > div { border-color: var(--home26-rule); }
+.home26 .home26-facts span { color: rgba(222, 235, 255, .68); }
+.home26 .home26-section + .home26-section { border-color: var(--home26-rule); }
+.home26 .home26-offer-card, .home26 .home26-how-grid > article, .home26 .home26-price-grid > article { border-color: var(--home26-rule); background: linear-gradient(145deg, rgba(15, 31, 54, .96), rgba(7, 16, 31, .97)); }
+.home26 .home26-offer-card li, .home26 .home26-how-grid li, .home26 .home26-price-grid li { border-color: var(--home26-rule); color: rgba(232, 241, 255, .76); }
+.home26 .home26-offer-card a, .home26 .home26-how-grid > article > a, .home26 .home26-price-grid a { border-color: rgba(190, 209, 255, .5); color: var(--home26-paper); }
+.home26 .home26-how-grid li > span, .home26 .home26-faq-list summary span { border-color: rgba(190, 209, 255, .32); }
+.home26 .home26-price-grid > article > div span, .home26 .home26-price-grid > article > small { color: rgba(222, 235, 255, .61); }
+.home26 .home26-price-grid > .home26-price-featured { border-color: #91b0ff; box-shadow: inset 0 4px #91b0ff, 0 24px 70px rgba(31, 84, 183, .2); }
+.home26 .home26-price-grid > .home26-price-business, .home26 .home26-artists, .home26 .home26-listen, .home26 .home26-final { background: linear-gradient(140deg, #07162d, #040a16); }
+.home26 .home26-button-primary { border-color: #90adff; background: #90adff; color: #071225; }
+.home26 .home26-button-primary:hover { border-color: #bee0ff; background: #bee0ff; }
+.home26 .home26-button-secondary { border-color: rgba(190, 209, 255, .44); background: rgba(8, 22, 42, .56); color: var(--home26-paper); }
+.home26 .home26-hero-wash { background: linear-gradient(90deg, rgba(3, 10, 24, .96), rgba(3, 10, 24, .74) 48%, rgba(3, 10, 24, .22)); }
+.home26 .home26-hero .home26-eyebrow, .home26 .home26-listen .home26-eyebrow, .home26 .home26-artists .home26-eyebrow, .home26 .home26-final .home26-eyebrow { color: #a8c2ff; }
+
 /* V28: one photographic opening scene rather than a stack of album artwork. */
 .home26-hero {
   position: relative;

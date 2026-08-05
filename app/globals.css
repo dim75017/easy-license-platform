@@ -15,20 +15,20 @@
 }
 
 :root {
-  --bg: #07080d;
-  --bg-deep: #05060a;
-  --panel: #10131e;
-  --panel-raised: #141828;
-  --panel-soft: rgba(18, 22, 35, 0.66);
-  --border: rgba(150, 163, 214, 0.12);
-  --border-active: rgba(154, 168, 255, 0.36);
-  --text: #eceef8;
-  --text-soft: #9aa1c0;
-  --text-muted: #676f91;
-  --accent: #9aa8ff;
-  --accent-light: #c7cdff;
-  --accent-bg: rgba(154, 168, 255, 0.12);
-  --cyan: #67e8f9;
+  --bg: #040b18;
+  --bg-deep: #020611;
+  --panel: #0a1628;
+  --panel-raised: #0e1d33;
+  --panel-soft: rgba(10, 22, 40, 0.72);
+  --border: rgba(143, 174, 255, 0.16);
+  --border-active: rgba(145, 174, 255, 0.48);
+  --text: #edf4ff;
+  --text-soft: #aebed8;
+  --text-muted: #7085a5;
+  --accent: #8eaaff;
+  --accent-light: #d3deff;
+  --accent-bg: rgba(142, 170, 255, 0.14);
+  --cyan: #77d9ff;
   --blue: #7dd3fc;
   --green: #4ade80;
   --amber: #fbbf24;

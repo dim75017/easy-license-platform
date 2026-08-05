@@ -243,3 +243,29 @@
   .retail-v2-artist-copy > p { font-size: 16px; }
   .retail-v2-form .lead-form { padding: 19px; }
 }
+
+/* V29: Retail follows the default midnight-blue platform mode. */
+.retail-v2 {
+  --cozy-night: #050d1d;
+  --cozy-oat: #edf4ff;
+  --cozy-paper: #0b1830;
+  --cozy-clay: #86aaff;
+  --cozy-clay-soft: #b8cbff;
+  --cozy-rule: rgba(152, 184, 255, .17);
+  background: radial-gradient(circle at 88% 7%, rgba(66, 118, 255, .16), transparent 25%), #040b18;
+  color: var(--cozy-oat);
+}
+.retail-v2 h1,
+.retail-v2 h2,
+.retail-v2 h3 { color: var(--cozy-oat); }
+.retail-v2-proof { border-color: var(--cozy-rule); background: rgba(10, 24, 48, .75); }
+.retail-v2-proof > div { border-color: var(--cozy-rule); }
+.retail-v2-proof span,
+.retail-v2-section-intro > p:last-child,
+.retail-v2-space-copy > p:last-child,
+.retail-v2-access > div > p,
+.retail-v2-access > div > small { color: rgba(224, 236, 255, .69); }
+.retail-v2-steps article,
+.retail-v2-form { border-color: var(--cozy-rule); background: #0b1830; box-shadow: 0 20px 52px rgba(0, 0, 0, .2); }
+.retail-v2-steps p,
+.retail-v2-form > div:first-child small { color: rgba(224, 236, 255, .66); }
