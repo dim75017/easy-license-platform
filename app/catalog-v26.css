@@ -1374,3 +1374,11 @@
 .catalogue-v26-waveform i,
 .catalogue-v26-compact .catalogue-v26-waveform i { background: linear-gradient(180deg, #d6a896, #ad705f); }
 .music-v26-hero { background: radial-gradient(circle at 74% 23%, rgba(185, 120, 100, .22), transparent 30%), radial-gradient(circle at 12% 88%, rgba(126, 137, 118, .15), transparent 26%), var(--music-night); }
+
+/* V36: library headings use a real display scale. */
+.music-v26-kicker { font-size: clamp(17px, 1.25vw, 20px); font-weight: 740; letter-spacing: .01em; }
+.music-v26-library .music-v26-section-head h2,
+.music-v26-curation h2 { font-size: clamp(52px, 5.4vw, 84px); }
+@media (max-width: 760px) {
+  .music-v26-kicker { font-size: 16px; }
+}

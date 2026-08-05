@@ -1367,3 +1367,20 @@
 .home26 .home26-listen .home26-eyebrow,
 .home26 .home26-artists .home26-eyebrow,
 .home26 .home26-final .home26-eyebrow { color: #e4b5a3; }
+
+/* V36: section labels are part of the reading hierarchy, not microcopy. */
+.home26 .home26-eyebrow {
+  font-size: clamp(17px, 1.25vw, 20px);
+  font-weight: 740;
+  letter-spacing: .01em;
+}
+.home26 .home26-listen .home26-section-heading h2,
+.home26 .home26-artists .home26-section-heading h2,
+.home26 .home26-final h2 { color: var(--home26-paper); }
+.home26 .home26-listen .home26-section-heading > p:last-of-type,
+.home26 .home26-artists .home26-section-heading > p:last-of-type,
+.home26 .home26-final p:last-child { color: rgba(251, 247, 239, .76); }
+
+@media (max-width: 760px) {
+  .home26 .home26-eyebrow { font-size: 16px; }
+}

@@ -8670,3 +8670,13 @@ button {
   .public-shell .site-header .site-nav > a,
   .public-shell .site-header .site-nav > a:last-of-type { border-color: rgba(41, 40, 50, .12); }
 }
+
+/* V36: footer copy stays dark and legible on the warm paper surface. */
+.public-shell .site-footer,
+.public-shell .site-footer .brand,
+.public-shell .site-footer .footer-brand > p,
+.public-shell .site-footer .footer-links a,
+.public-shell .site-footer .footer-bottom { color: #292832 !important; }
+.public-shell .site-footer .footer-label { color: #955a49 !important; }
+.public-shell .site-footer .brand-powered,
+.public-shell .site-footer .footer-bottom { color: rgba(41, 40, 50, .64) !important; }
