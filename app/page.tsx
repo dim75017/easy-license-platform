@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CatalogueExplorer } from "./components/CatalogueExplorer";
 import { PublicShell } from "./components/PublicShell";
-import { featuredTracks } from "./data/catalog";
 
 const useCollections = [
   {
@@ -14,7 +13,7 @@ const useCollections = [
     title: "Vlogs & Everyday Life",
     copy: "Warm, unobtrusive tracks for routines, stories and day-to-day content.",
     slug: "lifestyle-vlogs",
-    image: "/images/unsplash/creator-edit.jpg",
+    image: "/images/unsplash/vlogger.jpg",
   },
   {
     title: "Study, Focus & Tutorials",
@@ -26,7 +25,7 @@ const useCollections = [
     title: "Livestreams & Gaming",
     copy: "Long-form background music for live sessions, gameplay and community streams.",
     slug: "gaming-streaming",
-    image: "/images/unsplash/editing-desk.jpg",
+    image: "/images/unsplash/streamer.jpg",
   },
   {
     title: "Podcasts & Interviews",
@@ -44,7 +43,7 @@ const useCollections = [
     title: "Wellness & Slow Living",
     copy: "Calm, spacious music for meditation, movement, rest and quiet rituals.",
     slug: "wellness",
-    image: "/images/unsplash/retail/spa.jpg",
+    image: "/images/unsplash/massage.jpg",
   },
   {
     title: "Food & Hospitality",
@@ -66,6 +65,8 @@ export default function Home() {
     <PublicShell>
       <div className="home26">
         <section className="home26-hero">
+          <img className="home26-hero-image" src="/images/unsplash/hero-producer.jpg" alt="Music producer working at a recording console" />
+          <span className="home26-hero-wash" aria-hidden="true" />
           <div className="home26-hero-copy" data-reveal="left">
             <p className="home26-eyebrow">Powered by Lofi Girl · Human-made music licensing</p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
@@ -79,21 +80,7 @@ export default function Home() {
             <p className="home26-hero-note">No AI-generated music · Artists credited and paid directly</p>
           </div>
 
-          <div className="home26-hero-music" data-reveal="scale" aria-label="Selected Easy License catalogue artwork">
-            <div className="home26-cover-grid">
-              {featuredTracks.map((track, index) => (
-                <a href={track.spotifyUrl} target="_blank" rel="noreferrer" key={track.id} className={`home26-cover home26-cover-${index + 1}`}>
-                  <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
-                  <span><strong>{track.title}</strong><small>{track.artist}</small></span>
-                </a>
-              ))}
-            </div>
-            <div className="home26-hero-player">
-              <span className="home26-player-mark" aria-hidden="true">▶</span>
-              <p><small>EDITOR&apos;S PICK</small><strong>{featuredTracks[0]?.title}</strong><span>{featuredTracks[0]?.artist}</span></p>
-              <Link href="/catalog">Listen in Music</Link>
-            </div>
-          </div>
+          <p className="home26-hero-credit">A catalogue made by artists, for the people making the work.</p>
         </section>
 
         <section className="home26-facts" aria-label="Easy License catalogue facts" data-reveal="group">
@@ -144,7 +131,7 @@ export default function Home() {
           </div>
           <div className="home26-offer-grid" data-reveal="group">
             <article className="home26-offer-card home26-offer-creators">
-              <img src="/images/unsplash/creator-edit.jpg" alt="Creator editing a video at a desk" />
+              <img src="/images/unsplash/hero-creator.jpg" alt="Creator setting up a camera for a filmed project" />
               <div>
                 <p>Easy License for Creators</p>
                 <h3>For your own YouTube, livestream, podcast and social channels.</h3>

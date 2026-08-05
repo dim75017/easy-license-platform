@@ -84,13 +84,15 @@ export default function CreatorsPage() {
           </div>
         </section>
 
-        <section className="offer-pricing" id="creator-plans" aria-labelledby="creator-plans-title">
-          <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>05</span> Creator and Pro plans</p>
-            <h2 id="creator-plans-title">Choose a plan based<br />on how you publish.</h2>
+        <section className="offer-pricing creator-pricing" id="creator-plans" aria-labelledby="creator-plans-title">
+          <div className="creator-pricing-intro" data-reveal="group">
+            <div>
+              <p className="offer-kicker"><span>05</span> Creator and Pro plans</p>
+              <h2 id="creator-plans-title">Choose the scope<br />that fits your channels.</h2>
+            </div>
             <p>Creator covers one connected channel or profile per supported platform. Pro covers up to three and adds a shared workspace for creator teams. Audience size does not change the price.</p>
           </div>
-          <div data-reveal="group"><PricingCards expanded /></div>
+          <div className="creator-pricing-cards" data-reveal="group"><PricingCards expanded /></div>
         </section>
 
         <section className="offer-human offer-human-creators" aria-labelledby="creator-human-title">

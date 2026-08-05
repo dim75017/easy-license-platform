@@ -6,6 +6,17 @@ import "../catalog-v26.css";
 
 const useNames = new Map(useCategories.map((category) => [category.slug, category.label]));
 
+const waveHeights = [26, 54, 36, 72, 46, 92, 58, 34, 68, 42, 80, 52, 30, 64, 44, 88, 38, 60, 28, 56, 76, 40, 66, 32];
+
+function Waveform({ trackId }: { trackId: string }) {
+  const offset = trackId.charCodeAt(trackId.length - 1) % waveHeights.length;
+  return (
+    <span className="catalogue-v26-waveform" aria-hidden="true">
+      {waveHeights.map((_, index) => <i key={index} style={{ height: `${waveHeights[(index + offset) % waveHeights.length]}%` }} />)}
+    </span>
+  );
+}
+
 function subscribeToLocation(onStoreChange: () => void) {
   window.addEventListener("popstate", onStoreChange);
   window.addEventListener("easy-license-urlchange", onStoreChange);
@@ -82,7 +93,7 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
     return (
       <div className="catalogue-v26 catalogue-v26-compact">
         <div className="catalogue-featured" aria-label="Featured tracks from the Easy License catalogue">
-          {tracks.map((track) => (
+          {tracks.map((track, index) => (
             <button
               className={selectedTrackId === track.id ? "featured-track is-selected" : "featured-track"}
               type="button"
@@ -91,8 +102,11 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
               key={track.id}
             >
               <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
+              <span className="featured-track-number">0{index + 1}</span>
               <span className="featured-track-meta"><small>{track.genre} · {track.streams}</small><strong>{track.title}</strong><em>{track.artist}</em></span>
               <i aria-hidden="true">Listen</i>
+              <Waveform trackId={track.id} />
+              <i className="featured-track-play" aria-hidden="true">{selectedTrackId === track.id ? "×" : "▶"}</i>
             </button>
           ))}
         </div>
@@ -143,26 +157,26 @@ export function CatalogueExplorer({ compact = false }: { compact?: boolean }) {
             <span>{activeUse === "all" ? "Curated selection" : useNames.get(activeUse)}</span>
             <h3 id="catalogue-results-heading">{results.length} {results.length === 1 ? "track" : "tracks"}</h3>
           </div>
-          <p>Listen here through Spotify. Licensing availability is confirmed for the intended use before download.</p>
+          <p>Play a preview, then check eligibility for your intended use before downloading.</p>
         </div>
 
         <div className="catalogue-v26-track-list" aria-live="polite">
-          {results.map((track) => (
+          {results.map((track, index) => (
             <article className={selectedTrackId === track.id ? "catalogue-v26-track is-open" : "catalogue-v26-track"} key={track.id}>
-              <img className="catalogue-v26-track-cover" src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
+              <span className="catalogue-v26-track-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <div className="catalogue-v26-track-copy">
                 <span>{track.genre}</span>
                 <h4>{track.title}</h4>
                 <p>{track.artist}</p>
               </div>
+              <Waveform trackId={track.id} />
               <div className="catalogue-v26-track-uses" aria-label="Suggested uses">
                 {track.suggestedUses.slice(0, 3).map((slug) => <span key={slug}>{useNames.get(slug)}</span>)}
               </div>
               <span className="catalogue-v26-streams">{track.streams}</span>
               <button className="catalogue-v26-listen" type="button" onClick={() => chooseTrack(track)} aria-expanded={selectedTrackId === track.id}>
-                {selectedTrackId === track.id ? "Close player" : "Listen"}
+                <span aria-hidden="true">{selectedTrackId === track.id ? "×" : "▶"}</span>{selectedTrackId === track.id ? "Close" : "Play"}
               </button>
-              <a className="catalogue-v26-spotify-link" href={track.spotifyUrl} target="_blank" rel="noreferrer">Open in Spotify ↗</a>
               {selectedTrackId === track.id && <SpotifyPlayer track={track} onClose={() => setSelectedTrackId(null)} />}
             </article>
           ))}
@@ -182,7 +196,7 @@ function SpotifyPlayer({ track, compact = false, onClose }: { track: Track; comp
   return (
     <div className={compact ? "catalogue-v26-player is-compact" : "catalogue-v26-player"}>
       <div className="catalogue-v26-player-head">
-        <span><small>LISTEN ON SPOTIFY</small><strong>{track.title}</strong><em>{track.artist}</em></span>
+        <span><small>TRACK PREVIEW</small><strong>{track.title}</strong><em>{track.artist}</em></span>
         <button type="button" onClick={onClose} aria-label={`Close ${track.title} player`}>Close</button>
       </div>
       <iframe

@@ -1192,3 +1192,103 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* V28: audio-first lists, with lightweight waveforms instead of cover-art tiles. */
+.catalogue-v26-waveform {
+  display: flex;
+  min-width: 0;
+  height: 34px;
+  align-items: center;
+  gap: 2px;
+}
+
+.catalogue-v26-waveform i {
+  width: 100%;
+  min-width: 2px;
+  max-width: 5px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #c98f7d, #8b5e52);
+  opacity: .78;
+}
+
+.catalogue-v26-track {
+  grid-template-columns: 48px minmax(145px, .82fr) minmax(160px, 1.12fr) minmax(180px, .9fr) 105px auto;
+}
+
+.catalogue-v26-track-number {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(149, 90, 73, .2);
+  border-radius: 50%;
+  color: var(--music-clay-deep);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.catalogue-v26-track .catalogue-v26-spotify-link { display: none; }
+.catalogue-v26-listen { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; }
+.catalogue-v26-listen > span { font-size: 10px; }
+
+.catalogue-v26-compact .catalogue-featured {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid rgba(243, 236, 224, .16);
+  border-radius: 18px;
+  flex-direction: column;
+}
+
+.catalogue-v26-compact .featured-track {
+  display: grid;
+  min-height: 94px;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid rgba(243, 236, 224, .13);
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, .035);
+  color: var(--music-paper);
+  grid-template-columns: 40px minmax(130px, .85fr) minmax(150px, 1.25fr) 42px;
+  gap: 16px;
+}
+
+.catalogue-v26-compact .featured-track:last-child { border-bottom: 0; }
+.catalogue-v26-compact .featured-track::after,
+.catalogue-v26-compact .featured-track > img,
+.catalogue-v26-compact .featured-track > i:not(.featured-track-play) { display: none; }
+.catalogue-v26-compact .featured-track:hover,
+.catalogue-v26-compact .featured-track.is-selected { background: rgba(243, 236, 224, .1); }
+.catalogue-v26-compact .featured-track-number { color: rgba(243, 236, 224, .42); font-size: 11px; font-weight: 750; }
+.catalogue-v26-compact .featured-track-meta { position: static; z-index: auto; }
+.catalogue-v26-compact .featured-track-meta strong { margin-top: 3px; font-size: 18px; }
+.catalogue-v26-compact .featured-track-meta em { font-size: 13px; }
+.catalogue-v26-compact .catalogue-v26-waveform { position: static; z-index: auto; height: 28px; }
+.catalogue-v26-compact .catalogue-v26-waveform i { background: linear-gradient(180deg, #e5b09a, #9d6253); }
+.featured-track-play {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(243, 236, 224, .34);
+  border-radius: 50%;
+  color: var(--music-paper);
+  font-size: 10px;
+  font-style: normal;
+}
+
+@media (max-width: 1080px) {
+  .catalogue-v26-track { grid-template-columns: 48px minmax(145px, .85fr) minmax(140px, 1.15fr) auto; }
+  .catalogue-v26-track .catalogue-v26-track-uses { display: none; }
+  .catalogue-v26-track .catalogue-v26-waveform { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+@media (max-width: 720px) {
+  .catalogue-v26-track { grid-template-columns: 42px minmax(0, 1fr) auto; }
+  .catalogue-v26-track .catalogue-v26-waveform { grid-column: 2 / -1; grid-row: auto; }
+  .catalogue-v26-track .catalogue-v26-streams { display: none; }
+  .catalogue-v26-track .catalogue-v26-listen { grid-column: 3; grid-row: 1; }
+  .catalogue-v26-compact .featured-track { grid-template-columns: 32px minmax(0, 1fr) 38px; gap: 11px; }
+  .catalogue-v26-compact .featured-track .catalogue-v26-waveform { grid-column: 2 / -1; grid-row: 2; }
+  .catalogue-v26-compact .featured-track-meta { grid-row: 1; }
+  .featured-track-play { width: 34px; height: 34px; }
+}

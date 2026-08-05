@@ -194,7 +194,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogue, /featured-track/);
   assert.match(catalogue, /<iframe/);
   assert.match(catalogue, /open\.spotify\.com\/embed\/track/);
-  assert.match(catalogue, /Listen here through Spotify/i);
+  assert.match(catalogue, /Play a preview/i);
+  assert.match(catalogue, /catalogue-v26-waveform/);
   assert.match(catalogue, /Search the catalogue/i);
   assert.doesNotMatch(catalogue, /EL-CAT-|download=|Download track|Fake player|Prototype data|Demo tracks/i);
   assert.match(catalogueData, /Melting Snowman/);

@@ -15,7 +15,7 @@ export const useCategories = [
     slug: "lifestyle-vlogs",
     label: "Lifestyle & Vlogs",
     description: "Everyday edits, routines, interiors and personal stories.",
-    image: "/images/unsplash/creator-edit.jpg",
+    image: "/images/unsplash/vlogger.jpg",
   },
   {
     slug: "study-focus",
@@ -27,7 +27,7 @@ export const useCategories = [
     slug: "gaming-streaming",
     label: "Gaming & Streaming",
     description: "Gameplay, live sessions and community content.",
-    image: "/images/unsplash/editing-desk.jpg",
+    image: "/images/unsplash/streamer.jpg",
   },
   {
     slug: "podcasts",
@@ -39,7 +39,7 @@ export const useCategories = [
     slug: "wellness",
     label: "Wellness",
     description: "Meditation, movement, rest and quiet rituals.",
-    image: "/images/unsplash/retail/spa.jpg",
+    image: "/images/unsplash/massage.jpg",
   },
   {
     slug: "food-hospitality",

@@ -29,6 +29,15 @@ All three are marked free to use on Pexels. Pexels permits free personal and com
 
 All listed Unsplash photographs are marked free to use under the Unsplash License: https://unsplash.com/license
 
+## Added creator and wellness editorial photographs
+
+| File | Photographer | Source |
+| --- | --- | --- |
+| `hero-creator.jpg` | Rodrigo Rodrigues / WOLF ART | https://unsplash.com/photos/man-filming-with-professional-camera-setup-sPeIJ0ebl8c |
+| `streamer.jpg` | Daniel Lincoln | https://unsplash.com/photos/VQj-pE0DyAw |
+| `vlogger.jpg` | Videodeck.co | https://unsplash.com/photos/GRUhkcD9k8o |
+| `massage.jpg` | Simon HUMLER | https://unsplash.com/s/photos/massage-therapist |
+
 ## Featured catalogue artwork
 
 These are official Spotify cover thumbnails for tracks selected from the local catalogue database, retained solely for the Easy License product prototype.

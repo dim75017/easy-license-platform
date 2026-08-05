@@ -973,3 +973,56 @@
     transition: none !important;
   }
 }
+
+/* Creator plans get their own clear, editorial container. */
+.creator-pricing {
+  width: min(1440px, calc(100% - 80px));
+  margin: 38px auto 126px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 30px;
+  padding: clamp(42px, 6vw, 82px);
+  background: #e9ddd0;
+}
+
+.creator-pricing-intro {
+  display: grid;
+  max-width: 1180px;
+  margin: 0 auto 46px;
+  padding-bottom: 38px;
+  border-bottom: 1px solid rgba(41, 40, 50, .16);
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, .72fr);
+  align-items: end;
+  gap: clamp(36px, 8vw, 130px);
+}
+
+.creator-pricing-intro h2 { margin: 0; font-size: clamp(42px, 5.2vw, 72px); line-height: 1.02; }
+.creator-pricing-intro > p { max-width: 420px; margin: 0 0 5px; color: rgba(41, 40, 50, .68); font-size: 18px; line-height: 1.52; }
+.creator-pricing-cards { max-width: 1040px; margin: 0 auto; }
+.creator-pricing .billing-toggle { margin-bottom: 28px; border-color: rgba(41, 40, 50, .2); background: #f7f0e7; }
+.creator-pricing .billing-toggle button { color: rgba(41, 40, 50, .58); }
+.creator-pricing .billing-toggle button.is-active { background: #292832; color: #fbf7ef; }
+.creator-pricing .pricing-grid-expanded { max-width: none; gap: 24px; }
+.creator-pricing .price-card { min-height: 550px; border-color: rgba(41, 40, 50, .14); background: #fbf7ef; color: #292832; box-shadow: 0 16px 35px rgba(41, 40, 50, .08); }
+.creator-pricing .price-card-featured { border-color: #292832; background: #292832; color: #fbf7ef; box-shadow: 0 24px 50px rgba(41, 40, 50, .18); }
+.creator-pricing .price-card .plan-code,
+.creator-pricing .price-card-top > div > span,
+.creator-pricing .price-card .billing-note,
+.creator-pricing .price-card .fine-print,
+.creator-pricing .price-card .feature-list li { color: rgba(41, 40, 50, .63); }
+.creator-pricing .price-card-featured .plan-code,
+.creator-pricing .price-card-featured .price-card-top > div > span,
+.creator-pricing .price-card-featured .billing-note,
+.creator-pricing .price-card-featured .fine-print,
+.creator-pricing .price-card-featured .feature-list li { color: rgba(251, 247, 239, .69); }
+.creator-pricing .price-card .feature-list { border-color: rgba(41, 40, 50, .14); }
+.creator-pricing .price-card-featured .feature-list { border-color: rgba(251, 247, 239, .16); }
+.creator-pricing .price-card .button-primary { background: #292832; color: #fbf7ef; }
+.creator-pricing .price-card-featured .button-light { background: #fbf7ef; color: #292832; }
+
+@media (max-width: 760px) {
+  .creator-pricing { width: calc(100% - 28px); margin-bottom: 90px; border-radius: 23px; padding: 34px 20px; }
+  .creator-pricing-intro { grid-template-columns: 1fr; gap: 22px; margin-bottom: 32px; padding-bottom: 28px; }
+  .creator-pricing-intro > p { font-size: 16px; }
+  .creator-pricing .pricing-grid-expanded { grid-template-columns: 1fr; }
+}
