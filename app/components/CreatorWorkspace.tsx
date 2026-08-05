@@ -1,20 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Brand } from "./Brand";
-import { genres, moods, playlists, tracks, type MusicUseSlug, type Track } from "../data/catalog";
+import { genres, lofiGirlPlaylists, moods, tracks, type LofiGirlPlaylist, type MusicUseSlug, type Track } from "../data/catalog";
 import "../workspace-music.css";
 
 type LibraryView = "music" | "playlists" | "downloads" | "channels" | "licences";
 
 const roles = ["Creator", "Streamer", "Filmmaker", "Brand / agency"];
 const destinations = ["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Podcasts", "Websites"];
-const quickMoods = ["Warm", "Calm", "Dreamy", "Reflective", "Bright", "Easygoing"];
+const listeningDirections: Array<{ label: string; note: string; use: MusicUseSlug }> = [
+  { label: "Calm focus", note: "Lofi · Piano", use: "study-focus" },
+  { label: "Neon energy", note: "Synthwave · Gaming", use: "gaming-streaming" },
+  { label: "Dream state", note: "Ambient · Cinematic", use: "cinematic" },
+  { label: "Late-night warmth", note: "Jazz Lofi · Café", use: "food-hospitality" },
+  { label: "Sunny motion", note: "Chill House · Travel", use: "travel" },
+  { label: "Deep rest", note: "Sleep · Wellness", use: "wellness" },
+];
 
 const navItems: Array<{ id: LibraryView; label: string; icon: string; badge?: string }> = [
   { id: "music", label: "Music", icon: "♫" },
-  { id: "playlists", label: "Playlists", icon: "▤", badge: "6" },
+  { id: "playlists", label: "Playlists", icon: "▤", badge: String(lofiGirlPlaylists.length) },
   { id: "downloads", label: "Downloads", icon: "↓", badge: "4" },
   { id: "channels", label: "Channels", icon: "◉" },
   { id: "licences", label: "Licences", icon: "◇" },
@@ -28,6 +35,27 @@ function Wave({ seed, dense = false }: { seed: string; dense?: boolean }) {
     <span className="music-wave" aria-hidden="true">
       {heights.slice(0, count).map((_, index) => <i key={index} style={{ height: `${heights[(index + offset) % heights.length]}%` }} />)}
     </span>
+  );
+}
+
+function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen: (playlist: LofiGirlPlaylist) => void }) {
+  const style = {
+    "--playlist-border": playlist.borderColor,
+    "--playlist-position": playlist.imagePosition ?? "center",
+  } as CSSProperties;
+
+  return (
+    <button className="workspace-playlist" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.spotifyTitle}>
+      <img className="workspace-playlist-photo" src={playlist.image} alt="" />
+      <span className="workspace-playlist-shade" aria-hidden="true" />
+      <span className="workspace-playlist-copy">
+        <small>{playlist.genre} · {playlist.moods[0]}</small>
+        <strong>{playlist.title}</strong>
+        <em>{playlist.description}</em>
+        <b>Lofi Girl public playlist</b>
+      </span>
+      <i aria-hidden="true">→</i>
+    </button>
   );
 }
 
@@ -47,6 +75,7 @@ export function CreatorWorkspace() {
   const [genre, setGenre] = useState("All genres");
   const [mood, setMood] = useState("All moods");
   const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
   const [selectedTrackId, setSelectedTrackId] = useState(tracks[0]?.id ?? "");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
@@ -74,12 +103,22 @@ export function CreatorWorkspace() {
   }, [activeUse, genre, mood, query]);
 
   const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? tracks[0];
+  const activePlaylist = lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId);
 
-  function openPlaylist(use: MusicUseSlug) {
-    setActiveUse(use);
+  function openPlaylist(playlist: LofiGirlPlaylist) {
+    setActivePlaylistId(playlist.id);
+    setActiveUse(playlist.use);
     setGenre("All genres");
     setMood("All moods");
     setView("music");
+    window.setTimeout(() => document.querySelector(".music-track-browser")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+  }
+
+  function openDirection(use: MusicUseSlug) {
+    setActivePlaylistId(null);
+    setActiveUse(use);
+    setGenre("All genres");
+    setMood("All moods");
     window.setTimeout(() => document.querySelector(".music-track-browser")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
   }
 
@@ -138,7 +177,7 @@ export function CreatorWorkspace() {
           <div><span>Easy License</span><h1>{view === "music" ? "Music library" : navItems.find((item) => item.id === view)?.label}</h1></div>
           <label className="music-global-search">
             <span aria-hidden="true">⌕</span>
-            <input value={query} onChange={(event) => { setQuery(event.target.value); setView("music"); }} placeholder="Search tracks, artists, moods or genres" />
+            <input value={query} onChange={(event) => { setQuery(event.target.value); setActiveUse(null); setActivePlaylistId(null); setView("music"); }} placeholder="Search tracks, artists, moods or genres" />
             <kbd>⌘ K</kbd>
           </label>
           <button className="music-topbar-action" type="button" onClick={() => setView("downloads")}>Downloads <span>4</span></button>
@@ -152,30 +191,24 @@ export function CreatorWorkspace() {
             </section>
 
             <section className="music-shelf" aria-labelledby="project-playlists-title">
-              <div className="music-shelf-head"><div><span>START WITH THE PROJECT</span><h3 id="project-playlists-title">Playlists made for the work.</h3></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
+              <div className="music-shelf-head"><div><span>INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS</span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>Lofi, synthwave, piano, ambient, jazz, house, sleep and acoustic — built from the directions already living on the Lofi Girl profile.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
               <div className="music-playlist-shelf">
-                {playlists.map((playlist, index) => (
-                  <button className={`workspace-playlist is-${playlist.accent}`} type="button" onClick={() => openPlaylist(playlist.use)} key={playlist.title}>
-                    <span className="workspace-playlist-art"><small>{String(index + 1).padStart(2, "0")}</small><Wave seed={playlist.title} /></span>
-                    <span><strong>{playlist.title}</strong><small>{playlist.subtitle}</small><em>{playlist.tracks}</em></span>
-                    <i aria-hidden="true">▶</i>
-                  </button>
-                ))}
+                {lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
               </div>
             </section>
 
             <section className="music-mood-shelf" aria-labelledby="mood-title">
-              <div className="music-shelf-head"><div><span>FIND A FEELING</span><h3 id="mood-title">Browse by mood.</h3></div></div>
-              <div>{quickMoods.map((item) => <button className={mood === item ? "is-active" : ""} type="button" onClick={() => { setMood(item); setActiveUse(null); }} key={item}>{item}<span>→</span></button>)}</div>
+              <div className="music-shelf-head"><div><span>MOVE BY MOOD</span><h3 id="mood-title">Choose the feeling first.</h3></div></div>
+              <div>{listeningDirections.map((item) => <button className={activeUse === item.use && !activePlaylistId ? "is-active" : ""} type="button" onClick={() => openDirection(item.use)} key={item.label}><span><strong>{item.label}</strong><small>{item.note}</small></span><i>→</i></button>)}</div>
             </section>
 
             <section className="music-track-browser" aria-labelledby="tracks-title">
               <div className="music-track-browser-head">
-                <div><span>CATALOGUE PREVIEW</span><h3 id="tracks-title">{activeUse ? playlists.find((playlist) => playlist.use === activeUse)?.title : "All music"}</h3><p>{visibleTracks.length} tracks available in this preview</p></div>
+                <div><span>EASY LICENSE CATALOGUE PREVIEW</span><h3 id="tracks-title">{activePlaylist?.title ?? (activeUse ? listeningDirections.find((item) => item.use === activeUse)?.label : "All music")}</h3><p>{visibleTracks.length} matching licensable tracks in this preview</p></div>
                 <div className="music-filter-row">
                   <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
                   <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
-                  {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setQuery(""); }}>Clear filters</button>}
+                  {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setActivePlaylistId(null); setQuery(""); }}>Clear filters</button>}
                 </div>
               </div>
 
@@ -191,7 +224,7 @@ export function CreatorWorkspace() {
                     <span className="music-track-index">{String(index + 1).padStart(2, "0")}</span>
                   </article>
                 ))}
-                {visibleTracks.length === 0 && <div className="music-no-results"><strong>No matching tracks yet.</strong><p>Try another mood or clear the filters to return to the full preview.</p><button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setQuery(""); }}>Reset library</button></div>}
+                {visibleTracks.length === 0 && <div className="music-no-results"><strong>No matching tracks yet.</strong><p>Try another mood or clear the filters to return to the full preview.</p><button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setActivePlaylistId(null); setQuery(""); }}>Reset library</button></div>}
               </div>
             </section>
           </div>
@@ -230,8 +263,8 @@ export function CreatorWorkspace() {
   );
 }
 
-function PlaylistLibrary({ onOpen }: { onOpen: (use: MusicUseSlug) => void }) {
-  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Playlists</h2><p>Start from a use case, then refine the sound inside the catalogue.</p></header><div className="music-secondary-playlists">{playlists.map((playlist) => <button className={`workspace-playlist is-${playlist.accent}`} type="button" onClick={() => onOpen(playlist.use)} key={playlist.title}><span className="workspace-playlist-art"><Wave seed={playlist.title} /></span><span><strong>{playlist.title}</strong><small>{playlist.subtitle}</small><em>{playlist.tracks}</em></span><i>▶</i></button>)}</div></div>;
+function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => void }) {
+  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Eight distinct directions drawn from the public Lofi Girl profile, translated into an Easy License starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
 function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {

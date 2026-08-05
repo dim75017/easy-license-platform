@@ -285,11 +285,12 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, musicWorkspace, musicWorkspaceCss] = await Promise.all([
+  const [layout, workspaceCss, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
+    source("app/data/catalog.ts"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
@@ -303,9 +304,30 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /music-track-table/);
   assert.match(musicWorkspace, /open\.spotify\.com\/embed\/track/);
   assert.match(musicWorkspace, /easy-license-library-tuned/);
+  assert.match(musicWorkspace, /INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS/);
+  assert.match(musicWorkspace, /workspace-playlist-photo/);
+  assert.match(musicWorkspace, /lofiGirlPlaylists\.map/);
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.music-track-identity strong\s*\{[^}]*font-size:\s*15px/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
+  assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-border/);
+  assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
+
+  for (const [title, spotifyId, image] of [
+    ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study.jpg"],
+    ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-night.jpg"],
+    ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano.jpg"],
+    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient.jpg"],
+    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi.jpg"],
+    ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg"],
+    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient.jpg"],
+    ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar.jpg"],
+  ]) {
+    assert.match(catalogueData, new RegExp(title), title);
+    assert.match(catalogueData, new RegExp(spotifyId), spotifyId);
+    await access(new URL(`public/images/unsplash/playlists/${image}`, root));
+  }
+  await access(new URL("public/images/unsplash/playlists/SOURCES.md", root));
 });
 
 test("build emits product assets and removes starter artifacts", async () => {

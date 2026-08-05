@@ -60,6 +60,131 @@ export const playlists = [
   { title: "Slow rituals", subtitle: "Gentle music for wellness and rest", use: "wellness" as MusicUseSlug, accent: "sage", tracks: "211 tracks" },
 ] as const;
 
+export type LofiGirlPlaylist = {
+  id: string;
+  title: string;
+  spotifyTitle: string;
+  description: string;
+  spotifyId: string;
+  use: MusicUseSlug;
+  genre: string;
+  moods: readonly string[];
+  image: `/images/unsplash/playlists/${string}.jpg`;
+  imagePosition?: string;
+  borderColor: `#${string}`;
+};
+
+/**
+ * Editorial directions drawn from Lofi Girl's public Spotify profile.
+ * The photographs are mood references, not official Spotify cover art.
+ */
+export const lofiGirlPlaylists = [
+  {
+    id: "lofi-study",
+    title: "Lofi Study",
+    spotifyTitle: "Lofi Girl - beats to relax/study to",
+    description: "Warm, steady instrumentals for long edits, deep work and quiet routines.",
+    spotifyId: "0vvXsWCC9xrXsKd4FyS8kM",
+    use: "study-focus",
+    genre: "Lofi",
+    moods: ["Warm", "Calm", "Focused"],
+    image: "/images/unsplash/playlists/lofi-study.jpg",
+    imagePosition: "center 42%",
+    borderColor: "#B97864",
+  },
+  {
+    id: "synthwave-night",
+    title: "Synthwave Night",
+    spotifyTitle: "Synthwave - beats to chill/game to",
+    description: "Neon pulse and retro electronics for gaming, streams and after-dark edits.",
+    spotifyId: "1YIe34rcmLjCYpY9wJoM2p",
+    use: "gaming-streaming",
+    genre: "Synthwave",
+    moods: ["Neon", "Driving", "Focused"],
+    image: "/images/unsplash/playlists/synthwave-night.jpg",
+    imagePosition: "center 50%",
+    borderColor: "#6674B9",
+  },
+  {
+    id: "peaceful-piano",
+    title: "Peaceful Piano",
+    spotifyTitle: "Peaceful Piano - music to focus/study to",
+    description: "Spacious piano pieces for reading, reflective stories and slower moments.",
+    spotifyId: "1u4F50HA53L3Jwxbnk9IeO",
+    use: "study-focus",
+    genre: "Piano",
+    moods: ["Peaceful", "Reflective", "Soft"],
+    image: "/images/unsplash/playlists/peaceful-piano.jpg",
+    imagePosition: "center 48%",
+    borderColor: "#84927B",
+  },
+  {
+    id: "dark-ambient",
+    title: "Dark Ambient",
+    spotifyTitle: "Dark Ambient - music to escape/dream to",
+    description: "Textural, cinematic sound for night scenes, documentaries and imagined worlds.",
+    spotifyId: "07lYUEyTkWP3NqIa7Kzyqx",
+    use: "cinematic",
+    genre: "Ambient",
+    moods: ["Dark", "Dreamy", "Cinematic"],
+    image: "/images/unsplash/playlists/dark-ambient.jpg",
+    imagePosition: "center 38%",
+    borderColor: "#536B63",
+  },
+  {
+    id: "jazz-lofi",
+    title: "Jazz Lofi",
+    spotifyTitle: "Jazz lofi",
+    description: "Soft keys, dusty drums and late-night warmth for cafés, food and everyday life.",
+    spotifyId: "6abvvGTDj4WuFRNDMsHsw8",
+    use: "food-hospitality",
+    genre: "Jazz Lofi",
+    moods: ["Cozy", "Late night", "Easygoing"],
+    image: "/images/unsplash/playlists/jazz-lofi.jpg",
+    imagePosition: "center 55%",
+    borderColor: "#B88A54",
+  },
+  {
+    id: "chill-house",
+    title: "Chill House",
+    spotifyTitle: "Chill House 2026 - Feel Good Friday",
+    description: "Light electronic momentum for summer recaps, travel and feel-good campaigns.",
+    spotifyId: "4lqntZDCCDC5ySCz9Y5eJn",
+    use: "travel",
+    genre: "Chill House",
+    moods: ["Bright", "Sunny", "Free"],
+    image: "/images/unsplash/playlists/chill-house.jpg",
+    imagePosition: "center 58%",
+    borderColor: "#D49A68",
+  },
+  {
+    id: "sleep-ambient",
+    title: "Sleep Ambient",
+    spotifyTitle: "Sleep Ambient",
+    description: "Weightless sound beds for meditation, rest, wellness and gentle transitions.",
+    spotifyId: "4AITFDgLpIPPLYmFIKgsvr",
+    use: "wellness",
+    genre: "Ambient",
+    moods: ["Restful", "Gentle", "Weightless"],
+    image: "/images/unsplash/playlists/sleep-ambient.jpg",
+    imagePosition: "center 54%",
+    borderColor: "#8B7895",
+  },
+  {
+    id: "chill-guitar",
+    title: "Chill Guitar",
+    spotifyTitle: "Chill Guitar",
+    description: "Organic guitar-led music for personal stories, podcasts and unhurried vlogs.",
+    spotifyId: "1NvyHldjNnayEvqpyk3AYr",
+    use: "lifestyle-vlogs",
+    genre: "Acoustic",
+    moods: ["Organic", "Intimate", "Easygoing"],
+    image: "/images/unsplash/playlists/chill-guitar.jpg",
+    imagePosition: "center 50%",
+    borderColor: "#A9694F",
+  },
+] satisfies readonly LofiGirlPlaylist[];
+
 export type Track = {
   id: string;
   spotifyId: string;
