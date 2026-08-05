@@ -59,9 +59,9 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(layout, /offer-pages\.css/);
   assert.match(layout, /catalog-v26\.css/);
   assert.match(layout, /home-v26\.css/);
-  assert.match(layout, /themeColor:\s*"#040b18"/i);
-  assert.match(layout, /colorScheme:\s*"dark"/i);
-  assert.match(css, /--bg:\s*#040b18/i);
+  assert.match(layout, /themeColor:\s*"#f3ece0"/i);
+  assert.match(layout, /colorScheme:\s*"light"/i);
+  assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /\.home26-hero/);
   assert.match(homeCss, /\.home26-collection-grid/);
   assert.match(homeCss, /\.home26-price-grid/);

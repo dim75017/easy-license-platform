@@ -1124,3 +1124,101 @@
 .offer-landing .business-option p { color: rgba(229, 238, 255, .76); }
 .offer-landing .business-option strong { color: #a8c2ff; }
 .offer-landing .business-retail .offer-inline-link { border-bottom-color: rgba(237, 244, 255, .42); color: #edf4ff; }
+
+/* V35: warm editorial treatment for the Creator and Business stories. */
+.gateway-page,
+.offer-landing {
+  --marketing-night: #292832;
+  --marketing-ink: #35323a;
+  --marketing-paper: #f3ece0;
+  --marketing-cream: #fbf7ef;
+  --marketing-clay: #b97864;
+  --marketing-clay-soft: #dec4b7;
+  --marketing-sage: #7e8976;
+  --marketing-rule: rgba(41, 40, 50, .15);
+  --marketing-shadow: 0 28px 90px rgba(41, 40, 50, .11);
+  background: var(--marketing-paper);
+  color: var(--marketing-night);
+}
+.offer-landing .offer-section-head h2,
+.offer-landing .offer-curation h2,
+.offer-landing .offer-human h2,
+.offer-landing .business-retail h2,
+.offer-landing .offer-faq h2,
+.offer-landing .creator-pricing-intro h2 { color: var(--marketing-night); }
+.offer-landing .offer-section-head > p:last-child,
+.offer-landing .offer-curation-copy > p,
+.offer-landing .offer-human > div > p,
+.offer-landing .business-retail-copy > p,
+.offer-landing .offer-principles p,
+.offer-landing .offer-use-grid p,
+.offer-landing .offer-flow-grid p,
+.offer-landing .offer-faq-list details p { color: rgba(41, 40, 50, .67); }
+.offer-landing .offer-kicker { color: rgba(41, 40, 50, .57); }
+.offer-landing .offer-curation,
+.offer-landing .offer-human,
+.offer-landing .business-retail,
+.offer-landing .creator-pricing { background: var(--marketing-cream); box-shadow: var(--marketing-shadow); }
+.offer-landing .offer-human,
+.offer-landing .business-retail,
+.offer-landing .creator-pricing { background: #e8ddd1; }
+.offer-landing .offer-use-grid article,
+.offer-landing .offer-flow-grid article { border-color: var(--marketing-rule); background: var(--marketing-cream); }
+.offer-landing .offer-use-grid h3,
+.offer-landing .offer-flow-grid h3,
+.offer-landing .offer-principles h3,
+.offer-landing .offer-faq-list summary { color: var(--marketing-night); }
+.offer-landing .offer-principles,
+.offer-landing .offer-principles article,
+.offer-landing .offer-faq-list details,
+.offer-landing .offer-pricing { border-color: var(--marketing-rule); }
+.offer-landing .creator-pricing-intro { border-color: var(--marketing-rule); }
+.offer-landing .creator-pricing-intro > p { color: rgba(41, 40, 50, .68); }
+.offer-landing .creator-pricing .billing-toggle { border-color: rgba(41, 40, 50, .2); background: #f7f0e7; }
+.offer-landing .creator-pricing .billing-toggle button { color: rgba(41, 40, 50, .58); }
+.offer-landing .creator-pricing .billing-toggle button.is-active { background: #292832; color: #fbf7ef; }
+.offer-landing .creator-pricing .price-card { border-color: rgba(41, 40, 50, .14); background: #fbf7ef; color: #292832; box-shadow: 0 16px 35px rgba(41, 40, 50, .08); }
+.offer-landing .creator-pricing .price-card-featured { border-color: #292832; background: #292832; color: #fbf7ef; }
+.offer-landing .creator-pricing .price-card .plan-code,
+.offer-landing .creator-pricing .price-card-top > div > span,
+.offer-landing .creator-pricing .price-card .billing-note,
+.offer-landing .creator-pricing .price-card .fine-print,
+.offer-landing .creator-pricing .price-card .feature-list li { color: rgba(41, 40, 50, .63); }
+.offer-landing .creator-pricing .price-card-featured .plan-code,
+.offer-landing .creator-pricing .price-card-featured .price-card-top > div > span,
+.offer-landing .creator-pricing .price-card-featured .billing-note,
+.offer-landing .creator-pricing .price-card-featured .fine-print,
+.offer-landing .creator-pricing .price-card-featured .feature-list li { color: rgba(251, 247, 239, .69); }
+.offer-landing .creator-pricing .price-card .feature-list { border-color: rgba(41, 40, 50, .14); }
+.offer-landing .creator-pricing .price-card-featured .feature-list { border-color: rgba(251, 247, 239, .16); }
+.offer-landing .creator-pricing .price-card .button-primary { background: #292832; color: #fbf7ef; }
+.offer-landing .creator-pricing .price-card-featured .button-light { background: #fbf7ef; color: #292832; }
+.offer-landing .offer-hero,
+.offer-landing .offer-final-cta { color: #fbf7ef; }
+.offer-landing .offer-hero::after { background: linear-gradient(90deg, rgba(25, 24, 29, .95) 0%, rgba(25, 24, 29, .83) 44%, rgba(25, 24, 29, .3) 76%, rgba(25, 24, 29, .08) 100%), linear-gradient(180deg, rgba(25, 24, 29, .05), rgba(25, 24, 29, .55)); }
+.offer-landing .offer-hero-copy h1,
+.offer-landing .offer-final-cta h2,
+.offer-landing .offer-hero-proof strong { color: #fbf7ef; }
+.offer-landing .offer-hero-copy h1 em,
+.offer-landing .offer-hero-copy .offer-kicker > span,
+.offer-landing .offer-final-cta > p { color: #dec4b7; }
+.offer-landing .offer-hero-copy .offer-kicker,
+.offer-landing .offer-hero-copy > p:not(.offer-kicker),
+.offer-landing .offer-hero-proof span { color: rgba(251, 247, 239, .76); }
+.offer-landing .offer-hero-proof { border-color: rgba(243, 236, 224, .2); background: rgba(25, 24, 29, .58); }
+.offer-landing .offer-hero-proof > div { border-color: rgba(243, 236, 224, .16); }
+.offer-landing .offer-button-light { border-color: #fbf7ef; background: #fbf7ef; color: #292832; }
+.offer-landing .offer-button-light span:last-child { background: rgba(41, 40, 50, .08); }
+.offer-landing .offer-inline-light { border-bottom-color: rgba(251, 247, 239, .4); color: #fbf7ef; }
+.offer-landing .offer-catalogue .featured-track { color: #fbf7ef; }
+.offer-landing .offer-catalogue .featured-track-meta em { color: rgba(251, 247, 239, .62); }
+.offer-landing .offer-catalogue .featured-track-meta small { color: #dec4b7; }
+.offer-landing .offer-section-head-light h2 { color: #fbf7ef; }
+.offer-landing .offer-section-head-light .offer-kicker { color: rgba(251, 247, 239, .58); }
+.offer-landing .offer-section-head-light > p:last-child { color: rgba(251, 247, 239, .68); }
+.offer-landing .business-option { color: #fbf7ef; }
+.offer-landing .business-option::after { background: linear-gradient(180deg, rgba(25, 24, 29, .24), rgba(25, 24, 29, .93)); }
+.offer-landing .business-option > span { color: rgba(243, 236, 224, .72); }
+.offer-landing .business-option p { color: rgba(243, 236, 224, .7); }
+.offer-landing .business-option strong { color: #dec4b7; }
+.offer-landing .business-retail .offer-inline-link { border-bottom-color: rgba(41, 40, 50, .3); color: var(--marketing-night); }

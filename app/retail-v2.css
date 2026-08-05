@@ -269,3 +269,29 @@
 .retail-v2-form { border-color: var(--cozy-rule); background: #0b1830; box-shadow: 0 20px 52px rgba(0, 0, 0, .2); }
 .retail-v2-steps p,
 .retail-v2-form > div:first-child small { color: rgba(224, 236, 255, .66); }
+
+/* V35: Retail returns to the same warm, human-made palette. */
+.retail-v2 {
+  --cozy-night: #292832;
+  --cozy-oat: #f3ece0;
+  --cozy-paper: #fbf7ef;
+  --cozy-clay: #b97864;
+  --cozy-clay-soft: #e8d2c5;
+  --cozy-rule: rgba(41, 40, 50, .15);
+  background: var(--cozy-oat);
+  color: var(--cozy-night);
+}
+.retail-v2 h1,
+.retail-v2 h2,
+.retail-v2 h3 { color: var(--cozy-night); }
+.retail-v2-proof { border-color: var(--cozy-rule); background: var(--cozy-paper); }
+.retail-v2-proof > div { border-color: var(--cozy-rule); }
+.retail-v2-proof span,
+.retail-v2-section-intro > p:last-child,
+.retail-v2-space-copy > p:last-child,
+.retail-v2-access > div > p,
+.retail-v2-access > div > small { color: rgba(41, 40, 50, .69); }
+.retail-v2-steps article,
+.retail-v2-form { border-color: var(--cozy-rule); background: var(--cozy-paper); box-shadow: 0 20px 52px rgba(41, 40, 50, .1); }
+.retail-v2-steps p,
+.retail-v2-form > div:first-child small { color: rgba(41, 40, 50, .66); }

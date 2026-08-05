@@ -15,20 +15,20 @@
 }
 
 :root {
-  --bg: #040b18;
-  --bg-deep: #020611;
-  --panel: #0a1628;
-  --panel-raised: #0e1d33;
-  --panel-soft: rgba(10, 22, 40, 0.72);
-  --border: rgba(143, 174, 255, 0.16);
-  --border-active: rgba(145, 174, 255, 0.48);
-  --text: #edf4ff;
-  --text-soft: #aebed8;
-  --text-muted: #7085a5;
-  --accent: #8eaaff;
-  --accent-light: #d3deff;
-  --accent-bg: rgba(142, 170, 255, 0.14);
-  --cyan: #77d9ff;
+  --bg: #07080d;
+  --bg-deep: #05060a;
+  --panel: #10131e;
+  --panel-raised: #141828;
+  --panel-soft: rgba(18, 22, 35, 0.66);
+  --border: rgba(150, 163, 214, 0.12);
+  --border-active: rgba(154, 168, 255, 0.36);
+  --text: #eceef8;
+  --text-soft: #9aa1c0;
+  --text-muted: #676f91;
+  --accent: #9aa8ff;
+  --accent-light: #c7cdff;
+  --accent-bg: rgba(154, 168, 255, 0.12);
+  --cyan: #67e8f9;
   --blue: #7dd3fc;
   --green: #4ade80;
   --amber: #fbbf24;
@@ -8619,4 +8619,54 @@ button {
   .public-shell .site-header .site-nav > a { min-height: 56px; font-size: 16px; }
   .public-shell .footer-brand > p { font-size: 16px; }
   .public-shell .footer-links a { font-size: 16px; }
+}
+
+/* V35: warm paper is the public site default. */
+.public-shell { background: #f3ece0; }
+.public-shell .site-header {
+  border-bottom-color: rgba(41, 40, 50, .16);
+  background: rgba(243, 236, 224, .94);
+  color: #292832;
+  box-shadow: 0 10px 34px rgba(41, 40, 50, .08);
+}
+.public-shell .site-header .brand-mark { border-color: rgba(41, 40, 50, .28); background: linear-gradient(145deg, rgba(185, 120, 100, .16), rgba(41, 40, 50, .03)); box-shadow: inset 3px 0 #b97864; }
+.public-shell .site-header .brand-mark::after { border-color: rgba(41, 40, 50, .17); }
+.public-shell .site-header .brand-mark span { background: #292832; }
+.public-shell .site-header .brand-name { color: #292832; }
+.public-shell .site-header .brand-name em { color: #955a49; }
+.public-shell .site-header .brand-powered { color: rgba(41, 40, 50, .56); }
+.public-shell .site-header .site-nav { border-color: rgba(41, 40, 50, .12); }
+.public-shell .site-header .site-nav > a { border-color: rgba(41, 40, 50, .12); color: rgba(41, 40, 50, .72); }
+.public-shell .site-header .site-nav > a:hover,
+.public-shell .site-header .site-nav > a.is-active { background: rgba(41, 40, 50, .06); box-shadow: inset 0 -2px #b97864; color: #292832; }
+.public-shell .site-header .nav-soon { border-color: rgba(41, 40, 50, .18); color: rgba(41, 40, 50, .55); }
+.public-shell .header-login { border-bottom-color: rgba(41, 40, 50, .34); color: #292832; }
+.public-shell .header-login:hover { border-bottom-color: #b97864; color: #955a49; }
+.public-shell .site-header .button-primary { border-color: #292832; background: #292832; color: #fbf7ef; }
+.public-shell .site-header .button-primary:hover::after { background: #b97864; color: #fbf7ef; }
+.public-shell .site-header .nav-toggle { border-color: rgba(41, 40, 50, .24); background: transparent; }
+.public-shell .site-header .nav-toggle span { background: #292832; }
+.page-scrolled .site-header { border-color: rgba(41, 40, 50, .18); background: rgba(243, 236, 224, .98); box-shadow: 0 18px 50px -36px rgba(41, 40, 50, .35); }
+.public-shell .site-footer {
+  border-top-color: rgba(41, 40, 50, .16);
+  background: #e8ddd1;
+  box-shadow: 0 0 0 100vmax #e8ddd1;
+  color: #292832;
+}
+.public-shell .site-footer .brand-mark { border-color: rgba(41, 40, 50, .25); background: rgba(185, 120, 100, .12); box-shadow: inset 3px 0 #b97864; }
+.public-shell .site-footer .brand-mark::after { border-color: rgba(41, 40, 50, .16); }
+.public-shell .site-footer .brand-mark span { background: #292832; }
+.public-shell .site-footer .brand-name { color: #292832; }
+.public-shell .site-footer .brand-name em { color: #955a49; }
+.public-shell .site-footer .brand-powered { color: rgba(41, 40, 50, .55); }
+.public-shell .footer-brand > p { color: rgba(41, 40, 50, .68); }
+.public-shell .footer-label { color: #955a49; }
+.public-shell .footer-links a { color: rgba(41, 40, 50, .78); }
+.public-shell .footer-links a:hover { color: #292832; }
+.public-shell .footer-bottom { border-top-color: rgba(41, 40, 50, .13); color: rgba(41, 40, 50, .56); }
+
+@media (max-width: 800px) {
+  .public-shell .site-header .site-nav { border-color: rgba(41, 40, 50, .2); background: #fbf7ef; }
+  .public-shell .site-header .site-nav > a,
+  .public-shell .site-header .site-nav > a:last-of-type { border-color: rgba(41, 40, 50, .12); }
 }
