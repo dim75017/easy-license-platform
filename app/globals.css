@@ -8593,3 +8593,30 @@ button {
   .public-shell .site-header .site-nav > a { min-height: 52px; font-size: 14px; }
   .public-shell .footer-links { grid-template-columns: 1fr 1fr; }
 }
+
+/* V34: deliberately generous public typography. */
+.public-shell .site-header-inner { min-height: 90px; }
+.public-shell .site-header .brand-name { font-size: 17px; }
+.public-shell .site-header .brand-powered { font-size: 8.5px; }
+.public-shell .site-header .site-nav > a { min-height: 56px; padding-inline: 21px; font-size: 16px; }
+.public-shell .header-login { min-height: 46px; font-size: 16px; }
+.public-shell .site-header .button-primary { min-height: 50px; padding-inline: 24px; font-size: 16px; }
+.public-shell .site-footer { padding-top: 82px; padding-bottom: 36px; }
+.public-shell .footer-brand > p { max-width: 365px; font-size: 17px; line-height: 1.6; }
+.public-shell .footer-label { margin-bottom: 13px; font-size: 13px; }
+.public-shell .footer-links { gap: 32px; }
+.public-shell .footer-links a { font-size: 16px; line-height: 1.55; }
+.public-shell .footer-bottom { margin-top: 64px; padding-top: 26px; font-size: 13px; }
+
+@media (max-width: 1100px) {
+  .public-shell .site-header .site-nav > a { padding-inline: 14px; font-size: 14px; }
+  .public-shell .header-login { font-size: 14px; }
+  .public-shell .site-header .button-primary { padding-inline: 18px; font-size: 14px; }
+}
+
+@media (max-width: 800px) {
+  .public-shell .site-header-inner { min-height: 72px; }
+  .public-shell .site-header .site-nav > a { min-height: 56px; font-size: 16px; }
+  .public-shell .footer-brand > p { font-size: 16px; }
+  .public-shell .footer-links a { font-size: 16px; }
+}
