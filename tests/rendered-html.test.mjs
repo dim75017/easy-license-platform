@@ -81,8 +81,8 @@ test("defines every public and connected product surface", async () => {
   const routes = [
     ["app/creators/page.tsx", /Music that fits/i],
     ["app/business/page.tsx", /Music with the rights/i],
-    ["app/catalog/page.tsx", /Music for the/i],
-    ["app/pricing/page.tsx", /Pricing for creators/i],
+    ["app/catalog/page.tsx", /A real music/i],
+    ["app/pricing/page.tsx", /Simple plans for/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
@@ -111,8 +111,8 @@ test("defines every public and connected product surface", async () => {
   assert.match(business, /Music that can carry/i);
   assert.match(business, /Rights fit/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
-  assert.match(pricing, /CREATOR SUBSCRIPTIONS/i);
-  assert.match(pricing, /Business pricing depends on the rights you need/i);
+  assert.match(pricing, /FOR CREATORS/i);
+  assert.match(pricing, /Rights built around/i);
   assert.match(pricing, /Commercial Sync/i);
   assert.match(pricing, /Custom Commission/i);
   assert.match(pricing, /MUSIC FOR RETAIL/i);

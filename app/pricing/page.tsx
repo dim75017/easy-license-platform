@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
+import "../pricing-v39.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -44,31 +45,47 @@ const pricingFaq = [
   },
 ];
 
+const platforms = [
+  ["YouTube", "▶"],
+  ["Twitch", "✦"],
+  ["TikTok", "♪"],
+  ["Instagram", "◎"],
+  ["Kick", "K"],
+  ["Spotify", "≋"],
+  ["Podcasts", "◉"],
+];
+
 export default function PricingPage() {
   return (
     <PublicShell>
-      <section className="page-hero section-shell pricing-hero">
+      <div className="pricing-v39">
+      <section className="pricing-v39-hero">
         <div className="page-hero-copy centered">
-          <span className="eyebrow"><span>EL / PRICING</span> Creators and businesses</span>
-          <h1>Pricing for creators<br /><em>and business projects.</em></h1>
-          <p>Creators can choose a monthly or yearly subscription. Business licences are scoped and quoted according to the project, once the required rights are clear.</p>
+          <span className="pricing-v39-kicker">EASY LICENSE PRICING</span>
+          <h1>Simple plans for<br />the way you publish.</h1>
+          <p>Creator subscriptions are clear from the start. Business projects are quoted around the rights they actually need.</p>
         </div>
       </section>
 
-      <section className="section-shell pricing-page-cards" aria-labelledby="creator-pricing-title">
-        <div className="section-heading centered small-heading">
-          <span className="section-kicker">CREATOR SUBSCRIPTIONS</span>
-          <h2 id="creator-pricing-title">Choose a plan based on the channels you manage.</h2>
-          <p>Both plans include eligible catalogue downloads and licensing for your own content. Your price does not increase with your follower count.</p>
+      <section className="pricing-v39-plans" aria-labelledby="creator-pricing-title">
+        <div className="pricing-v39-heading">
+          <div><span className="pricing-v39-kicker">FOR CREATORS</span><h2 id="creator-pricing-title">Choose your<br />publishing setup.</h2></div>
+          <p>Both plans include eligible catalogue downloads for your own content. The price stays the same, whatever the size of your audience.</p>
         </div>
         <PricingCards expanded />
       </section>
 
-      <section className="section section-shell comparison-section" aria-labelledby="comparison-title">
-        <div className="section-heading centered small-heading">
-          <span className="section-kicker">CREATOR PLAN COMPARISON</span>
-          <h2 id="comparison-title">Compare Creator and Pro.</h2>
-          <p>The main differences are the number of connected channels, team access and the level of Content ID support.</p>
+      <section className="pricing-v39-platforms" aria-labelledby="platforms-title">
+        <div><span className="pricing-v39-kicker">COVERED PLATFORMS</span><h2 id="platforms-title">Where you can publish.</h2><p>Connect the channels and profiles covered by your plan. Creator licensing is built for your own content, not paid advertising or client campaigns.</p></div>
+        <div className="pricing-v39-platform-grid">
+          {platforms.map(([name, mark]) => <span key={name}><i aria-hidden="true">{mark}</i>{name}</span>)}
+        </div>
+      </section>
+
+      <section className="pricing-v39-comparison" aria-labelledby="comparison-title">
+        <div className="pricing-v39-heading">
+          <div><span className="pricing-v39-kicker">PLAN COMPARISON</span><h2 id="comparison-title">Creator or Pro?</h2></div>
+          <p>The difference is the number of connected channels, the workspace and the support level. Nothing hidden in the fine print.</p>
         </div>
         <div className="comparison-table">
           <div className="comparison-head"><span>Plan coverage</span><strong>Creator</strong><strong>Pro</strong></div>
@@ -82,11 +99,10 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="business-options" aria-labelledby="business-pricing-title">
-        <div className="offer-section-head" data-reveal="group">
-          <p className="offer-kicker"><span>BUSINESS</span> Project-based licensing</p>
-          <h2 id="business-pricing-title">Business pricing depends on the rights you need.</h2>
-          <p>Choose an existing track, commission original music, or join early access for Music for Retail. Commercial projects receive a clear quote once the media, territory, term and exclusivity are defined.</p>
+      <section className="pricing-v39-business" aria-labelledby="business-pricing-title">
+        <div className="pricing-v39-heading">
+          <div><span className="pricing-v39-kicker">FOR BUSINESSES</span><h2 id="business-pricing-title">Rights built around<br />the project.</h2></div>
+          <p>From a single existing track to a custom commission, we scope the licence around the media, territory, term and exclusivity you actually require.</p>
         </div>
         <div className="business-option-grid" data-reveal="group">
           <Link className="business-option business-option-sync" href="/sync">
@@ -116,10 +132,10 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="section section-shell pricing-faq" id="faq" aria-labelledby="pricing-faq-title">
-        <div className="split-heading">
+      <section className="pricing-v39-faq" id="faq" aria-labelledby="pricing-faq-title">
+        <div className="pricing-v39-heading">
           <div>
-            <span className="section-kicker">PRICING FAQ</span>
+            <span className="pricing-v39-kicker">PRICING FAQ</span>
             <h2 id="pricing-faq-title">Questions about plans and project licences.</h2>
           </div>
           <p>Creator subscriptions have published prices. Business licences are quoted after the required rights and deliverables are confirmed.</p>
@@ -134,11 +150,12 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="pricing-project-cta section-shell">
+      <section className="pricing-v39-cta">
         <span>Commercial Sync or Custom Commission</span>
         <h2>Tell us what you are making and where it will be used.</h2>
         <Link className="button button-light" href="/sync#brief">Start a business brief</Link>
       </section>
+      </div>
     </PublicShell>
   );
 }

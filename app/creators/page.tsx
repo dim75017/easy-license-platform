@@ -16,6 +16,10 @@ const creatorUses = [
   ["Podcasts", "Use music for intros, transitions and background beds in eligible podcast episodes."],
 ];
 
+const creatorPlatforms = [
+  ["YouTube", "▶"], ["Twitch", "✦"], ["TikTok", "♪"], ["Instagram", "◎"], ["Kick", "K"], ["Spotify", "≋"], ["Apple Podcasts", "◉"],
+];
+
 export default function CreatorsPage() {
   return (
     <PublicShell>
@@ -62,9 +66,20 @@ export default function CreatorsPage() {
           </div>
         </section>
 
+        <section className="creator-platforms" aria-labelledby="creator-platforms-title">
+          <div className="offer-section-head" data-reveal="group">
+            <p className="offer-kicker"><span>03</span> Supported creator platforms</p>
+            <h2 id="creator-platforms-title">Make for the platforms<br />you actually use.</h2>
+            <p>Connect the channels and profiles covered by your plan. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
+          </div>
+          <div className="creator-platform-grid" data-reveal="group">
+            {creatorPlatforms.map(([name, mark]) => <span key={name}><i aria-hidden="true">{mark}</i>{name}</span>)}
+          </div>
+        </section>
+
         <section className="offer-catalogue" aria-labelledby="creator-catalogue-title">
           <div className="offer-section-head offer-section-head-light" data-reveal="group">
-            <p className="offer-kicker"><span>03</span> Browse the music</p>
+            <p className="offer-kicker"><span>04</span> Browse the music</p>
             <h2 id="creator-catalogue-title">Search by mood,<br />style or use.</h2>
             <p>Listen to selected tracks, review the artist and genre, and check whether a title is eligible for your plan before downloading it.</p>
           </div>

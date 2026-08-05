@@ -51,6 +51,15 @@ export const useCategories = [
 
 export type MusicUseSlug = (typeof useCategories)[number]["slug"];
 
+export const playlists = [
+  { title: "Soft focus", subtitle: "Lo-fi & ambient for deep work", use: "study-focus" as MusicUseSlug, accent: "plum", tracks: "186 tracks" },
+  { title: "Daylight drives", subtitle: "Warm instrumentals for travel stories", use: "travel" as MusicUseSlug, accent: "gold", tracks: "242 tracks" },
+  { title: "Quiet scenes", subtitle: "Cinematic music for picture-led work", use: "cinematic" as MusicUseSlug, accent: "forest", tracks: "164 tracks" },
+  { title: "After hours", subtitle: "Jazzhop and late-night rhythms", use: "food-hospitality" as MusicUseSlug, accent: "rust", tracks: "128 tracks" },
+  { title: "Live energy", subtitle: "Background music for streams", use: "gaming-streaming" as MusicUseSlug, accent: "blue", tracks: "97 tracks" },
+  { title: "Slow rituals", subtitle: "Gentle music for wellness and rest", use: "wellness" as MusicUseSlug, accent: "sage", tracks: "211 tracks" },
+] as const;
+
 export type Track = {
   id: string;
   spotifyId: string;
