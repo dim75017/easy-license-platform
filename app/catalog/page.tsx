@@ -23,7 +23,7 @@ export default function CataloguePage() {
 
         <section className="music-playlists" aria-labelledby="music-playlists-title">
           <div className="music-library-section-head" data-reveal="group">
-            <div><p className="music-v26-kicker"><span>01</span> Playlists</p><h2 id="music-playlists-title">Explore the Lofi Girl worlds.</h2></div>
+            <div><p className="music-v26-kicker"><span>01</span> Playlists</p><h2 id="music-playlists-title">Start with a playlist.</h2></div>
             <p>Start with the public playlists that define the catalogue&apos;s main directions, from quiet piano and lofi to synthwave, jazz, house and ambient.</p>
           </div>
           <div className="music-playlist-grid" data-reveal="group">

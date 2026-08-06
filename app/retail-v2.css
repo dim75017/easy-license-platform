@@ -295,3 +295,18 @@
 .retail-v2-form { border-color: var(--cozy-rule); background: var(--cozy-paper); box-shadow: 0 20px 52px rgba(41, 40, 50, .1); }
 .retail-v2-steps p,
 .retail-v2-form > div:first-child small { color: rgba(41, 40, 50, .66); }
+
+@media (min-width: 761px) {
+  .retail-v2-hero,
+  .retail-v2-easy,
+  .retail-v2-spaces,
+  .retail-v2-artists,
+  .retail-v2-access {
+    width: 100%;
+    max-width: none;
+    padding-right: clamp(28px, 4vw, 76px);
+    padding-left: clamp(28px, 4vw, 76px);
+  }
+
+  .retail-v2-artists { border-radius: 0; }
+}

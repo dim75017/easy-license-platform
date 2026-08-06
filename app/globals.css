@@ -8704,21 +8704,6 @@ button {
   .public-shell .site-header .site-nav > a:last-of-type { border: 0; border-radius: 9px; }
 }
 
-/* V41: carry the homepage grid into the footer so the columns breathe evenly. */
-.public-shell .site-footer { width: min(1440px, calc(100% - 72px)); }
-.public-shell .footer-main {
-  grid-template-columns: minmax(300px, .95fr) minmax(0, 2.05fr);
-  gap: clamp(64px, 8vw, 160px);
-}
-
-@media (max-width: 980px) {
-  .public-shell .site-footer { width: min(760px, calc(100% - 48px)); }
-  .public-shell .footer-main { grid-template-columns: 1fr; gap: 44px; }
-}
-
-@media (max-width: 620px) {
-  .public-shell .site-footer { width: calc(100% - 32px); }
-}
 
 /* V41: carry the homepage grid into the footer so the columns breathe evenly. */
 .public-shell .site-footer { width: min(1440px, calc(100% - 72px)); }
@@ -8734,4 +8719,17 @@ button {
 
 @media (max-width: 620px) {
   .public-shell .site-footer { width: calc(100% - 32px); }
+}
+
+/* V43: public pages use the full canvas, with only a deliberate reading gutter. */
+@media (min-width: 761px) {
+  .public-shell .site-header-inner,
+  .public-shell .site-footer,
+  .public-shell .section-shell {
+    width: 100%;
+    max-width: none;
+    padding-inline: clamp(28px, 4vw, 76px);
+  }
+
+  .public-shell .section-shell { margin-inline: 0; }
 }

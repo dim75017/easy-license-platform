@@ -1407,3 +1407,19 @@
 @media (max-width: 640px) {
   .home26-facts { width: calc(100% - 32px); }
 }
+
+/* V43: let the homepage sections use the full editorial canvas. */
+@media (min-width: 761px) {
+  .home26-hero {
+    padding-right: clamp(28px, 4vw, 76px);
+    padding-left: clamp(28px, 4vw, 76px);
+  }
+
+  .home26-section {
+    width: 100%;
+    padding-right: clamp(28px, 4vw, 76px);
+    padding-left: clamp(28px, 4vw, 76px);
+  }
+
+  .home26-facts { width: 100%; }
+}

@@ -1504,3 +1504,18 @@
   .music-library-hero h1 { font-size: clamp(50px, 15vw, 70px); line-height: .98; }
   .music-playlist-grid, .music-mood-shelf > div { grid-template-columns: 1fr; }
 }
+
+/* V43: the music library fills the canvas rather than a centred column. */
+@media (min-width: 761px) {
+  .music-library-hero,
+  .music-playlists,
+  .music-mood-shelf,
+  .music-v26-library,
+  .music-v26-discovery,
+  .music-v26-sound-map,
+  .music-v26-curation,
+  .music-v26-paths {
+    padding-right: clamp(28px, 4vw, 76px);
+    padding-left: clamp(28px, 4vw, 76px);
+  }
+}

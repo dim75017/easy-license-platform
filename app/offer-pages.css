@@ -1271,3 +1271,32 @@
   .creators-landing .creator-pricing { border-radius:24px; padding:32px 20px; }
   .creators-landing .creator-pricing .price-card { min-height:0; border-radius:22px; padding:28px 24px; }
 }
+
+/* V43: public offer pages use the full width on larger screens. */
+@media (min-width: 761px) {
+  .gateway-paths,
+  .offer-hero-copy,
+  .offer-uses,
+  .offer-flow,
+  .offer-pricing,
+  .business-options,
+  .offer-faq,
+  .creator-platforms {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-right: clamp(28px, 4vw, 76px);
+    padding-left: clamp(28px, 4vw, 76px);
+  }
+
+  .gateway-curation,
+  .gateway-artists,
+  .offer-curation,
+  .offer-human,
+  .business-retail,
+  .creator-pricing {
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+  }
+}
