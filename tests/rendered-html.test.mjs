@@ -133,10 +133,15 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
   assert.match(pricing, /<PlatformLogo platform=\{name\}/);
+  assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
+  assert.doesNotMatch(platformLogo, /creatorPlatforms[^;]*Apple Podcasts/);
   assert.doesNotMatch(creators, /\["YouTube", "▶"\]|\["Twitch", "✦"\]|\["TikTok", "♪"\]/);
   assert.doesNotMatch(pricing, /\["Instagram", "◎"\]|\["Kick", "K"\]|\["Spotify", "≋"\]/);
   assert.match(platformLogo, /<svg viewBox="0 0 24 24"/);
   assert.match(platformLogo, /aria-hidden="true"/);
+  assert.match(platformLogo, /background: "#000000"/);
+  assert.match(platformLogo, /platform === "TikTok" \? "#FFFFFF"/);
+  assert.match(platformLogo, /<img src="\/images\/platforms\/instagram-glyph-gradient\.svg" alt="" \/>/);
   for (const [name, color] of [
     ["YouTube", "#FF0000"],
     ["Twitch", "#9146FF"],
@@ -144,13 +149,16 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
     ["Instagram", "#FF0069"],
     ["Kick", "#53FC19"],
     ["Spotify", "#1ED760"],
-    ["Apple Podcasts", "#9933CC"],
   ]) {
     assert.match(platformLogo, new RegExp(name), name);
     assert.match(platformLogo, new RegExp(color), color);
   }
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon svg/);
+  assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon img/);
+  assert.match(offerCss, /creator-platform-grid \{[^}]*grid-template-columns:repeat\(3/s);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
+  assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
+  await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));
 });
 
 function imagePaths(content) {
