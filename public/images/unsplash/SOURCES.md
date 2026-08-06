@@ -1,5 +1,7 @@
 # Added Unsplash image sources
 
+- `hero-turntable.jpg` — Caught In Joy, https://unsplash.com/photos/ptVBlniJi50 (Unsplash License)
+
 - `food-hospitality.jpg` — Alex Haney, https://unsplash.com/photos/CAhjZmVk5H4 (Unsplash License)
 - `vlogger.jpg` — Vitaly Gariev, https://unsplash.com/photos/FrGXVK00Onk (Unsplash License)
 - `music-header.jpg` — Wes Hicks, https://unsplash.com/photos/MEL-jJnm7RQ (Unsplash License)

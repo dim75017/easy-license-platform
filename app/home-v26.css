@@ -1391,19 +1391,6 @@
   .home26 .home26-eyebrow { font-size: 16px; }
 }
 
-/* V41: keep the catalogue facts on the same editorial frame as the title. */
-.home26-facts {
-  width: min(1440px, calc(100% - 72px));
-  margin-inline: auto;
-}
-
-@media (max-width: 900px) {
-  .home26-facts { width: min(760px, calc(100% - 48px)); }
-}
-
-@media (max-width: 640px) {
-  .home26-facts { width: calc(100% - 32px); }
-}
 
 /* V41: keep the catalogue facts on the same editorial frame as the title. */
 .home26-facts {
