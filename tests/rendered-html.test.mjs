@@ -62,6 +62,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(layout, /colorScheme:\s*"light"/i);
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /\.home26-hero/);
+  assert.match(homeCss, /\.home26-facts\s*\{\s*width:\s*min\(1440px,\s*calc\(100% - 72px\)\)/);
   assert.match(homeCss, /\.home26-collection-grid/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
@@ -72,6 +73,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(offerCss, /offer-hero-creators/);
   assert.match(offerCss, /offer-hero-business/);
   assert.match(css, /@media \(max-width: 640px\)/);
+  assert.match(css, /\.public-shell \.site-footer\s*\{\s*width:\s*min\(1440px,\s*calc\(100% - 72px\)\)/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|Your site is taking shape/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
