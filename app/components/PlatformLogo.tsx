@@ -54,6 +54,17 @@ export function PlatformLogo({ platform }: { platform: PlatformName }) {
     <span className="platform-brand-icon" style={{ backgroundColor: icon.background }} aria-hidden="true">
       {platform === "Instagram" ? (
         <img src="/images/platforms/instagram-glyph-gradient.svg" alt="" />
+      ) : platform === "YouTube" ? (
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+          <path d={icon.path} fill={icon.color} />
+          <path className="platform-logo-youtube-play" d="M9.545 15.568V8.432L15.818 12z" fill="#FFFFFF" />
+        </svg>
+      ) : platform === "Twitch" ? (
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+          <path d={icon.path} fill={icon.color} />
+          <path className="platform-logo-twitch-face" d="M20.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" fill="#FFFFFF" />
+          <path className="platform-logo-twitch-eyes" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714z" fill={icon.color} />
+        </svg>
       ) : (
         <svg viewBox="0 0 24 24" role="presentation" focusable="false" fill={platform === "TikTok" ? "#FFFFFF" : icon.color}>
           <path d={icon.path} />

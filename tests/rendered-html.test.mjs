@@ -141,6 +141,9 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(platformLogo, /aria-hidden="true"/);
   assert.match(platformLogo, /background: "#000000"/);
   assert.match(platformLogo, /platform === "TikTok" \? "#FFFFFF"/);
+  assert.match(platformLogo, /platform-logo-youtube-play[^>]*fill="#FFFFFF"/);
+  assert.match(platformLogo, /platform-logo-twitch-face[^>]*fill="#FFFFFF"/);
+  assert.match(platformLogo, /platform-logo-twitch-eyes/);
   assert.match(platformLogo, /<img src="\/images\/platforms\/instagram-glyph-gradient\.svg" alt="" \/>/);
   for (const [name, color] of [
     ["YouTube", "#FF0000"],
