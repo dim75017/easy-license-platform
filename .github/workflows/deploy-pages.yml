@@ -1,4 +1,5 @@
 name: Deploy public mockup to GitHub Pages
+# Fresh deployment marker: GitHub Pages can occasionally cancel a retried artifact.
 
 on:
   push:
