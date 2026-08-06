@@ -445,6 +445,7 @@
 .catalogue-v26-use:nth-child(1) img { object-position: 50% 36%; }
 .catalogue-v26-use:nth-child(3) img { object-position: 50% 45%; }
 .catalogue-v26-use:nth-child(4) img { object-position: 50% 58%; }
+.catalogue-v26-use:nth-child(5) img { object-position: 58% center; }
 .catalogue-v26-use:nth-child(6) img { object-position: 50% 25%; }
 
 .catalogue-v26-use > span {

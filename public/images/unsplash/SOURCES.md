@@ -7,7 +7,7 @@
 - `music-header.jpg` — Wes Hicks, https://unsplash.com/photos/MEL-jJnm7RQ (Unsplash License)
 - `creator-youtube.jpg` — Videodeck .co, https://unsplash.com/photos/YawVzNv7bho (Unsplash License)
 - `massage.jpg` — Getty Images, https://unsplash.com/photos/JQA6aZ18-OQ (Unsplash+ License)
-- `streamer.jpg` — Getty Images, https://unsplash.com/photos/g3yGZhTMnQk (Unsplash+ License)
+- `streamer.jpg` — ELLA DON, https://unsplash.com/photos/mKWi7LHcfcU (Unsplash License)
 - `podcast-home.jpg` — Stephanie Berbec, https://unsplash.com/photos/fu5mrNNvTIE (Unsplash+ License)
 - `study.jpg` — Kateryna Hliznitsova, https://unsplash.com/photos/JT5IUQHtL7E (Unsplash+ License)
 - `creator-piano.jpg` — Benoît Deschasaux, https://unsplash.com/photos/yXRWCqGJBSc (Unsplash+ License)
