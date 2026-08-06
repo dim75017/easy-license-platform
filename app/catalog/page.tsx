@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueExplorer } from "../components/CatalogueExplorer";
 import { PublicShell } from "../components/PublicShell";
-import { genres, playlists } from "../data/catalog";
+import { lofiGirlPlaylists, moods } from "../data/catalog";
 
 export const metadata: Metadata = {
   title: "Music library",
@@ -15,38 +15,34 @@ export default function CataloguePage() {
       <div className="music-v26-page">
         <section className="music-library-hero">
           <div data-reveal="left">
-            <p className="music-v26-kicker"><span>Easy License</span> Music</p>
             <h1>A real music<br />library for creators.</h1>
             <p>Listen, save your direction, then license the music that fits your video, stream, podcast or project. Every track is made by a real artist.</p>
             <a className="music-v26-button music-v26-button-light" href="#music-library">Open the library <span>↓</span></a>
-          </div>
-          <div className="music-library-now-playing" data-reveal="right" aria-label="Catalogue preview">
-            <span className="music-library-eq" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
-            <div><small>NOW EXPLORING</small><strong>Instrumental music<br />with a human touch.</strong><p>10,000+ tracks · 0 AI · 1,000+ artists</p></div>
           </div>
         </section>
 
         <section className="music-playlists" aria-labelledby="music-playlists-title">
           <div className="music-library-section-head" data-reveal="group">
-            <div><p className="music-v26-kicker"><span>01</span> Playlists</p><h2 id="music-playlists-title">Start with a playlist.</h2></div>
-            <p>Collections built around a feeling or a use case. Choose one to open matching tracks in the library.</p>
+            <div><p className="music-v26-kicker"><span>01</span> Playlists</p><h2 id="music-playlists-title">Explore the Lofi Girl worlds.</h2></div>
+            <p>Start with the public playlists that define the catalogue&apos;s main directions, from quiet piano and lofi to synthwave, jazz, house and ambient.</p>
           </div>
           <div className="music-playlist-grid" data-reveal="group">
-            {playlists.map((playlist, index) => (
-              <Link className={`music-playlist-card is-${playlist.accent}`} href={`/catalog?use=${playlist.use}#music-library`} key={playlist.title}>
+            {lofiGirlPlaylists.map((playlist, index) => (
+              <a className="music-playlist-card" href={`https://open.spotify.com/playlist/${playlist.spotifyId}`} key={playlist.id}>
                 <span className="music-playlist-number">{String(index + 1).padStart(2, "0")}</span>
-                <span className="music-playlist-art" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
-                <span><small>{playlist.tracks}</small><strong>{playlist.title}</strong><em>{playlist.subtitle}</em></span>
-                <b>Play playlist →</b>
-              </Link>
+                <img src={playlist.image} alt="" style={{ objectPosition: playlist.imagePosition ?? "center" }} />
+                <span className="music-playlist-copy"><small>{playlist.genre} · {playlist.moods.slice(0, 2).join(" · ")}</small><strong>{playlist.title}</strong><em>{playlist.description}</em></span>
+                <b>Open on Spotify ↗</b>
+              </a>
             ))}
           </div>
+          <a className="music-playlists-all" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists <span>↗</span></a>
         </section>
 
-        <section className="music-genre-shelf" aria-labelledby="music-genres-title">
-          <p className="music-v26-kicker"><span>02</span> Genres</p>
-          <h2 id="music-genres-title">Browse by genre.</h2>
-          <div>{genres.filter((item) => item !== "All genres").map((genre) => <Link href={`/catalog?genre=${encodeURIComponent(genre)}#music-library`} key={genre}>{genre}<span>Open playlist</span></Link>)}</div>
+        <section className="music-mood-shelf" aria-labelledby="music-moods-title">
+          <p className="music-v26-kicker"><span>02</span> Moods</p>
+          <h2 id="music-moods-title">Browse by mood.</h2>
+          <div>{moods.filter((item) => item !== "All moods").map((mood) => <Link href={`/catalog?q=${encodeURIComponent(mood)}#music-library`} key={mood}>{mood}<span>Search the library</span></Link>)}</div>
         </section>
 
         <section className="music-v26-library" id="music-library" aria-labelledby="music-library-title">

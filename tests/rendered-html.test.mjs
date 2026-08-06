@@ -67,6 +67,13 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
+  const cataloguePage = await source("app/catalog/page.tsx");
+  assert.match(cataloguePage, /lofiGirlPlaylists/);
+  assert.match(cataloguePage, /Explore all playlists/);
+  assert.match(cataloguePage, /Browse by mood/);
+  assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
+  assert.doesNotMatch(cataloguePage, /Easy License<\/span> Music/);
+  assert.match(catalogueCss, /\.music-library-hero h1 \{[\s\S]*letter-spacing: -\.035em/);
   assert.match(offerCss, /\.gateway-page/);
   assert.match(offerCss, /\.creators-landing/);
   assert.match(offerCss, /\.business-landing/);
