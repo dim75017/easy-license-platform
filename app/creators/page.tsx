@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 };
 
 const creatorUses = [
-  ["YouTube", "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel."],
-  ["Livestreams", "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account."],
-  ["Social content", "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account."],
-  ["Podcasts", "Use music for intros, transitions and background beds in eligible podcast episodes."],
+  { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/filmmaker-desk.jpg", alt: "Creator editing a video on a laptop" },
+  { title: "Livestreams", copy: "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account.", image: "/images/unsplash/streamer.jpg", alt: "Streamer at a live gaming setup" },
+  { title: "Social content", copy: "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account.", image: "/images/unsplash/vlogger.jpg", alt: "Creator listening to music outdoors" },
+  { title: "Podcasts", copy: "Use music for intros, transitions and background beds in eligible podcast episodes.", image: "/images/stock/studio-artist.jpg", alt: "Music producer in a recording studio" },
 ];
 
 export default function CreatorsPage() {
@@ -59,7 +59,7 @@ export default function CreatorsPage() {
             <p>Creator and Pro are designed for YouTubers, streamers, influencers, podcasters and social creators publishing their own eligible content. The number of connected channels and available team features depends on the plan you choose.</p>
           </div>
           <div className="offer-use-grid" data-reveal="group">
-            {creatorUses.map(([title, copy], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}
+            {creatorUses.map(({ title, copy, image, alt }, index) => <article key={title}><img src={image} alt={alt} /><div><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></div></article>)}
           </div>
         </section>
 
@@ -78,7 +78,7 @@ export default function CreatorsPage() {
           <div className="offer-section-head offer-section-head-light" data-reveal="group">
             <p className="offer-kicker"><span>04</span> Browse the music</p>
             <h2 id="creator-catalogue-title">Search by mood,<br />style or use.</h2>
-            <p>Listen to selected tracks, review the artist and genre, and check whether a title is eligible for your plan before downloading it.</p>
+            <p>Search for a specific track by mood, style or intended use. Or start with a professionally curated playlist made for a stream, edit or a particular kind of content.</p>
           </div>
           <div className="offer-catalogue-console" data-reveal="scale"><CatalogueExplorer compact /></div>
           <Link className="offer-button offer-button-light offer-catalogue-link" href="/catalog">Browse all 10,000+ tracks <span>↗</span></Link>
@@ -87,7 +87,8 @@ export default function CreatorsPage() {
         <section className="offer-flow" aria-labelledby="creator-flow-title">
           <div className="offer-section-head" data-reveal="group">
             <p className="offer-kicker"><span>04</span> How creator licensing works</p>
-            <h2 id="creator-flow-title">From account setup<br />to a licensed upload.</h2>
+            <h2 id="creator-flow-title">Simple from account setup<br />to a licensed upload.</h2>
+            <p>A simple three-step process: connect your channels, choose eligible music and keep every licence record in one place.</p>
           </div>
           <div className="offer-flow-grid" data-reveal="group">
             <article><span>01</span><h3>Connect your channels</h3><p>Add the supported YouTube, Twitch, podcast or social channels covered by your plan.</p></article>

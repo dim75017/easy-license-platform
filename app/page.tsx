@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CatalogueExplorer } from "./components/CatalogueExplorer";
 import { PublicShell } from "./components/PublicShell";
 
 const useCollections = [
@@ -31,7 +30,7 @@ const useCollections = [
     title: "Podcasts & Interviews",
     copy: "Intros, transitions and subtle beds for conversation-led formats.",
     slug: "podcasts",
-    image: "/images/stock/studio-artist.jpg",
+    image: "/images/unsplash/creator-edit.jpg",
   },
   {
     title: "Film, Documentary & Brand",
@@ -57,7 +56,8 @@ const artists = [
   { name: "Charlee Nguyen", style: "Ambient · Cinematic", image: "/artists/charlee.jpg" },
   { name: "Project AER", style: "Lofi hip-hop · Jazzhop", image: "/artists/project-aer.jpg" },
   { name: "amies", style: "Ambient · Piano", image: "/artists/amies.jpg" },
-  { name: "Dario Lessing", style: "Modern classical · Piano", image: "/artists/dario-lessing.jpg" },
+  { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.jpg" },
+  { name: "In the studio", style: "Human-made production", image: "/images/stock/studio-artist.jpg" },
 ];
 
 export default function Home() {
@@ -71,7 +71,7 @@ export default function Home() {
             <p className="home26-eyebrow">Powered by Lofi Girl · Human-made music licensing</p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
             <p className="home26-hero-lede">
-              Browse more than 10,000 instrumental and background tracks selected by our music team. Choose a creator plan for your own channels, or request a licence for a campaign, production or physical space.
+              Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
             </p>
             <div className="home26-actions">
               <Link className="home26-button home26-button-primary" href="/catalog">Browse music</Link>
@@ -87,19 +87,6 @@ export default function Home() {
           <div><strong>10,000+</strong><span>instrumental and background tracks</span></div>
           <div><strong>1,000+</strong><span>artists represented worldwide</span></div>
           <div><strong>0</strong><span>AI-generated tracks accepted</span></div>
-          <div><strong>Music team</strong><span>professional review and detailed tagging</span></div>
-        </section>
-
-        <section className="home26-section home26-listen" aria-labelledby="home26-listen-title">
-          <div className="home26-section-heading" data-reveal="group">
-            <p className="home26-eyebrow">Music library</p>
-            <h2 id="home26-listen-title">Listen to the catalogue before choosing a licence.</h2>
-            <p>Start with a selection from our music editors. Search the full library by track, artist, mood or intended use when you need something more specific.</p>
-            <Link className="home26-text-link" href="/catalog">Open the music library <span>→</span></Link>
-          </div>
-          <div className="home26-library" data-reveal="scale">
-            <CatalogueExplorer compact />
-          </div>
         </section>
 
         <section className="home26-section home26-collections" aria-labelledby="home26-collections-title">
@@ -123,50 +110,14 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="home26-section home26-offers" aria-labelledby="home26-offers-title">
-          <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
-            <p className="home26-eyebrow">Licensing options</p>
-            <h2 id="home26-offers-title">Different uses need different licences.</h2>
-            <p>Creator subscriptions cover music used on your own eligible channels. Business licences are scoped to a commercial project, client brief or physical location.</p>
-          </div>
-          <div className="home26-offer-grid" data-reveal="group">
-            <article className="home26-offer-card home26-offer-creators">
-              <img src="/images/unsplash/hero-creator.jpg" alt="Creator setting up a camera for a filmed project" />
-              <div>
-                <p>Easy License for Creators</p>
-                <h3>For your own YouTube, livestream, podcast and social channels.</h3>
-                <ul>
-                  <li>Creator and Pro plans</li>
-                  <li>Clear records for every licensed download</li>
-                  <li>Plans from €6.67/month with annual billing</li>
-                </ul>
-                <Link href="/creators">See the creator licence →</Link>
-              </div>
-            </article>
-            <article className="home26-offer-card home26-offer-business">
-              <img src="/images/unsplash/filmmaker-desk.jpg" alt="Commercial production planned at a filmmaker's desk" />
-              <div>
-                <p>Easy License for Businesses</p>
-                <h3>For campaigns, productions, client work and physical spaces.</h3>
-                <ul>
-                  <li>Commercial Sync for existing music</li>
-                  <li>Custom Commission for original music</li>
-                  <li>Music for Retail coming soon</li>
-                </ul>
-                <Link href="/business">See the business options →</Link>
-              </div>
-            </article>
-          </div>
-        </section>
-
         <section className="home26-section home26-curation" aria-labelledby="home26-curation-title">
           <figure data-reveal="scale">
-            <img src="/images/unsplash/studio-artist.jpg" alt="Music artist working in a recording studio" />
+            <img src="/images/unsplash/hero-turntable.jpg" alt="Turntable and amplifier in a warm listening room" />
           </figure>
           <div className="home26-curation-copy" data-reveal="right">
-            <p className="home26-eyebrow">A considered catalogue</p>
-            <h2 id="home26-curation-title">Music that is easy to find and good to use.</h2>
-            <p>Every release is selected and organised with the people making the work in mind. Clear moods, genres and project filters make it easier to find music that supports the story instead of distracting from it.</p>
+            <p className="home26-eyebrow">Quality without the noise</p>
+            <h2 id="home26-curation-title">A precise, high-quality catalogue.</h2>
+            <p>Instrumental and background music made for projects where the details matter. Clear moods, genres and project filters make it simple to find a track that supports the story without taking it over.</p>
           </div>
         </section>
 
@@ -176,7 +127,7 @@ export default function Home() {
             <h2 id="home26-artists-title">More than 1,000 artists contribute to the catalogue.</h2>
             <p>Every track is written and produced by artists. Generative AI music is not accepted, artists remain clearly credited, and licensing income is paid directly and fairly.</p>
           </div>
-          <div className="home26-artist-grid" data-reveal="group">
+          <div className="home26-artist-grid" data-reveal="group" aria-label="A selection of Easy License artists and studio sessions">
             {artists.map((artist) => (
               <article key={artist.name}>
                 <img src={artist.image} alt={`Portrait of ${artist.name}`} />
@@ -184,65 +135,6 @@ export default function Home() {
               </article>
             ))}
           </div>
-        </section>
-
-        <section className="home26-section home26-how" aria-labelledby="home26-how-title">
-          <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
-            <p className="home26-eyebrow">How licensing works</p>
-            <h2 id="home26-how-title">A clear process for creators and businesses.</h2>
-            <p>The route depends on where the music will be used. You do not need to interpret every right before you start.</p>
-          </div>
-          <div className="home26-how-grid" data-reveal="group">
-            <article>
-              <p>For Creators</p>
-              <h3>Use music on your own eligible channels.</h3>
-              <ol>
-                <li><span>1</span><div><strong>Choose Creator or Pro</strong><small>Select the plan that matches the channels and people you manage.</small></div></li>
-                <li><span>2</span><div><strong>Connect your channels</strong><small>Keep covered profiles and licence records together in your account.</small></div></li>
-                <li><span>3</span><div><strong>Browse, download and publish</strong><small>Use eligible music while the account keeps the related licence information.</small></div></li>
-              </ol>
-              <Link href="/pricing">Compare creator plans →</Link>
-            </article>
-            <article>
-              <p>For Businesses</p>
-              <h3>License music for a defined commercial use.</h3>
-              <ol>
-                <li><span>1</span><div><strong>Send the brief</strong><small>Share the project, media, markets, timing and budget.</small></div></li>
-                <li><span>2</span><div><strong>Receive a shortlist or proposal</strong><small>Choose catalogue music or discuss an original commission with the team.</small></div></li>
-                <li><span>3</span><div><strong>Confirm scope and delivery</strong><small>Rights, term, territory, quote and final assets are documented before use.</small></div></li>
-              </ol>
-              <Link href="/sync#brief">Start a business brief →</Link>
-            </article>
-          </div>
-        </section>
-
-        <section className="home26-section home26-pricing" aria-labelledby="home26-pricing-title">
-          <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
-            <p className="home26-eyebrow">Pricing overview</p>
-            <h2 id="home26-pricing-title">Creator plans start at €6.67 per month.</h2>
-            <p>Prices below are the monthly equivalent when billed annually. Commercial licensing is quoted according to the rights required by the project.</p>
-          </div>
-          <div className="home26-price-grid" data-reveal="group">
-            <article>
-              <p>Creator</p><div><strong>€6.67</strong><span>/ month</span></div>
-              <small>€79.99 billed annually</small>
-              <ul><li>One channel per supported platform</li><li>Your own monetised content</li><li>Licence and Content ID support records</li></ul>
-              <Link href="/pricing">See Creator details →</Link>
-            </article>
-            <article className="home26-price-featured">
-              <p>Pro</p><div><strong>€16.67</strong><span>/ month</span></div>
-              <small>€199.99 billed annually</small>
-              <ul><li>Up to three channels per platform</li><li>Multi-channel and team workspace</li><li>Priority Content ID support</li></ul>
-              <Link href="/pricing">See Pro details →</Link>
-            </article>
-            <article className="home26-price-business">
-              <p>Business</p><div><strong>Project-based</strong></div>
-              <small>Rights and quote defined from your brief</small>
-              <ul><li>Commercial Sync</li><li>Custom Commission</li><li>Music for Retail coming soon</li></ul>
-              <Link href="/business">See business options →</Link>
-            </article>
-          </div>
-          <Link className="home26-button home26-button-primary home26-pricing-button" href="/pricing">Compare all pricing and coverage</Link>
         </section>
 
         <section className="home26-section home26-faq" aria-labelledby="home26-faq-title">
@@ -263,7 +155,7 @@ export default function Home() {
         </section>
 
         <section className="home26-final" data-reveal="group">
-          <div><p className="home26-eyebrow">Start with the music</p><h2>Browse the catalogue before you choose.</h2><p>Listen first, compare the licensing options and create an account when you are ready to publish.</p></div>
+          <div><p className="home26-eyebrow">Start with the music</p><h2>Finding the right track should be simple.</h2><p>Browse a specific sound or start with a professionally curated playlist, then choose the licensing option that fits your project.</p></div>
           <div className="home26-actions"><Link className="home26-button home26-button-light" href="/catalog">Explore music</Link><Link className="home26-button home26-button-outline-light" href="/pricing">Compare plans</Link></div>
         </section>
       </div>

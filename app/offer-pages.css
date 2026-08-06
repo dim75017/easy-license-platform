@@ -1232,3 +1232,42 @@
 
 /* Keep the Business artist portrait crisp rather than stylistically softened. */
 .offer-human-business img { filter: none; }
+
+/* V40: image-led creator uses and clearer creator plans. */
+.creators-landing .offer-use-grid article { display:flex; min-height:430px; flex-direction:column; overflow:hidden; padding:0; background:#fbf7ef; }
+.creators-landing .offer-use-grid article > img { width:100%; height:184px; object-fit:cover; }
+.creators-landing .offer-use-grid article > div { display:flex; min-height:246px; padding:22px 26px 28px; flex-direction:column; }
+.creators-landing .offer-use-grid article > div > span { color:var(--marketing-clay); font-size:12px; font-weight:800; }
+.creators-landing .offer-use-grid h3 { margin:22px 0 10px; font-size:28px; }
+.creators-landing .offer-use-grid p { font-size:16px; }
+
+.creators-landing .creator-pricing { border-radius:32px; padding:clamp(40px, 5vw, 72px); }
+.creators-landing .creator-pricing .pricing-block { max-width:1120px; margin:0 auto; }
+.creators-landing .creator-pricing .billing-toggle { margin-bottom:34px; border-radius:999px; padding:5px; }
+.creators-landing .creator-pricing .billing-toggle button { min-height:44px; border-radius:999px; padding-inline:21px; font-family:var(--font-body); font-size:15px; font-weight:720; letter-spacing:0; text-transform:none; }
+.creators-landing .creator-pricing .pricing-grid-expanded { gap:22px; }
+.creators-landing .creator-pricing .price-card { min-height:610px; border-radius:28px; padding:34px; background:#fbf7ef; box-shadow:0 18px 42px rgba(41,40,50,.09); }
+.creators-landing .creator-pricing .price-card-featured { background:linear-gradient(150deg,#35323a,#292832); }
+.creators-landing .creator-pricing .plan-code,
+.creators-landing .creator-pricing .plan-icon { display:none; }
+.creators-landing .creator-pricing .popular-pill { position:static; width:fit-content; margin:0 0 28px; border:1px solid rgba(251,247,239,.38); border-radius:999px; padding:7px 12px; background:rgba(251,247,239,.12); color:#fbf7ef; font-family:var(--font-body); font-size:13px; font-weight:720; letter-spacing:0; text-transform:none; }
+.creators-landing .creator-pricing .price-card-top { align-items:flex-start; }
+.creators-landing .creator-pricing .price-card-top > div { gap:3px; }
+.creators-landing .creator-pricing .price-card-top p { font-family:var(--font-display); font-size:clamp(38px,4vw,52px); font-weight:630; letter-spacing:-.055em; line-height:.94; }
+.creators-landing .creator-pricing .price-card-top > div > span { font-family:var(--font-body); font-size:17px; }
+.creators-landing .creator-pricing .price { margin-top:42px; }
+.creators-landing .creator-pricing .price strong { font-family:var(--font-display); font-size:clamp(68px,6vw,90px); font-weight:630; letter-spacing:-.075em; }
+.creators-landing .creator-pricing .price > span { margin-top:14px; font-size:25px; }
+.creators-landing .creator-pricing .price small { margin-bottom:12px; font-family:var(--font-body); font-size:16px; }
+.creators-landing .creator-pricing .billing-note { margin-top:11px; font-family:var(--font-body); font-size:15px; }
+.creators-landing .creator-pricing .feature-list { margin-block:32px 34px; padding-top:24px; }
+.creators-landing .creator-pricing .feature-list li { margin-block:15px; font-family:var(--font-body); font-size:16px; }
+.creators-landing .creator-pricing .price-card .button { min-height:57px; border-radius:999px; font-family:var(--font-body); font-size:17px; font-weight:750; }
+.creators-landing .creator-pricing .fine-print { margin-top:17px; font-family:var(--font-body); font-size:14px; line-height:1.4; }
+
+@media (max-width: 760px) {
+  .creators-landing .offer-use-grid article > img { height:210px; }
+  .creators-landing .offer-use-grid article > div { min-height:0; }
+  .creators-landing .creator-pricing { border-radius:24px; padding:32px 20px; }
+  .creators-landing .creator-pricing .price-card { min-height:0; border-radius:22px; padding:28px 24px; }
+}

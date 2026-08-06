@@ -284,7 +284,7 @@
   display: grid;
   border-block: 1px solid var(--home26-rule);
   background: var(--home26-paper);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .home26-facts > div {
@@ -597,13 +597,19 @@
 }
 
 .home26-artist-grid {
-  display: grid;
+  display: flex;
   margin-top: 56px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow-x: auto;
+  padding-bottom: 10px;
   gap: 14px;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: rgba(214, 168, 150, .66) transparent;
+  scrollbar-width: thin;
 }
 
 .home26-artist-grid article {
+  min-width: clamp(220px, 23vw, 310px);
+  scroll-snap-align: start;
   overflow: hidden;
   border: 1px solid rgba(251, 247, 239, .14);
   border-radius: 25px;

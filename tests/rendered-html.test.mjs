@@ -21,9 +21,9 @@ test("contains the complete Easy License music licensing homepage", async () => 
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
   assert.match(layout, /Powered by Lofi Girl/i);
-  assert.match(page, /Browse more than 10,000 instrumental and background tracks selected by our music team/i);
-  assert.match(page, /<CatalogueExplorer compact \/>/i);
-  assert.match(page, /Listen to the catalogue before choosing a licence/i);
+  assert.match(page, /Browse more than 10,000 instrumental and background tracks created by real artists/i);
+  assert.doesNotMatch(page, /Music team[\s\S]*professional review and detailed tagging/i);
+  assert.doesNotMatch(page, /Listen to the catalogue before choosing a licence|Open the music library/i);
   for (const useCase of [
     "Travel & Outdoors",
     "Vlogs & Everyday Life",
@@ -39,17 +39,15 @@ test("contains the complete Easy License music licensing homepage", async () => 
   for (const useRoute of ["travel", "lifestyle-vlogs", "study-focus", "gaming-streaming", "podcasts", "cinematic", "wellness", "food-hospitality"]) {
     assert.match(page, new RegExp(`slug: "${useRoute}"`), useRoute);
   }
-  assert.match(page, /Easy License for Creators/i);
-  assert.match(page, /Easy License for Businesses/i);
-  assert.match(page, /href="\/creators"/i);
-  assert.match(page, /href="\/business"/i);
-  assert.match(page, /Music that is easy to find and good to use/i);
+  assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
+  assert.match(page, /A precise, high-quality catalogue/i);
+  assert.match(page, /hero-turntable\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
-  assert.match(page, /Creator plans start at .*6\.67 per month/i);
+  assert.match(page, /M e a d o w/i);
+  assert.match(page, /Human-made production/i);
+  assert.doesNotMatch(page, /Dario Lessing/i);
+  assert.match(page, /Finding the right track should be simple/i);
   assert.match(page, /What to know before using a track/i);
-  assert.match(page, /Commercial Sync for existing music/i);
-  assert.match(page, /Custom Commission for original music/i);
-  assert.match(page, /Music for Retail coming soon/i);
   assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
   assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
   assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
@@ -64,7 +62,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /\.home26-hero/);
   assert.match(homeCss, /\.home26-collection-grid/);
-  assert.match(homeCss, /\.home26-price-grid/);
+  assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
   assert.match(offerCss, /\.gateway-page/);
@@ -286,7 +284,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /Drifting away/);
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
-  assert.match(page, /Music that is easy to find and good to use/i);
+  assert.match(page, /A precise, high-quality catalogue/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.match(business, /\/artists\/meadow\.jpg/);
