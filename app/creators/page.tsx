@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueExplorer } from "../components/CatalogueExplorer";
+import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
 
@@ -14,10 +15,6 @@ const creatorUses = [
   ["Livestreams", "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account."],
   ["Social content", "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account."],
   ["Podcasts", "Use music for intros, transitions and background beds in eligible podcast episodes."],
-];
-
-const creatorPlatforms = [
-  ["YouTube", "▶"], ["Twitch", "✦"], ["TikTok", "♪"], ["Instagram", "◎"], ["Kick", "K"], ["Spotify", "≋"], ["Apple Podcasts", "◉"],
 ];
 
 export default function CreatorsPage() {
@@ -73,7 +70,7 @@ export default function CreatorsPage() {
             <p>Connect the channels and profiles covered by your plan. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
           </div>
           <div className="creator-platform-grid" data-reveal="group">
-            {creatorPlatforms.map(([name, mark]) => <span key={name}><i aria-hidden="true">{mark}</i>{name}</span>)}
+            {creatorPlatforms.map((name) => <span key={name}><PlatformLogo platform={name} />{name}</span>)}
           </div>
         </section>
 

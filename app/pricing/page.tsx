@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
 import "../pricing-v39.css";
@@ -45,16 +46,6 @@ const pricingFaq = [
   },
 ];
 
-const platforms = [
-  ["YouTube", "▶"],
-  ["Twitch", "✦"],
-  ["TikTok", "♪"],
-  ["Instagram", "◎"],
-  ["Kick", "K"],
-  ["Spotify", "≋"],
-  ["Podcasts", "◉"],
-];
-
 export default function PricingPage() {
   return (
     <PublicShell>
@@ -78,7 +69,7 @@ export default function PricingPage() {
       <section className="pricing-v39-platforms" aria-labelledby="platforms-title">
         <div><span className="pricing-v39-kicker">COVERED PLATFORMS</span><h2 id="platforms-title">Where you can publish.</h2><p>Connect the channels and profiles covered by your plan. Creator licensing is built for your own content, not paid advertising or client campaigns.</p></div>
         <div className="pricing-v39-platform-grid">
-          {platforms.map(([name, mark]) => <span key={name}><i aria-hidden="true">{mark}</i>{name}</span>)}
+          {creatorPlatforms.map((name) => <span key={name}><PlatformLogo platform={name} />{name}</span>)}
         </div>
       </section>
 

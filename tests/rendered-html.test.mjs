@@ -122,6 +122,37 @@ test("defines every public and connected product surface", async () => {
   assert.match(sync, /Easy License for Business/i);
 });
 
+test("uses real platform logos instead of placeholder glyphs", async () => {
+  const [creators, pricing, platformLogo, offerCss, pricingCss] = await Promise.all([
+    source("app/creators/page.tsx"),
+    source("app/pricing/page.tsx"),
+    source("app/components/PlatformLogo.tsx"),
+    source("app/offer-pages.css"),
+    source("app/pricing-v39.css"),
+  ]);
+
+  assert.match(creators, /<PlatformLogo platform=\{name\}/);
+  assert.match(pricing, /<PlatformLogo platform=\{name\}/);
+  assert.doesNotMatch(creators, /\["YouTube", "▶"\]|\["Twitch", "✦"\]|\["TikTok", "♪"\]/);
+  assert.doesNotMatch(pricing, /\["Instagram", "◎"\]|\["Kick", "K"\]|\["Spotify", "≋"\]/);
+  assert.match(platformLogo, /<svg viewBox="0 0 24 24"/);
+  assert.match(platformLogo, /aria-hidden="true"/);
+  for (const [name, color] of [
+    ["YouTube", "#FF0000"],
+    ["Twitch", "#9146FF"],
+    ["TikTok", "#000000"],
+    ["Instagram", "#FF0069"],
+    ["Kick", "#53FC19"],
+    ["Spotify", "#1ED760"],
+    ["Apple Podcasts", "#9933CC"],
+  ]) {
+    assert.match(platformLogo, new RegExp(name), name);
+    assert.match(platformLogo, new RegExp(color), color);
+  }
+  assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon svg/);
+  assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
+});
+
 function imagePaths(content) {
   return [...content.matchAll(/(?:src|image)\s*[:=]\s*"([^"]+)"/g)].map((match) => match[1]);
 }
