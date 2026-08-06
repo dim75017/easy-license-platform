@@ -1410,7 +1410,7 @@
 @media (max-width: 560px) { .music-v26-project-grid, .music-v26-sound-map-groups { grid-template-columns: 1fr; } .music-v26-project-card { min-height: 260px; } .music-v26-sound-map-groups { gap: 24px; } }
 
 /* V39: the music route is an audio library first. */
-.music-library-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: clamp(44px, 9vw, 150px); align-items: center; min-height: 620px; padding: clamp(90px, 11vw, 160px) max(28px, calc((100vw - 1340px) / 2)); background: #292832; color: #fbf7ef; }
+.music-library-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: clamp(44px, 9vw, 150px); align-items: center; min-height: 620px; padding: clamp(90px, 11vw, 160px) max(28px, calc((100vw - 1340px) / 2)); background: linear-gradient(90deg, rgba(41,40,50,.96) 0%, rgba(41,40,50,.84) 52%, rgba(41,40,50,.62) 100%), url("/images/unsplash/music-header.jpg") center / cover; color: #fbf7ef; }
 .music-library-hero h1 { max-width: 10ch; margin: 16px 0 20px; font-family: var(--font-display); font-size: clamp(58px, 7vw, 105px); letter-spacing: -.07em; line-height: .86; }
 .music-library-hero > div > p:not(.music-v26-kicker) { max-width: 50ch; margin: 0 0 30px; color: rgba(251,247,239,.74); font-size: 18px; line-height: 1.55; }
 .music-library-now-playing { display: grid; min-height: 350px; align-content: end; gap: 36px; border: 1px solid rgba(251,247,239,.17); padding: 35px; background: linear-gradient(145deg, rgba(185,120,100,.25), rgba(251,247,239,.04)); box-shadow: 28px 28px 0 rgba(185,120,100,.18); }

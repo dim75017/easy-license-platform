@@ -44,8 +44,9 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(page, /hero-turntable\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /M e a d o w/i);
-  assert.match(page, /Human-made production/i);
+  assert.doesNotMatch(page, /In the studio|Human-made production/i);
   assert.doesNotMatch(page, /Dario Lessing/i);
+  assert.match(page, /food-hospitality\.jpg/i);
   assert.match(page, /Finding the right track should be simple/i);
   assert.match(page, /What to know before using a track/i);
   assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
@@ -231,16 +232,18 @@ test("ships progressive, accessible motion without an animation dependency", asy
 });
 
 test("ships the cozy Lofi Girl identity, focused navigation and real artist profiles", async () => {
-  const [css, homeCss, cozyCss, layout, brand, header, catalogue, catalogueData, page, business, booth] = await Promise.all([
+  const [css, homeCss, cozyCss, catalogCss, layout, brand, header, catalogue, catalogueData, page, creators, business, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
+    source("app/catalog-v26.css"),
     source("app/layout.tsx"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
     source("app/components/CatalogueExplorer.tsx"),
     source("app/data/catalog.ts"),
     source("app/page.tsx"),
+    source("app/creators/page.tsx"),
     source("app/business/page.tsx"),
     source("app/components/LicenseBooth.tsx"),
   ]);
@@ -284,6 +287,9 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /Drifting away/);
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
+  assert.match(creators, /creator-youtube\.jpg/i);
+  assert.match(catalogueData, /food-hospitality\.jpg/i);
+  assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(page, /A precise, high-quality catalogue/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
@@ -306,6 +312,9 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/stock/cozy-workspace.jpg", root)),
     access(new URL("public/images/stock/ATTRIBUTION.md", root)),
     access(new URL("public/images/unsplash/creator-edit.jpg", root)),
+    access(new URL("public/images/unsplash/creator-youtube.jpg", root)),
+    access(new URL("public/images/unsplash/food-hospitality.jpg", root)),
+    access(new URL("public/images/unsplash/music-header.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),

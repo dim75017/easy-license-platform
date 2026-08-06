@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const creatorUses = [
-  { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/filmmaker-desk.jpg", alt: "Creator editing a video on a laptop" },
+  { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/creator-youtube.jpg", alt: "Creator holding a movie clapper in a video studio" },
   { title: "Livestreams", copy: "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account.", image: "/images/unsplash/streamer.jpg", alt: "Streamer at a live gaming setup" },
   { title: "Social content", copy: "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account.", image: "/images/unsplash/vlogger.jpg", alt: "Creator listening to music outdoors" },
   { title: "Podcasts", copy: "Use music for intros, transitions and background beds in eligible podcast episodes.", image: "/images/stock/studio-artist.jpg", alt: "Music producer in a recording studio" },

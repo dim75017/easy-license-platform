@@ -48,7 +48,7 @@ const useCollections = [
     title: "Food & Hospitality",
     copy: "Warm music for recipes, cafés, restaurants and welcoming spaces.",
     slug: "food-hospitality",
-    image: "/images/unsplash/retail/cafe.jpg",
+    image: "/images/unsplash/food-hospitality.jpg",
   },
 ];
 
@@ -57,7 +57,6 @@ const artists = [
   { name: "Project AER", style: "Lofi hip-hop · Jazzhop", image: "/artists/project-aer.jpg" },
   { name: "amies", style: "Ambient · Piano", image: "/artists/amies.jpg" },
   { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.jpg" },
-  { name: "In the studio", style: "Human-made production", image: "/images/stock/studio-artist.jpg" },
 ];
 
 export default function Home() {

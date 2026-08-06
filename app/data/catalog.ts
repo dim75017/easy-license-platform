@@ -45,7 +45,7 @@ export const useCategories = [
     slug: "food-hospitality",
     label: "Food & Hospitality",
     description: "Recipes, cafés, restaurants and welcoming spaces.",
-    image: "/images/unsplash/retail/cafe.jpg",
+    image: "/images/unsplash/food-hospitality.jpg",
   },
 ] as const;
 
