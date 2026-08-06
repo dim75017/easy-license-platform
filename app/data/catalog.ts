@@ -21,7 +21,7 @@ export const useCategories = [
     slug: "study-focus",
     label: "Study & Focus",
     description: "Long-form work, study sessions and calm tutorials.",
-    image: "/images/stock/cozy-workspace.jpg",
+    image: "/images/unsplash/study.jpg",
   },
   {
     slug: "gaming-streaming",
@@ -33,7 +33,7 @@ export const useCategories = [
     slug: "podcasts",
     label: "Podcasts",
     description: "Openings, transitions, interviews and narrative episodes.",
-    image: "/images/stock/studio-artist.jpg",
+    image: "/images/unsplash/podcast-home.jpg",
   },
   {
     slug: "wellness",

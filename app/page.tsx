@@ -18,7 +18,7 @@ const useCollections = [
     title: "Study, Focus & Tutorials",
     copy: "Steady instrumental music that supports explanation without competing with it.",
     slug: "study-focus",
-    image: "/images/stock/cozy-workspace.jpg",
+    image: "/images/unsplash/study.jpg",
   },
   {
     title: "Livestreams & Gaming",
@@ -30,7 +30,7 @@ const useCollections = [
     title: "Podcasts & Interviews",
     copy: "Intros, transitions and subtle beds for conversation-led formats.",
     slug: "podcasts",
-    image: "/images/unsplash/creator-edit.jpg",
+    image: "/images/unsplash/podcast-home.jpg",
   },
   {
     title: "Film, Documentary & Brand",

@@ -79,12 +79,14 @@ export default function BusinessPage() {
           <div className="business-retail-copy" data-reveal="left">
             <p className="offer-kicker"><span>04</span> Music for Retail · Coming soon</p>
             <h2 id="business-retail-title">Licensed background music<br />for physical spaces.</h2>
-            <p>The planned Retail service will provide human-made background music for cafés, restaurants, hotels, boutiques, gyms and spas. Businesses will be able to choose professionally curated programming through a simple, affordable subscription designed for in-venue use.</p>
+            <p>The planned Retail service will provide human-made background music for retail stores, offices, restaurants, hotels, gyms and spas. Businesses will be able to choose professionally curated programming through a simple, affordable subscription designed for in-venue use.</p>
             <Link className="offer-inline-link" href="/retail">Join the first pilot <span>→</span></Link>
           </div>
           <div className="business-retail-images" data-reveal="group">
-            <figure><img src="/images/unsplash/retail/cafe.jpg" alt="Warm café interior" /><figcaption>Cafés</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/store.jpg" alt="Clothing store interior" /><figcaption>Retail stores</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/office.jpg" alt="Modern office interior" /><figcaption>Offices</figcaption></figure>
             <figure><img src="/images/unsplash/retail/restaurant-new.jpg" alt="Contemporary restaurant interior" /><figcaption>Restaurants</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/hotel.jpg" alt="Hotel lobby interior" /><figcaption>Hotels</figcaption></figure>
             <figure><img src="/images/unsplash/retail/gym.jpg" alt="Modern gym interior" /><figcaption>Gyms</figcaption></figure>
             <figure><img src="/images/unsplash/massage.jpg" alt="Spa treatment in progress" /><figcaption>Spas &amp; wellness</figcaption></figure>
           </div>

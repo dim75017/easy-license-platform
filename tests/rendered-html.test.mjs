@@ -288,8 +288,10 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
   assert.match(creators, /creator-youtube\.jpg/i);
+  assert.match(creators, /creator-piano\.jpg|creator-streamer\.jpg|creator-social\.jpg|creator-podcast\.jpg/i);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
+  assert.match(business, /Retail stores[\s\S]*Offices[\s\S]*Restaurants[\s\S]*Hotels[\s\S]*Gyms[\s\S]*Spas/i);
   assert.match(page, /A precise, high-quality catalogue/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
@@ -313,8 +315,14 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/stock/ATTRIBUTION.md", root)),
     access(new URL("public/images/unsplash/creator-edit.jpg", root)),
     access(new URL("public/images/unsplash/creator-youtube.jpg", root)),
+    access(new URL("public/images/unsplash/creator-piano.jpg", root)),
+    access(new URL("public/images/unsplash/creator-streamer.jpg", root)),
+    access(new URL("public/images/unsplash/creator-social.jpg", root)),
+    access(new URL("public/images/unsplash/creator-podcast.jpg", root)),
     access(new URL("public/images/unsplash/food-hospitality.jpg", root)),
     access(new URL("public/images/unsplash/music-header.jpg", root)),
+    access(new URL("public/images/unsplash/podcast-home.jpg", root)),
+    access(new URL("public/images/unsplash/study.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
@@ -326,6 +334,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/retail/restaurant.jpg", root)),
     access(new URL("public/images/unsplash/retail/hotel.jpg", root)),
     access(new URL("public/images/unsplash/retail/spa.jpg", root)),
+    access(new URL("public/images/unsplash/retail/store.jpg", root)),
+    access(new URL("public/images/unsplash/retail/office.jpg", root)),
     access(new URL("public/images/catalogue/melting-snowman.jpg", root)),
     access(new URL("public/images/catalogue/532pm.jpg", root)),
     access(new URL("public/images/catalogue/blue-and-green.jpg", root)),
