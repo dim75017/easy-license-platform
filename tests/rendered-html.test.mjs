@@ -42,11 +42,13 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
   assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
   assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
-  assert.match(page, /Find the perfect music for any situation/i);
+  assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
   assert.match(page, /editing-desk\.jpg/i);
   assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
+  assert.match(page, /The Deli/i);
+  assert.doesNotMatch(page, /Project AER/i);
   assert.match(page, /M e a d o w/i);
   assert.doesNotMatch(page, /In the studio|Human-made production/i);
   assert.doesNotMatch(page, /Dario Lessing/i);
@@ -72,6 +74,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
   assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
   assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,220}\.home26-audience\s*\{[\s\S]{0,140}width:\s*100%;[\s\S]{0,100}padding:\s*0;/);
+  assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
   assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
@@ -278,7 +281,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(motion, /prefers-reduced-motion/);
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
   assert.match(homeCss, /@keyframes v5Scan/);
-  assert.match(home26Css, /\.home26-artist-grid article\s*\{[\s\S]{0,120}flex:\s*0 0 clamp\(220px, 23vw, 310px\)/);
+  assert.match(home26Css, /\.home26-artist-grid article\s*\{[\s\S]{0,120}flex:\s*0 0 clamp\(300px, 22\.5vw, 460px\)/);
   assert.match(home26Css, /@media \(min-width: 901px\)[\s\S]*?\.home26-artists \.home26-section-heading\s*\{[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}text-align:\s*center;/);
   assert.match(home26Css, /\.home26-artists \.home26-artist-grid\s*\{[\s\S]{0,120}width:\s*fit-content;[\s\S]{0,100}max-width:\s*100%;[\s\S]{0,100}margin-inline:\s*auto;/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
@@ -363,7 +366,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);
   assert.match(business, /Retail stores[\s\S]*Offices[\s\S]*Restaurants[\s\S]*Hotels[\s\S]*Gyms[\s\S]*Spas/i);
-  assert.match(page, /Find the perfect music for any situation/i);
+  assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.doesNotMatch(business, /\/artists\/meadow\.jpg/);
@@ -378,6 +381,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/artists/meadow.jpg", root)),
     access(new URL("public/artists/mujo.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
+    access(new URL("public/artists/the-deli.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
     access(new URL("public/artists/meadow.jpg", root)),
     access(new URL("public/images/stock/vinyl-turntable.jpg", root)),

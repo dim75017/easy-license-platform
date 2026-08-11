@@ -54,7 +54,7 @@ const useCollections = [
 
 const artists = [
   { name: "Charlee Nguyen", style: "Ambient · Cinematic", image: "/artists/charlee.jpg" },
-  { name: "Project AER", style: "Lofi hip-hop · Jazzhop", image: "/artists/project-aer.jpg" },
+  { name: "The Deli", style: "Jazzhop · Instrumental hip-hop", image: "/artists/the-deli.jpg", closePortrait: true },
   { name: "amies", style: "Ambient · Piano", image: "/artists/amies.jpg" },
   { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.jpg" },
 ];
@@ -130,7 +130,7 @@ export default function Home() {
         <section className="home26-section home26-collections" aria-labelledby="home26-collections-title">
           <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
             <p className="home26-eyebrow">A diverse catalogue</p>
-            <h2 id="home26-collections-title">Find the perfect music for any situation.</h2>
+            <h2 id="home26-collections-title">Find the perfect music<br />for any situation.</h2>
             <p>Explore more than 10,000 instrumental tracks across lofi hip-hop, ambient, jazz, piano, electronic, cinematic and more. Start with a project collection below, browse by mood, or explore playlists prepared for common creative needs.</p>
           </div>
           <div className="home26-collection-grid" data-reveal="group">
@@ -160,8 +160,10 @@ export default function Home() {
           <div className="home26-artist-grid" data-reveal="group" aria-label="A selection of Symbiose artists and studio sessions">
             {artists.map((artist) => (
               <article key={artist.name}>
-                <img src={artist.image} alt={`Portrait of ${artist.name}`} />
-                <div><strong>{artist.name}</strong><span>{artist.style}</span></div>
+                <div className="home26-artist-photo">
+                  <img className={artist.closePortrait ? "home26-artist-image-close" : undefined} src={artist.image} alt={`Portrait of ${artist.name}`} />
+                </div>
+                <div className="home26-artist-meta"><strong>{artist.name}</strong><span>{artist.style}</span></div>
               </article>
             ))}
           </div>

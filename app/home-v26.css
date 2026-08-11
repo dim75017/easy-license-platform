@@ -585,7 +585,7 @@
 .home26-artists {
   width: 100%;
   max-width: none;
-  padding-inline: max(36px, calc((100vw - 1440px) / 2));
+  padding-inline: clamp(24px, 2.5vw, 48px);
   background: var(--home26-night);
   color: var(--home26-paper);
 }
@@ -610,7 +610,7 @@
 }
 
 .home26-artist-grid article {
-  flex: 0 0 clamp(220px, 23vw, 310px);
+  flex: 0 0 clamp(300px, 22.5vw, 460px);
   scroll-snap-align: start;
   overflow: hidden;
   border: 1px solid rgba(251, 247, 239, .14);
@@ -618,27 +618,37 @@
   background: rgba(251, 247, 239, .05);
 }
 
+.home26-artist-photo {
+  overflow: hidden;
+  aspect-ratio: .88;
+}
+
 .home26-artist-grid img {
   display: block;
   width: 100%;
-  aspect-ratio: .88;
+  height: 100%;
   object-fit: cover;
   filter: saturate(.85) contrast(.96);
 }
 
-.home26-artist-grid article > div {
+.home26-artist-grid img.home26-artist-image-close {
+  transform: scale(1.42);
+  transform-origin: 50% 31%;
+}
+
+.home26-artist-meta {
   display: flex;
-  padding: 20px;
+  padding: 22px;
   flex-direction: column;
 }
 
 .home26-artist-grid strong {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .home26-artist-grid span {
   color: rgba(251, 247, 239, .58);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .home26-how-grid {
@@ -1689,5 +1699,47 @@
 
   .home26-audience-copy {
     padding: 34px 22px 38px;
+  }
+}
+
+/* V52: equal audience stages and larger artist portraits. */
+.home26-audience-media {
+  position: relative;
+  min-width: 0;
+}
+
+.home26-audience-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+@media (min-width: 981px) {
+  .home26-audience-panel,
+  .home26-audience-business .home26-audience-panel {
+    height: clamp(900px, 48vw, 940px);
+    min-height: 0;
+  }
+
+  .home26-audience-media {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .home26-audience-panel,
+  .home26-audience-business .home26-audience-panel {
+    height: auto;
+  }
+
+  .home26-audience-media {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 620px) {
+  .home26-audience-media {
+    aspect-ratio: 4 / 3;
   }
 }
