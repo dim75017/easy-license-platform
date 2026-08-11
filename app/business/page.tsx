@@ -29,7 +29,7 @@ export default function BusinessPage() {
         </section>
 
         <section className="offer-curation offer-curation-reverse business-curation" aria-labelledby="business-curation-title">
-          <figure data-reveal="scale"><img src="/images/unsplash/business-studio.jpg" alt="Sound engineer producing music in a recording studio" /></figure>
+          <figure data-reveal="scale"><img src="/images/unsplash/business-studio.webp" alt="Sound engineer producing music in a recording studio" width={1400} height={912} loading="eager" fetchPriority="high" decoding="async" /></figure>
           <div className="offer-curation-copy" data-reveal="left">
             <p className="offer-kicker"><span>01</span> Start from the brief</p>
             <h2 id="business-curation-title">Music that can carry<br />a brand or a story.</h2>
@@ -82,13 +82,13 @@ export default function BusinessPage() {
             <p>The planned Retail service will provide human-made background music for retail stores, offices, restaurants, hotels, gyms and spas. Businesses will be able to choose professionally curated programming through a simple, affordable subscription designed for in-venue use.</p>
             <Link className="offer-inline-link" href="/retail">Join the first pilot <span>→</span></Link>
           </div>
-          <div className="business-retail-images" data-reveal="group">
-            <figure><img src="/images/unsplash/retail/store.jpg" alt="Clothing store interior" /><figcaption>Retail stores</figcaption></figure>
-            <figure><img src="/images/unsplash/retail/office.jpg" alt="Modern office interior" /><figcaption>Offices</figcaption></figure>
-            <figure><img src="/images/unsplash/retail/restaurant-new.jpg" alt="Contemporary restaurant interior" /><figcaption>Restaurants</figcaption></figure>
-            <figure><img src="/images/unsplash/retail/hotel.jpg" alt="Hotel lobby interior" /><figcaption>Hotels</figcaption></figure>
-            <figure><img src="/images/unsplash/retail/gym.jpg" alt="Modern gym interior" /><figcaption>Gyms</figcaption></figure>
-            <figure><img src="/images/unsplash/massage.jpg" alt="Spa treatment in progress" /><figcaption>Spas &amp; wellness</figcaption></figure>
+          <div className="business-retail-images">
+            <figure><img src="/images/unsplash/retail/store.webp" alt="Clothing store interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Retail stores</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/office.webp" alt="Modern office interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Offices</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/restaurant.webp" alt="Contemporary restaurant interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Restaurants</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/hotel.webp" alt="Hotel lobby interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Hotels</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/gym.webp" alt="Modern gym interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Gyms</figcaption></figure>
+            <figure><img src="/images/unsplash/retail/spa.webp" alt="Spa treatment in progress" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Spas &amp; wellness</figcaption></figure>
           </div>
         </section>
 

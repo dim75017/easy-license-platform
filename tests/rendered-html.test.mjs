@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
@@ -173,6 +173,25 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));
+});
+
+test("preloads lightweight imagery for the physical-spaces section", async () => {
+  const [business, businessHead] = await Promise.all([
+    source("app/business/page.tsx"),
+    source("app/business/head.tsx"),
+  ]);
+  const retailImages = ["store.webp", "office.webp", "restaurant.webp", "hotel.webp", "gym.webp", "spa.webp"];
+  let totalBytes = 0;
+
+  assert.doesNotMatch(business, /className="business-retail-images"\s+data-reveal/, "Retail images should paint without a stagger delay");
+
+  for (const image of retailImages) {
+    assert.match(business, new RegExp(`retail/${image.replace(".", "\\.")}[\\s\\S]{0,180}loading="eager"[\\s\\S]{0,80}fetchPriority="high"`), image);
+    assert.match(businessHead, new RegExp(`retail/${image.replace(".", "\\.")}`), `${image} preload`);
+    totalBytes += (await stat(new URL(`public/images/unsplash/retail/${image}`, root))).size;
+  }
+
+  assert.ok(totalBytes < 350_000, `Retail imagery should stay below 350 KB, received ${totalBytes} bytes`);
 });
 
 function imagePaths(content) {

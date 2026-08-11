@@ -9,6 +9,8 @@
 - `retail/restaurant-new.jpg` — https://unsplash.com/photos/Orz90t6o0e4 (Unsplash License)
 - `retail/hotel.jpg` — https://unsplash.com/photos/pGeCP2Bj_Qw (Unsplash+ License)
 - `retail/gym.jpg` — https://unsplash.com/photos/uRVwjUia9fE (Unsplash+ License)
+
+The matching `.webp` files are locally resized derivatives used by the Business page for faster delivery. The original licensed downloads remain alongside them.
 - `massage.jpg` and `retail/spa.jpg` — https://unsplash.com/photos/JQA6aZ18-OQ (Unsplash+ License, downloaded without watermark)
 
 - `hero-turntable.jpg` — Caught In Joy, https://unsplash.com/photos/ptVBlniJi50 (Unsplash License)
