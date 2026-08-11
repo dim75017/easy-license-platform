@@ -8,7 +8,7 @@ import "../pricing-v39.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Simple creator subscriptions and custom business music quotes from Symbiose.",
+  description: "Simple creator subscriptions and custom business music quotes from Symbiome.",
 };
 
 export default function PricingPage() {
@@ -17,7 +17,7 @@ export default function PricingPage() {
       <div className="pricing-v39">
         <section className="pricing-v39-hero">
           <div className="page-hero-copy centered">
-            <span className="pricing-v39-kicker">SYMBIOSE PRICING</span>
+            <span className="pricing-v39-kicker">SYMBIOME PRICING</span>
             <h1>Simple pricing for<br />creators and businesses.</h1>
             <p>Choose a fixed creator subscription or tell us what your commercial project needs for a custom quote.</p>
           </div>

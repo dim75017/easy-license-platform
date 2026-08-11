@@ -61,7 +61,7 @@ export function ArtistMarquee({ artists }: { artists: ArtistMarqueeItem[] }) {
   const motionPaused = paused || !inView || !pageVisible;
 
   return (
-    <div ref={regionRef} className="home26-artist-grid" data-reveal="group" role="region" aria-label="Featured Symbiose artists">
+    <div ref={regionRef} className="home26-artist-grid" data-reveal="group" role="region" aria-label="Featured Symbiome artists">
       <button
         className="home26-artist-motion"
         type="button"

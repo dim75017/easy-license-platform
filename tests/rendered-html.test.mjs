@@ -8,7 +8,7 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("contains the complete Symbiose music licensing homepage", async () => {
+test("contains the complete Symbiome music licensing homepage", async () => {
   const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
@@ -113,11 +113,11 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(catalogueFacts, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
-  assert.match(layout, /Symbiose — High-quality instrumental music for creators and businesses/);
+  assert.match(layout, /Symbiome — High-quality instrumental music for creators and businesses/);
   assert.match(layout, /offer-pages\.css/);
   assert.match(layout, /catalog-v26\.css/);
   assert.match(layout, /home-v26\.css/);
-  assert.match(layout, /themeColor:\s*"#f3ece0"/i);
+  assert.match(layout, /themeColor:\s*"#f7ebdd"/i);
   assert.match(layout, /colorScheme:\s*"light"/i);
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /\.home26-hero/);
@@ -165,7 +165,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,700}@media \(max-width: 760px\)[\s\S]{0,140}min-height:\s*620px/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
   assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
-  assert.doesNotMatch(cataloguePage, /Symbiose<\/span> Music/);
+  assert.doesNotMatch(cataloguePage, /Symbiome<\/span> Music/);
   assert.match(catalogueCss, /\.music-library-hero h1 \{[\s\S]*letter-spacing: -\.035em/);
   assert.match(homeCss, /V43: let the homepage sections use the full editorial canvas/);
   assert.match(offerCss, /V43: public offer pages use the full width/);
@@ -263,7 +263,7 @@ test("defines every public and connected product surface", async () => {
   assert.doesNotMatch(pricingCards, /SY–03 \/ BUSINESS/i);
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);
-  assert.match(sync, /Symbiose/i);
+  assert.match(sync, /Symbiome/i);
 });
 
 test("presents one real track from each main playlist on the Creators page", async () => {
@@ -367,7 +367,7 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,500}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,100}margin:\s*0;[\s\S]{0,140}border-radius:\s*0;/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,1100}\.creators-landing \.creator-platforms \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,2400}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,700}background:\s*transparent;[\s\S]{0,120}box-shadow:\s*none;[\s\S]{0,150}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
-  assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,1500}\.creators-landing \.creator-editorial\s*\{[\s\S]{0,100}background:\s*#e8ddd1;[\s\S]{0,80}color:\s*var\(--marketing-night\)/);
+  assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,1500}\.creators-landing \.creator-editorial\s*\{[\s\S]{0,100}background:\s*#efd6c7;[\s\S]{0,80}color:\s*var\(--marketing-night\)/);
   assert.match(offerCss, /\.creators-landing \.creator-editorial-track\s*\{[\s\S]{0,260}background:\s*linear-gradient\([^}]*rgba\(41, 40, 50, \.98\)/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,3300}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,160}width:\s*clamp\(74px, 5vw, 88px\)/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,5200}@media \(max-width: 700px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
@@ -559,16 +559,16 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(css, /font-family:\s*"Afacad Flux"/);
   assert.match(css, /unbounded-var-latin\.woff2/);
   assert.match(css, /afacad-flux-var-latin\.woff2/);
-  assert.match(homeCss, /Symbiose V5 — the licensing signal router/);
+  assert.match(homeCss, /Symbiome V5 — the licensing signal router/);
   assert.match(homeCss, /\.v5-booth/);
   assert.match(homeCss, /clip-path:/);
-  assert.match(cozyCss, /Symbiose V6 — warm, quiet and recognisably Lofi Girl/);
+  assert.match(cozyCss, /Symbiome V6 — warm, quiet and recognisably Lofi Girl/);
   assert.match(cozyCss, /--font-display:\s*"Afacad Flux"/);
   assert.match(cozyCss, /\.el-v6 \.v5-booth::before[\s\S]*display:\s*none/);
   assert.match(css, /navigation uses one clear hover treatment[\s\S]{0,700}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none/);
   assert.match(homeCss, /\.site-header \.site-nav > a:hover::after,[\s\S]{0,120}transform:\s*scaleX\(1\)/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
-  assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biose<\/span>/);
+  assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biome<\/span>/);
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
   assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
@@ -640,6 +640,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   await Promise.all([
     access(new URL("public/fonts/unbounded-var-latin.woff2", root)),
     access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
+    access(new URL("app/icon.svg", root)),
     access(new URL("public/og.png", root)),
     access(new URL("public/artists/charlee.webp", root)),
     access(new URL("public/artists/meadow.webp", root)),
@@ -681,7 +682,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   ]);
 });
 
-test("uses the eucalyptus accent instead of the retired brown UI palette", async () => {
+test("uses the Warm Groove palette instead of the retired eucalyptus UI palette", async () => {
   const publicStyles = [
     "app/globals.css",
     "app/home-v6.css",
@@ -692,33 +693,38 @@ test("uses the eucalyptus accent instead of the retired brown UI palette", async
     "app/retail-v2.css",
   ];
   const styles = await Promise.all(publicStyles.map(source));
-  const retiredBrown =
-    /#(?:b97864|ad705f|855246|955a49|dec4b7|d6a896|e4b5a3|c98d7d|8e5546|8d5344|e5b9aa|dcae9d|deb09f|c98f7d|8b5e52|f2c7b5)\b|rgba?\(\s*(?:185\s*,\s*120\s*,\s*100|173\s*,\s*112\s*,\s*95|149\s*,\s*90\s*,\s*73)\b/i;
+  const retiredEucalyptus =
+    /#(?:2f665e|234f4a|9ed4c7|dceae5|7e8976|76806f|8cafa6)\b|rgba?\(\s*(?:47\s*,\s*102\s*,\s*94|35\s*,\s*79\s*,\s*74|158\s*,\s*212\s*,\s*199)\b/i;
 
   for (const [index, css] of styles.entries()) {
-    assert.doesNotMatch(css, retiredBrown, publicStyles[index]);
+    assert.doesNotMatch(css, retiredEucalyptus, publicStyles[index]);
   }
 
   const combined = styles.join("\n");
-  assert.match(combined, /#2f665e/i, "solid eucalyptus accent");
-  assert.match(combined, /#234f4a/i, "deep eucalyptus text accent");
-  assert.match(combined, /#9ed4c7/i, "light eucalyptus accent on navy");
-  assert.match(combined, /#dceae5/i, "eucalyptus wash");
+  assert.match(combined, /#e06343/i, "signature Warm Groove orange");
+  assert.match(combined, /#9f3f2b/i, "deep orange text accent");
+  assert.match(combined, /#f2b5a0/i, "peach accent on navy");
+  assert.match(combined, /#f5ded5/i, "warm blush wash");
+  assert.match(combined, /#f0b84c/i, "honey highlight");
+  assert.match(combined, /#f7ebdd/i, "cream background");
+  assert.match(combined, /#fff9f1/i, "paper surface");
 
   const [catalogueData, workspaceCss] = await Promise.all([
     source("app/data/catalog.ts"),
     source("app/workspace-music.css"),
   ]);
-  assert.doesNotMatch(catalogueData, /#b97864/i, "playlist buttons should not restore the old brand brown");
-  assert.match(workspaceCss, /--wm-clay:#2f665e; --wm-clay-deep:#234f4a; --wm-clay-soft:#9ed4c7/i);
+  assert.doesNotMatch(catalogueData, retiredEucalyptus, "playlist buttons should not restore eucalyptus");
+  assert.match(catalogueData, /#E06343/i, "playlist buttons should use the Symbiome orange");
+  assert.match(workspaceCss, /--wm-clay:#e06343; --wm-clay-deep:#9f3f2b; --wm-clay-soft:#f2b5a0/i);
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, symbioseBrandCss, brand, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
+  const [layout, workspaceCss, symbioseBrandCss, brand, icon, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
     source("app/symbiose-brand.css"),
     source("app/components/Brand.tsx"),
+    source("app/icon.svg"),
     source("app/components/DashboardShell.tsx"),
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
@@ -732,11 +738,16 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(brand, /className="brand brand-warm"/);
   assert.match(brand, /brand-groove-warm/);
   assert.match(brand, /brand-groove-base/);
+  assert.match(brand, /aria-label="Symbiome home"/);
+  assert.match(icon, /<title>Symbiome<\/title>/);
   assert.match(dashboardShell, /<Brand compact \/>/);
   assert.match(musicWorkspace, /<Brand compact \/>/);
-  assert.match(symbioseBrandCss, /--symbiose-brand-warm:\s*#e06343/i);
-  assert.match(symbioseBrandCss, /--symbiose-brand-base:\s*#292832/i);
-  assert.match(symbioseBrandCss, /\.brand-warm \.brand-groove path[\s\S]*stroke-width:\s*13/);
+  assert.match(symbioseBrandCss, /--symbiose-warm:\s*#e06343/i);
+  assert.match(symbioseBrandCss, /--symbiose-night:\s*#292832/i);
+  assert.match(symbioseBrandCss, /--symbiose-brand-warm:\s*var\(--symbiose-warm\)/i);
+  assert.match(symbioseBrandCss, /--symbiose-brand-base:\s*var\(--symbiose-night\)/i);
+  assert.match(symbioseBrandCss, /\.brand-warm \.brand-groove path[\s\S]*fill:/);
+  assert.doesNotMatch(symbioseBrandCss, /stroke-width:\s*13/);
   assert.match(symbioseBrandCss, /\.site-header \.brand-warm \.brand-name/);
   assert.match(symbioseBrandCss, /\.site-footer \.brand-warm/);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);

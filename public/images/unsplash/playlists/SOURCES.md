@@ -1,6 +1,6 @@
 # Playlist photography
 
-Downloaded on 2026-08-06 and 2026-08-11 for the Symbiose mockup. These are editorial mood photographs used under the [Unsplash License](https://unsplash.com/license) or [Unsplash+ License](https://unsplash.com/plus/license); they are not official Spotify playlist artwork.
+Downloaded on 2026-08-06 and 2026-08-11 for the Symbiome mockup. These are editorial mood photographs used under the [Unsplash License](https://unsplash.com/license) or [Unsplash+ License](https://unsplash.com/plus/license); they are not official Spotify playlist artwork.
 
 | Local file | Photographer | Source |
 | --- | --- | --- |

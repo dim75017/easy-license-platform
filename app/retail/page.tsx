@@ -49,7 +49,7 @@ export default function RetailPage() {
         <section className="retail-v2-spaces" data-reveal="group">
           <figure className="retail-v2-space-large"><img src="/images/unsplash/retail/restaurant.jpg" alt="Warm restaurant interior at night" /><figcaption>Restaurants & cafés</figcaption></figure>
           <figure><img src="/images/unsplash/retail/hotel.jpg" alt="Warm modern hotel lobby" /><figcaption>Hotels & hospitality</figcaption></figure>
-          <div className="retail-v2-space-copy"><p className="retail-v2-kicker"><span>02</span> Made for the room</p><h2>From first coffee to last guest.</h2><p>Every space has its own rhythm. Symbiose helps make it intentional, whether people are stopping by, staying a while or coming back tomorrow.</p></div>
+          <div className="retail-v2-space-copy"><p className="retail-v2-kicker"><span>02</span> Made for the room</p><h2>From first coffee to last guest.</h2><p>Every space has its own rhythm. Symbiome helps make it intentional, whether people are stopping by, staying a while or coming back tomorrow.</p></div>
         </section>
 
         <section className="retail-v2-artists">

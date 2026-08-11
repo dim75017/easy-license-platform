@@ -15,7 +15,7 @@ export default function BusinessPage() {
       <div className="offer-landing business-landing">
         <section className="offer-hero offer-hero-business">
           <div className="offer-hero-copy" data-reveal="left">
-            <p className="offer-kicker"><span>SYMBIOSE / BUSINESS</span> Powered by Lofi Girl</p>
+            <p className="offer-kicker"><span>SYMBIOME / BUSINESS</span> Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
             <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">
@@ -43,7 +43,7 @@ export default function BusinessPage() {
 
         <section className="business-options" id="business-options" aria-labelledby="business-options-title">
           <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>02</span> Symbiose for Business</p>
+            <p className="offer-kicker"><span>02</span> Symbiome for Business</p>
             <h2 id="business-options-title">Choose the service that matches your project.</h2>
             <p>Commercial Sync licenses an existing track for a defined use. Custom Commission creates original music for the brief. Music for Retail will cover licensed background music in physical spaces when the service launches.</p>
           </div>

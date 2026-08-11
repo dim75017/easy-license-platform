@@ -1,6 +1,6 @@
-# Symbiose
+# Symbiome
 
-Symbiose is a high-quality instrumental music platform for creators and
+Symbiome is a high-quality instrumental music platform for creators and
 businesses, powered by Lofi Girl. It brings creator subscriptions, commercial
 sync enquiries and a future retail offer into one clear product.
 
@@ -56,5 +56,5 @@ npm run db:generate
 
 ## Brand
 
-Symbiose is an independent product presented as “Powered by Lofi Girl”.
+Symbiome is an independent product presented as “Powered by Lofi Girl”.
 All customer-facing copy is in English.

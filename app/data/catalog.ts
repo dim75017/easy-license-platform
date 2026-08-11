@@ -90,7 +90,7 @@ export const lofiGirlPlaylists = [
     moods: ["Warm", "Calm", "Focused"],
     image: "/images/unsplash/playlists/lofi-study.jpg",
     imagePosition: "center 42%",
-    borderColor: "#2F665E",
+    borderColor: "#e06343",
   },
   {
     id: "synthwave-night",
