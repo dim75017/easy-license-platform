@@ -74,7 +74,7 @@ export default function Home() {
             </p>
             <div className="home26-actions">
               <Link className="home26-button home26-button-primary" href="/catalog">Browse music</Link>
-              <Link className="home26-button home26-button-secondary" href="/pricing">View pricing</Link>
+              <Link className="home26-button home26-button-secondary" href="#services">Explore licensing</Link>
             </div>
             <p className="home26-hero-note">No AI-generated music · Artists credited and paid directly</p>
           </div>
@@ -88,11 +88,50 @@ export default function Home() {
           <div><strong>0</strong><span>AI-generated tracks accepted</span></div>
         </section>
 
+        <section className="home26-section home26-audience home26-audience-creators" id="services" aria-labelledby="home26-creators-title">
+          <div className="home26-audience-panel">
+            <figure className="home26-audience-media" data-reveal="scale">
+              <img src="/images/unsplash/editing-desk.jpg" alt="Video editing timeline and headphones at a creator workspace" width={1800} height={1200} loading="lazy" decoding="async" />
+            </figure>
+            <div className="home26-audience-copy" data-reveal="right">
+              <p className="home26-eyebrow">For content creators</p>
+              <h2 id="home26-creators-title">A simple music licence for the channels you own.</h2>
+              <p>Use high-quality instrumental music in your YouTube videos, livestreams, social content and podcasts. Browse by mood or project, download the right track, and keep the channels covered by your plan together in one account.</p>
+              <ul className="home26-audience-points" aria-label="Creator uses">
+                <li>YouTube videos and Shorts</li>
+                <li>Twitch and livestreams</li>
+                <li>TikTok and Instagram</li>
+                <li>Podcasts</li>
+              </ul>
+              <Link className="home26-button home26-button-primary home26-audience-button" href="/creators">Explore Symbiose for Creators <span aria-hidden="true">→</span></Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="home26-section home26-audience home26-audience-business" aria-labelledby="home26-business-title">
+          <div className="home26-audience-panel">
+            <div className="home26-audience-copy" data-reveal="left">
+              <p className="home26-eyebrow">For businesses</p>
+              <h2 id="home26-business-title">Music and rights shaped around the project.</h2>
+              <p>License an existing track for a campaign, film, game, advert or branded production, or commission original music from an artist. Media, territories, duration and exclusivity are confirmed from your brief, so the quote reflects the use you actually need.</p>
+              <ul className="home26-audience-points" aria-label="Business services">
+                <li>Commercial Sync</li>
+                <li>Custom Commission</li>
+                <li>Music for Retail · Coming soon</li>
+              </ul>
+              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiose for Businesses <span aria-hidden="true">→</span></Link>
+            </div>
+            <figure className="home26-audience-media" data-reveal="scale">
+              <img src="/images/unsplash/filmmaker-desk.jpg" alt="Camera equipment and production monitors in a filmmaker workspace" width={1800} height={2699} loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </section>
+
         <section className="home26-section home26-collections" aria-labelledby="home26-collections-title">
           <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
-            <p className="home26-eyebrow">Browse by project</p>
-            <h2 id="home26-collections-title">Find the perfect music for every project.</h2>
-            <p>Genres and moods are useful, but sometimes the quickest place to start is the job the music needs to do. These collections are organised around common formats and real creative briefs.</p>
+            <p className="home26-eyebrow">A diverse catalogue</p>
+            <h2 id="home26-collections-title">Find the perfect music for any situation.</h2>
+            <p>Explore more than 10,000 instrumental tracks across lofi hip-hop, ambient, jazz, piano, electronic, cinematic and more. Start with a project collection below, browse by mood, or explore playlists prepared for common creative needs.</p>
           </div>
           <div className="home26-collection-grid" data-reveal="group">
             {useCollections.map((collection) => (
@@ -107,16 +146,8 @@ export default function Home() {
               </Link>
             ))}
           </div>
-        </section>
-
-        <section className="home26-section home26-curation" aria-labelledby="home26-curation-title">
-          <figure data-reveal="scale">
-            <img src="/images/unsplash/hero-turntable.jpg" alt="Turntable and amplifier in a warm listening room" />
-          </figure>
-          <div className="home26-curation-copy" data-reveal="right">
-            <p className="home26-eyebrow">Quality without the noise</p>
-            <h2 id="home26-curation-title">A precise, high-quality catalogue.</h2>
-            <p>Instrumental and background music made for projects where the details matter. Clear moods, genres and project filters make it simple to find a track that supports the story without taking it over.</p>
+          <div className="home26-catalogue-action" data-reveal="group">
+            <Link className="home26-button home26-button-primary" href="/catalog">Explore the full music library <span aria-hidden="true">→</span></Link>
           </div>
         </section>
 
@@ -136,27 +167,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="home26-section home26-faq" aria-labelledby="home26-faq-title">
-          <div className="home26-section-heading" data-reveal="left">
-            <p className="home26-eyebrow">Questions about the licence</p>
-            <h2 id="home26-faq-title">What to know before using a track.</h2>
-            <p>Final eligibility is shown with the selected track and plan. For commercial work, our team confirms the scope in writing.</p>
-          </div>
-          <div className="home26-faq-list" data-reveal="group">
-            <details open><summary>Can I listen before creating an account?<span>+</span></summary><p>Yes. You can browse the catalogue and listen to the available previews before choosing a creator plan or requesting a business licence.</p></details>
-            <details><summary>Which platforms can I connect?<span>+</span></summary><p>Creator plans are intended for eligible YouTube, Twitch, podcast and social profiles. The exact number of connected profiles depends on the plan.</p></details>
-            <details><summary>Does a Creator plan cover paid advertising?<span>+</span></summary><p>No. Paid media, brand campaigns, client productions, films and games require Symbiose for Businesses.</p></details>
-            <details><summary>Is any catalogue music generated with AI?<span>+</span></summary><p>No. Symbiose does not accept generative AI music into the eligible catalogue. Every track is created by artists.</p></details>
-            <details><summary>How are artists paid?<span>+</span></summary><p>Artists are credited and receive direct, fair payment when their music is licensed through Symbiose.</p></details>
-            <details><summary>What happens to content after I cancel?<span>+</span></summary><p>The final licence terms will explain how content published during an active subscription remains covered and which new uses require an active plan.</p></details>
-            <details><summary>Can a business commission an exclusive track?<span>+</span></summary><p>Yes. Custom Commission covers original music created for a brief. Exclusivity, media, territory, term and delivery are agreed for the project.</p></details>
-          </div>
-        </section>
-
-        <section className="home26-final" data-reveal="group">
-          <div><p className="home26-eyebrow">Start with the music</p><h2>Finding the right track should be simple.</h2><p>Browse a specific sound or start with a professionally curated playlist, then choose the licensing option that fits your project.</p></div>
-          <div className="home26-actions"><Link className="home26-button home26-button-light" href="/catalog">Explore music</Link><Link className="home26-button home26-button-outline-light" href="/pricing">Compare plans</Link></div>
-        </section>
       </div>
     </PublicShell>
   );

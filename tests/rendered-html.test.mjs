@@ -40,16 +40,19 @@ test("contains the complete Symbiose music licensing homepage", async () => {
     assert.match(page, new RegExp(`slug: "${useRoute}"`), useRoute);
   }
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
-  assert.match(page, /A precise, high-quality catalogue/i);
-  assert.match(page, /Find the perfect music for every project/i);
-  assert.match(page, /hero-turntable\.jpg/i);
+  assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
+  assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
+  assert.match(page, /Find the perfect music for any situation/i);
+  assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
+  assert.match(page, /editing-desk\.jpg/i);
+  assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /M e a d o w/i);
   assert.doesNotMatch(page, /In the studio|Human-made production/i);
   assert.doesNotMatch(page, /Dario Lessing/i);
   assert.match(page, /food-hospitality\.jpg/i);
-  assert.match(page, /Finding the right track should be simple/i);
-  assert.match(page, /What to know before using a track/i);
+  assert.doesNotMatch(page, /home26-curation|home26-faq|home26-final/i);
+  assert.doesNotMatch(page, /href="\/pricing"/i);
   assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
   assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
   assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
@@ -65,6 +68,9 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-hero/);
   assert.match(homeCss, /\.home26-facts\s*\{\s*width:\s*min\(1440px,\s*calc\(100% - 72px\)\)/);
   assert.match(homeCss, /\.home26-collection-grid/);
+  assert.match(homeCss, /\.home26-audience-panel/);
+  assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
+  assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
@@ -353,7 +359,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);
   assert.match(business, /Retail stores[\s\S]*Offices[\s\S]*Restaurants[\s\S]*Hotels[\s\S]*Gyms[\s\S]*Spas/i);
-  assert.match(page, /A precise, high-quality catalogue/i);
+  assert.match(page, /Find the perfect music for any situation/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
   assert.doesNotMatch(business, /\/artists\/meadow\.jpg/);
