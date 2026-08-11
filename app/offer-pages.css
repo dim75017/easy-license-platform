@@ -1564,3 +1564,198 @@
     height: 72px;
   }
 }
+
+/* V49: pricing lives on its own page; Business starts with a tailored brief. */
+.creators-landing .creator-pricing-cta {
+  width: calc(100% - 48px);
+  min-height: 420px;
+  margin: 0 auto 24px;
+  overflow: hidden;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(185, 120, 100, .38), transparent 32%),
+    linear-gradient(145deg, #3a3337, #292832 72%);
+  box-shadow: 0 28px 70px rgba(41, 40, 50, .16);
+}
+
+.business-quote {
+  display: grid;
+  width: calc(100% - 48px);
+  max-width: none;
+  margin: 0 auto 24px;
+  align-items: start;
+  border-radius: 32px;
+  padding: clamp(52px, 6vw, 92px);
+  background: var(--marketing-night);
+  color: var(--marketing-paper);
+  grid-template-columns: minmax(0, .82fr) minmax(520px, 1.18fr);
+  gap: clamp(48px, 7vw, 108px);
+}
+
+.business-quote-copy {
+  position: sticky;
+  top: 124px;
+}
+
+.business-quote-copy .offer-kicker { color: rgba(251, 247, 239, .62); }
+
+.business-quote-copy h2 {
+  max-width: 720px;
+  margin: 20px 0 24px;
+  color: var(--marketing-paper);
+  font-size: clamp(48px, 5vw, 76px);
+  font-weight: 620;
+  letter-spacing: -.055em;
+  line-height: .96;
+}
+
+.business-quote-copy > p:last-of-type {
+  max-width: 650px;
+  margin: 0;
+  color: rgba(251, 247, 239, .72);
+  font-size: clamp(17px, 1.35vw, 20px);
+  line-height: 1.55;
+}
+
+.business-quote-factors {
+  display: flex;
+  margin-top: 34px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.business-quote-factors span {
+  border: 1px solid rgba(251, 247, 239, .22);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: rgba(251, 247, 239, .82);
+  font-size: 14px;
+  font-weight: 680;
+}
+
+.business-quote .form-panel {
+  overflow: hidden;
+  border: 1px solid rgba(41, 40, 50, .14);
+  border-radius: 26px;
+  background: var(--marketing-cream);
+  color: var(--marketing-night);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
+}
+
+.business-quote .form-panel-head {
+  min-height: 68px;
+  border-bottom: 1px solid rgba(41, 40, 50, .14);
+  padding: 0 28px;
+}
+
+.business-quote .form-panel-head span {
+  color: var(--marketing-clay);
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.business-quote .form-panel-head small {
+  color: rgba(41, 40, 50, .58);
+  font-size: 13px;
+}
+
+.business-quote .lead-form {
+  padding: clamp(24px, 3vw, 36px);
+  gap: 18px;
+}
+
+.business-quote .lead-form label { gap: 8px; }
+
+.business-quote .lead-form label > span {
+  color: rgba(41, 40, 50, .76);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.business-quote .lead-form input,
+.business-quote .lead-form select,
+.business-quote .lead-form textarea {
+  min-height: 52px;
+  border: 1px solid rgba(41, 40, 50, .2);
+  border-radius: 13px;
+  padding: 14px 15px;
+  background: #fffdf8;
+  color: var(--marketing-night);
+  font-size: 16px;
+}
+
+.business-quote .lead-form textarea { min-height: 148px; }
+.business-quote .lead-form option { background: #fffdf8; }
+
+.business-quote .lead-form input::placeholder,
+.business-quote .lead-form textarea::placeholder {
+  color: rgba(41, 40, 50, .42);
+}
+
+.business-quote .lead-form input:focus,
+.business-quote .lead-form select:focus,
+.business-quote .lead-form textarea:focus {
+  border-color: var(--marketing-clay);
+  box-shadow: 0 0 0 3px rgba(185, 120, 100, .14);
+}
+
+.business-quote .lead-form .button-primary {
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--marketing-night);
+  color: var(--marketing-paper);
+  font-size: 16px;
+  font-weight: 760;
+}
+
+.business-quote .form-privacy,
+.business-quote .form-error {
+  margin-top: -2px;
+  color: rgba(41, 40, 50, .55);
+  font-size: 12px;
+}
+
+.business-quote .form-error { color: #a04438; }
+.business-quote .form-success p { color: rgba(41, 40, 50, .72); }
+
+.business-quote .form-success .text-link {
+  color: var(--marketing-clay);
+  font-size: 14px;
+  font-weight: 720;
+}
+
+@media (max-width: 1050px) {
+  .business-quote {
+    grid-template-columns: 1fr;
+  }
+
+  .business-quote-copy {
+    position: static;
+    max-width: 780px;
+  }
+}
+
+@media (max-width: 620px) {
+  .creators-landing .creator-pricing-cta {
+    width: calc(100% - 28px);
+    min-height: 350px;
+    border-radius: 24px;
+    padding: 54px 22px;
+  }
+
+  .business-quote {
+    width: calc(100% - 28px);
+    margin-bottom: 14px;
+    border-radius: 24px;
+    padding: 48px 20px 20px;
+    gap: 34px;
+  }
+
+  .business-quote-copy h2 { font-size: 44px; }
+  .business-quote .form-panel { border-radius: 20px; }
+  .business-quote .form-panel-head { padding: 0 20px; }
+}

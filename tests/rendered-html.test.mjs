@@ -115,13 +115,18 @@ test("defines every public and connected product surface", async () => {
   ]);
   assert.match(creators, /Music that leaves room/i);
   assert.match(creators, /<CatalogueExplorer compact \/>/i);
-  assert.match(creators, /<PricingCards expanded \/>/i);
+  assert.doesNotMatch(creators, /PricingCards|creator-pricing-cards/i);
+  assert.match(creators, /creator-pricing-cta[\s\S]*href="\/pricing"[\s\S]*Discover pricing/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
   assert.match(business, /Commercial Sync/i);
   assert.match(business, /Custom Commission/i);
   assert.match(business, /Music for Retail · Coming soon/i);
   assert.match(business, /Music that can carry/i);
   assert.match(business, /Rights fit/i);
+  assert.match(business, /Every business project gets a custom quote/i);
+  assert.match(business, /id="business-brief"/i);
+  assert.match(business, /<LeadForm type="sync" \/>/i);
+  assert.match(business, /href="#business-brief"/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /Rights built around/i);
@@ -341,6 +346,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
   assert.match(offerCss, /\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*32px/);
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
+  assert.match(offerCss, /\.business-quote \.lead-form input,[\s\S]{0,420}font-size:\s*16px;/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueExplorer } from "../components/CatalogueExplorer";
 import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
-import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
@@ -25,10 +24,10 @@ export default function CreatorsPage() {
           <div className="offer-hero-copy" data-reveal="left">
             <p className="offer-kicker"><span>EL / CREATORS</span> Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
-            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Creator plans are built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
+            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Easy License is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
             <div className="offer-actions">
               <Link className="offer-button offer-button-light" href="/catalog">Explore the music <span>↗</span></Link>
-              <a className="offer-inline-link offer-inline-light" href="#creator-plans">Compare Creator &amp; Pro <span>↓</span></a>
+              <a className="offer-inline-link offer-inline-light" href="#creator-plans">Discover pricing <span>↓</span></a>
             </div>
           </div>
           <div className="offer-hero-proof" data-reveal="group">
@@ -55,8 +54,8 @@ export default function CreatorsPage() {
         <section className="offer-uses" aria-labelledby="creator-uses-title">
           <div className="offer-section-head" data-reveal="group">
             <p className="offer-kicker"><span>02</span> Where you can use the music</p>
-            <h2 id="creator-uses-title">Plans for your own<br />creator channels.</h2>
-            <p>Creator and Pro are designed for YouTubers, streamers, influencers, podcasters and social creators publishing their own eligible content. The number of connected channels and available team features depends on the plan you choose.</p>
+            <h2 id="creator-uses-title">Music for your own<br />creator channels.</h2>
+            <p>Built for YouTubers, streamers, influencers, podcasters and social creators publishing their own eligible content.</p>
           </div>
           <div className="offer-use-grid" data-reveal="group">
             {creatorUses.map(({ title, copy, image, alt, width, height }, index) => <article key={title}><img src={image} alt={alt} width={width} height={height} loading="lazy" decoding="async" /><div><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></div></article>)}
@@ -67,7 +66,7 @@ export default function CreatorsPage() {
           <div className="offer-section-head" data-reveal="group">
             <p className="offer-kicker"><span>03</span> Supported creator platforms</p>
             <h2 id="creator-platforms-title">Make for the platforms<br />you actually use.</h2>
-            <p>Connect the channels and profiles covered by your plan. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
+            <p>Connect the channels and profiles covered by your licence. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
           </div>
           <div className="creator-platform-grid" data-reveal="group">
             {creatorPlatforms.map((name) => <span className="creator-platform-logo" key={name} role="img" aria-label={name} title={name}><PlatformLogo platform={name} /></span>)}
@@ -86,26 +85,15 @@ export default function CreatorsPage() {
 
         <section className="offer-flow" aria-labelledby="creator-flow-title">
           <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>04</span> How creator licensing works</p>
+            <p className="offer-kicker"><span>05</span> How creator licensing works</p>
             <h2 id="creator-flow-title">Simple from account setup<br />to a licensed upload.</h2>
             <p>A simple three-step process: connect your channels, choose eligible music and keep every licence record in one place.</p>
           </div>
           <div className="offer-flow-grid" data-reveal="group">
-            <article><span>01</span><h3>Connect your channels</h3><p>Add the supported YouTube, Twitch, podcast or social channels covered by your plan.</p></article>
-            <article><span>02</span><h3>Select eligible music</h3><p>Browse the catalogue and download a track that is approved for your plan and intended use.</p></article>
+            <article><span>01</span><h3>Connect your channels</h3><p>Add the supported YouTube, Twitch, podcast or social channels covered by your licence.</p></article>
+            <article><span>02</span><h3>Select eligible music</h3><p>Browse the catalogue and download a track that is approved for your licence and intended use.</p></article>
             <article><span>03</span><h3>Keep the licence record</h3><p>Your workspace keeps the track, channel and licence information together for future reference and support.</p></article>
           </div>
-        </section>
-
-        <section className="offer-pricing creator-pricing" id="creator-plans" aria-labelledby="creator-plans-title">
-          <div className="creator-pricing-intro" data-reveal="group">
-            <div>
-              <p className="offer-kicker"><span>05</span> Creator and Pro plans</p>
-              <h2 id="creator-plans-title">Choose the scope<br />that fits your channels.</h2>
-            </div>
-            <p>Creator covers one connected channel or profile per supported platform. Pro covers up to three and adds a shared workspace for creator teams. Audience size does not change the price.</p>
-          </div>
-          <div className="creator-pricing-cards" data-reveal="group"><PricingCards expanded /></div>
         </section>
 
         <section className="offer-human offer-human-creators" aria-labelledby="creator-human-title">
@@ -120,16 +108,16 @@ export default function CreatorsPage() {
         <section className="offer-faq" aria-labelledby="creator-faq-title">
           <div data-reveal="left"><p className="offer-kicker"><span>07</span> Creator FAQ</p><h2 id="creator-faq-title">Common licensing questions.</h2></div>
           <div className="offer-faq-list" data-reveal="group">
-            <details open><summary>What does Creator cover?<span>+</span></summary><p>One connected channel or profile per supported platform for your own eligible monetised videos, livestreams, podcasts and social content.</p></details>
-            <details><summary>What does Pro add?<span>+</span></summary><p>Up to three connected channels or profiles, cross-platform publishing and a workspace designed for creator teams.</p></details>
+            <details open><summary>Can I use the music in videos and livestreams?<span>+</span></summary><p>Yes. Eligible music can cover your own supported videos, livestreams, podcasts and social content.</p></details>
+            <details><summary>Can I browse the catalogue before choosing?<span>+</span></summary><p>Yes. You can search the library and listen to the available tracks and playlists before choosing a licence.</p></details>
             <details><summary>What if I receive a Content ID claim?<span>+</span></summary><p>Automated claims can still happen. Your workspace keeps the relevant track and licence information ready for support.</p></details>
             <details><summary>Does this cover commercial campaigns?<span>+</span></summary><p>No. Paid advertising, brand campaigns, films, games and broader commercial uses need Easy License for Business.</p></details>
           </div>
         </section>
 
-        <section className="offer-final-cta" data-reveal="group">
-          <p>EASY LICENSE FOR CREATORS</p><h2>Compare the plans before licensing your channels.</h2>
-          <div className="offer-actions"><Link className="offer-button offer-button-light" href="/pricing">Compare creator plans <span>↗</span></Link><Link className="offer-inline-link offer-inline-light" href="/catalog">Browse the music <span>→</span></Link></div>
+        <section className="offer-final-cta creator-pricing-cta" id="creator-plans" aria-labelledby="creator-plans-title" data-reveal="group">
+          <p>CREATOR PRICING</p><h2 id="creator-plans-title">Discover pricing for your creator channels.</h2>
+          <div className="offer-actions"><Link className="offer-button offer-button-light" href="/pricing">Discover pricing <span>↗</span></Link></div>
         </section>
       </div>
     </PublicShell>

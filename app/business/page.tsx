@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
@@ -15,16 +16,16 @@ export default function BusinessPage() {
           <div className="offer-hero-copy" data-reveal="left">
             <p className="offer-kicker"><span>EL / BUSINESS</span> Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
-            <p>For a campaign, film, product, event or client brief, we help you choose the right route: clear an existing track or commission something original. The scope is shaped around the media, territories, term and exclusivity of the work — before it goes live.</p>
+            <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">
-              <Link className="offer-button offer-button-light" href="/sync#brief">Send a business brief <span>↗</span></Link>
+              <a className="offer-button offer-button-light" href="#business-brief">Request a custom quote <span>↓</span></a>
               <a className="offer-inline-link offer-inline-light" href="#business-options">Review business services <span>↓</span></a>
             </div>
           </div>
           <div className="offer-hero-proof" data-reveal="group">
             <div><strong>10,000+</strong><span>Human-made tracks</span></div>
             <div><strong>0</strong><span>AI-generated tracks</span></div>
-            <div><strong>Curated</strong><span>By music professionals</span></div>
+            <div><strong>Custom</strong><span>Quote for every brief</span></div>
           </div>
         </section>
 
@@ -52,8 +53,8 @@ export default function BusinessPage() {
             <Link className="business-option business-option-sync" href="/sync">
               <span>01 / COMMERCIAL SYNC</span><div><h3>License existing music.</h3><p>For advertising, film, series, games, trailers, branded content and events, with rights scoped to the project.</p><strong>Explore Commercial Sync ↗</strong></div>
             </Link>
-            <Link className="business-option business-option-custom" href="/sync#brief">
-              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission music for the project.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Explore Custom Commission ↗</strong></div>
+            <Link className="business-option business-option-custom" href="#business-brief">
+              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission music for the project.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Request a custom quote ↓</strong></div>
             </Link>
             <Link className="business-option business-option-retail" href="/retail">
               <span>03 / MUSIC FOR RETAIL · COMING SOON</span><div><h3>Curated music for physical spaces.</h3><p>An easy, affordable way to soundtrack cafés, restaurants, hotels, boutiques, gyms, studios and spas.</p><strong>Join early access ↗</strong></div>
@@ -101,9 +102,19 @@ export default function BusinessPage() {
           </div>
         </section>
 
-        <section className="offer-final-cta" data-reveal="group">
-          <p>EASY LICENSE FOR BUSINESS</p><h2>Tell us how the music will be used.</h2>
-          <div className="offer-actions"><Link className="offer-button offer-button-light" href="/sync#brief">Send a business brief <span>↗</span></Link><Link className="offer-inline-link offer-inline-light" href="/catalog">Browse the music <span>→</span></Link></div>
+        <section className="business-quote" id="business-brief" aria-labelledby="business-brief-title">
+          <div className="business-quote-copy" data-reveal="left">
+            <p className="offer-kicker"><span>06</span> Made-to-measure quotes</p>
+            <h2 id="business-brief-title">Every business project gets a custom quote.</h2>
+            <p>Share the project, media, territories, timing and indicative budget. Our team will confirm the right music route, define the required rights and prepare a quote around the real use.</p>
+            <div className="business-quote-factors" aria-label="The four factors used to prepare a quote">
+              <span>Media</span><span>Territories</span><span>Term</span><span>Exclusivity</span>
+            </div>
+          </div>
+          <div className="form-panel business-quote-form" data-reveal="right">
+            <div className="form-panel-head"><span>CUSTOM QUOTE REQUEST</span><small>Start with the brief — we will help with the licence</small></div>
+            <LeadForm type="sync" />
+          </div>
         </section>
       </div>
     </PublicShell>
