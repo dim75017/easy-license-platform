@@ -282,6 +282,7 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
   assert.match(creators, /<PlatformLogo platform=\{name\} bare \/>/);
+  assert.match(creators, /className="creator-platforms-inner"/);
   assert.match(creators, /className="creator-platform-logo"[^>]*role="img"[^>]*aria-label=\{name\}/);
   assert.doesNotMatch(creators, /<PlatformLogo platform=\{name\} \/>\{name\}/);
   assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
@@ -309,10 +310,11 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   }
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon svg/);
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon img/);
-  assert.match(offerCss, /creator-platform-grid \{[^}]*grid-template-columns:repeat\(3/s);
-  assert.match(offerCss, /\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,160}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
-  assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\s*\{[\s\S]{0,160}width:\s*80px;[\s\S]{0,80}height:\s*80px;/);
   assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
+  assert.match(offerCss, /V59: platform coverage is one balanced editorial composition[\s\S]{0,900}\.creators-landing \.creator-platforms-inner\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, \.95fr\) minmax\(480px, 1\.05fr\)/);
+  assert.match(offerCss, /V59: platform coverage[\s\S]{0,1700}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,420}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\.is-bare\s*\{[\s\S]{0,180}width:\s*clamp\(62px, 4\.5vw, 72px\)/);
+  assert.match(offerCss, /@media \(max-width:\s*360px\)[\s\S]{0,200}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /V51: the Creators banner is a full-width rectangle[\s\S]{0,180}\.creators-landing \.offer-hero\s*\{[\s\S]{0,80}border-radius:\s*0;/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));
 });

@@ -63,13 +63,15 @@ export default function CreatorsPage() {
         </section>
 
         <section className="creator-platforms" aria-labelledby="creator-platforms-title">
-          <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>03</span> Supported creator platforms</p>
-            <h2 id="creator-platforms-title">Make for the platforms<br />you actually use.</h2>
-            <p>Connect the channels and profiles covered by your licence. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
-          </div>
-          <div className="creator-platform-grid" data-reveal="group">
-            {creatorPlatforms.map((name) => <span className="creator-platform-logo" key={name} role="img" aria-label={name} title={name}><PlatformLogo platform={name} bare /></span>)}
+          <div className="creator-platforms-inner">
+            <div className="offer-section-head" data-reveal="left">
+              <p className="offer-kicker"><span>03</span> Supported creator platforms</p>
+              <h2 id="creator-platforms-title">Make for the platforms<br />you actually use.</h2>
+              <p>Connect the channels and profiles covered by your licence. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
+            </div>
+            <div className="creator-platform-grid" data-reveal="right">
+              {creatorPlatforms.map((name) => <span className="creator-platform-logo" key={name} role="img" aria-label={name} title={name}><PlatformLogo platform={name} bare /></span>)}
+            </div>
           </div>
         </section>
 

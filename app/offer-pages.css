@@ -2335,3 +2335,103 @@
     padding: 24px;
   }
 }
+
+/* V59: platform coverage is one balanced editorial composition, not a loose logo row. */
+.creators-landing .creator-platforms {
+  width: calc(100% - 48px);
+  margin: 0 auto 118px;
+  border-radius: 32px;
+  padding: clamp(72px, 7vw, 108px) clamp(34px, 5vw, 78px);
+  background: #e8ddd1;
+}
+
+.creators-landing .creator-platforms-inner {
+  display: grid;
+  width: min(1440px, 100%);
+  margin-inline: auto;
+  align-items: center;
+  grid-template-columns: minmax(0, .95fr) minmax(480px, 1.05fr);
+  gap: clamp(64px, 8vw, 128px);
+}
+
+.creators-landing .creator-platforms .offer-section-head {
+  max-width: 580px;
+  margin: 0;
+}
+
+.creators-landing .creator-platforms .offer-section-head > p:last-child {
+  max-width: 540px;
+}
+
+.creators-landing .creator-platform-grid {
+  width: 100%;
+  max-width: 590px;
+  margin: 0;
+  justify-self: end;
+  border: 1px solid rgba(41, 40, 50, .14);
+  border-radius: 28px;
+  padding: clamp(30px, 3.5vw, 48px);
+  background: rgba(251, 247, 239, .48);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 3vw, 46px);
+}
+
+.creators-landing .creator-platform-grid > .creator-platform-logo {
+  min-height: 82px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.creators-landing .creator-platform-grid .platform-brand-icon.is-bare {
+  width: clamp(62px, 4.5vw, 72px);
+  height: clamp(62px, 4.5vw, 72px);
+}
+
+@media (max-width: 960px) {
+  .creators-landing .creator-platforms-inner {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .creators-landing .creator-platforms .offer-section-head {
+    max-width: 760px;
+  }
+
+  .creators-landing .creator-platform-grid {
+    width: min(590px, 100%);
+    margin-inline: auto;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .creators-landing .creator-platforms {
+    width: calc(100% - 28px);
+    margin-bottom: 90px;
+    border-radius: 24px;
+    padding: 58px 20px;
+  }
+
+  .creators-landing .creator-platform-grid {
+    border-radius: 22px;
+    padding: 28px 20px;
+    gap: 22px 18px;
+  }
+
+  .creators-landing .creator-platform-grid > .creator-platform-logo {
+    min-height: 68px;
+  }
+
+  .creators-landing .creator-platform-grid .platform-brand-icon.is-bare {
+    width: 58px;
+    height: 58px;
+  }
+}
+
+@media (max-width: 360px) {
+  .creators-landing .creator-platform-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
