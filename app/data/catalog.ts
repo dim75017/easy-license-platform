@@ -140,8 +140,8 @@ export const lofiGirlPlaylists = [
     use: "food-hospitality",
     genre: "Jazz Lofi",
     moods: ["Cozy", "Late night", "Easygoing"],
-    image: "/images/unsplash/playlists/jazz-lofi.jpg",
-    imagePosition: "center 55%",
+    image: "/images/unsplash/playlists/jazz-lofi-saxophone.jpg",
+    imagePosition: "58% center",
     borderColor: "#B88A54",
   },
   {
@@ -166,8 +166,8 @@ export const lofiGirlPlaylists = [
     use: "wellness",
     genre: "Ambient",
     moods: ["Restful", "Gentle", "Weightless"],
-    image: "/images/unsplash/playlists/sleep-ambient.jpg",
-    imagePosition: "center 54%",
+    image: "/images/unsplash/playlists/sleep-ambient-bedside.jpg",
+    imagePosition: "64% center",
     borderColor: "#8B7895",
   },
   {

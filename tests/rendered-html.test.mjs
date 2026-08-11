@@ -419,9 +419,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
     ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-night.jpg"],
     ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano.jpg"],
     ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient.jpg"],
-    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi.jpg"],
+    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg"],
     ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg"],
-    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient.jpg"],
+    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg"],
     ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar.jpg"],
   ]) {
     assert.match(catalogueData, new RegExp(title), title);
