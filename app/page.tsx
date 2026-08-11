@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArtistMarquee } from "./components/ArtistMarquee";
 import { PublicShell } from "./components/PublicShell";
 
 const useCollections = [
@@ -53,11 +54,26 @@ const useCollections = [
 ];
 
 const artists = [
-  { name: "Charlee Nguyen", style: "Ambient · Cinematic", image: "/artists/charlee.jpg" },
-  { name: "Laffey", style: "Lofi hip-hop · Ambient", image: "/artists/laffey.jpg" },
-  { name: "amies", style: "Ambient · Piano", image: "/artists/amies.jpg" },
-  { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.jpg" },
-  { name: "Hoogway", style: "Lofi hip-hop · Guitar", image: "/artists/hoogway.jpg" },
+  { name: "Charlee Nguyen", style: "Ambient · Cinematic", image: "/artists/charlee.webp" },
+  { name: "Laffey", style: "Lofi hip-hop · Ambient", image: "/artists/laffey.webp" },
+  { name: "amies", style: "Ambient · Piano", image: "/artists/amies.webp" },
+  { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.webp" },
+  { name: "Hoogway", style: "Lofi hip-hop · Guitar", image: "/artists/hoogway.webp" },
+  { name: "Tibeauthetraveler", style: "Lofi hip-hop · Travel", image: "/artists/tibeauthetraveler.webp" },
+  { name: "Swink", style: "Lofi hip-hop · Guitar", image: "/artists/swink.webp" },
+  { name: "Mondo Loops", style: "Cinematic lofi · Guitar", image: "/artists/mondo-loops.webp" },
+  { name: "Jam'addict", style: "Lofi hip-hop · Guitar", image: "/artists/jamaddict.webp" },
+  { name: "John Lee", style: "Korean lofi · Cinematic", image: "/artists/john-lee.webp" },
+  { name: "Kainbeats", style: "Sleepy lofi · Ambient", image: "/artists/kainbeats.webp" },
+  { name: "xander.", style: "Cinematic lofi · Ambient", image: "/artists/xander.webp" },
+  { name: "Phlocalyst", style: "Jazzhop · Lofi hip-hop", image: "/artists/phlocalyst.webp" },
+  { name: "Yasper", style: "Jazzhop · Chillhop", image: "/artists/yasper.webp" },
+  { name: "BluntOne", style: "Boom bap · Beatmaking", image: "/artists/bluntone.webp" },
+  { name: "Allem Iversom", style: "Lofi hip-hop · Chillhop", image: "/artists/allem-iversom.webp" },
+  { name: "Kupla", style: "Lofi · Ambient", image: "/artists/kupla.webp" },
+  { name: "Nymano", style: "Lofi hip-hop · Jazzhop", image: "/artists/nymano.webp" },
+  { name: "Leavv", style: "Cinematic lofi · Chillhop", image: "/artists/leavv.webp" },
+  { name: "Sebastian Kamae", style: "Jazzhop · Vinyl", image: "/artists/sebastian-kamae.webp" },
 ];
 
 export default function Home() {
@@ -158,16 +174,7 @@ export default function Home() {
             <h2 id="home26-artists-title">More than 1,000 artists contribute to the catalogue.</h2>
             <p>Every track is written and produced by artists. Generative AI music is not accepted, artists remain clearly credited, and licensing income is paid directly and fairly.</p>
           </div>
-          <div className="home26-artist-grid" data-reveal="group" aria-label="A selection of Symbiose artists and studio sessions">
-            {artists.map((artist) => (
-              <article key={artist.name}>
-                <div className="home26-artist-photo">
-                  <img className={artist.name === "Hoogway" ? "home26-artist-image-hoogway" : undefined} src={artist.image} alt={`Portrait of ${artist.name}`} width={640} height={640} loading="lazy" decoding="async" />
-                </div>
-                <div className="home26-artist-meta"><strong>{artist.name}</strong><span>{artist.style}</span></div>
-              </article>
-            ))}
-          </div>
+          <ArtistMarquee artists={artists} />
         </section>
 
       </div>

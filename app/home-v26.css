@@ -1837,3 +1837,129 @@
 .home26-artist-meta span {
   color: rgba(255, 255, 255, .78);
 }
+
+/* V56: a continuous artist marquee adds motion without duplicating accessible content. */
+.home26-artists .home26-artist-grid {
+  --artist-card: clamp(300px, 19vw, 380px);
+  --artist-gap: clamp(14px, 1.1vw, 22px);
+  position: relative;
+  left: 50%;
+  display: block;
+  width: 100vw;
+  max-width: none;
+  margin-top: clamp(36px, 4vw, 58px);
+  margin-left: -50vw;
+  overflow: hidden;
+  padding: 10px 0 6px;
+  scroll-snap-type: none;
+}
+
+.home26-artist-track {
+  display: flex;
+  width: max-content;
+  animation: home26ArtistsLeft 100s linear infinite;
+}
+
+.home26-artist-track[data-paused="true"],
+.home26-artist-grid:hover .home26-artist-track,
+.home26-artist-grid:focus-within .home26-artist-track {
+  animation-play-state: paused;
+}
+
+.home26-artist-sequence {
+  display: flex;
+  flex: none;
+  gap: var(--artist-gap);
+  padding-inline-end: var(--artist-gap);
+}
+
+.home26-artist-sequence article {
+  width: var(--artist-card);
+  min-width: 0;
+  flex: 0 0 var(--artist-card);
+  scroll-snap-align: none;
+}
+
+.home26-artist-motion {
+  position: absolute;
+  top: 24px;
+  right: clamp(18px, 2.5vw, 42px);
+  z-index: 5;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 50%;
+  background: rgba(24, 22, 28, .72);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .2);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: background .25s ease, border-color .25s ease, transform .25s ease;
+}
+
+.home26-artist-motion:hover,
+.home26-artist-motion:focus-visible {
+  border-color: rgba(255, 255, 255, .72);
+  background: rgba(24, 22, 28, .92);
+  outline: none;
+  transform: scale(1.05);
+}
+
+.home26-artist-motion span {
+  color: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@keyframes home26ArtistsLeft {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (max-width: 760px) {
+  .home26-artists .home26-artist-grid {
+    --artist-card: min(78vw, 310px);
+    --artist-gap: 14px;
+  }
+
+  .home26-artist-motion {
+    top: 20px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home26-artists .home26-artist-grid {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home26-artist-track {
+    animation: none;
+    transform: none;
+  }
+
+  .home26-artist-sequence:first-child {
+    padding-inline-start: 18px;
+  }
+
+  .home26-artist-sequence.is-duplicate {
+    display: none;
+  }
+
+  .home26-artist-sequence article {
+    scroll-snap-align: start;
+  }
+
+  .home26-artist-motion {
+    display: none;
+  }
+}

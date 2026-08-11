@@ -9,7 +9,7 @@ async function source(path) {
 }
 
 test("contains the complete Symbiose music licensing homepage", async () => {
-  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson] = await Promise.all([
+  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
@@ -17,6 +17,8 @@ test("contains the complete Symbiose music licensing homepage", async () => {
     source("app/catalog-v26.css"),
     source("app/offer-pages.css"),
     source("package.json"),
+    source("app/components/ArtistMarquee.tsx"),
+    source("public/artists/SOURCES.md"),
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
@@ -52,6 +54,30 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.doesNotMatch(page, /The Deli/i);
   assert.doesNotMatch(page, /Project AER/i);
   assert.match(page, /M e a d o w/i);
+  assert.match(page, /Tibeauthetraveler/i);
+  assert.match(page, /Mondo Loops/i);
+  assert.match(page, /Sebastian Kamae/i);
+  const artistImages = [...page.matchAll(/image:\s*"(\/artists\/[^".]+\.webp)"/g)].map((match) => match[1]);
+  assert.equal(artistImages.length, 20, "homepage should present twenty artist portraits");
+  assert.equal(new Set(artistImages).size, 20, "artist portraits should be unique");
+  let artistImageBytes = 0;
+  for (const image of artistImages) {
+    const file = new URL(`public${image}`, root);
+    await access(file);
+    const metadata = await stat(file);
+    artistImageBytes += metadata.size;
+    assert.ok(metadata.size <= 120_000, `${image} should stay below 120 KB`);
+    assert.match(artistSources, new RegExp(image.split("/").at(-1).replace(".", "\\.")), `${image} source should be documented`);
+  }
+  assert.ok(artistImageBytes <= 1_600_000, "the twenty artist portraits should stay below 1.6 MB");
+  assert.match(artistSources, /Rights\/status[\s\S]*Public profile metadata; prototype only/i);
+  assert.match(page, /<ArtistMarquee artists=\{artists\} \/>/);
+  assert.match(artistMarquee, /<ArtistSequence artists=\{artists\} \/>[\s\S]*<ArtistSequence artists=\{artists\} duplicate \/>/);
+  assert.match(artistMarquee, /aria-hidden=\{duplicate \? "true" : undefined\}/);
+  assert.match(artistMarquee, /width=\{640\}[\s\S]{0,180}height=\{640\}[\s\S]{0,180}loading="lazy"[\s\S]{0,180}decoding="async"[\s\S]{0,180}fetchPriority="low"/);
+  assert.match(artistMarquee, /IntersectionObserver/);
+  assert.match(artistMarquee, /aria-pressed=\{paused\}/);
+  assert.doesNotMatch(artistMarquee, /aria-live/);
   assert.doesNotMatch(page, /In the studio|Human-made production/i);
   assert.doesNotMatch(page, /Dario Lessing/i);
   assert.match(page, /food-hospitality\.jpg/i);
@@ -77,9 +103,12 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
   assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,220}\.home26-audience\s*\{[\s\S]{0,140}width:\s*100%;[\s\S]{0,100}padding:\s*0;/);
   assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
-  assert.match(homeCss, /V53: five artists fill the desktop row[\s\S]{0,500}grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /V54: keep the next photographic section below the opening viewport[\s\S]{0,260}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(homeCss, /V55: artist portraits fill each card[\s\S]{0,900}\.home26-artist-meta\s*\{[\s\S]{0,260}position:\s*absolute;[\s\S]{0,260}color:\s*#fff;/);
+  assert.match(homeCss, /V56: a continuous artist marquee[\s\S]{0,900}animation:\s*home26ArtistsLeft 100s linear infinite/);
+  assert.match(homeCss, /@keyframes home26ArtistsLeft[\s\S]{0,180}translate3d\(-50%, 0, 0\)/);
+  assert.match(homeCss, /\.home26-artist-grid:hover \.home26-artist-track,[\s\S]{0,180}focus-within[\s\S]{0,180}animation-play-state:\s*paused/);
+  assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,900}\.home26-artist-sequence\.is-duplicate[\s\S]{0,120}display:\s*none/);
   assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
@@ -291,9 +320,9 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(motion, /prefers-reduced-motion/);
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
   assert.match(homeCss, /@keyframes v5Scan/);
-  assert.match(home26Css, /\.home26-artist-grid article\s*\{[\s\S]{0,120}flex:\s*0 0 clamp\(300px, 22\.5vw, 460px\)/);
   assert.match(home26Css, /@media \(min-width: 901px\)[\s\S]*?\.home26-artists \.home26-section-heading\s*\{[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}text-align:\s*center;/);
-  assert.match(home26Css, /\.home26-artists \.home26-artist-grid\s*\{[\s\S]{0,120}width:\s*fit-content;[\s\S]{0,100}max-width:\s*100%;[\s\S]{0,100}margin-inline:\s*auto;/);
+  assert.match(home26Css, /V56: a continuous artist marquee[\s\S]{0,650}width:\s*100vw;[\s\S]{0,180}overflow:\s*hidden/);
+  assert.match(home26Css, /\.home26-artist-track\s*\{[\s\S]{0,180}width:\s*max-content;[\s\S]{0,180}animation:\s*home26ArtistsLeft 100s linear infinite/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(cozyCss, /animation:\s*none\s*!important/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
@@ -378,8 +407,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(business, /Retail stores[\s\S]*Offices[\s\S]*Restaurants[\s\S]*Hotels[\s\S]*Gyms[\s\S]*Spas/i);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
-  assert.match(page, /\/artists\/charlee\.jpg/);
-  assert.doesNotMatch(business, /\/artists\/meadow\.jpg/);
+  assert.match(page, /\/artists\/charlee\.webp/);
+  assert.doesNotMatch(business, /\/artists\/meadow\.webp/);
   assert.match(booth, /My channel/);
   assert.match(layout, /openGraph/);
   assert.match(layout, /og\.png/);
@@ -387,14 +416,12 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/fonts/unbounded-var-latin.woff2", root)),
     access(new URL("public/fonts/afacad-flux-var-latin.woff2", root)),
     access(new URL("public/og.png", root)),
-    access(new URL("public/artists/charlee.jpg", root)),
-    access(new URL("public/artists/meadow.jpg", root)),
-    access(new URL("public/artists/mujo.jpg", root)),
-    access(new URL("public/artists/project-aer.jpg", root)),
-    access(new URL("public/artists/laffey.jpg", root)),
-    access(new URL("public/artists/hoogway.jpg", root)),
-    access(new URL("public/artists/amies.jpg", root)),
-    access(new URL("public/artists/meadow.jpg", root)),
+    access(new URL("public/artists/charlee.webp", root)),
+    access(new URL("public/artists/meadow.webp", root)),
+    access(new URL("public/artists/tibeauthetraveler.webp", root)),
+    access(new URL("public/artists/mondo-loops.webp", root)),
+    access(new URL("public/artists/sebastian-kamae.webp", root)),
+    access(new URL("public/artists/SOURCES.md", root)),
     access(new URL("public/images/stock/vinyl-turntable.jpg", root)),
     access(new URL("public/images/stock/studio-artist.jpg", root)),
     access(new URL("public/images/stock/cozy-workspace.jpg", root)),
