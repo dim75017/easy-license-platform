@@ -408,6 +408,28 @@ test("keeps each public page free of repeated image assets", async () => {
   assertUniquePageImages("Catalogue", imagePaths(catalogueData));
 });
 
+test("ships three unique Business service photographs", async () => {
+  const [offerCss, sources] = await Promise.all([
+    source("app/offer-pages.css"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const serviceImages = [
+    [".business-option-sync", "/images/unsplash/business-license-vinyl.webp", "wejxKZ-9IZg"],
+    [".business-option-custom", "/images/unsplash/business-commission-guitar.webp", "4DAH0YhV3Qg"],
+    [".business-option-retail", "/images/unsplash/business-physical-coffee.webp", "f7zm5TDOi4g"],
+  ];
+  let serviceImageBytes = 0;
+  for (const [selector, image, sourceId] of serviceImages) {
+    assert.equal(backgroundImage(offerCss, selector), image);
+    const metadata = await stat(new URL(`public${image}`, root));
+    serviceImageBytes += metadata.size;
+    assert.ok(metadata.size <= 200_000, `${image} should stay below 200 KB`);
+    assert.match(sources, new RegExp(`${image.split("/").at(-1)}[\\s\\S]{0,220}${sourceId}`));
+  }
+  assert.equal(new Set(serviceImages.map(([, image]) => image)).size, 3);
+  assert.ok(serviceImageBytes <= 400_000, "the three Business service photographs should stay below 400 KB");
+});
+
 test("ships the Business process backdrop locally and documents its source", async () => {
   const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
   const sources = await source("public/images/unsplash/SOURCES.md");

@@ -51,3 +51,9 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 ## Homepage creator route refresh (2026-08-11)
 
 - `creator-editing-keyboard.webp` — TheRegisti, https://unsplash.com/photos/a-person-typing-on-a-keyboard-next-to-a-laptop-ziSzilQLSOM (Unsplash License, locally resized WebP derivative)
+
+## Business service cards refresh (2026-08-11)
+
+- `business-license-vinyl.webp` — Jamakassi, https://unsplash.com/photos/person-holding-elvis-presley-vinyl-sleeve-wejxKZ-9IZg (Unsplash License, locally resized WebP derivative)
+- `business-commission-guitar.webp` — Soundtrap, https://unsplash.com/photos/woman-playing-brown-acoustic-guitar-4DAH0YhV3Qg (Unsplash License, locally resized WebP derivative)
+- `business-physical-coffee.webp` — Joshua Rodriguez, https://unsplash.com/photos/man-buying-coffee-on-counter-f7zm5TDOi4g (Unsplash License, locally resized WebP derivative)

@@ -834,9 +834,20 @@
 .business-option::before { background-position: center; background-size: cover; transition: transform 750ms cubic-bezier(.2,.7,.2,1); }
 .business-option::after { background: linear-gradient(180deg, rgba(25,24,29,.24), rgba(25,24,29,.93)); }
 .business-option:hover::before { transform: scale(1.035); }
-.business-option-sync::before { background-image: url("/images/unsplash/filmmaker-desk-business.webp"); }
-.business-option-custom::before { background-image: url("/images/unsplash/hero-listening-business.webp"); }
-.business-option-retail::before { background-image: url("/images/unsplash/retail/spa-option.webp"); }
+.business-option-sync::before {
+  background-image: url("/images/unsplash/business-license-vinyl.webp");
+  background-position: center;
+}
+
+.business-option-custom::before {
+  background-image: url("/images/unsplash/business-commission-guitar.webp");
+  background-position: center 34%;
+}
+
+.business-option-retail::before {
+  background-image: url("/images/unsplash/business-physical-coffee.webp");
+  background-position: center;
+}
 
 .business-option > span { color: rgba(243,236,224,.72); font-size: 10px; font-weight: 800; letter-spacing: .07em; }
 .business-option h3 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 630; letter-spacing: -.052em; line-height: .95; }
