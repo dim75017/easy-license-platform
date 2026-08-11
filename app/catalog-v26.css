@@ -1451,6 +1451,7 @@
   isolation: isolate;
   min-height: 360px;
   border: 1px solid rgba(251, 247, 239, .18);
+  border-radius: 24px;
   background: #292832;
   grid-template-rows: auto 1fr auto;
 }

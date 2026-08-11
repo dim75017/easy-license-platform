@@ -322,6 +322,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(creators, /creator-piano\.jpg|creator-streamer\.jpg|creator-social\.jpg|creator-podcast\.jpg/i);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
+  assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);
   assert.match(business, /Retail stores[\s\S]*Offices[\s\S]*Restaurants[\s\S]*Hotels[\s\S]*Gyms[\s\S]*Spas/i);
   assert.match(page, /A precise, high-quality catalogue/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
