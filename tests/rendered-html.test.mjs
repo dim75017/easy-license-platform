@@ -9,7 +9,7 @@ async function source(path) {
 }
 
 test("contains the complete Symbiose music licensing homepage", async () => {
-  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts] = await Promise.all([
+  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts, unsplashSources] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
@@ -20,6 +20,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
     source("app/components/ArtistMarquee.tsx"),
     source("public/artists/SOURCES.md"),
     source("app/components/CatalogueFacts.tsx"),
+    source("public/images/unsplash/SOURCES.md"),
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
@@ -47,7 +48,8 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
-  assert.match(page, /editing-desk\.jpg/i);
+  assert.match(page, /creator-editing-keyboard\.webp/i);
+  assert.match(unsplashSources, /creator-editing-keyboard\.webp[\s\S]*ziSzilQLSOM/i);
   assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
@@ -584,6 +586,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/study.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
+    access(new URL("public/images/unsplash/creator-editing-keyboard.webp", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
     access(new URL("public/images/unsplash/hero-turntable.jpg", root)),

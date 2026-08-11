@@ -47,3 +47,7 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 ## Creator process refresh (2026-08-11)
 
 - `creator-process-blur.webp` — Rodrigo Rodrigues / WOLF ART, https://unsplash.com/photos/man-filming-with-professional-camera-setup-sPeIJ0ebl8c (Unsplash License, locally resized and blurred derivative)
+
+## Homepage creator route refresh (2026-08-11)
+
+- `creator-editing-keyboard.webp` — TheRegisti, https://unsplash.com/photos/a-person-typing-on-a-keyboard-next-to-a-laptop-ziSzilQLSOM (Unsplash License, locally resized WebP derivative)
