@@ -631,9 +631,9 @@
   filter: saturate(.85) contrast(.96);
 }
 
-.home26-artist-grid img.home26-artist-image-close {
-  transform: scale(1.42);
-  transform-origin: 50% 31%;
+.home26-artist-grid img.home26-artist-image-hoogway {
+  transform: scale(1.25);
+  transform-origin: 72% 35%;
 }
 
 .home26-artist-meta {
@@ -1741,5 +1741,51 @@
 @media (max-width: 620px) {
   .home26-audience-media {
     aspect-ratio: 4 / 3;
+  }
+}
+
+/* V53: five artists fill the desktop row without shrinking the mobile portraits. */
+@media (min-width: 1280px) {
+  .home26-artists .home26-artist-grid {
+    display: grid;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    overflow: visible;
+    padding-bottom: 0;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(14px, 1.1vw, 22px);
+  }
+
+  .home26-artist-grid article {
+    min-width: 0;
+    flex: none;
+  }
+}
+
+@media (max-width: 1279px) {
+  .home26-artists .home26-artist-grid {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    gap: 16px;
+    scroll-padding-inline: 0;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home26-artist-grid article {
+    flex: 0 0 clamp(300px, 42vw, 360px);
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 620px) {
+  .home26-artist-grid article {
+    flex-basis: min(84vw, 340px);
   }
 }

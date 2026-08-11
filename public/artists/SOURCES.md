@@ -1,6 +1,6 @@
 # Artist image sources
 
-Profile images downloaded from the artists' public Spotify profile metadata on 2026-08-04 for the Symbiose prototype.
+Profile images sourced from the artists' public profile metadata for the Symbiose prototype.
 
 - Charlee Nguyen — https://open.spotify.com/artist/5ffORofXMmNRRtwIeQsyW3
 - Project AER — https://open.spotify.com/artist/0iMWUBpWAGKAenBVePrZFP
@@ -9,3 +9,5 @@ Profile images downloaded from the artists' public Spotify profile metadata on 2
 - Mujo — https://open.spotify.com/artist/0vg08N1z9G9LrGLkG1nNDS
 - Dario Lessing — https://open.spotify.com/artist/0EocooOvTYLsjqSSQdqiyi
 - The Deli — official artist portrait via Chillhop: https://chillhop.com/artists/139-the-deli/
+- Laffey — https://open.spotify.com/artist/7LWdcPFBFcRaamGjIJbPV7
+- Hoogway — https://open.spotify.com/artist/1Mh9G47YfuaLdQs44voLrQ

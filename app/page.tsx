@@ -54,9 +54,10 @@ const useCollections = [
 
 const artists = [
   { name: "Charlee Nguyen", style: "Ambient · Cinematic", image: "/artists/charlee.jpg" },
-  { name: "The Deli", style: "Jazzhop · Instrumental hip-hop", image: "/artists/the-deli.jpg", closePortrait: true },
+  { name: "Laffey", style: "Lofi hip-hop · Ambient", image: "/artists/laffey.jpg" },
   { name: "amies", style: "Ambient · Piano", image: "/artists/amies.jpg" },
   { name: "M e a d o w", style: "Ambient · Electronic", image: "/artists/meadow.jpg" },
+  { name: "Hoogway", style: "Lofi hip-hop · Guitar", image: "/artists/hoogway.jpg" },
 ];
 
 export default function Home() {
@@ -161,7 +162,7 @@ export default function Home() {
             {artists.map((artist) => (
               <article key={artist.name}>
                 <div className="home26-artist-photo">
-                  <img className={artist.closePortrait ? "home26-artist-image-close" : undefined} src={artist.image} alt={`Portrait of ${artist.name}`} />
+                  <img className={artist.name === "Hoogway" ? "home26-artist-image-hoogway" : undefined} src={artist.image} alt={`Portrait of ${artist.name}`} width={640} height={640} loading="lazy" decoding="async" />
                 </div>
                 <div className="home26-artist-meta"><strong>{artist.name}</strong><span>{artist.style}</span></div>
               </article>

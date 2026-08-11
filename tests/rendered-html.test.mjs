@@ -47,7 +47,9 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /editing-desk\.jpg/i);
   assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
-  assert.match(page, /The Deli/i);
+  assert.match(page, /Laffey/i);
+  assert.match(page, /Hoogway/i);
+  assert.doesNotMatch(page, /The Deli/i);
   assert.doesNotMatch(page, /Project AER/i);
   assert.match(page, /M e a d o w/i);
   assert.doesNotMatch(page, /In the studio|Human-made production/i);
@@ -75,6 +77,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
   assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,220}\.home26-audience\s*\{[\s\S]{0,140}width:\s*100%;[\s\S]{0,100}padding:\s*0;/);
   assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
+  assert.match(homeCss, /V53: five artists fill the desktop row[\s\S]{0,500}grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
@@ -381,7 +384,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/artists/meadow.jpg", root)),
     access(new URL("public/artists/mujo.jpg", root)),
     access(new URL("public/artists/project-aer.jpg", root)),
-    access(new URL("public/artists/the-deli.jpg", root)),
+    access(new URL("public/artists/laffey.jpg", root)),
+    access(new URL("public/artists/hoogway.jpg", root)),
     access(new URL("public/artists/amies.jpg", root)),
     access(new URL("public/artists/meadow.jpg", root)),
     access(new URL("public/images/stock/vinyl-turntable.jpg", root)),
