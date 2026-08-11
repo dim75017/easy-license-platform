@@ -1850,3 +1850,21 @@
     display: none;
   }
 }
+
+/* V45: Music opens on the same banner dimensions as every public route. */
+.music-v26-page .music-library-hero {
+  min-height: 720px;
+  align-items: center;
+}
+
+@media (min-width: 901px) and (min-height: 800px) {
+  .music-v26-page .music-library-hero {
+    min-height: max(720px, calc(100svh - 245px));
+  }
+}
+
+@media (max-width: 760px) {
+  .music-v26-page .music-library-hero {
+    min-height: 620px;
+  }
+}
