@@ -2203,3 +2203,114 @@
   border-radius: 0;
   box-shadow: none;
 }
+
+/* V55: a cinematic visual pause for the commercial licensing process. */
+.business-landing .business-flow {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  padding: clamp(94px, 8vw, 132px) clamp(28px, 4vw, 76px) clamp(100px, 8vw, 140px);
+  color: var(--marketing-paper);
+}
+
+.business-landing .business-flow::before {
+  position: absolute;
+  inset: -12px;
+  z-index: 0;
+  background-image: url("/images/unsplash/business-process-blur.webp");
+  background-position: center;
+  background-size: cover;
+  content: "";
+  transform: scale(1.025);
+}
+
+.business-landing .business-flow::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(110deg, rgba(18, 21, 26, .93), rgba(27, 48, 47, .79) 52%, rgba(18, 21, 26, .9)),
+    linear-gradient(180deg, rgba(18, 21, 26, .18), rgba(18, 21, 26, .72));
+  content: "";
+}
+
+.business-landing .business-flow > * {
+  position: relative;
+  z-index: 2;
+}
+
+.business-landing .business-flow .offer-section-head {
+  max-width: 1080px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.business-landing .business-flow .offer-kicker {
+  justify-content: center;
+  color: rgba(251, 247, 239, .72);
+}
+
+.business-landing .business-flow .offer-kicker > span,
+.business-landing .business-flow .offer-flow-grid article > span {
+  color: var(--marketing-clay-soft);
+}
+
+.business-landing .business-flow .offer-section-head h2 {
+  color: var(--marketing-paper);
+  font-size: clamp(54px, 6vw, 92px);
+  line-height: .92;
+}
+
+.business-landing .business-flow .offer-section-head > p:last-child {
+  max-width: 760px;
+  margin: 28px auto 0;
+  color: rgba(251, 247, 239, .72);
+}
+
+.business-landing .business-flow .offer-flow-grid {
+  max-width: 1440px;
+  margin: clamp(50px, 6vw, 76px) auto 0;
+  border-color: rgba(251, 247, 239, .24);
+}
+
+.business-landing .business-flow .offer-flow-grid article {
+  min-height: 260px;
+  border-color: rgba(251, 247, 239, .2);
+  background: linear-gradient(180deg, rgba(17, 24, 27, .42), rgba(17, 24, 27, .68));
+}
+
+.business-landing .business-flow .offer-flow-grid h3 {
+  color: var(--marketing-paper);
+}
+
+.business-landing .business-flow .offer-flow-grid p {
+  color: rgba(251, 247, 239, .7);
+}
+
+@media (max-width: 620px) {
+  .business-landing .business-flow {
+    width: 100%;
+    padding: 74px 14px 82px;
+  }
+
+  .business-landing .business-flow::before {
+    background-position: 55% center;
+  }
+
+  .business-landing .business-flow .offer-section-head h2 {
+    font-size: clamp(44px, 13vw, 58px);
+  }
+
+  .business-landing .business-flow .offer-flow-grid {
+    margin-top: 42px;
+  }
+
+  .business-landing .business-flow .offer-flow-grid article {
+    min-height: 210px;
+    padding: 24px;
+  }
+}

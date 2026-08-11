@@ -39,3 +39,7 @@ The matching `.webp` files are locally resized derivatives used by the Business 
 - `creator-audio-editor.webp` — Kelly Sikkema, https://unsplash.com/photos/X-etICbUKec (Unsplash License, locally resized derivative)
 
 The matching `creator-piano-human.webp` and `creator-*-card.webp` files are locally resized derivatives. `creator-youtube-card.webp` is derived from the already sourced `creator-youtube.jpg` original.
+
+## Business process refresh (2026-08-11)
+
+- `business-process-blur.webp` — Vitaly Gariev, https://unsplash.com/photos/KNGa5luu2HA (Unsplash License, locally resized and blurred derivative)

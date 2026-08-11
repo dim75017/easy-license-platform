@@ -350,9 +350,20 @@ test("keeps each public page free of repeated image assets", async () => {
     backgroundImage(offerCss, ".business-option-sync"),
     backgroundImage(offerCss, ".business-option-custom"),
     backgroundImage(offerCss, ".business-option-retail"),
+    backgroundImage(offerCss, ".business-landing .business-flow::before"),
   ]);
   assertUniquePageImages("Retail", imagePaths(retail));
   assertUniquePageImages("Catalogue", imagePaths(catalogueData));
+});
+
+test("ships the Business process backdrop locally and documents its source", async () => {
+  const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
+  const sources = await source("public/images/unsplash/SOURCES.md");
+
+  await access(backdrop);
+  const metadata = await stat(backdrop);
+  assert.ok(metadata.size <= 80_000, "the blurred Business process backdrop should stay below 80 KB");
+  assert.match(sources, /business-process-blur\.webp[\s\S]{0,160}Vitaly Gariev[\s\S]{0,160}KNGa5luu2HA/);
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
@@ -463,6 +474,10 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
   assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(84px, 8vw, 112px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
   assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(82px, 8vw, 108px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V55: a cinematic visual pause for the commercial licensing process\.[\s\S]{0,420}\.business-landing \.business-flow::before\s*\{[\s\S]{0,220}business-process-blur\.webp/);
+  assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
+  assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head h2\s*\{[\s\S]{0,180}color:\s*var\(--marketing-paper\);[\s\S]{0,100}font-size:\s*clamp\(54px, 6vw, 92px\)/);
+  assert.match(offerCss, /\.business-landing \.business-flow \.offer-flow-grid article\s*\{[\s\S]{0,260}background:\s*linear-gradient/);
   assert.match(offerCss, /\.business-quote \.lead-form input,[\s\S]{0,420}font-size:\s*16px;/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
