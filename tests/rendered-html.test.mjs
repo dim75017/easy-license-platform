@@ -263,11 +263,12 @@ test("ships progressive, accessible motion without an animation dependency", asy
 });
 
 test("ships the cozy Lofi Girl identity, focused navigation and real artist profiles", async () => {
-  const [css, homeCss, cozyCss, catalogCss, layout, brand, header, catalogue, catalogueData, page, creators, business, booth] = await Promise.all([
+  const [css, homeCss, cozyCss, catalogCss, offerCss, layout, brand, header, catalogue, catalogueData, page, creators, business, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
     source("app/catalog-v26.css"),
+    source("app/offer-pages.css"),
     source("app/layout.tsx"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
@@ -318,8 +319,15 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /Drifting away/);
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
-  assert.match(creators, /creator-youtube\.jpg/i);
-  assert.match(creators, /creator-piano\.jpg|creator-streamer\.jpg|creator-social\.jpg|creator-podcast\.jpg/i);
+  assert.match(creators, /creator-youtube-card\.webp/i);
+  assert.match(creators, /creator-piano-human\.webp/i);
+  assert.match(creators, /creator-streamer-card\.webp/i);
+  assert.match(creators, /creator-social-card\.webp/i);
+  assert.match(creators, /creator-podcast-card\.webp/i);
+  assert.doesNotMatch(creators, /creator-(?:piano|streamer|social|podcast)\.jpg/i);
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article\s*\{[\s\S]{0,500}border-radius:\s*28px/);
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
+  assert.match(offerCss, /\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*32px/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);
@@ -346,11 +354,11 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/stock/cozy-workspace.jpg", root)),
     access(new URL("public/images/stock/ATTRIBUTION.md", root)),
     access(new URL("public/images/unsplash/creator-edit.jpg", root)),
-    access(new URL("public/images/unsplash/creator-youtube.jpg", root)),
-    access(new URL("public/images/unsplash/creator-piano.jpg", root)),
-    access(new URL("public/images/unsplash/creator-streamer.jpg", root)),
-    access(new URL("public/images/unsplash/creator-social.jpg", root)),
-    access(new URL("public/images/unsplash/creator-podcast.jpg", root)),
+    access(new URL("public/images/unsplash/creator-youtube-card.webp", root)),
+    access(new URL("public/images/unsplash/creator-piano-human.webp", root)),
+    access(new URL("public/images/unsplash/creator-streamer-card.webp", root)),
+    access(new URL("public/images/unsplash/creator-social-card.webp", root)),
+    access(new URL("public/images/unsplash/creator-podcast-card.webp", root)),
     access(new URL("public/images/unsplash/food-hospitality.jpg", root)),
     access(new URL("public/images/unsplash/music-header.jpg", root)),
     access(new URL("public/images/unsplash/podcast-home.jpg", root)),

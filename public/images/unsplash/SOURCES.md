@@ -29,3 +29,12 @@ The matching `.webp` files are locally resized derivatives used by the Business 
 - `creator-podcast.jpg` — Getty Images, https://unsplash.com/photos/AEhl7m5xnjA (Unsplash+ License)
 - `retail/store.jpg` — Unsplash+, https://unsplash.com/photos/ioRyX4xxnWw (Unsplash+ License)
 - `retail/office.jpg` — Unsplash, https://unsplash.com/photos/yWwob8kwOCk (Unsplash License)
+
+## Creators refresh (2026-08-11)
+
+- `creator-piano-human.jpg` — A. C., https://unsplash.com/photos/yOjwoPIj7Fo (Unsplash+ License, original download)
+- `creator-streamer-clean.jpg` — Samsung Memory, https://unsplash.com/photos/faiWKfVjtZ4 (Unsplash License)
+- `creator-social-clean.jpg` — Vitaly Gariev, https://unsplash.com/photos/mVp5g-NzUQo (Unsplash License)
+- `creator-podcast-clean.jpg` — Marty O’Neill, https://unsplash.com/photos/Y7H5ZKUZsg8 (Unsplash License)
+
+The matching `creator-piano-human.webp` and `creator-*-card.webp` files are locally resized derivatives used by the Creators page. `creator-youtube-card.webp` is derived from the already sourced `creator-youtube.jpg` original.

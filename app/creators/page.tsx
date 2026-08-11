@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 };
 
 const creatorUses = [
-  { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/creator-youtube.jpg", alt: "Creator holding a movie clapper in a video studio" },
-  { title: "Livestreams", copy: "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account.", image: "/images/unsplash/creator-streamer.jpg", alt: "Streamer at a live gaming setup" },
-  { title: "Social content", copy: "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account.", image: "/images/unsplash/creator-social.jpg", alt: "Creator filming social content in front of a mirror" },
-  { title: "Podcasts", copy: "Use music for intros, transitions and background beds in eligible podcast episodes.", image: "/images/unsplash/creator-podcast.jpg", alt: "Podcast hosts recording an interview" },
+  { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/creator-youtube-card.webp", alt: "Creator holding a movie clapper in a video studio", width: 1200, height: 800 },
+  { title: "Livestreams", copy: "Add music to eligible Twitch streams and other supported live channels, with licence records kept in your account.", image: "/images/unsplash/creator-streamer-card.webp", alt: "Gamer playing at a desktop setup", width: 1200, height: 800 },
+  { title: "Social content", copy: "Publish eligible tracks on TikTok, Instagram, Reels and other supported social platforms linked to your account.", image: "/images/unsplash/creator-social-card.webp", alt: "Creator filming a video at home", width: 1200, height: 675 },
+  { title: "Podcasts", copy: "Use music for intros, transitions and background beds in eligible podcast episodes.", image: "/images/unsplash/creator-podcast-card.webp", alt: "Podcast host recording at a microphone", width: 1200, height: 675 },
 ];
 
 export default function CreatorsPage() {
@@ -39,7 +39,7 @@ export default function CreatorsPage() {
         </section>
 
         <section className="offer-curation" aria-labelledby="creator-curation-title">
-          <figure data-reveal="scale"><img src="/images/unsplash/creator-piano.jpg" alt="Pianist playing in a dark studio" /></figure>
+          <figure data-reveal="scale"><img src="/images/unsplash/creator-piano-human.webp" alt="Pianist playing in a warm recording studio" width={1200} height={1800} loading="eager" decoding="async" /></figure>
           <div className="offer-curation-copy" data-reveal="right">
             <p className="offer-kicker"><span>01</span> Built for the cut and the stream</p>
             <h2 id="creator-curation-title">Music that leaves room<br />for your voice.</h2>
@@ -59,7 +59,7 @@ export default function CreatorsPage() {
             <p>Creator and Pro are designed for YouTubers, streamers, influencers, podcasters and social creators publishing their own eligible content. The number of connected channels and available team features depends on the plan you choose.</p>
           </div>
           <div className="offer-use-grid" data-reveal="group">
-            {creatorUses.map(({ title, copy, image, alt }, index) => <article key={title}><img src={image} alt={alt} /><div><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></div></article>)}
+            {creatorUses.map(({ title, copy, image, alt, width, height }, index) => <article key={title}><img src={image} alt={alt} width={width} height={height} loading="lazy" decoding="async" /><div><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></div></article>)}
           </div>
         </section>
 
