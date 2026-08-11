@@ -47,7 +47,7 @@ const platformIcons: Record<PlatformName, PlatformIcon> = {
 
 export const creatorPlatforms: PlatformName[] = ["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"];
 
-export function PlatformLogo({ platform, bare = false }: { platform: PlatformName; bare?: boolean }) {
+export function PlatformLogo({ platform, bare = false, onDark = false }: { platform: PlatformName; bare?: boolean; onDark?: boolean }) {
   const icon = platformIcons[platform];
 
   return (
@@ -65,8 +65,14 @@ export function PlatformLogo({ platform, bare = false }: { platform: PlatformNam
           <path className="platform-logo-twitch-face" d="M20.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" fill="#FFFFFF" />
           <path className="platform-logo-twitch-eyes" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714z" fill={icon.color} />
         </svg>
+      ) : platform === "TikTok" ? (
+        <svg className="platform-logo-tiktok" viewBox="0 0 24 24" role="presentation" focusable="false">
+          <path d={icon.path} fill="#25F4EE" transform="translate(-0.35 0.3)" />
+          <path d={icon.path} fill="#FE2C55" transform="translate(0.35 -0.3)" />
+          <path d={icon.path} fill={onDark ? "#FFFFFF" : (bare ? icon.color : "#FFFFFF")} />
+        </svg>
       ) : (
-        <svg viewBox="0 0 24 24" role="presentation" focusable="false" fill={platform === "TikTok" ? (bare ? icon.color : "#FFFFFF") : icon.color}>
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false" fill={icon.color}>
           <path d={icon.path} />
         </svg>
       )}

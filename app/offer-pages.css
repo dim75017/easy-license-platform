@@ -2681,3 +2681,151 @@
 .creators-landing .creator-editorial-action .offer-catalogue-link span:last-child {
   background: rgba(251, 247, 239, .12);
 }
+
+/* V63: platforms become a full-width brand rail instead of a card inside a card. */
+.creators-landing .creator-platforms {
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0;
+  padding: clamp(72px, 6vw, 88px) clamp(28px, 4vw, 76px) clamp(68px, 5.5vw, 82px);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(62, 77, 91, .42), transparent 31%),
+    var(--marketing-night);
+}
+
+.creators-landing .creator-platforms-inner {
+  display: block;
+  width: min(1600px, 100%);
+  margin-inline: auto;
+}
+
+.creators-landing .creator-platforms .offer-section-head {
+  max-width: 1120px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.creators-landing .creator-platforms .offer-kicker {
+  justify-content: center;
+}
+
+.creators-landing .creator-platforms .offer-section-head h2 {
+  max-width: 1080px;
+  margin-inline: auto;
+  font-size: clamp(54px, 5vw, 82px);
+  letter-spacing: -.035em;
+  line-height: .95;
+}
+
+.creators-landing .creator-platforms .offer-section-head > p:last-child {
+  max-width: 760px;
+  margin: 28px auto 0;
+  font-size: clamp(18px, 1.35vw, 21px);
+}
+
+.creators-landing .creator-platform-grid {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  margin: clamp(44px, 4vw, 56px) 0 0;
+  justify-self: auto;
+  border: 0;
+  border-top: 1px solid rgba(251, 247, 239, .16);
+  border-bottom: 1px solid rgba(251, 247, 239, .16);
+  border-radius: 0;
+  padding: clamp(24px, 2.4vw, 32px) 0;
+  background: transparent;
+  box-shadow: none;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+}
+
+.creators-landing .creator-platform-grid > .creator-platform-logo {
+  display: grid;
+  min-width: 0;
+  min-height: 96px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  transition: transform 420ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.creators-landing .creator-platform-grid .platform-brand-icon.is-bare {
+  width: clamp(74px, 5vw, 88px);
+  height: clamp(74px, 5vw, 88px);
+}
+
+.creators-landing .creator-platform-grid > .creator-platform-logo:first-child .platform-brand-icon.is-bare {
+  width: clamp(82px, 5.7vw, 100px);
+  height: clamp(82px, 5.7vw, 100px);
+}
+
+.creators-landing .creator-platform-grid > .creator-platform-logo:nth-child(5) .platform-brand-icon.is-bare {
+  width: clamp(78px, 5.25vw, 92px);
+  height: clamp(78px, 5.25vw, 92px);
+}
+
+.creators-landing .creator-platform-grid .platform-logo-tiktok {
+  overflow: visible;
+}
+
+@media (hover: hover) {
+  .creators-landing .creator-platform-grid > .creator-platform-logo:hover {
+    transform: translateY(-7px) scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creators-landing .creator-platform-grid > .creator-platform-logo {
+    transition: none;
+  }
+
+  .creators-landing .creator-platform-grid > .creator-platform-logo:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .creators-landing .creator-platform-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .creators-landing .creator-platforms {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    padding: 64px 20px 58px;
+  }
+
+  .creators-landing .creator-platforms .offer-section-head h2 {
+    font-size: clamp(46px, 13vw, 60px);
+  }
+
+  .creators-landing .creator-platform-grid {
+    margin-top: 46px;
+    padding-block: 26px;
+  }
+
+  .creators-landing .creator-platform-grid > .creator-platform-logo {
+    min-height: 88px;
+  }
+
+  .creators-landing .creator-platform-grid .platform-brand-icon.is-bare,
+  .creators-landing .creator-platform-grid > .creator-platform-logo:first-child .platform-brand-icon.is-bare,
+  .creators-landing .creator-platform-grid > .creator-platform-logo:nth-child(5) .platform-brand-icon.is-bare {
+    width: clamp(58px, 17vw, 68px);
+    height: clamp(58px, 17vw, 68px);
+  }
+}
+
+@media (max-width: 360px) {
+  .creators-landing .creator-platform-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

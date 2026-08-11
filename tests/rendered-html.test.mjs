@@ -301,9 +301,11 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   ]);
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
-  assert.match(creators, /<PlatformLogo platform=\{name\} bare \/>/);
+  assert.match(creators, /<PlatformLogo platform=\{name\} bare onDark \/>/);
   assert.match(creators, /className="creator-platforms-inner"/);
   assert.match(creators, /className="creator-platform-logo"[^>]*role="img"[^>]*aria-label=\{name\}/);
+  assert.match(creators, /id="creator-platforms-title">Music for every channel you publish on\.<\/h2>/);
+  assert.doesNotMatch(creators, /id="creator-platforms-title">[^<]*<br/);
   assert.doesNotMatch(creators, /<PlatformLogo platform=\{name\} \/>\{name\}/);
   assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
   assert.doesNotMatch(platformLogo, /creatorPlatforms[^;]*Apple Podcasts/);
@@ -311,7 +313,10 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(platformLogo, /<svg viewBox="0 0 24 24"/);
   assert.match(platformLogo, /aria-hidden="true"/);
   assert.match(platformLogo, /background: "#000000"/);
-  assert.match(platformLogo, /platform === "TikTok" \? \(bare \? icon\.color : "#FFFFFF"\)/);
+  assert.match(platformLogo, /platform === "TikTok"[\s\S]{0,700}fill=\{onDark \? "#FFFFFF" : \(bare \? icon\.color : "#FFFFFF"\)\}/);
+  assert.match(platformLogo, /platform-logo-tiktok/);
+  assert.match(platformLogo, /#25F4EE/);
+  assert.match(platformLogo, /#FE2C55/);
   assert.match(platformLogo, /style=\{bare \? undefined : \{ backgroundColor: icon\.background \}\}/);
   assert.match(platformLogo, /platform-logo-youtube-play[^>]*fill="#FFFFFF"/);
   assert.match(platformLogo, /platform-logo-twitch-face[^>]*fill="#FFFFFF"/);
@@ -331,13 +336,15 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon svg/);
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon img/);
   assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
-  assert.match(offerCss, /V59: platform coverage is one balanced editorial composition[\s\S]{0,900}\.creators-landing \.creator-platforms-inner\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, \.95fr\) minmax\(480px, 1\.05fr\)/);
-  assert.match(offerCss, /V59: platform coverage[\s\S]{0,1700}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,420}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,420}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,260}var\(--marketing-night\)/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,500}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,100}margin:\s*0;[\s\S]{0,140}border-radius:\s*0;/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,1100}\.creators-landing \.creator-platforms \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,2400}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,700}background:\s*transparent;[\s\S]{0,120}box-shadow:\s*none;[\s\S]{0,150}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,1500}\.creators-landing \.creator-editorial\s*\{[\s\S]{0,100}background:\s*#e8ddd1;[\s\S]{0,80}color:\s*var\(--marketing-night\)/);
   assert.match(offerCss, /\.creators-landing \.creator-editorial-track\s*\{[\s\S]{0,260}background:\s*linear-gradient\([^}]*rgba\(41, 40, 50, \.98\)/);
-  assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\.is-bare\s*\{[\s\S]{0,180}width:\s*clamp\(62px, 4\.5vw, 72px\)/);
-  assert.match(offerCss, /@media \(max-width:\s*360px\)[\s\S]{0,200}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,3300}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,160}width:\s*clamp\(74px, 5vw, 88px\)/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,5200}@media \(max-width: 700px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,7000}@media \(max-width: 360px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,300}\.creators-landing \.creator-platform-grid > \.creator-platform-logo:hover\s*\{[\s\S]{0,80}transform:\s*none/);
   assert.match(offerCss, /V51: the Creators banner is a full-width rectangle[\s\S]{0,180}\.creators-landing \.offer-hero\s*\{[\s\S]{0,80}border-radius:\s*0;/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));
 });
@@ -558,7 +565,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.doesNotMatch(creators, /creator-(?:piano|streamer|social|podcast)\.jpg/i);
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article\s*\{[\s\S]{0,500}border-radius:\s*28px/);
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
-  assert.match(offerCss, /\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*32px/);
+  assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,500}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*0/);
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
   assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(84px, 8vw, 112px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
   assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(82px, 8vw, 108px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
