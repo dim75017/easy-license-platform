@@ -450,6 +450,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
   assert.match(creators, /creator-youtube-card\.webp/i);
   assert.match(creators, /creator-audio-editor\.webp/i);
+  assert.match(creators, /className="offer-hero offer-hero-creators"[\s\S]*?<\/section>\s*<section className="offer-curation"/);
   assert.doesNotMatch(creators, /creator-piano-human\.webp/i);
   assert.match(creators, /creator-streamer-card\.webp/i);
   assert.match(creators, /creator-social-card\.webp/i);
@@ -459,6 +460,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
   assert.match(offerCss, /\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*32px/);
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
+  assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(84px, 8vw, 112px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
   assert.match(offerCss, /\.business-quote \.lead-form input,[\s\S]{0,420}font-size:\s*16px;/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);

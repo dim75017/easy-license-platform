@@ -2183,3 +2183,13 @@
   .creator-editorial-side i { transition: none; }
   .creator-editorial-track:hover { transform: none; }
 }
+
+/* V53: the first Creators story continues directly from the hero, full bleed. */
+.creators-landing .offer-curation {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 clamp(84px, 8vw, 112px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
