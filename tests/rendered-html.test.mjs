@@ -266,6 +266,71 @@ test("defines every public and connected product surface", async () => {
   assert.match(sync, /Symbiome/i);
 });
 
+test("ships a complete footer, detailed help and honest public information pages", async () => {
+  const publicRoutes = ["help", "contact", "about", "press", "careers", "legal", "privacy", "cookies"];
+  const [footer, creators, help, about, contact, press, careers, legal, privacy, cookies, layout, supportCss] = await Promise.all([
+    source("app/components/SiteFooter.tsx"),
+    source("app/creators/page.tsx"),
+    source("app/help/page.tsx"),
+    source("app/about/page.tsx"),
+    source("app/contact/page.tsx"),
+    source("app/press/page.tsx"),
+    source("app/careers/page.tsx"),
+    source("app/legal/page.tsx"),
+    source("app/privacy/page.tsx"),
+    source("app/cookies/page.tsx"),
+    source("app/layout.tsx"),
+    source("app/support-pages.css"),
+  ]);
+
+  for (const route of publicRoutes) {
+    await access(new URL(`app/${route}/page.tsx`, root));
+    assert.match(footer, new RegExp(`href="/${route}"`), `footer should link to /${route}`);
+  }
+
+  const footerGroups = [...footer.matchAll(/<p className="footer-label">([^<]+)<\/p>/g)].map((match) => match[1]);
+  assert.deepEqual(footerGroups, ["Music", "For Creators", "For Businesses", "Help", "About", "Legal"]);
+  assert.doesNotMatch(footer, /href="\/blog"|>\s*Blog\s*</i);
+  assert.match(layout, /support-pages\.css/);
+  assert.match(supportCss, /\.site-footer \.footer-links\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(supportCss, /@media \(max-width: 1180px\)[\s\S]{0,320}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(supportCss, /@media \(max-width: 700px\)[\s\S]{0,900}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(supportCss, /@media \(max-width: 420px\)[\s\S]{0,160}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*1fr/);
+
+  assert.match(creators, /offer-faq[\s\S]*className="offer-faq-help"[\s\S]*href="\/help#creator-licensing"[\s\S]*Explore the Help Center/i);
+  assert.match(help, /id:\s*"creator-licensing"/);
+  assert.equal([...help.matchAll(/question:\s*"/g)].length, 30, "Help Center should answer thirty concrete questions");
+  for (const category of ["getting-started", "creator-licensing", "business-licensing", "catalogue-artists", "account-billing-support"]) {
+    assert.match(help, new RegExp(`id: "${category}"`), `Help Center should include ${category}`);
+  }
+  for (const question of [
+    "What can a Creator licence cover?",
+    "What should I do if I receive a Content ID claim?",
+    "What is Commercial Sync?",
+    "When can I start using the music?",
+    "Is AI-generated music accepted into the catalogue?",
+    "Can I create a paid account or purchase a licence in this preview?",
+  ]) {
+    assert.match(help, new RegExp(question.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), question);
+  }
+  assert.match(help, /Authentication, checkout, production downloads and licence issuance are not active on this GitHub Pages preview/i);
+  assert.match(help, /no information is sent or stored/i);
+
+  for (const page of [about, contact, press, careers, legal, privacy, cookies]) {
+    assert.match(page, /<EditorialInfoPage/);
+    assert.doesNotMatch(page, /lorem ipsum|example@example\.com|hello@symbiome/i);
+  }
+  assert.match(about, /does not accept generative AI music/i);
+  assert.match(contact, /dedicated Symbiome support address is not published yet/i);
+  assert.match(press, /No downloadable press kit or dedicated Symbiome press email is currently published/i);
+  assert.match(careers, /No confirmed Symbiome openings are listed today/i);
+  assert.match(legal, /currently presented as a pre-launch service[\s\S]*legal identity of the operator[\s\S]*will be published here before Symbiome issues licences or accepts payments/i);
+  assert.match(privacy, /static GitHub Pages version[\s\S]*not transmitted or stored by Symbiome/i);
+  assert.match(privacy, /data controller, lawful bases, service providers, international transfers, retention periods/i);
+  assert.match(cookies, /does not include a first-party advertising or analytics cookie system/i);
+  assert.match(cookies, /one preference in the browser(?:&apos;|')s local storage[\s\S]*device-level interface preference rather than an advertising profile/i);
+});
+
 test("presents one real track from each main playlist on the Creators page", async () => {
   const [creators, showcase, catalogueData, offerCss, artworkSources] = await Promise.all([
     source("app/creators/page.tsx"),

@@ -28,9 +28,23 @@ export function SiteFooter() {
             <Link href="/pricing?business_need=physical_places#business-request">Music for Retail · Coming soon</Link>
           </div>
           <div>
-            <p className="footer-label">Account</p>
+            <p className="footer-label">Help</p>
+            <Link href="/help">Help Center</Link>
             <Link href="/app">Log in</Link>
             <Link href="/pricing#creator-pricing-title">Create account</Link>
+          </div>
+          <div>
+            <p className="footer-label">About</p>
+            <Link href="/contact">Contact us</Link>
+            <Link href="/about">About us</Link>
+            <Link href="/press">Press</Link>
+            <Link href="/careers">Careers</Link>
+          </div>
+          <div>
+            <p className="footer-label">Legal</p>
+            <Link href="/legal">Legal information</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/cookies">Cookies</Link>
           </div>
         </div>
       </div>

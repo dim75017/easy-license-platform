@@ -8,6 +8,7 @@ import "./offer-pages.css";
 import "./catalog-v26.css";
 import "./home-v26.css";
 import "./symbiose-brand.css";
+import "./support-pages.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dim75017.github.io/easy-license-platform/"),
