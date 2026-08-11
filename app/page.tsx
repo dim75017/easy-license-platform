@@ -128,15 +128,15 @@ export default function Home() {
               <p className="home26-eyebrow">For businesses</p>
               <h2 id="home26-business-title">Music and rights shaped around the project.</h2>
               <p>License an existing track for a campaign, film, game, advert or branded production, or commission original music from an artist. Media, territories, duration and exclusivity are confirmed from your brief, so the quote reflects the use you actually need.</p>
+              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiose for Businesses <span aria-hidden="true">→</span></Link>
               <ul className="home26-audience-points" aria-label="Business services">
                 <li>Commercial Sync</li>
                 <li>Custom Commission</li>
                 <li>Music for Retail · Coming soon</li>
               </ul>
-              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiose for Businesses <span aria-hidden="true">→</span></Link>
             </div>
-            <figure className="home26-audience-media" data-reveal="scale">
-              <img src="/images/unsplash/filmmaker-desk.jpg" alt="Camera equipment and production monitors in a filmmaker workspace" width={1800} height={2699} loading="lazy" decoding="async" />
+            <figure className="home26-audience-media" aria-hidden="true">
+              <img src="/images/unsplash/filmmaker-desk.jpg" alt="" width={1800} height={2699} loading="lazy" decoding="async" />
             </figure>
           </div>
         </section>

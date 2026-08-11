@@ -45,6 +45,16 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
   assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
   assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
+  const businessRouteStart = page.indexOf('className="home26-section home26-audience home26-audience-business"');
+  const catalogueRouteStart = page.indexOf('className="home26-section home26-collections"');
+  const businessRoute = page.slice(businessRouteStart, catalogueRouteStart);
+  assert.ok(businessRouteStart !== -1 && catalogueRouteStart > businessRouteStart, "homepage should isolate the Business route before the catalogue");
+  assert.match(businessRoute, /aria-labelledby="home26-business-title"/);
+  assert.match(businessRoute, /<h2 id="home26-business-title">Music and rights shaped around the project\.<\/h2>/);
+  assert.match(businessRoute, /Commercial Sync[\s\S]*Custom Commission[\s\S]*Music for Retail[\s\S]*Coming soon/i);
+  assert.match(businessRoute, /href="\/business"/);
+  assert.match(businessRoute, /home26-audience-media" aria-hidden="true"[\s\S]{0,180}alt=""/);
+  assert.doesNotMatch(businessRoute, /home26-audience-media" data-reveal="scale"/);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
   assert.match(page, /creator-editing-keyboard\.webp/i);
@@ -116,9 +126,10 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-collection-grid/);
   assert.match(homeCss, /\.home26-audience-panel/);
   assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
-  assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
   assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,220}\.home26-audience\s*\{[\s\S]{0,140}width:\s*100%;[\s\S]{0,100}padding:\s*0;/);
   assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
+  assert.match(homeCss, /V64: Business is a cinematic project canvas, not a mirrored Creator split\.[\s\S]{0,360}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,180}display:\s*block;[\s\S]{0,180}isolation:\s*isolate/);
+  assert.match(homeCss, /V64: Business is a cinematic project canvas[\s\S]{0,1800}\.home26-audience-business \.home26-audience-points\s*\{[\s\S]{0,260}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /V54: keep the next photographic section below the opening viewport[\s\S]{0,260}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(homeCss, /V55: artist portraits fill each card[\s\S]{0,900}\.home26-artist-meta\s*\{[\s\S]{0,260}position:\s*absolute;[\s\S]{0,260}color:\s*#fff;/);
   assert.match(homeCss, /V56: a continuous artist marquee[\s\S]{0,900}animation:\s*home26ArtistsLeft 200s linear infinite/);
@@ -133,7 +144,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /V58: primary actions use the same navy[\s\S]{0,260}\.home26 \.home26-button-primary\s*\{[\s\S]{0,180}background:\s*var\(--home26-night\)/);
   assert.match(css, /V38: public button hover details stay navy[\s\S]{0,220}background:\s*#3a3742/);
   assert.match(catalogueCss, /\.catalogue-v26-listen:hover\s*\{[\s\S]{0,100}background:\s*var\(--music-night-soft\)/);
-  assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,650}\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
