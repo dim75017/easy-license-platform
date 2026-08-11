@@ -199,9 +199,9 @@ export function CreatorWorkspace() {
             </section>
 
             <section className="music-shelf" aria-labelledby="project-playlists-title">
-              <div className="music-shelf-head"><div><span>INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS</span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>Lofi, synthwave, piano, ambient, jazz, house, sleep and acoustic — built from the directions already living on the Lofi Girl profile.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
+              <div className="music-shelf-head"><div><span>INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS</span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>From lofi and ambient to classical, bossa and seasonal listening — twelve distinct directions for the work in front of you.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
               <div className="music-playlist-shelf">
-                {lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
+                {lofiGirlPlaylists.slice(0, 8).map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
               </div>
             </section>
 
@@ -272,7 +272,7 @@ export function CreatorWorkspace() {
 }
 
 function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => void }) {
-  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Eight distinct directions drawn from the public Lofi Girl profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
+  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public Lofi Girl profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
 function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {

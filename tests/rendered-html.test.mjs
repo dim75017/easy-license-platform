@@ -110,8 +110,9 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueFacts, /10,000\+[\s\S]*instrumental and background tracks/i);
   assert.match(catalogueFacts, /0[\s\S]*AI-generated tracks accepted/i);
   assert.match(catalogueFacts, /1,000\+[\s\S]*artists represented worldwide/i);
-  assert.match(catalogueFacts, /featuredGenreCount[\s\S]*music genres across our featured playlists/i);
+  assert.match(catalogueFacts, /featuredGenreLabel[\s\S]*music genres across our featured playlists/i);
   assert.match(catalogueFacts, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
+  assert.match(catalogueFacts, /featuredGenreCount >= 10 \? "10\+" : String\(featuredGenreCount\)/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
   assert.match(layout, /Symbiome — High-quality instrumental music for creators and businesses/);
@@ -177,6 +178,10 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /\.catalogue-moods-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 1100px\)[\s\S]{0,160}\.catalogue-moods-grid\s*\{[^}]*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 560px\)[\s\S]{0,260}\.music-playlist-grid, \.catalogue-moods-grid\s*\{[^}]*grid-template-columns:\s*1fr/);
+  assert.match(catalogueCss, /V46: twelve playlist directions fit within one desktop view\.[\s\S]{0,400}min-height:\s*calc\(100svh - 90px\)/);
+  assert.match(catalogueCss, /V46: twelve playlist directions fit within one desktop view\.[\s\S]{0,1000}grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(catalogueCss, /@media \(min-width: 1800px\) and \(min-height: 760px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(catalogueCss, /@media \(min-width: 901px\) and \(max-width: 1179px\)[\s\S]{0,160}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
   assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
   assert.doesNotMatch(cataloguePage, /Symbiome<\/span> Music/);
@@ -352,7 +357,7 @@ test("ships a complete footer, detailed help and honest public information pages
   assert.match(cookies, /one preference in the browser(?:&apos;|')s local storage[\s\S]*device-level interface preference rather than an advertising profile/i);
 });
 
-test("presents one real track from each main playlist on the Creators page", async () => {
+test("presents eight editor-selected tracks across the main playlists on the Creators page", async () => {
   const [creators, showcase, catalogueData, offerCss, artworkSources] = await Promise.all([
     source("app/creators/page.tsx"),
     source("app/components/CreatorTrackShowcase.tsx"),
@@ -361,7 +366,7 @@ test("presents one real track from each main playlist on the Creators page", asy
     source("public/images/stock/ATTRIBUTION.md"),
   ]);
 
-  assert.match(creators, /these eight tracks — one from each of our main playlists/i);
+  assert.match(creators, /eight editor-selected tracks drawn from our main playlists/i);
   assert.match(showcase, /creatorPlaylistTracks\.slice\(0, 8\)\.map/);
   assert.match(showcase, /className=\{isSelected \? "creator-editorial-track is-selected" : "creator-editorial-track"\}/);
   assert.match(showcase, /\{track\.title\}/);
@@ -797,7 +802,12 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
     source("app/support-pages.css"),
   ]);
   assert.doesNotMatch(catalogueData, retiredEucalyptus, "playlist buttons should not restore eucalyptus");
-  assert.equal([...catalogueData.matchAll(/borderColor:\s*"#e06343"/gi)].length, 8, "every playlist accent should use Symbiome orange");
+  const playlistBlock = catalogueData.match(/export const lofiGirlPlaylists = \[([\s\S]*?)\]\s+satisfies readonly LofiGirlPlaylist\[\];/);
+  assert.ok(playlistBlock, "the playlist collection should remain a typed list");
+  const playlistGenres = [...playlistBlock[1].matchAll(/genre:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(playlistGenres.length, 12, "the catalogue should present twelve playlist directions");
+  assert.equal(new Set(playlistGenres).size, 10, "the twelve playlists should span ten real genre families");
+  assert.equal([...catalogueData.matchAll(/borderColor:\s*"#e06343"/gi)].length, 12, "every playlist accent should use Symbiome orange");
   assert.match(workspaceCss, /--wm-side:#292832; --wm-side-soft:#292832;[^\n]*--wm-clay:#e06343; --wm-clay-deep:#e06343; --wm-clay-soft:#e06343; --wm-sage:#e06343/i);
   assert.match(brandCss, /--symbiose-night:\s*#292832/i);
   assert.match(brandCss, /--symbiose-warm:\s*#e06343/i);
@@ -902,6 +912,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
     ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg", null],
     ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg", null],
     ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar-couch-KEtvAfDlpWI.jpg", "KEtvAfDlpWI"],
+    ["Classical", "36varCeUCC5XN7rXuMMa0Z", "classical-quartet-__2fmv-P4eA.jpg", "__2fmv-P4eA"],
+    ["Bossa Lofi", "7Lky3YE5SfTMKQxD7FnC6J", "bossa-trees-KttgjNw5Iqo.jpg", "KttgjNw5Iqo"],
+    ["Christmas Music", "74UM9i1Dkr7dClq7u4PGYF", "christmas-tree-Kf8ko_oGN20.jpg", "Kf8ko_oGN20"],
+    ["Halloween Music", "6FEzJ6EWEHpUz0nz7gIVvJ", "halloween-pumpkin-MYRG0ptGh50.jpg", "MYRG0ptGh50"],
   ]) {
     assert.match(catalogueData, new RegExp(title), title);
     assert.match(catalogueData, new RegExp(spotifyId), spotifyId);
@@ -915,8 +929,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
       refreshedPlaylistBytes += metadata.size;
     }
   }
-  assert.ok(refreshedPlaylistBytes <= 725_000, "the four refreshed playlist images should stay lightweight");
-  assert.equal([...playlistSources.matchAll(/original download without watermark/g)].length, 2, "both Unsplash+ originals should be documented as watermark-free downloads");
+  assert.ok(refreshedPlaylistBytes <= 1_400_000, "the refreshed playlist images should stay lightweight");
+  assert.equal([...playlistSources.matchAll(/original download without watermark/g)].length, 3, "all Unsplash+ originals should be documented as watermark-free downloads");
   for (const retiredImage of ["lofi-study.jpg", "synthwave-night.jpg", "peaceful-piano.jpg", "chill-guitar.jpg"]) {
     assert.doesNotMatch(catalogueData, new RegExp(`playlists/${retiredImage.replace(".", "\\.")}`), retiredImage);
     assert.doesNotMatch(playlistSources, new RegExp(retiredImage.replace(".", "\\.")), retiredImage);

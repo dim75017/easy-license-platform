@@ -21,7 +21,7 @@ export function CreatorTrackShowcase() {
 
   return (
     <div className="creator-editorial-showcase">
-      <div className="creator-editorial-grid" aria-label="One track from each featured Symbiome playlist">
+      <div className="creator-editorial-grid" aria-label="Eight tracks selected across featured Symbiome playlists">
         {creatorPlaylistTracks.slice(0, 8).map((track, index) => {
           const isSelected = selectedTrackId === track.spotifyId;
           return (

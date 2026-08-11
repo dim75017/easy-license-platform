@@ -77,7 +77,7 @@ export default function CreatorsPage() {
           <div className="offer-section-head offer-section-head-light creator-editorial-heading" data-reveal="group">
             <p className="offer-kicker"><span>04</span> Browse the music</p>
             <h2 id="creator-catalogue-title">Search by mood,<br />style or use.</h2>
-            <p>Search for a specific track by mood, style or intended use. Or begin with these eight tracks — one from each of our main playlists, selected for streams, edits and different kinds of content.</p>
+            <p>Search for a specific track by mood, style or intended use. Or begin with eight editor-selected tracks drawn from our main playlists for streams, edits and different kinds of content.</p>
           </div>
           <div data-reveal="scale"><CreatorTrackShowcase /></div>
           <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link" href="/catalog">Explore the full music library <span>↗</span></Link></div>

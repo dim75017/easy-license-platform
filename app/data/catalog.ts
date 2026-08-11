@@ -183,6 +183,58 @@ export const lofiGirlPlaylists = [
     imagePosition: "46% 47%",
     borderColor: "#e06343",
   },
+  {
+    id: "relaxing-classical",
+    title: "Classical",
+    spotifyTitle: "Relaxing Classical Music",
+    description: "Soothing strings and piano for focused work, elegant edits and reflective scenes.",
+    spotifyId: "36varCeUCC5XN7rXuMMa0Z",
+    use: "study-focus",
+    genre: "Classical",
+    moods: ["Elegant", "Peaceful", "Reflective"],
+    image: "/images/unsplash/playlists/classical-quartet-__2fmv-P4eA.jpg",
+    imagePosition: "center",
+    borderColor: "#e06343",
+  },
+  {
+    id: "bossa-lofi",
+    title: "Bossa Lofi",
+    spotifyTitle: "Bossa Lofi",
+    description: "Sunny bossa grooves and mellow lofi textures for food, travel and easygoing stories.",
+    spotifyId: "7Lky3YE5SfTMKQxD7FnC6J",
+    use: "food-hospitality",
+    genre: "Bossa Lofi",
+    moods: ["Sunny", "Easygoing", "Warm"],
+    image: "/images/unsplash/playlists/bossa-trees-KttgjNw5Iqo.jpg",
+    imagePosition: "center",
+    borderColor: "#e06343",
+  },
+  {
+    id: "christmas-music",
+    title: "Christmas Music",
+    spotifyTitle: "Christmas Music",
+    description: "Warm festive instrumentals for holiday edits, gatherings and winter storytelling.",
+    spotifyId: "74UM9i1Dkr7dClq7u4PGYF",
+    use: "lifestyle-vlogs",
+    genre: "Seasonal Lofi",
+    moods: ["Festive", "Cozy", "Warm"],
+    image: "/images/unsplash/playlists/christmas-tree-Kf8ko_oGN20.jpg",
+    imagePosition: "center",
+    borderColor: "#e06343",
+  },
+  {
+    id: "halloween-music",
+    title: "Halloween Music",
+    spotifyTitle: "Halloween Music 2026",
+    description: "Spooky lofi beats and eerie textures for seasonal streams, games and night-time edits.",
+    spotifyId: "6FEzJ6EWEHpUz0nz7gIVvJ",
+    use: "gaming-streaming",
+    genre: "Seasonal Lofi",
+    moods: ["Spooky", "Dark", "Playful"],
+    image: "/images/unsplash/playlists/halloween-pumpkin-MYRG0ptGh50.jpg",
+    imagePosition: "center",
+    borderColor: "#e06343",
+  },
 ] satisfies readonly LofiGirlPlaylist[];
 
 export type CreatorPlaylistTrack = {
@@ -198,8 +250,9 @@ export type CreatorPlaylistTrack = {
 };
 
 /**
- * One current track from each main public playlist, verified from Spotify's
- * public embeds on 2026-08-11. Artwork is stored locally for a fast preview.
+ * Eight editor-selected tracks drawn from the featured public playlists,
+ * verified from Spotify's public embeds on 2026-08-11. Artwork is stored
+ * locally for a fast preview.
  */
 export const creatorPlaylistTracks = [
   {
