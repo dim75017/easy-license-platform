@@ -102,6 +102,21 @@ export default function BusinessPage() {
             <LeadForm type="business" />
           </div>
         </section>
+
+        <section className="offer-faq business-faq" aria-labelledby="business-faq-title">
+          <div data-reveal="left">
+            <p className="offer-kicker"><span>06</span> Business FAQ</p>
+            <h2 id="business-faq-title">Common licensing questions.</h2>
+            <Link className="offer-faq-help" href="/help#business-licensing">Explore the Help Center <span aria-hidden="true">→</span></Link>
+          </div>
+          <div className="offer-faq-list" data-reveal="group">
+            <details open><summary>What is the difference between Commercial Sync and Custom Commission?<span aria-hidden="true">+</span></summary><p>Commercial Sync licenses an existing catalogue track for a defined project. Custom Commission creates original music around your brief.</p></details>
+            <details><summary>What should I include in the brief?<span aria-hidden="true">+</span></summary><p>Share the project, media, territories, term, launch timing, budget and any exclusivity you need. These details shape the rights and quote.</p></details>
+            <details><summary>Can one licence cover every use?<span aria-hidden="true">+</span></summary><p>No. A Business licence covers the media, markets, duration and other rights confirmed for that project. A new use may need an updated scope.</p></details>
+            <details><summary>Is Music for Retail available now?<span aria-hidden="true">+</span></summary><p>Not yet. Music for physical spaces is coming soon, and you can join the early-access list while the first pilot is prepared.</p></details>
+            <details><summary>When can I start using the music?<span aria-hidden="true">+</span></summary><p>Use the music only after the scope, quote and licence agreement are confirmed. Sending a brief or previewing a track does not grant permission to publish.</p></details>
+          </div>
+        </section>
       </div>
     </PublicShell>
   );

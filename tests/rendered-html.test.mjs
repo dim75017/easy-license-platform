@@ -273,6 +273,29 @@ test("defines every public and connected product surface", async () => {
   assert.match(business, /href="#business-brief"/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.doesNotMatch(business, /Artists and music team|More than 1,000 artists|offer-human/i);
+  const businessStageIds = [
+    "business-curation-title",
+    "business-options-title",
+    "business-flow-title",
+    "business-retail-title",
+    "business-brief-title",
+    "business-faq-title",
+  ];
+  let previousBusinessStage = -1;
+  for (const id of businessStageIds) {
+    const index = business.indexOf(`id="${id}"`);
+    assert.ok(index > previousBusinessStage, `${id} should follow the previous Business stage`);
+    previousBusinessStage = index;
+  }
+  const businessFaqStart = business.indexOf('className="offer-faq business-faq"');
+  const businessFaq = business.slice(businessFaqStart);
+  assert.ok(businessFaqStart !== -1, "Business should end with a FAQ");
+  assert.match(businessFaq, /Common licensing questions\./i);
+  assert.equal([...businessFaq.matchAll(/<details/g)].length, 5);
+  assert.equal([...businessFaq.matchAll(/<summary/g)].length, 5);
+  assert.match(businessFaq, /href="\/help#business-licensing"/);
+  assert.match(businessFaq, /<p>[^<]+<\/p><\/details>/);
+  assert.match(businessFaq, /<\/section>\s*<\/div>\s*<\/PublicShell>/);
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /FOR BUSINESSES/i);
   assert.match(pricing, /<PricingCards expanded \/>/i);
@@ -747,7 +770,13 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /V64: the two main Creator stories each own a complete desktop viewport\.[\s\S]{0,500}\.creators-landing \.offer-curation\s*\{[\s\S]{0,80}margin:\s*0;/);
   assert.match(offerCss, /V64: the two main Creator stories each own a complete desktop viewport\.[\s\S]{0,700}\.creators-landing \.offer-uses\s*\{[\s\S]{0,180}display:\s*flex;[\s\S]{0,100}justify-content:\s*center;[\s\S]{0,240}flex-direction:\s*column;/);
   assert.match(offerCss, /V65: Creator pricing closes the page as a square, full-width beige band\.[\s\S]{0,180}\.creators-landing \.creator-pricing-cta\s*\{[\s\S]{0,200}width:\s*100%;[\s\S]{0,120}max-width:\s*none;[\s\S]{0,160}margin:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,220}background:\s*var\(--marketing-paper\);[\s\S]{0,120}box-shadow:\s*none;/);
-  assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(82px, 8vw, 108px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,220}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?@media \(min-width: 1101px\)[\s\S]*?\.business-landing \.business-curation,[\s\S]*?\.business-landing \.business-options,[\s\S]*?\.business-landing \.business-flow,[\s\S]*?\.business-landing \.business-retail,[\s\S]*?\.business-landing \.business-quote\s*\{[^}]*min-height:\s*max\(900px, calc\(100svh - 90px\)\);[^}]*margin-block:\s*0;/s);
+  assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?\.business-landing \.business-curation figure\s*\{[^}]*max-height:\s*none;/s);
+  assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?\.business-landing \.business-options,[\s\S]*?\.business-landing \.business-flow\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;[^}]*flex-direction:\s*column;/s);
+  assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?\.business-landing \.business-quote\s*\{[^}]*align-items:\s*center;/s);
+  assert.match(offerCss, /V67: the Business route closes with a focused beige FAQ\.[\s\S]*?\.business-landing \.business-faq\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0;[^}]*background:\s*var\(--marketing-paper\)/s);
+  assert.match(offerCss, /\.business-landing \.business-faq \.offer-faq-list summary:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--marketing-night\)/s);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,260}\.offer-landing \.offer-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,100}align-items:\s*center;/);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,1200}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,180}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(offerCss, /\.offer-landing \.catalogue-facts\s*\{[\s\S]{0,240}--home26-paper:\s*var\(--marketing-cream\);[\s\S]{0,180}background:\s*var\(--marketing-cream\)/);

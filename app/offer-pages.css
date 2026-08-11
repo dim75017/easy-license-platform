@@ -2924,3 +2924,65 @@
     padding: 64px 22px;
   }
 }
+
+/* V66: every core Business story owns one complete desktop viewport. */
+@media (min-width: 1101px) {
+  .business-landing .business-curation,
+  .business-landing .business-options,
+  .business-landing .business-flow,
+  .business-landing .business-retail,
+  .business-landing .business-quote {
+    box-sizing: border-box;
+    min-height: max(900px, calc(100svh - 90px));
+    margin-block: 0;
+  }
+
+  .business-landing .business-curation figure {
+    max-height: none;
+  }
+
+  .business-landing .business-options,
+  .business-landing .business-flow {
+    display: flex;
+    justify-content: center;
+    padding-top: clamp(64px, 7vh, 92px);
+    padding-bottom: clamp(64px, 7vh, 92px);
+    flex-direction: column;
+  }
+
+  .business-landing .business-quote {
+    align-items: center;
+  }
+}
+
+/* V67: the Business route closes with a focused beige FAQ. */
+.business-landing .business-faq {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(88px, 8vw, 128px) clamp(28px, 4vw, 76px) clamp(96px, 9vw, 140px);
+  background: var(--marketing-paper);
+}
+
+.business-landing .business-faq .offer-faq-list details[open] summary span {
+  transform: rotate(45deg);
+}
+
+.business-landing .business-faq .offer-faq-list summary:focus-visible {
+  outline: 3px solid var(--marketing-night);
+  outline-offset: 4px;
+}
+
+@media (max-width: 620px) {
+  .business-landing .business-faq {
+    width: 100%;
+    padding: 76px 20px 88px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .business-landing .business-faq .offer-faq-list summary span {
+    transition: none;
+  }
+}
