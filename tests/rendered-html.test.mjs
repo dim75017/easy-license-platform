@@ -456,6 +456,38 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   ]);
 });
 
+test("uses the eucalyptus accent instead of the retired brown UI palette", async () => {
+  const publicStyles = [
+    "app/globals.css",
+    "app/home-v6.css",
+    "app/home-v26.css",
+    "app/offer-pages.css",
+    "app/catalog-v26.css",
+    "app/pricing-v39.css",
+    "app/retail-v2.css",
+  ];
+  const styles = await Promise.all(publicStyles.map(source));
+  const retiredBrown =
+    /#(?:b97864|ad705f|855246|955a49|dec4b7|d6a896|e4b5a3|c98d7d|8e5546|8d5344|e5b9aa|dcae9d|deb09f|c98f7d|8b5e52|f2c7b5)\b|rgba?\(\s*(?:185\s*,\s*120\s*,\s*100|173\s*,\s*112\s*,\s*95|149\s*,\s*90\s*,\s*73)\b/i;
+
+  for (const [index, css] of styles.entries()) {
+    assert.doesNotMatch(css, retiredBrown, publicStyles[index]);
+  }
+
+  const combined = styles.join("\n");
+  assert.match(combined, /#2f665e/i, "solid eucalyptus accent");
+  assert.match(combined, /#234f4a/i, "deep eucalyptus text accent");
+  assert.match(combined, /#9ed4c7/i, "light eucalyptus accent on navy");
+  assert.match(combined, /#dceae5/i, "eucalyptus wash");
+
+  const [catalogueData, workspaceCss] = await Promise.all([
+    source("app/data/catalog.ts"),
+    source("app/workspace-music.css"),
+  ]);
+  assert.doesNotMatch(catalogueData, /#b97864/i, "playlist buttons should not restore the old brand brown");
+  assert.match(workspaceCss, /--wm-clay:#2f665e; --wm-clay-deep:#234f4a; --wm-clay-soft:#9ed4c7/i);
+});
+
 test("keeps the connected workspace readable and artist-led", async () => {
   const [layout, workspaceCss, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
     source("app/layout.tsx"),

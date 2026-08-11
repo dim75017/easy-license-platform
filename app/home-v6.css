@@ -5,8 +5,8 @@
   --cozy-night-soft: #36333d;
   --cozy-oat: #f3ece0;
   --cozy-paper: #fbf7ef;
-  --cozy-clay: #b97864;
-  --cozy-clay-soft: #e8d2c5;
+  --cozy-clay: #2f665e;
+  --cozy-clay-soft: #dceae5;
   --cozy-sage: #7e8976;
   --cozy-lamp: #d1a25e;
   --cozy-rule: rgba(41, 40, 50, .15);
@@ -27,18 +27,18 @@
   --panel-raised: #37343e;
   --panel-soft: rgba(48, 46, 55, .74);
   --border: rgba(243, 236, 224, .12);
-  --border-active: rgba(185, 120, 100, .42);
+  --border-active: rgba(47, 102, 94, .42);
   --text: var(--cozy-oat);
   --text-soft: #c9bfb2;
   --text-muted: #938a82;
   --accent: var(--cozy-clay);
   --accent-light: var(--cozy-clay-soft);
-  --accent-bg: rgba(185, 120, 100, .12);
+  --accent-bg: rgba(47, 102, 94, .12);
   --font-display: "Afacad Flux", "Segoe UI Variable Display", "Segoe UI", sans-serif;
 }
 
 ::selection {
-  background: rgba(185, 120, 100, .3);
+  background: rgba(47, 102, 94, .3);
   color: var(--cozy-night);
 }
 
@@ -54,7 +54,7 @@
   opacity: .022;
   background-image:
     repeating-linear-gradient(0deg, transparent 0 3px, rgba(41, 40, 50, .035) 4px),
-    repeating-linear-gradient(90deg, transparent 0 6px, rgba(185, 120, 100, .025) 7px);
+    repeating-linear-gradient(90deg, transparent 0 6px, rgba(47, 102, 94, .025) 7px);
 }
 
 /* Calm, readable navigation */
@@ -160,15 +160,15 @@
 
 .site-header .site-nav > a:hover,
 .site-header .site-nav > a.is-active {
-  background: rgba(185, 120, 100, .08);
+  background: rgba(47, 102, 94, .08);
   color: var(--cozy-night);
 }
 
 .site-header .nav-soon {
-  border-color: rgba(185, 120, 100, .35);
+  border-color: rgba(47, 102, 94, .35);
   border-radius: 999px;
-  background: rgba(185, 120, 100, .08);
-  color: #8e5546;
+  background: rgba(47, 102, 94, .08);
+  color: #234f4a;
 }
 
 .site-header .header-login {
@@ -362,7 +362,7 @@
 }
 
 .el-v6 .v5-hero-copy .v5-kicker > span {
-  background: rgba(232, 210, 197, .13);
+  background: rgba(220, 234, 229, .13);
   color: var(--cozy-clay-soft);
 }
 
@@ -500,7 +500,7 @@
 }
 
 .el-v6 .v5-booth-tabs button:hover {
-  background: rgba(185, 120, 100, .07);
+  background: rgba(47, 102, 94, .07);
   color: var(--cozy-night);
 }
 
@@ -834,7 +834,7 @@
 
 .el-v6 .v5-proof-visual span {
   border-color: var(--cozy-clay);
-  color: #8d5344;
+  color: #234f4a;
 }
 
 /* Plans stay light and consistent */
@@ -884,7 +884,7 @@
 }
 
 .el-v6 .v5-plan-row::before {
-  background: radial-gradient(65% 180% at var(--plan-x) 50%, rgba(185, 120, 100, .18), rgba(185, 120, 100, .085) 38%, transparent 75%);
+  background: radial-gradient(65% 180% at var(--plan-x) 50%, rgba(47, 102, 94, .18), rgba(47, 102, 94, .085) 38%, transparent 75%);
   opacity: 0;
   transform: none;
   transform-origin: center;
@@ -895,12 +895,12 @@
 .el-v6 .v5-plan-pro,
 .el-v6 .v5-plan-sync,
 .el-v6 .v5-plan-retail {
-  --route-color: rgba(185, 120, 100, .11);
+  --route-color: rgba(47, 102, 94, .11);
 }
 
 .el-v6 .v5-plan-row:hover {
   color: var(--cozy-night);
-  box-shadow: inset 0 0 0 1px rgba(185, 120, 100, .09);
+  box-shadow: inset 0 0 0 1px rgba(47, 102, 94, .09);
 }
 
 .el-v6 .v5-plan-row:hover::before,
@@ -976,7 +976,7 @@
 }
 
 .el-v6 .v5-catalogue-head .v5-kicker > span {
-  background: rgba(232, 210, 197, .12);
+  background: rgba(220, 234, 229, .12);
   color: var(--cozy-clay-soft);
 }
 
@@ -1049,7 +1049,7 @@
 
 .el-v6 .v5-catalogue .track-row:hover,
 .el-v6 .v5-catalogue .track-row.is-playing {
-  background: rgba(185, 120, 100, .09);
+  background: rgba(47, 102, 94, .09);
 }
 
 .el-v6 .v5-catalogue .catalogue-explorer.no-waveform .track-row {
@@ -1113,7 +1113,7 @@
 }
 
 .el-v6 .v6-artist-statement span {
-  color: #8e5546;
+  color: #234f4a;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 760;
@@ -1158,7 +1158,7 @@
 .el-v6 .v5-artist-blue,
 .el-v6 .v5-artist-acid,
 .el-v6 .v5-artist-mint {
-  --artist-color: rgba(185, 120, 100, .28);
+  --artist-color: rgba(47, 102, 94, .28);
   min-height: 420px;
   aspect-ratio: 3 / 4;
   border: 0;
@@ -1351,7 +1351,7 @@
   padding: 112px 8vw;
   background:
     radial-gradient(circle at 82% 70%, rgba(209, 162, 94, .14), transparent 26%),
-    radial-gradient(circle at 70% 10%, rgba(185, 120, 100, .11), transparent 24%),
+    radial-gradient(circle at 70% 10%, rgba(47, 102, 94, .11), transparent 24%),
     var(--cozy-night);
   color: var(--cozy-oat);
 }
@@ -1567,7 +1567,7 @@
 }
 
 .el-v6 .v5-plan-row::before {
-  background: radial-gradient(130% 95% at var(--plan-x) 0%, rgba(185, 120, 100, .18), transparent 62%);
+  background: radial-gradient(130% 95% at var(--plan-x) 0%, rgba(47, 102, 94, .18), transparent 62%);
 }
 
 .el-v6 .v5-plan-row > p,

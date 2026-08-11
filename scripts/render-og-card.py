@@ -18,7 +18,7 @@ NIGHT = "#292832"
 NIGHT_SOFT = "#36333d"
 OAT = "#f3ece0"
 PAPER = "#fbf7ef"
-CLAY = "#b97864"
+CLAY = "#2f665e"
 SAGE = "#7e8976"
 LAMP = "#d1a25e"
 
@@ -68,14 +68,14 @@ def main() -> None:
 
     chip_y = 666
     rounded(draw, (108, chip_y, 415, chip_y + 62), 31, (243, 236, 224, 22), (243, 236, 224, 54), 1)
-    rounded(draw, (429, chip_y, 746, chip_y + 62), 31, (185, 120, 100, 32), (185, 120, 100, 90), 1)
+    rounded(draw, (429, chip_y, 746, chip_y + 62), 31, (47, 102, 94, 32), (47, 102, 94, 90), 1)
     draw.text((136, chip_y + 17), "10,000+ TRACKS", font=chip, fill=OAT)
     draw.text((457, chip_y + 17), "ZERO AI MUSIC", font=chip, fill=OAT)
 
     # Code-built listening-room vignette: record, sleeve, desk and lamp.
     rounded(draw, (1010, 180, 1548, 695), 30, PAPER, None)
     draw.rectangle((1010, 180, 1105, 695), fill=CLAY)
-    draw.ellipse((855, 78, 1255, 478), fill=(185, 120, 100, 225))
+    draw.ellipse((855, 78, 1255, 478), fill=(47, 102, 94, 225))
     draw.ellipse((908, 131, 1202, 425), fill=NIGHT_SOFT)
 
     # Vinyl with subtle grooves.
@@ -89,7 +89,7 @@ def main() -> None:
 
     # Wooden desk and a small warm lamp.
     rounded(draw, (872, 684, 1650, 786), 18, (54, 45, 42, 255), (243, 236, 224, 28), 2)
-    draw.ellipse((1425, 546, 1627, 665), fill=(185, 120, 100, 255))
+    draw.ellipse((1425, 546, 1627, 665), fill=(47, 102, 94, 255))
     rounded(draw, (1515, 635, 1534, 748), 9, LAMP)
     rounded(draw, (1460, 735, 1594, 758), 12, LAMP)
     draw.ellipse((1487, 629, 1562, 702), fill=(209, 162, 94, 40))

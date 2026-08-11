@@ -194,7 +194,7 @@
 
 .retail-v2-artists { display: grid; grid-template-columns: .92fr 1.08fr; gap: clamp(42px, 8vw, 142px); border-radius: 30px; padding: clamp(44px, 6vw, 93px); background: var(--cozy-night); color: var(--cozy-oat); }
 .retail-v2-artists .retail-v2-kicker { color: rgba(243, 236, 224, .7); }
-.retail-v2-artists .retail-v2-kicker span { background: rgba(232, 210, 197, .14); color: var(--cozy-clay-soft); }
+.retail-v2-artists .retail-v2-kicker span { background: rgba(220, 234, 229, .14); color: var(--cozy-clay-soft); }
 .retail-v2-artists h2 { max-width: 680px; margin-bottom: 0; }
 .retail-v2-artist-copy > p { max-width: 560px; margin-top: 0; color: rgba(243, 236, 224, .7); font-size: 18px; }
 .retail-v2-artist-copy > div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; margin-top: 23px; border-top: 1px solid rgba(243, 236, 224, .14); padding-top: 20px; }
@@ -275,8 +275,8 @@
   --cozy-night: #292832;
   --cozy-oat: #f3ece0;
   --cozy-paper: #fbf7ef;
-  --cozy-clay: #b97864;
-  --cozy-clay-soft: #e8d2c5;
+  --cozy-clay: #2f665e;
+  --cozy-clay-soft: #dceae5;
   --cozy-rule: rgba(41, 40, 50, .15);
   background: var(--cozy-oat);
   color: var(--cozy-night);

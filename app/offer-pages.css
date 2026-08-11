@@ -7,8 +7,8 @@
   --marketing-ink: #35323a;
   --marketing-paper: #f3ece0;
   --marketing-cream: #fbf7ef;
-  --marketing-clay: #b97864;
-  --marketing-clay-soft: #dec4b7;
+  --marketing-clay: #2f665e;
+  --marketing-clay-soft: #9ed4c7;
   --marketing-sage: #7e8976;
   --marketing-rule: rgba(41, 40, 50, .15);
   --marketing-shadow: 0 28px 90px rgba(41, 40, 50, .11);
@@ -1197,8 +1197,8 @@
   --marketing-ink: #35323a;
   --marketing-paper: #f3ece0;
   --marketing-cream: #fbf7ef;
-  --marketing-clay: #b97864;
-  --marketing-clay-soft: #dec4b7;
+  --marketing-clay: #2f665e;
+  --marketing-clay-soft: #9ed4c7;
   --marketing-sage: #7e8976;
   --marketing-rule: rgba(41, 40, 50, .15);
   --marketing-shadow: 0 28px 90px rgba(41, 40, 50, .11);
@@ -1266,7 +1266,7 @@
 .offer-landing .offer-hero-proof strong { color: #fbf7ef; }
 .offer-landing .offer-hero-copy h1 em,
 .offer-landing .offer-hero-copy .offer-kicker > span,
-.offer-landing .offer-final-cta > p { color: #dec4b7; }
+.offer-landing .offer-final-cta > p { color: #9ed4c7; }
 .offer-landing .offer-hero-copy .offer-kicker,
 .offer-landing .offer-hero-copy > p:not(.offer-kicker),
 .offer-landing .offer-hero-proof span { color: rgba(251, 247, 239, .76); }
@@ -1277,7 +1277,7 @@
 .offer-landing .offer-inline-light { border-bottom-color: rgba(251, 247, 239, .4); color: #fbf7ef; }
 .offer-landing .offer-catalogue .featured-track { color: #fbf7ef; }
 .offer-landing .offer-catalogue .featured-track-meta em { color: rgba(251, 247, 239, .62); }
-.offer-landing .offer-catalogue .featured-track-meta small { color: #dec4b7; }
+.offer-landing .offer-catalogue .featured-track-meta small { color: #9ed4c7; }
 .offer-landing .offer-section-head-light h2 { color: #fbf7ef; }
 .offer-landing .offer-section-head-light .offer-kicker { color: rgba(251, 247, 239, .58); }
 .offer-landing .offer-section-head-light > p:last-child { color: rgba(251, 247, 239, .68); }
@@ -1287,11 +1287,11 @@
 /* V39: creator platform coverage is explicit and readable. */
 .creator-platforms { padding: clamp(84px, 10vw, 140px) max(28px, calc((100vw - 1340px) / 2)); background: #e8ddd1; color: #292832; }
 .creator-platforms .offer-section-head { margin-bottom: 42px; }.creator-platforms .offer-section-head h2 { color:#292832; }.creator-platforms .offer-section-head > p:last-child { color:rgba(41,40,50,.7); font-size:18px; }.creator-platform-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid rgba(41,40,50,.2); border-left:1px solid rgba(41,40,50,.2); }.creator-platform-grid > span { display:flex; min-height:90px; align-items:center; gap:14px; border-right:1px solid rgba(41,40,50,.2); border-bottom:1px solid rgba(41,40,50,.2); padding:18px; background:#f7f0e7; color:#292832; font-size:17px; font-weight:750; }.creator-platform-grid .platform-brand-icon { display:grid; width:42px; height:42px; flex:0 0 auto; place-items:center; border:1px solid rgba(41,40,50,.14); border-radius:12px; box-shadow:0 7px 18px rgba(41,40,50,.1); }.creator-platform-grid .platform-brand-icon svg { width:23px; height:23px; }
-@media (max-width: 800px) { .creator-platform-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }.offer-landing .creator-platforms .offer-kicker { color:rgba(41,40,50,.62); }.offer-landing .creator-platforms .offer-kicker span { color:#955a49; }
+@media (max-width: 800px) { .creator-platform-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }.offer-landing .creator-platforms .offer-kicker { color:rgba(41,40,50,.62); }.offer-landing .creator-platforms .offer-kicker span { color:#234f4a; }
 @media (max-width: 480px) { .creator-platform-grid { grid-template-columns:1fr; } }
 .offer-landing .business-option > span { color: rgba(243, 236, 224, .72); }
 .offer-landing .business-option p { color: rgba(243, 236, 224, .7); }
-.offer-landing .business-option strong { color: #dec4b7; }
+.offer-landing .business-option strong { color: #9ed4c7; }
 .offer-landing .business-retail .offer-inline-link { border-bottom-color: rgba(41, 40, 50, .3); color: var(--marketing-night); }
 
 /* Keep the Business artist portrait crisp rather than stylistically softened. */
@@ -1573,7 +1573,7 @@
   overflow: hidden;
   border-radius: 32px;
   background:
-    radial-gradient(circle at 82% 18%, rgba(185, 120, 100, .38), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(47, 102, 94, .38), transparent 32%),
     linear-gradient(145deg, #3a3337, #292832 72%);
   box-shadow: 0 28px 70px rgba(41, 40, 50, .16);
 }
@@ -1699,7 +1699,7 @@
 .business-quote .lead-form select:focus,
 .business-quote .lead-form textarea:focus {
   border-color: var(--marketing-clay);
-  box-shadow: 0 0 0 3px rgba(185, 120, 100, .14);
+  box-shadow: 0 0 0 3px rgba(47, 102, 94, .14);
 }
 
 .business-quote .lead-form .button-primary {
