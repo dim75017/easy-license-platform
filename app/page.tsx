@@ -67,7 +67,7 @@ export default function Home() {
           <img className="home26-hero-image" src="/images/unsplash/hero-producer.jpg" alt="Music producer working at a recording console" />
           <span className="home26-hero-wash" aria-hidden="true" />
           <div className="home26-hero-copy" data-reveal="left">
-            <p className="home26-eyebrow">Powered by Lofi Girl · Human-made music licensing</p>
+            <p className="home26-eyebrow">Symbiose · Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
             <p className="home26-hero-lede">
               Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
@@ -82,7 +82,7 @@ export default function Home() {
           <p className="home26-hero-credit">A catalogue made by artists, for the people making the work.</p>
         </section>
 
-        <section className="home26-facts" aria-label="Easy License catalogue facts" data-reveal="group">
+        <section className="home26-facts" aria-label="Symbiose catalogue facts" data-reveal="group">
           <div><strong>10,000+</strong><span>instrumental and background tracks</span></div>
           <div><strong>1,000+</strong><span>artists represented worldwide</span></div>
           <div><strong>0</strong><span>AI-generated tracks accepted</span></div>
@@ -126,7 +126,7 @@ export default function Home() {
             <h2 id="home26-artists-title">More than 1,000 artists contribute to the catalogue.</h2>
             <p>Every track is written and produced by artists. Generative AI music is not accepted, artists remain clearly credited, and licensing income is paid directly and fairly.</p>
           </div>
-          <div className="home26-artist-grid" data-reveal="group" aria-label="A selection of Easy License artists and studio sessions">
+          <div className="home26-artist-grid" data-reveal="group" aria-label="A selection of Symbiose artists and studio sessions">
             {artists.map((artist) => (
               <article key={artist.name}>
                 <img src={artist.image} alt={`Portrait of ${artist.name}`} />
@@ -145,9 +145,9 @@ export default function Home() {
           <div className="home26-faq-list" data-reveal="group">
             <details open><summary>Can I listen before creating an account?<span>+</span></summary><p>Yes. You can browse the catalogue and listen to the available previews before choosing a creator plan or requesting a business licence.</p></details>
             <details><summary>Which platforms can I connect?<span>+</span></summary><p>Creator plans are intended for eligible YouTube, Twitch, podcast and social profiles. The exact number of connected profiles depends on the plan.</p></details>
-            <details><summary>Does a Creator plan cover paid advertising?<span>+</span></summary><p>No. Paid media, brand campaigns, client productions, films and games require Easy License for Businesses.</p></details>
-            <details><summary>Is any catalogue music generated with AI?<span>+</span></summary><p>No. Easy License does not accept generative AI music into the eligible catalogue. Every track is created by artists.</p></details>
-            <details><summary>How are artists paid?<span>+</span></summary><p>Artists are credited and receive direct, fair payment when their music is licensed through Easy License.</p></details>
+            <details><summary>Does a Creator plan cover paid advertising?<span>+</span></summary><p>No. Paid media, brand campaigns, client productions, films and games require Symbiose for Businesses.</p></details>
+            <details><summary>Is any catalogue music generated with AI?<span>+</span></summary><p>No. Symbiose does not accept generative AI music into the eligible catalogue. Every track is created by artists.</p></details>
+            <details><summary>How are artists paid?<span>+</span></summary><p>Artists are credited and receive direct, fair payment when their music is licensed through Symbiose.</p></details>
             <details><summary>What happens to content after I cancel?<span>+</span></summary><p>The final licence terms will explain how content published during an active subscription remains covered and which new uses require an active plan.</p></details>
             <details><summary>Can a business commission an exclusive track?<span>+</span></summary><p>Yes. Custom Commission covers original music created for a brief. Exclusivity, media, territory, term and delivery are agreed for the project.</p></details>
           </div>

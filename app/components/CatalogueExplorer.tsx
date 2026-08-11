@@ -102,7 +102,7 @@ export function CatalogueExplorer({ compact = false, showUseCases = true }: { co
   if (compact) {
     return (
       <div className="catalogue-v26 catalogue-v26-compact">
-        <div className="catalogue-featured" aria-label="Featured tracks from the Easy License catalogue">
+        <div className="catalogue-featured" aria-label="Featured tracks from the Symbiose catalogue">
           {tracks.map((track, index) => (
             <button
               className={selectedTrackId === track.id ? "featured-track is-selected" : "featured-track"}

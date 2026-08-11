@@ -5,7 +5,7 @@ import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
-  title: "Easy License for Creators",
+  title: "For Creators",
   description: "Professionally curated, human-made music for YouTube, livestreams, podcasts and social content.",
 };
 
@@ -22,9 +22,9 @@ export default function CreatorsPage() {
       <div className="offer-landing creators-landing">
         <section className="offer-hero offer-hero-creators">
           <div className="offer-hero-copy" data-reveal="left">
-            <p className="offer-kicker"><span>EL / CREATORS</span> Powered by Lofi Girl</p>
+            <p className="offer-kicker"><span>SYMBIOSE / CREATORS</span> Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
-            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Easy License is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
+            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Symbiose is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
             <div className="offer-actions">
               <Link className="offer-button offer-button-light" href="/catalog">Explore the music <span>↗</span></Link>
               <a className="offer-inline-link offer-inline-light" href="#creator-plans">Discover pricing <span>↓</span></a>
@@ -97,11 +97,11 @@ export default function CreatorsPage() {
         </section>
 
         <section className="offer-human offer-human-creators" aria-labelledby="creator-human-title">
-          <figure data-reveal="scale"><img src="/artists/charlee.jpg" alt="Charlee, an Easy License artist, playing guitar" /></figure>
+          <figure data-reveal="scale"><img src="/artists/charlee.jpg" alt="Charlee, a Symbiose artist, playing guitar" /></figure>
           <div data-reveal="right">
             <p className="offer-kicker"><span>06</span> Artists and payments</p>
             <h2 id="creator-human-title">More than 1,000 artists<br />contribute to the catalogue.</h2>
-            <p>Every track is created by a real artist, and no generative AI is used in the music catalogue. Artists are credited and paid directly and fairly when their music is licensed through Easy License.</p>
+            <p>Every track is created by a real artist, and no generative AI is used in the music catalogue. Artists are credited and paid directly and fairly when their music is licensed through Symbiose.</p>
           </div>
         </section>
 
@@ -111,7 +111,7 @@ export default function CreatorsPage() {
             <details open><summary>Can I use the music in videos and livestreams?<span>+</span></summary><p>Yes. Eligible music can cover your own supported videos, livestreams, podcasts and social content.</p></details>
             <details><summary>Can I browse the catalogue before choosing?<span>+</span></summary><p>Yes. You can search the library and listen to the available tracks and playlists before choosing a licence.</p></details>
             <details><summary>What if I receive a Content ID claim?<span>+</span></summary><p>Automated claims can still happen. Your workspace keeps the relevant track and licence information ready for support.</p></details>
-            <details><summary>Does this cover commercial campaigns?<span>+</span></summary><p>No. Paid advertising, brand campaigns, films, games and broader commercial uses need Easy License for Business.</p></details>
+            <details><summary>Does this cover commercial campaigns?<span>+</span></summary><p>No. Paid advertising, brand campaigns, films, games and broader commercial uses need Symbiose for Business.</p></details>
           </div>
         </section>
 

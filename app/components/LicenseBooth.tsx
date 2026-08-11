@@ -54,7 +54,7 @@ export function LicenseBooth() {
   return (
     <div className={`v5-booth v5-booth-${selected.color}`} data-pointer-glow="">
       <div className="v5-booth-topline">
-        <span>Easy License · by Lofi Girl</span>
+        <span>Symbiose · by Lofi Girl</span>
         <span className="v5-live"><i /> Live prototype</span>
       </div>
 
@@ -75,9 +75,9 @@ export function LicenseBooth() {
       </div>
 
       <div className="v5-booth-track">
-        <div className="v5-booth-art" aria-hidden="true"><span>EL</span><i /></div>
+        <div className="v5-booth-art" aria-hidden="true"><span>SY</span><i /></div>
         <div>
-          <small>TRACK / EL-CAT-0041</small>
+          <small>TRACK / SY-CAT-0041</small>
           <strong>Cloudlines</strong>
           <span>Charlee Nguyen · 02:42</span>
         </div>

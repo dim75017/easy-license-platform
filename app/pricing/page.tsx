@@ -7,7 +7,7 @@ import "../pricing-v39.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Creator subscriptions and business music licensing from Easy License.",
+  description: "Creator subscriptions and business music licensing from Symbiose.",
 };
 
 const comparison = [
@@ -42,7 +42,7 @@ const pricingFaq = [
   },
   {
     question: "Is the catalogue made with generative AI?",
-    answer: "No. Easy License only accepts music written and produced by artists. Generative AI music is not accepted into the catalogue.",
+    answer: "No. Symbiose only accepts music written and produced by artists. Generative AI music is not accepted into the catalogue.",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function PricingPage() {
       <div className="pricing-v39">
       <section className="pricing-v39-hero">
         <div className="page-hero-copy centered">
-          <span className="pricing-v39-kicker">EASY LICENSE PRICING</span>
+          <span className="pricing-v39-kicker">SYMBIOSE PRICING</span>
           <h1>Simple plans for<br />the way you publish.</h1>
           <p>Creator subscriptions are clear from the start. Business projects are quoted around the rights they actually need.</p>
         </div>

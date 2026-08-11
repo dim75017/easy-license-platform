@@ -8,7 +8,7 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("contains the complete Easy License music licensing homepage", async () => {
+test("contains the complete Symbiose music licensing homepage", async () => {
   const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
@@ -20,7 +20,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
-  assert.match(layout, /Powered by Lofi Girl/i);
+  assert.match(page, /Powered by Lofi Girl/i);
   assert.match(page, /Browse more than 10,000 instrumental and background tracks created by real artists/i);
   assert.doesNotMatch(page, /Music team[\s\S]*professional review and detailed tagging/i);
   assert.doesNotMatch(page, /Listen to the catalogue before choosing a licence|Open the music library/i);
@@ -55,7 +55,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
-  assert.match(layout, /Easy License .* Human-made music licensing/);
+  assert.match(layout, /Symbiose — High-quality instrumental music for creators and businesses/);
   assert.match(layout, /offer-pages\.css/);
   assert.match(layout, /catalog-v26\.css/);
   assert.match(layout, /home-v26\.css/);
@@ -74,7 +74,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   assert.match(cataloguePage, /Browse by mood/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
   assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
-  assert.doesNotMatch(cataloguePage, /Easy License<\/span> Music/);
+  assert.doesNotMatch(cataloguePage, /Symbiose<\/span> Music/);
   assert.match(catalogueCss, /\.music-library-hero h1 \{[\s\S]*letter-spacing: -\.035em/);
   assert.match(homeCss, /V43: let the homepage sections use the full editorial canvas/);
   assert.match(offerCss, /V43: public offer pages use the full width/);
@@ -133,10 +133,10 @@ test("defines every public and connected product surface", async () => {
   assert.match(pricing, /Commercial Sync/i);
   assert.match(pricing, /Custom Commission/i);
   assert.match(pricing, /MUSIC FOR RETAIL/i);
-  assert.doesNotMatch(pricingCards, /EL–03 \/ BUSINESS/i);
+  assert.doesNotMatch(pricingCards, /SY–03 \/ BUSINESS/i);
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);
-  assert.match(sync, /Easy License for Business/i);
+  assert.match(sync, /Symbiose/i);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -298,16 +298,16 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(css, /font-family:\s*"Afacad Flux"/);
   assert.match(css, /unbounded-var-latin\.woff2/);
   assert.match(css, /afacad-flux-var-latin\.woff2/);
-  assert.match(homeCss, /Easy License V5 — the licensing signal router/);
+  assert.match(homeCss, /Symbiose V5 — the licensing signal router/);
   assert.match(homeCss, /\.v5-booth/);
   assert.match(homeCss, /clip-path:/);
-  assert.match(cozyCss, /Easy License V6 — warm, quiet and recognisably Lofi Girl/);
+  assert.match(cozyCss, /Symbiose V6 — warm, quiet and recognisably Lofi Girl/);
   assert.match(cozyCss, /--font-display:\s*"Afacad Flux"/);
   assert.match(cozyCss, /\.el-v6 \.v5-booth::before[\s\S]*display:\s*none/);
   assert.match(css, /navigation uses one clear hover treatment[\s\S]{0,700}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none/);
   assert.match(homeCss, /\.site-header \.site-nav > a:hover::after,[\s\S]{0,120}transform:\s*scaleX\(1\)/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
-  assert.match(brand, /className="brand-accent">license<\/span>/);
+  assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biose<\/span>/);
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
   assert.match(header, /For Creators/);

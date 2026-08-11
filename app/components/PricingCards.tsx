@@ -16,7 +16,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
       </div>
       <div className={expanded ? "pricing-grid pricing-grid-expanded" : "pricing-grid"}>
         <article className="price-card" data-pointer-glow="">
-          <span className="plan-code">EL–01 / CREATOR</span>
+          <span className="plan-code">SY–01 / CREATOR</span>
           <div className="price-card-top">
             <span className="plan-icon plan-creator">C</span>
             <div><p>Creator</p><span>For your own content</span></div>
@@ -38,7 +38,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
 
         <article className="price-card price-card-featured" data-pointer-glow="">
           <span className="popular-pill">Recommended scope</span>
-          <span className="plan-code">EL–02 / PRO</span>
+          <span className="plan-code">SY–02 / PRO</span>
           <div className="price-card-top">
             <span className="plan-icon plan-pro">P</span>
             <div><p>Pro</p><span>For multi-channel creators</span></div>
@@ -55,7 +55,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             {expanded && <li><i>✓</i> Centralised downloads and licences</li>}
           </ul>
           <Link className="button button-light button-full" href="/app">License my channels</Link>
-          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Easy License for Business.</p>
+          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Symbiose for Business.</p>
         </article>
 
       </div>

@@ -2,7 +2,7 @@ const waveform = [26, 42, 18, 58, 34, 72, 48, 84, 40, 66, 30, 54, 76, 38, 62, 24
 
 export function HeroProductMockup() {
   return (
-    <div className="hero-product" aria-label="Easy License product preview" data-reveal="hero-product" data-parallax="24" data-tilt>
+    <div className="hero-product" aria-label="Symbiose product preview" data-reveal="hero-product" data-parallax="24" data-tilt>
       <div className="hero-product-glow" />
       <div className="product-window">
         <div className="product-window-top">
@@ -14,7 +14,7 @@ export function HeroProductMockup() {
         </div>
         <div className="product-window-body">
           <aside className="mock-sidebar" aria-hidden="true">
-            <span className="mock-logo">e</span>
+            <span className="mock-logo">s</span>
             <span className="mock-side-line is-active" />
             <span className="mock-side-line" />
             <span className="mock-side-line" />

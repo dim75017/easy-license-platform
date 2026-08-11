@@ -1,8 +1,8 @@
-# Easy License
+# Symbiose
 
-Easy License is an artist-first music licensing platform prototype, powered by
-Lofi Girl. It brings creator subscriptions, commercial sync enquiries and a
-future retail offer into one clear product.
+Symbiose is a high-quality instrumental music platform for creators and
+businesses, powered by Lofi Girl. It brings creator subscriptions, commercial
+sync enquiries and a future retail offer into one clear product.
 
 ## Included in this V1
 
@@ -56,5 +56,5 @@ npm run db:generate
 
 ## Brand
 
-Easy License is an independent product presented as “Powered by Lofi Girl”.
+Symbiose is an independent product presented as “Powered by Lofi Girl”.
 All customer-facing copy is in English.

@@ -61,7 +61,7 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
 
 function ProductNavigation() {
   return (
-    <div className="music-product-nav" aria-label="Easy License products">
+    <div className="music-product-nav" aria-label="Symbiose products">
       <button className="is-active" type="button"><span>♫</span><strong>Music</strong></button>
       <button type="button" aria-disabled="true"><span>⌁</span><strong>Sound effects</strong><small>Coming soon</small></button>
       <button type="button" aria-disabled="true"><span>◌</span><strong>Voices</strong><small>Coming soon</small></button>
@@ -174,7 +174,7 @@ export function CreatorWorkspace() {
 
       <main className="music-app-main">
         <header className="music-app-topbar">
-          <div><span>Easy License</span><h1>{view === "music" ? "Music library" : navItems.find((item) => item.id === view)?.label}</h1></div>
+          <div><span>Symbiose</span><h1>{view === "music" ? "Music library" : navItems.find((item) => item.id === view)?.label}</h1></div>
           <label className="music-global-search">
             <span aria-hidden="true">⌕</span>
             <input value={query} onChange={(event) => { setQuery(event.target.value); setActiveUse(null); setActivePlaylistId(null); setView("music"); }} placeholder="Search tracks, artists, moods or genres" />
@@ -204,7 +204,7 @@ export function CreatorWorkspace() {
 
             <section className="music-track-browser" aria-labelledby="tracks-title">
               <div className="music-track-browser-head">
-                <div><span>EASY LICENSE CATALOGUE PREVIEW</span><h3 id="tracks-title">{activePlaylist?.title ?? (activeUse ? listeningDirections.find((item) => item.use === activeUse)?.label : "All music")}</h3><p>{visibleTracks.length} matching licensable tracks in this preview</p></div>
+                <div><span>SYMBIOSE CATALOGUE PREVIEW</span><h3 id="tracks-title">{activePlaylist?.title ?? (activeUse ? listeningDirections.find((item) => item.use === activeUse)?.label : "All music")}</h3><p>{visibleTracks.length} matching licensable tracks in this preview</p></div>
                 <div className="music-filter-row">
                   <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
                   <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -250,7 +250,7 @@ export function CreatorWorkspace() {
       {setupOpen && (
         <div className="music-setup-backdrop" role="dialog" aria-modal="true" aria-labelledby="music-setup-title">
           <div className="music-setup-panel">
-            <div className="music-setup-intro"><span>FIRST LISTEN</span><h2 id="music-setup-title">Tune the library<br />to your work.</h2><p>Two quick choices help Easy License put more useful playlists first. You can change this later.</p><button type="button" onClick={closeSetup}>Skip for now</button></div>
+            <div className="music-setup-intro"><span>FIRST LISTEN</span><h2 id="music-setup-title">Tune the library<br />to your work.</h2><p>Two quick choices help Symbiose put more useful playlists first. You can change this later.</p><button type="button" onClick={closeSetup}>Skip for now</button></div>
             <div className="music-setup-form">
               <section><span>01 · YOUR MAIN ROLE</span><h3>What are you creating as?</h3><div className="music-role-grid">{roles.map((role) => <button className={selectedRole === role ? "is-selected" : ""} type="button" onClick={() => setSelectedRole(role)} key={role}>{role}<i>{selectedRole === role ? "✓" : ""}</i></button>)}</div></section>
               <section><span>02 · WHERE YOU PUBLISH</span><h3>Choose every destination that matters.</h3><div className="music-destination-grid">{destinations.map((destination) => <button className={selectedDestinations.has(destination) ? "is-selected" : ""} type="button" onClick={() => toggleDestination(destination)} key={destination}>{destination}<i>{selectedDestinations.has(destination) ? "✓" : "+"}</i></button>)}</div></section>
@@ -264,7 +264,7 @@ export function CreatorWorkspace() {
 }
 
 function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => void }) {
-  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Eight distinct directions drawn from the public Lofi Girl profile, translated into an Easy License starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
+  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Eight distinct directions drawn from the public Lofi Girl profile, translated into a Symbiose starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
 function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {
@@ -276,5 +276,5 @@ function ChannelsView() {
 }
 
 function LicencesView() {
-  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Licences</h2><p>Keep each track, channel and proof of licence in one place.</p></header><section className="music-account-card"><span className="music-account-platform">◇</span><div><strong>Easy License · Creator</strong><small>EL-DEMO-2026-0001 · Active since 03 Aug 2026</small></div><span className="music-account-status">● Active</span><button type="button">View licence</button></section></div>;
+  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Licences</h2><p>Keep each track, channel and proof of licence in one place.</p></header><section className="music-account-card"><span className="music-account-platform">◇</span><div><strong>Symbiose · Creator</strong><small>SY-DEMO-2026-0001 · Active since 03 Aug 2026</small></div><span className="music-account-status">● Active</span><button type="button">View licence</button></section></div>;
 }

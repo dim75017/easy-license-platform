@@ -1,4 +1,4 @@
-"""Render the hand-composed Easy License social card."""
+"""Render the hand-composed Symbiose social card."""
 
 from __future__ import annotations
 
@@ -56,15 +56,15 @@ def main() -> None:
     body = font("segoeui.ttf", 31)
     chip = font("seguisb.ttf", 23)
 
-    draw.text((112, 91), "EASY", font=brand, fill=OAT)
-    easy_width = draw.textlength("EASY ", font=brand)
-    draw.text((112 + easy_width, 91), "LICENSE", font=brand, fill=CLAY)
+    draw.text((112, 91), "SYMB", font=brand, fill=OAT)
+    symb_width = draw.textlength("SYMB", font=brand)
+    draw.text((112 + symb_width, 91), "IOSE", font=brand, fill=CLAY)
     draw.text((112, 143), "by Lofi Girl", font=label, fill=(243, 236, 224, 155))
 
-    draw.text((108, 254), "Sound for", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
-    draw.text((108, 368), "every story.", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
-    draw.text((112, 515), "Premium music made by people,", font=body, fill=(243, 236, 224, 205))
-    draw.text((112, 558), "licensed simply.", font=body, fill=(243, 236, 224, 205))
+    draw.text((108, 254), "Music for", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
+    draw.text((108, 368), "every project.", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
+    draw.text((112, 515), "High-quality instrumental music for creators", font=body, fill=(243, 236, 224, 205))
+    draw.text((112, 558), "and businesses. Made by people.", font=body, fill=(243, 236, 224, 205))
 
     chip_y = 666
     rounded(draw, (108, chip_y, 415, chip_y + 62), 31, (243, 236, 224, 22), (243, 236, 224, 54), 1)

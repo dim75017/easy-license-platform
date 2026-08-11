@@ -4,7 +4,7 @@ import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
-  title: "Easy License for Business",
+  title: "For Businesses",
   description: "Human-made music licensing and original composition for commercial projects, with music for physical spaces coming soon.",
 };
 
@@ -14,7 +14,7 @@ export default function BusinessPage() {
       <div className="offer-landing business-landing">
         <section className="offer-hero offer-hero-business">
           <div className="offer-hero-copy" data-reveal="left">
-            <p className="offer-kicker"><span>EL / BUSINESS</span> Powered by Lofi Girl</p>
+            <p className="offer-kicker"><span>SYMBIOSE / BUSINESS</span> Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
             <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">
@@ -45,7 +45,7 @@ export default function BusinessPage() {
 
         <section className="business-options" id="business-options" aria-labelledby="business-options-title">
           <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>02</span> Easy License for Business</p>
+            <p className="offer-kicker"><span>02</span> Symbiose for Business</p>
             <h2 id="business-options-title">Choose the service that matches your project.</h2>
             <p>Commercial Sync licenses an existing track for a defined use. Custom Commission creates original music for the brief. Music for Retail will cover licensed background music in physical spaces when the service launches.</p>
           </div>
@@ -94,11 +94,11 @@ export default function BusinessPage() {
         </section>
 
         <section className="offer-human offer-human-business" aria-labelledby="business-human-title">
-          <figure data-reveal="scale"><img src="/artists/meadow.jpg" alt="Portrait of Easy License artist M e a d o w" /></figure>
+          <figure data-reveal="scale"><img src="/artists/meadow.jpg" alt="Portrait of Symbiose artist M e a d o w" /></figure>
           <div data-reveal="right">
             <p className="offer-kicker"><span>05</span> Artists and music team</p>
             <h2 id="business-human-title">More than 1,000 artists<br />contribute to the catalogue.</h2>
-            <p>Every track is created by a real artist, and no generative AI is used in the music catalogue. Our music team selects work for composition, production quality and suitability for commercial use. Artists are credited and paid directly and fairly when their music is licensed through Easy License.</p>
+            <p>Every track is created by a real artist, and no generative AI is used in the music catalogue. Our music team selects work for composition, production quality and suitability for commercial use. Artists are credited and paid directly and fairly when their music is licensed through Symbiose.</p>
           </div>
         </section>
 

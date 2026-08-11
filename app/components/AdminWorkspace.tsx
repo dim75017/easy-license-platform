@@ -49,13 +49,13 @@ export function AdminWorkspace() {
     <DashboardShell area="admin" items={items} active={active} onChange={setActive}>
       <header className="dashboard-topbar">
         <div>
-          <span className="dashboard-overline">Easy License CMS</span>
+          <span className="dashboard-overline">Symbiose CMS</span>
           <h1>{items.find((item) => item.id === active)?.label}</h1>
         </div>
         <div className="dashboard-top-actions">
           <span className="demo-data-pill"><i /> Demo data</span>
           <button className="notification-button" type="button" aria-label="Notifications">◌<span>4</span></button>
-          <div className="dashboard-user"><span className="user-avatar admin-avatar">EL</span><span><strong>Licensing team</strong><small>Administrator</small></span></div>
+          <div className="dashboard-user"><span className="user-avatar admin-avatar">SY</span><span><strong>Licensing team</strong><small>Administrator</small></span></div>
         </div>
       </header>
 
@@ -90,7 +90,7 @@ export function AdminWorkspace() {
 
             <div className="dashboard-three-columns">
               <section className="dashboard-panel health-panel"><div className="panel-heading"><div><span>CATALOGUE HEALTH</span><h3>Rights readiness</h3></div><span className="status-pill status-live"><i /> Healthy</span></div><div className="health-ring"><div><strong>82%</strong><span>ready</span></div></div><div className="health-legend"><span><i className="ready" />Eligible <strong>6,560</strong></span><span><i className="review" />Review <strong>1,040</strong></span><span><i className="blocked" />Blocked <strong>400</strong></span></div><button type="button" onClick={() => setActive("catalogue")}>Open catalogue →</button></section>
-              <section className="dashboard-panel activity-panel"><div className="panel-heading"><div><span>ACTIVITY</span><h3>Live operations</h3></div><span>Today</span></div><ul><li><i className="green" />Licence EL-0284 issued<span>4 min</span></li><li><i className="violet" />New Creator subscriber<span>12 min</span></li><li><i className="amber" />Rights check needs info<span>24 min</span></li><li><i className="blue" />Sync brief received<span>41 min</span></li><li><i className="green" />Channel marked ready<span>1 h</span></li></ul></section>
+              <section className="dashboard-panel activity-panel"><div className="panel-heading"><div><span>ACTIVITY</span><h3>Live operations</h3></div><span>Today</span></div><ul><li><i className="green" />Licence SY-0284 issued<span>4 min</span></li><li><i className="violet" />New Creator subscriber<span>12 min</span></li><li><i className="amber" />Rights check needs info<span>24 min</span></li><li><i className="blue" />Sync brief received<span>41 min</span></li><li><i className="green" />Channel marked ready<span>1 h</span></li></ul></section>
               <section className="dashboard-panel launch-panel"><div className="panel-heading"><div><span>LAUNCH READINESS</span><h3>Production checklist</h3></div><strong>5 / 9</strong></div><div className="launch-progress"><i /></div><ul><li className="done"><i>✓</i>Product prototype</li><li className="done"><i>✓</i>Creator pricing</li><li className="done"><i>✓</i>Sync intake</li><li><i>4</i>Final licence terms</li><li><i>5</i>Content ID architecture</li></ul></section>
             </div>
           </>

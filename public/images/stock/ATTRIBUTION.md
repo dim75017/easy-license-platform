@@ -42,7 +42,7 @@ All listed Unsplash photographs are marked free to use under the Unsplash Licens
 
 ## Featured catalogue artwork
 
-These are official Spotify cover thumbnails for tracks selected from the local catalogue database, retained solely for the Easy License product prototype.
+These are official Spotify cover thumbnails for tracks selected from the local catalogue database, retained solely for the Symbiose product prototype.
 
 | File | Track | Spotify source |
 | --- | --- | --- |

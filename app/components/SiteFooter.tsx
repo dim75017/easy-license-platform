@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="footer-main">
         <div className="footer-brand">
           <Brand />
-          <p>Human-made music licensing for creators, productions, campaigns and physical spaces.</p>
+          <p>High-quality instrumental music for creators and businesses.</p>
         </div>
         <div className="footer-links">
           <div>
@@ -35,7 +35,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 Easy License.</span>
+        <span>© 2026 Symbiose.</span>
         <span>Powered by Lofi Girl.</span>
       </div>
     </footer>
