@@ -1645,3 +1645,49 @@
     width: 100%;
   }
 }
+
+/* V51: the two licensing routes are full-bleed and use identical proportions. */
+.home26-audience {
+  width: 100%;
+  margin-inline: 0;
+  padding: 0;
+}
+
+.home26-audience-panel,
+.home26-audience-business .home26-audience-panel {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  background-clip: padding-box;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  box-shadow: none;
+}
+
+.home26-audience + .home26-audience {
+  border-top: 0;
+}
+
+.home26-audience-copy {
+  padding: clamp(44px, 5.5vw, 88px);
+}
+
+@media (max-width: 980px) {
+  .home26-audience-panel,
+  .home26-audience-business .home26-audience-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .home26-audience {
+    padding: 0;
+  }
+
+  .home26-audience-panel {
+    border-radius: 0;
+  }
+
+  .home26-audience-copy {
+    padding: 34px 22px 38px;
+  }
+}

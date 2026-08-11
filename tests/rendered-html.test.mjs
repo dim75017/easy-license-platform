@@ -71,6 +71,8 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-audience-panel/);
   assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
   assert.match(homeCss, /\.home26-audience-business \.home26-audience-panel[\s\S]{0,300}grid-template-areas:\s*"copy media"/);
+  assert.match(homeCss, /V51: the two licensing routes are full-bleed[\s\S]{0,220}\.home26-audience\s*\{[\s\S]{0,140}width:\s*100%;[\s\S]{0,100}padding:\s*0;/);
+  assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
@@ -318,6 +320,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biose<\/span>/);
   assert.match(header, /Log in/);
   assert.match(header, /Create account/);
+  assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
+  assert.match(header, /if \(href === "\/"\) return pathname === "\/";/);
   assert.match(header, /For Creators/);
   assert.match(header, /For Businesses/);
   assert.match(header, /href:\s*"\/catalog",\s*label:\s*"Music"/);

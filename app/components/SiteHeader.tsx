@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Brand } from "./Brand";
 
 const navItems = [
+  { href: "/", label: "Home" },
   { href: "/catalog", label: "Music" },
   { href: "/creators", label: "For Creators" },
   { href: "/business", label: "For Businesses" },
@@ -18,6 +19,7 @@ export function SiteHeader() {
   const isBusinessSurface = ["/business", "/sync", "/retail"].includes(pathname);
 
   const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
     if (href === "/catalog") return pathname === "/catalog";
     if (href === "/creators") return pathname === "/creators";
     if (href === "/business") return isBusinessSurface;
