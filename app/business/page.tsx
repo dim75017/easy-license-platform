@@ -52,7 +52,7 @@ export default function BusinessPage() {
               <span>01 / COMMERCIAL SYNC</span><div><h3>License existing music.</h3><p>For advertising, film, series, games, trailers, branded content and events, with rights scoped to the project.</p><strong>Explore Commercial Sync ↗</strong></div>
             </Link>
             <Link className="business-option business-option-custom" href="#business-brief">
-              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission music for the project.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Request a custom quote ↓</strong></div>
+              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission original music.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Request a custom quote ↓</strong></div>
             </Link>
             <Link className="business-option business-option-retail" href="/retail">
               <span>03 / MUSIC FOR RETAIL · COMING SOON</span><div><h3>Curated music for physical spaces.</h3><p>An easy, affordable way to soundtrack cafés, restaurants, hotels, boutiques, gyms, studios and spas.</p><strong>Join early access ↗</strong></div>
