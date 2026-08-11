@@ -1,3 +1,5 @@
+import { SymbiomeMark } from "./SymbiomeMark";
+
 const waveform = [26, 42, 18, 58, 34, 72, 48, 84, 40, 66, 30, 54, 76, 38, 62, 24, 48, 68, 36, 52, 28, 44, 60, 32];
 
 export function HeroProductMockup() {
@@ -14,7 +16,9 @@ export function HeroProductMockup() {
         </div>
         <div className="product-window-body">
           <aside className="mock-sidebar" aria-hidden="true">
-            <span className="mock-logo">s</span>
+            <span className="mock-logo">
+              <SymbiomeMark />
+            </span>
             <span className="mock-side-line is-active" />
             <span className="mock-side-line" />
             <span className="mock-side-line" />

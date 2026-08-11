@@ -4,9 +4,9 @@
   --font-display: "Afacad Flux", "Segoe UI Variable Display", "Segoe UI", sans-serif;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 86% 0, rgba(240, 184, 76, .11), transparent 25%),
+    radial-gradient(circle at 86% 0, rgba(224, 99, 67, .12), transparent 25%),
     radial-gradient(circle at 18% 80%, rgba(224, 99, 67, .08), transparent 32%),
-    #25242c;
+    #292832;
   color: var(--cozy-oat);
   font-family: var(--font-ui);
 }
@@ -15,9 +15,7 @@
   width: 270px;
   border-right-color: rgba(247, 235, 221, .12);
   padding: 26px 16px 18px;
-  background:
-    linear-gradient(180deg, rgba(42, 41, 50, .98), rgba(31, 30, 37, .98)),
-    #292832;
+  background: #292832;
 }
 
 .dashboard-shell .dashboard-brand-row {
@@ -156,7 +154,7 @@
 .dashboard-shell .button-ghost { border: 1px solid rgba(247, 235, 221, .18); background: rgba(247, 235, 221, .05); color: var(--cozy-oat); }
 
 .dashboard-shell .metric-grid { gap: 17px; margin: 18px 0; }
-.dashboard-shell .metric-grid article { min-height: 165px; border-color: rgba(247, 235, 221, .1); border-radius: 20px; padding: 20px; background: rgba(48, 46, 55, .78); }
+.dashboard-shell .metric-grid article { min-height: 165px; border-color: rgba(247, 235, 221, .1); border-radius: 20px; padding: 20px; background: rgba(255, 249, 241, .055); }
 .dashboard-shell .metric-grid article::before { height: 3px; background: linear-gradient(90deg, var(--cozy-clay), transparent); }
 .dashboard-shell .metric-grid article > p { color: rgba(247, 235, 221, .55); font-size: 13px; letter-spacing: .055em; }
 .dashboard-shell .metric-grid article > strong { color: var(--cozy-oat); font-family: var(--font-display); font-size: 36px; font-weight: 600; }
@@ -170,7 +168,7 @@
 .dashboard-shell .metric-grid small.positive { color: #b7cfac; }
 
 .dashboard-shell .dashboard-two-columns { gap: 17px; margin-bottom: 17px; }
-.dashboard-shell .dashboard-panel { border-color: rgba(247, 235, 221, .1); border-radius: 22px; padding: 25px; background: linear-gradient(180deg, rgba(48, 46, 55, .85), rgba(38, 37, 45, .9)); box-shadow: 0 18px 48px rgba(10, 10, 14, .12); }
+.dashboard-shell .dashboard-panel { border-color: rgba(247, 235, 221, .1); border-radius: 22px; padding: 25px; background: linear-gradient(180deg, rgba(255, 249, 241, .07), rgba(255, 249, 241, .025)); box-shadow: 0 18px 48px rgba(41, 40, 50, .2); }
 .dashboard-shell .panel-heading { min-height: 55px; }
 .dashboard-shell .panel-heading > div > span { color: var(--cozy-clay-soft); font-family: var(--font-ui); font-size: 11px; letter-spacing: .1em; }
 .dashboard-shell .panel-heading h3 { margin-top: 5px; color: var(--cozy-oat); font-family: var(--font-display); font-size: 26px; font-weight: 610; letter-spacing: -.04em; }
@@ -185,9 +183,9 @@
 .dashboard-shell .compact-track small { color: rgba(247, 235, 221, .54); font-size: 13px; }
 .dashboard-shell .compact-track em { border-radius: 999px; padding: 4px 8px; background: rgba(224, 99, 67, .14); color: var(--cozy-clay-soft); font-size: 11px; }
 
-.dashboard-shell .rights-panel { background: linear-gradient(145deg, rgba(69, 57, 62, .92), rgba(38, 37, 45, .94)); }
+.dashboard-shell .rights-panel { background: linear-gradient(145deg, rgba(224, 99, 67, .13), rgba(255, 249, 241, .025)); }
 .dashboard-shell .rights-orbit { width: 128px; height: 128px; margin: 18px auto; border-color: rgba(183, 207, 172, .34); box-shadow: 0 0 0 14px rgba(183, 207, 172, .025), 0 0 45px rgba(183, 207, 172, .08); }
-.dashboard-shell .rights-orbit > span { width: 64px; height: 64px; border-radius: 22px; background: rgba(183, 207, 172, .12); color: #c9dfbd; font-size: 22px; }
+.dashboard-shell .rights-orbit > span { width: 64px; height: 64px; border-radius: 22px; background: rgba(224, 99, 67, .16); color: #e06343; font-size: 22px; }
 .dashboard-shell .rights-panel > p { max-width: 350px; color: rgba(247, 235, 221, .62); font-size: 14px; line-height: 1.5; }
 .dashboard-shell .rights-steps { gap: 8px; }
 .dashboard-shell .rights-steps > span { color: rgba(247, 235, 221, .62); font-size: 12px; }
@@ -197,12 +195,12 @@
 .dashboard-shell .attribution-panel > div:first-child > div > span { color: var(--cozy-clay-soft); font-size: 11px; }
 .dashboard-shell .attribution-panel h3 { font-family: var(--font-display); font-size: 23px; }
 .dashboard-shell .attribution-panel p { color: rgba(247, 235, 221, .57); font-size: 14px; }
-.dashboard-shell .attribution-panel code { border-color: rgba(247, 235, 221, .12); border-radius: 13px; padding: 14px 16px; background: rgba(15, 14, 20, .48); color: var(--cozy-oat); font-size: 13px; }
+.dashboard-shell .attribution-panel code { border-color: rgba(247, 235, 221, .12); border-radius: 13px; padding: 14px 16px; background: rgba(41, 40, 50, .78); color: var(--cozy-oat); font-size: 13px; }
 
 .dashboard-shell .detail-view { min-height: calc(100vh - 170px); }
 .dashboard-shell .dashboard-search { width: min(600px, 100%); min-height: 56px; font-size: 15px; }
 .dashboard-shell .workspace-track-grid { gap: 16px; }
-.dashboard-shell .workspace-track { border-color: rgba(247, 235, 221, .1); border-radius: 18px; padding: 14px; background: rgba(48, 46, 55, .78); }
+.dashboard-shell .workspace-track { border-color: rgba(247, 235, 221, .1); border-radius: 18px; padding: 14px; background: rgba(255, 249, 241, .055); }
 .dashboard-shell .workspace-cover { border-radius: 14px; background: linear-gradient(135deg, rgba(224, 99, 67, .2), rgba(41, 40, 50, .3)), url("/images/unsplash/creator-edit.jpg") center / cover; }
 .dashboard-shell .workspace-cover::before,
 .dashboard-shell .workspace-cover::after { border-color: rgba(247, 235, 221, .22); }
@@ -244,7 +242,7 @@
 }
 
 @media (max-width: 640px) {
-  .dashboard-shell .dashboard-sidebar { border-color: rgba(247, 235, 221, .15); background: rgba(37, 36, 44, .94); }
+  .dashboard-shell .dashboard-sidebar { border-color: rgba(247, 235, 221, .15); background: rgba(41, 40, 50, .94); }
   .dashboard-shell .dashboard-nav button { min-height: 53px; }
   .dashboard-shell .dashboard-nav button > span { font-size: 16px; }
   .dashboard-shell .dashboard-nav button strong { font-size: 8px; }

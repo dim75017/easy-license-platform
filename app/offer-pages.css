@@ -4,12 +4,12 @@
 .gateway-page,
 .offer-landing {
   --marketing-night: #292832;
-  --marketing-ink: #35323a;
+  --marketing-ink: #292832;
   --marketing-paper: #f7ebdd;
   --marketing-cream: #fff9f1;
   --marketing-clay: #e06343;
-  --marketing-clay-soft: #f2b5a0;
-  --marketing-sage: #8b6347;
+  --marketing-clay-soft: #e06343;
+  --marketing-sage: #e06343;
   --marketing-rule: rgba(41, 40, 50, .15);
   --marketing-shadow: 0 28px 90px rgba(41, 40, 50, .11);
   background: var(--marketing-paper);
@@ -1205,11 +1205,11 @@
 .gateway-page,
 .offer-landing {
   --marketing-night: #292832;
-  --marketing-ink: #35323a;
+  --marketing-ink: #292832;
   --marketing-paper: #f7ebdd;
   --marketing-cream: #fff9f1;
   --marketing-clay: #e06343;
-  --marketing-clay-soft: #f2b5a0;
+  --marketing-clay-soft: #e06343;
   --marketing-sage: #8b6347;
   --marketing-rule: rgba(41, 40, 50, .15);
   --marketing-shadow: 0 28px 90px rgba(41, 40, 50, .11);
@@ -2150,7 +2150,7 @@
 }
 
 .creator-editorial-player button span { margin-left: 5px; }
-.creator-editorial-player iframe { display: block; border: 0; border-radius: 14px; background: #17161c; }
+.creator-editorial-player iframe { display: block; border: 0; border-radius: 14px; background: #292832; }
 
 .creator-editorial-action {
   display: flex;
@@ -2611,7 +2611,7 @@
 .creators-landing .creator-platforms {
   background:
     radial-gradient(circle at 92% 8%, rgba(224, 99, 67, .2), transparent 27%),
-    radial-gradient(circle at 8% 92%, rgba(242, 181, 160, .07), transparent 24%),
+    radial-gradient(circle at 8% 92%, rgba(224, 99, 67, .07), transparent 24%),
     var(--marketing-night);
   color: var(--marketing-paper);
 }
@@ -2636,7 +2636,7 @@
 }
 
 .creators-landing .creator-editorial {
-  background: #efd6c7;
+  background: #e06343;
   color: var(--marketing-night);
 }
 
@@ -2655,14 +2655,14 @@
 
 .creators-landing .creator-editorial-track {
   border-color: rgba(41, 40, 50, .12);
-  background: linear-gradient(135deg, rgba(41, 40, 50, .98), rgba(58, 55, 66, .96));
+  background: #292832;
   box-shadow: 0 18px 44px rgba(41, 40, 50, .14);
 }
 
 .creators-landing .creator-editorial-track:hover,
 .creators-landing .creator-editorial-track.is-selected {
   border-color: rgba(41, 40, 50, .28);
-  background: linear-gradient(135deg, #34323d, #292832);
+  background: #292832;
   box-shadow: 0 24px 54px rgba(41, 40, 50, .22);
 }
 
@@ -2690,7 +2690,7 @@
   border-radius: 0;
   padding: clamp(72px, 6vw, 88px) clamp(28px, 4vw, 76px) clamp(68px, 5.5vw, 82px);
   background:
-    radial-gradient(circle at 88% 12%, rgba(62, 77, 91, .42), transparent 31%),
+    radial-gradient(circle at 88% 12%, rgba(224, 99, 67, .3), transparent 31%),
     var(--marketing-night);
 }
 

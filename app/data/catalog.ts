@@ -103,7 +103,7 @@ export const lofiGirlPlaylists = [
     moods: ["Neon", "Driving", "Focused"],
     image: "/images/unsplash/playlists/synthwave-night.jpg",
     imagePosition: "center 50%",
-    borderColor: "#6674B9",
+    borderColor: "#e06343",
   },
   {
     id: "peaceful-piano",
@@ -116,7 +116,7 @@ export const lofiGirlPlaylists = [
     moods: ["Peaceful", "Reflective", "Soft"],
     image: "/images/unsplash/playlists/peaceful-piano.jpg",
     imagePosition: "center 48%",
-    borderColor: "#84927B",
+    borderColor: "#e06343",
   },
   {
     id: "dark-ambient",
@@ -129,7 +129,7 @@ export const lofiGirlPlaylists = [
     moods: ["Dark", "Dreamy", "Cinematic"],
     image: "/images/unsplash/playlists/dark-ambient-fog.jpg",
     imagePosition: "60% center",
-    borderColor: "#536B63",
+    borderColor: "#e06343",
   },
   {
     id: "jazz-lofi",
@@ -142,7 +142,7 @@ export const lofiGirlPlaylists = [
     moods: ["Cozy", "Late night", "Easygoing"],
     image: "/images/unsplash/playlists/jazz-lofi-saxophone.jpg",
     imagePosition: "58% center",
-    borderColor: "#B88A54",
+    borderColor: "#e06343",
   },
   {
     id: "chill-house",
@@ -155,7 +155,7 @@ export const lofiGirlPlaylists = [
     moods: ["Bright", "Sunny", "Free"],
     image: "/images/unsplash/playlists/chill-house.jpg",
     imagePosition: "center 58%",
-    borderColor: "#D49A68",
+    borderColor: "#e06343",
   },
   {
     id: "sleep-ambient",
@@ -168,7 +168,7 @@ export const lofiGirlPlaylists = [
     moods: ["Restful", "Gentle", "Weightless"],
     image: "/images/unsplash/playlists/sleep-ambient-bedside.jpg",
     imagePosition: "64% center",
-    borderColor: "#8B7895",
+    borderColor: "#e06343",
   },
   {
     id: "chill-guitar",
@@ -181,7 +181,7 @@ export const lofiGirlPlaylists = [
     moods: ["Organic", "Intimate", "Easygoing"],
     image: "/images/unsplash/playlists/chill-guitar.jpg",
     imagePosition: "center 50%",
-    borderColor: "#A9694F",
+    borderColor: "#e06343",
   },
 ] satisfies readonly LofiGirlPlaylist[];
 

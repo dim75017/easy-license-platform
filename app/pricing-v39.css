@@ -3,10 +3,10 @@
   --price-ink: #292832;
   --price-paper: #f7ebdd;
   --price-cream: #fff9f1;
-  --price-sand: #efd6c7;
+  --price-sand: #fff9f1;
   --price-clay: #e06343;
-  --price-clay-deep: #9f3f2b;
-  --price-clay-soft: #f2b5a0;
+  --price-clay-deep: #e06343;
+  --price-clay-soft: #e06343;
   background: var(--price-paper);
   color: var(--price-ink);
 }
@@ -331,7 +331,7 @@
   border: 1px solid rgba(224, 99, 67, .24);
   border-radius: 16px;
   padding: 20px;
-  background: #f5ded5;
+  background: #fff9f1;
 }
 
 .pricing-v39 .business-coming-soon p {

@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 import math
 import random
+import re
+from xml.etree import ElementTree
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -13,6 +15,7 @@ WIDTH = 1732
 HEIGHT = 876
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "public" / "og.png"
+ICON = ROOT / "app" / "icon.svg"
 
 NIGHT = "#292832"
 NIGHT_SOFT = "#36333d"
@@ -29,6 +32,74 @@ def font(name: str, size: int) -> ImageFont.FreeTypeFont:
 
 def rounded(draw: ImageDraw.ImageDraw, box, radius: int, fill, outline=None, width=1):
     draw.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=width)
+
+
+SVG_TOKEN = re.compile(r"[MCZ]|-?\d+(?:\.\d+)?")
+
+
+def flatten_cubic_path(path_data: str, scale: float, steps: int = 32) -> list[tuple[float, float]]:
+    """Flatten this mark's absolute M/C/Z path without changing its 100x100 geometry."""
+    tokens = SVG_TOKEN.findall(path_data)
+    points: list[tuple[float, float]] = []
+    index = 0
+    current = (0.0, 0.0)
+    start = current
+
+    while index < len(tokens):
+        command = tokens[index]
+        index += 1
+        if command == "M":
+            current = (float(tokens[index]), float(tokens[index + 1]))
+            index += 2
+            start = current
+            points.append((current[0] * scale, current[1] * scale))
+        elif command == "C":
+            control_1 = (float(tokens[index]), float(tokens[index + 1]))
+            control_2 = (float(tokens[index + 2]), float(tokens[index + 3]))
+            end = (float(tokens[index + 4]), float(tokens[index + 5]))
+            index += 6
+            origin = current
+            for step in range(1, steps + 1):
+                t = step / steps
+                inverse = 1.0 - t
+                x = (
+                    inverse**3 * origin[0]
+                    + 3 * inverse**2 * t * control_1[0]
+                    + 3 * inverse * t**2 * control_2[0]
+                    + t**3 * end[0]
+                )
+                y = (
+                    inverse**3 * origin[1]
+                    + 3 * inverse**2 * t * control_1[1]
+                    + 3 * inverse * t**2 * control_2[1]
+                    + t**3 * end[1]
+                )
+                points.append((x * scale, y * scale))
+            current = end
+        elif command == "Z":
+            points.append((start[0] * scale, start[1] * scale))
+        else:
+            raise ValueError(f"Unsupported SVG command: {command}")
+
+    return points
+
+
+def render_symbiome_mark(size: int) -> Image.Image:
+    """Render the two canonical icon paths with their original spacing and proportions."""
+    supersample = 4
+    canvas_size = size * supersample
+    mark = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    mark_draw = ImageDraw.Draw(mark, "RGBA")
+    icon_root = ElementTree.parse(ICON).getroot()
+    paths = [node for node in icon_root.iter() if node.tag.endswith("path")]
+    if len(paths) != 2:
+        raise ValueError(f"Expected two Symbiome paths in {ICON}, found {len(paths)}")
+
+    for path in paths:
+        polygon = flatten_cubic_path(path.attrib["d"], canvas_size / 100)
+        mark_draw.polygon(polygon, fill=path.attrib["fill"])
+
+    return mark.resize((size, size), Image.Resampling.LANCZOS)
 
 
 def main() -> None:
@@ -56,10 +127,14 @@ def main() -> None:
     body = font("segoeui.ttf", 31)
     chip = font("seguisb.ttf", 23)
 
-    draw.text((112, 91), "SYMB", font=brand, fill=OAT)
+    rounded(draw, (108, 80, 176, 148), 16, PAPER)
+    mark = render_symbiome_mark(58)
+    image.paste(mark, (113, 85), mark)
+    wordmark_x = 196
+    draw.text((wordmark_x, 91), "SYMB", font=brand, fill=OAT)
     symb_width = draw.textlength("SYMB", font=brand)
-    draw.text((112 + symb_width, 91), "IOME", font=brand, fill=CLAY)
-    draw.text((112, 143), "by Lofi Girl", font=label, fill=(247, 235, 221, 155))
+    draw.text((wordmark_x + symb_width, 91), "IOME", font=brand, fill=CLAY)
+    draw.text((wordmark_x, 143), "by Lofi Girl", font=label, fill=(247, 235, 221, 155))
 
     draw.text((108, 254), "Music for", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
     draw.text((108, 368), "every project.", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)

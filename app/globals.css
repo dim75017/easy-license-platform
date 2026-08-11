@@ -611,6 +611,21 @@ button {
   font-weight: 800;
 }
 
+.mock-logo svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  overflow: visible;
+}
+
+.mock-logo .brand-groove-warm {
+  fill: var(--symbiose-warm, #e06343);
+}
+
+.mock-logo .brand-groove-base {
+  fill: var(--symbiose-paper, #fff9f1);
+}
+
 .mock-side-line {
   width: 23px;
   height: 4px;
