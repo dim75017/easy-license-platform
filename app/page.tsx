@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { ArtistMarquee } from "./components/ArtistMarquee";
 import { PublicShell } from "./components/PublicShell";
+import { lofiGirlPlaylists } from "./data/catalog";
+
+const featuredGenreCount = new Set(lofiGirlPlaylists.map((playlist) => playlist.genre)).size;
 
 const useCollections = [
   {
@@ -102,6 +105,7 @@ export default function Home() {
         <section className="home26-facts" aria-label="Symbiose catalogue facts" data-reveal="group">
           <div><strong>10,000+</strong><span>instrumental and background tracks</span></div>
           <div><strong>1,000+</strong><span>artists represented worldwide</span></div>
+          <div><strong>{featuredGenreCount}</strong><span>music genres across our featured playlists</span></div>
           <div><strong>0</strong><span>AI-generated tracks accepted</span></div>
         </section>
 

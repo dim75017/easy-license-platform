@@ -86,6 +86,8 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
   assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
   assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
+  assert.match(page, /featuredGenreCount[\s\S]*music genres across our featured playlists/i);
+  assert.match(page, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
   assert.match(layout, /Symbiose — High-quality instrumental music for creators and businesses/);
@@ -97,6 +99,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(css, /--bg:\s*#07080d/i);
   assert.match(homeCss, /\.home26-hero/);
   assert.match(homeCss, /\.home26-facts\s*\{\s*width:\s*min\(1440px,\s*calc\(100% - 72px\)\)/);
+  assert.match(homeCss, /\.home26-facts\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /\.home26-collection-grid/);
   assert.match(homeCss, /\.home26-audience-panel/);
   assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
