@@ -4,15 +4,15 @@ import { EditorialInfoPage } from "../components/EditorialInfoPage";
 
 export const metadata: Metadata = {
   title: "About Symbiome",
-  description: "Meet Symbiome, a human-made instrumental music catalogue and licensing service for creators and businesses, powered by Lofi Girl.",
+  description: "Discover Symbiome, a human-made music ecosystem connecting artists, the label, creators and businesses through clear music licensing.",
 };
 
 export default function AboutPage() {
   return (
     <EditorialInfoPage
       eyebrow="About Symbiome"
-      title={<>Music licensing built<br />around people.</>}
-      lead="Symbiome brings a broad catalogue of high-quality instrumental music into one clear service for creators and businesses. Every track begins with an artist, and every licensing route starts with how the music will actually be used."
+      title={<>Why we call it<br />Symbiome.</>}
+      lead="The name combines symbiosis and biome. It describes a music ecosystem where artists, the label, creators and businesses each bring something useful to the relationship, and each benefits when the music finds the right project."
       actions={[
         { label: "Explore the music", href: "/catalog" },
         { label: "Discover Lofi Girl", href: "https://www.lofigirl.com/", external: true, secondary: true },
@@ -23,6 +23,29 @@ export default function AboutPage() {
         { value: "0", label: "AI-generated tracks accepted" },
       ]}
       sections={[
+        {
+          id: "the-name",
+          eyebrow: "The idea",
+          title: "Symbiosis at the centre. A biome around it.",
+          content: (
+            <>
+              <p>Symbiome begins with a simple principle: a healthy music relationship should create value in both directions. Artists bring their music, identity and point of view. The label brings curation, presentation and licensing. Each helps the other go further.</p>
+              <p>That exchange continues with creators and businesses. They receive human-made music that is easy to discover and license. Their projects give the music new contexts, new audiences and new value that can flow back to the artists behind it.</p>
+              <div className="support-concept-grid">
+                <article className="support-concept-card">
+                  <small>Symbiosis</small>
+                  <strong>Value moves both ways.</strong>
+                  <p>Artists and the label strengthen one another. The label and the people who use the music do the same.</p>
+                </article>
+                <article className="support-concept-card">
+                  <small>Biome</small>
+                  <strong>One connected music ecosystem.</strong>
+                  <p>Artists, the label, creators and businesses form a living network, linked by the music they make and use.</p>
+                </article>
+              </div>
+            </>
+          ),
+        },
         {
           id: "what-we-build",
           eyebrow: "The service",

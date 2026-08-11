@@ -335,6 +335,12 @@ test("ships a complete footer, detailed help and honest public information pages
     assert.match(page, /<EditorialInfoPage/);
     assert.doesNotMatch(page, /lorem ipsum|example@example\.com|hello@symbiome/i);
   }
+  assert.match(about, /combines symbiosis and biome/i);
+  assert.match(about, /artists, the label, creators and businesses/i);
+  assert.match(about, /id:\s*"the-name"/);
+  assert.equal([...about.matchAll(/className="support-concept-card"/g)].length, 2);
+  assert.match(supportCss, /\.support-concept-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
+  assert.match(supportCss, /@media \(max-width: 700px\)[\s\S]*\.support-concept-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
   assert.match(about, /does not accept generative AI music/i);
   assert.match(contact, /dedicated Symbiome support address is not published yet/i);
   assert.match(press, /No downloadable press kit or dedicated Symbiome press email is currently published/i);
