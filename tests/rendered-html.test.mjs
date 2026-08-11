@@ -327,7 +327,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(catalogueData, /spotifyId/);
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
   assert.match(creators, /creator-youtube-card\.webp/i);
-  assert.match(creators, /creator-piano-human\.webp/i);
+  assert.match(creators, /creator-audio-editor\.webp/i);
+  assert.doesNotMatch(creators, /creator-piano-human\.webp/i);
   assert.match(creators, /creator-streamer-card\.webp/i);
   assert.match(creators, /creator-social-card\.webp/i);
   assert.match(creators, /creator-podcast-card\.webp/i);
@@ -335,6 +336,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article\s*\{[\s\S]{0,500}border-radius:\s*28px/);
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
   assert.match(offerCss, /\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*32px/);
+  assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);
   assert.match(catalogCss, /\.music-playlist-card\s*\{[\s\S]{0,220}border-radius:\s*24px/);
@@ -362,7 +364,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/stock/ATTRIBUTION.md", root)),
     access(new URL("public/images/unsplash/creator-edit.jpg", root)),
     access(new URL("public/images/unsplash/creator-youtube-card.webp", root)),
-    access(new URL("public/images/unsplash/creator-piano-human.webp", root)),
+    access(new URL("public/images/unsplash/creator-audio-editor.webp", root)),
     access(new URL("public/images/unsplash/creator-streamer-card.webp", root)),
     access(new URL("public/images/unsplash/creator-social-card.webp", root)),
     access(new URL("public/images/unsplash/creator-podcast-card.webp", root)),

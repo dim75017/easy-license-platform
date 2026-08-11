@@ -36,5 +36,6 @@ The matching `.webp` files are locally resized derivatives used by the Business 
 - `creator-streamer-clean.jpg` — Samsung Memory, https://unsplash.com/photos/faiWKfVjtZ4 (Unsplash License)
 - `creator-social-clean.jpg` — Vitaly Gariev, https://unsplash.com/photos/mVp5g-NzUQo (Unsplash License)
 - `creator-podcast-clean.jpg` — Marty O’Neill, https://unsplash.com/photos/Y7H5ZKUZsg8 (Unsplash License)
+- `creator-audio-editor.webp` — Kelly Sikkema, https://unsplash.com/photos/X-etICbUKec (Unsplash License, locally resized derivative)
 
-The matching `creator-piano-human.webp` and `creator-*-card.webp` files are locally resized derivatives used by the Creators page. `creator-youtube-card.webp` is derived from the already sourced `creator-youtube.jpg` original.
+The matching `creator-piano-human.webp` and `creator-*-card.webp` files are locally resized derivatives. `creator-youtube-card.webp` is derived from the already sourced `creator-youtube.jpg` original.

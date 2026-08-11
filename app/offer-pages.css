@@ -1451,8 +1451,6 @@
   border-radius: 32px;
 }
 
-.creators-landing .offer-curation img { object-position: center 48%; }
-
 .creators-landing .creator-platforms {
   width: calc(100% - 48px);
   max-width: none;
@@ -1491,4 +1489,32 @@
   }
 
   .creators-landing .creator-platform-grid > span { border-radius: 16px; }
+}
+
+/* V47: a more compact creator story with a landscape editing image. */
+.creators-landing .offer-curation img {
+  object-position: 62% center;
+}
+
+@media (min-width: 1101px) {
+  .creators-landing .offer-curation-copy {
+    padding: clamp(44px, 4.5vw, 68px);
+  }
+
+  .creators-landing .offer-principles { margin-top: 28px; }
+  .creators-landing .offer-principles article { padding-block: 17px; }
+  .creators-landing .offer-curation figure { min-height: 680px; }
+}
+
+@media (max-width: 1100px) {
+  .creators-landing .offer-curation figure {
+    height: clamp(420px, 50vw, 560px);
+    min-height: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .creators-landing .offer-curation figure {
+    height: clamp(320px, 84vw, 420px);
+  }
 }

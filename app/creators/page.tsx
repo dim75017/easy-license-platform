@@ -39,7 +39,7 @@ export default function CreatorsPage() {
         </section>
 
         <section className="offer-curation" aria-labelledby="creator-curation-title">
-          <figure data-reveal="scale"><img src="/images/unsplash/creator-piano-human.webp" alt="Pianist playing in a warm recording studio" width={1200} height={1800} loading="eager" decoding="async" /></figure>
+          <figure data-reveal="scale"><img src="/images/unsplash/creator-audio-editor.webp" alt="Creator editing audio at a studio workstation" width={1600} height={1124} loading="eager" decoding="async" /></figure>
           <div className="offer-curation-copy" data-reveal="right">
             <p className="offer-kicker"><span>01</span> Built for the cut and the stream</p>
             <h2 id="creator-curation-title">Music that leaves room<br />for your voice.</h2>
