@@ -820,6 +820,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal(markPaths.length, 2, "the reusable mark should keep the two canonical lobes");
   assert.deepEqual(markPaths, iconPaths, "every rendered mark should preserve the board geometry and spacing");
   assert.match(icon, /<title>Symbiome<\/title>/);
+  assert.doesNotMatch(icon, /<(?:rect|image)\b/i, "the favicon should keep a transparent canvas");
+  assert.match(icon, /fill="#e06343"/i, "the favicon should keep the warm lobe");
+  assert.match(icon, /path:last-of-type\s*\{\s*fill:\s*#292832/i, "the favicon should stay visible on light browser chrome");
+  assert.match(icon, /prefers-color-scheme:\s*dark[\s\S]{0,100}fill:\s*#fff9f1/i, "the favicon should match the cream logo on dark browser chrome");
   assert.match(heroMockup, /className="mock-logo"[\s\S]{0,120}<SymbiomeMark \/>/);
   assert.doesNotMatch(heroMockup, /className="mock-logo">s<\/span>/);
   assert.match(ogScript, /ICON = ROOT \/ "app" \/ "icon\.svg"/);
@@ -834,6 +838,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(symbioseBrandCss, /stroke-width:\s*13/);
   assert.match(symbioseBrandCss, /\.site-header \.brand-warm \.brand-name/);
   assert.match(symbioseBrandCss, /\.site-footer \.brand-warm/);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-name\s*\{[^}]*font-size:\s*26px/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-powered\s*\{[^}]*font-size:\s*12px/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-nav > a\s*\{[^}]*font-size:\s*18px/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*1100px\) and \(min-width:\s*981px\)[\s\S]{0,260}font-size:\s*16px/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]{0,260}font-size:\s*18px/s);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);
