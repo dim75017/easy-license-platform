@@ -292,6 +292,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(cozyCss, /Easy License V6 — warm, quiet and recognisably Lofi Girl/);
   assert.match(cozyCss, /--font-display:\s*"Afacad Flux"/);
   assert.match(cozyCss, /\.el-v6 \.v5-booth::before[\s\S]*display:\s*none/);
+  assert.match(css, /navigation uses one clear hover treatment[\s\S]{0,700}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none/);
+  assert.match(homeCss, /\.site-header \.site-nav > a:hover::after,[\s\S]{0,120}transform:\s*scaleX\(1\)/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
   assert.match(brand, /className="brand-accent">license<\/span>/);
   assert.match(header, /Log in/);
