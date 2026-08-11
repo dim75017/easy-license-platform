@@ -83,7 +83,7 @@ export default function CreatorsPage() {
           <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link" href="/catalog">Explore the full music library <span>↗</span></Link></div>
         </section>
 
-        <section className="offer-flow" aria-labelledby="creator-flow-title">
+        <section className="offer-flow creator-flow" aria-labelledby="creator-flow-title">
           <div className="offer-section-head" data-reveal="group">
             <p className="offer-kicker"><span>05</span> How creator licensing works</p>
             <h2 id="creator-flow-title">Simple from account setup<br />to a licensed upload.</h2>

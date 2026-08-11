@@ -375,7 +375,11 @@ test("keeps each public page free of repeated image assets", async () => {
   ]);
 
   assertUniquePageImages("Homepage", imagePaths(home));
-  assertUniquePageImages("Creators", [...imagePaths(creators), backgroundImage(offerCss, ".offer-hero-creators")]);
+  assertUniquePageImages("Creators", [
+    ...imagePaths(creators),
+    backgroundImage(offerCss, ".offer-hero-creators"),
+    backgroundImage(offerCss, ".creators-landing .creator-flow::before"),
+  ]);
   assertUniquePageImages("Business", [
     ...imagePaths(business),
     backgroundImage(offerCss, ".offer-hero-business"),
@@ -396,6 +400,16 @@ test("ships the Business process backdrop locally and documents its source", asy
   const metadata = await stat(backdrop);
   assert.ok(metadata.size <= 80_000, "the blurred Business process backdrop should stay below 80 KB");
   assert.match(sources, /business-process-blur\.webp[\s\S]{0,160}Vitaly Gariev[\s\S]{0,160}KNGa5luu2HA/);
+});
+
+test("ships the Creator process backdrop locally and documents its source", async () => {
+  const backdrop = new URL("public/images/unsplash/creator-process-blur.webp", root);
+  const sources = await source("public/images/unsplash/SOURCES.md");
+
+  await access(backdrop);
+  const metadata = await stat(backdrop);
+  assert.ok(metadata.size <= 80_000, "the blurred Creator process backdrop should stay below 80 KB");
+  assert.match(sources, /creator-process-blur\.webp[\s\S]{0,180}Rodrigo Rodrigues[\s\S]{0,180}sPeIJ0ebl8c/);
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
@@ -513,6 +527,11 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
   assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head h2\s*\{[\s\S]{0,180}color:\s*var\(--marketing-paper\);[\s\S]{0,100}font-size:\s*clamp\(54px, 6vw, 92px\)/);
   assert.match(offerCss, /\.business-landing \.business-flow \.offer-flow-grid article\s*\{[\s\S]{0,260}background:\s*linear-gradient/);
+  assert.match(creators, /className="offer-flow creator-flow"/);
+  assert.match(offerCss, /V61: a cinematic visual pause for the Creator licensing process\.[\s\S]{0,420}\.creators-landing \.creator-flow::before\s*\{[\s\S]{0,240}creator-process-blur\.webp/);
+  assert.match(offerCss, /\.creators-landing \.creator-flow \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
+  assert.match(offerCss, /\.creators-landing \.creator-flow \.offer-section-head h2\s*\{[\s\S]{0,180}color:\s*var\(--marketing-paper\);[\s\S]{0,120}font-size:\s*clamp\(54px, 6vw, 92px\)/);
+  assert.match(offerCss, /\.creators-landing \.creator-flow \.offer-flow-grid article\s*\{[\s\S]{0,260}background:\s*linear-gradient/);
   assert.match(offerCss, /\.business-quote \.lead-form input,[\s\S]{0,420}font-size:\s*16px;/);
   assert.match(catalogueData, /food-hospitality\.jpg/i);
   assert.match(catalogCss, /music-header\.jpg/i);

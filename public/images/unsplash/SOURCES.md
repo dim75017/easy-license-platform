@@ -43,3 +43,7 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 ## Business process refresh (2026-08-11)
 
 - `business-process-blur.webp` — Vitaly Gariev, https://unsplash.com/photos/KNGa5luu2HA (Unsplash License, locally resized and blurred derivative)
+
+## Creator process refresh (2026-08-11)
+
+- `creator-process-blur.webp` — Rodrigo Rodrigues / WOLF ART, https://unsplash.com/photos/man-filming-with-professional-camera-setup-sPeIJ0ebl8c (Unsplash License, locally resized and blurred derivative)

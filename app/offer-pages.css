@@ -2479,3 +2479,124 @@
     padding: 62px 24px 100px;
   }
 }
+
+/* V61: a cinematic visual pause for the Creator licensing process. */
+.creators-landing .creator-flow {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  padding: clamp(94px, 8vw, 132px) clamp(28px, 4vw, 76px) clamp(100px, 8vw, 140px);
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-flow::before {
+  position: absolute;
+  inset: -12px;
+  z-index: 0;
+  background: url("/images/unsplash/creator-process-blur.webp") center / cover no-repeat;
+  content: "";
+  transform: scale(1.025);
+}
+
+.creators-landing .creator-flow::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(110deg, rgba(18, 19, 29, .94), rgba(39, 43, 61, .79) 52%, rgba(18, 19, 29, .91)),
+    linear-gradient(180deg, rgba(18, 19, 29, .18), rgba(18, 19, 29, .74));
+  content: "";
+}
+
+.creators-landing .creator-flow > * {
+  position: relative;
+  z-index: 2;
+}
+
+.creators-landing .creator-flow .offer-section-head {
+  max-width: 1080px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.creators-landing .creator-flow .offer-kicker {
+  justify-content: center;
+  color: rgba(251, 247, 239, .72);
+}
+
+.creators-landing .creator-flow .offer-kicker > span,
+.creators-landing .creator-flow .offer-flow-grid article > span {
+  color: var(--marketing-clay-soft);
+}
+
+.creators-landing .creator-flow .offer-section-head h2 {
+  color: var(--marketing-paper);
+  font-size: clamp(54px, 6vw, 92px);
+  line-height: .92;
+}
+
+.creators-landing .creator-flow .offer-section-head > p:last-child {
+  max-width: 760px;
+  margin: 28px auto 0;
+  color: rgba(251, 247, 239, .72);
+}
+
+.creators-landing .creator-flow .offer-flow-grid {
+  max-width: 1240px;
+  margin: clamp(50px, 6vw, 76px) auto 0;
+  border-color: rgba(251, 247, 239, .24);
+}
+
+.creators-landing .creator-flow .offer-flow-grid article {
+  min-height: 260px;
+  border-color: rgba(251, 247, 239, .2);
+  background: linear-gradient(180deg, rgba(17, 20, 28, .42), rgba(17, 20, 28, .7));
+}
+
+.creators-landing .creator-flow .offer-flow-grid h3 {
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-flow .offer-flow-grid p {
+  color: rgba(251, 247, 239, .7);
+}
+
+@media (min-width: 761px) {
+  .creators-landing .creator-flow .offer-flow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .creators-landing .creator-flow .offer-flow-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .creators-landing .creator-flow {
+    width: 100%;
+    padding: 74px 14px 82px;
+  }
+
+  .creators-landing .creator-flow::before {
+    background-position: 58% center;
+  }
+
+  .creators-landing .creator-flow .offer-section-head h2 {
+    font-size: clamp(44px, 13vw, 58px);
+  }
+
+  .creators-landing .creator-flow .offer-flow-grid {
+    margin-top: 42px;
+  }
+
+  .creators-landing .creator-flow .offer-flow-grid article {
+    min-height: 210px;
+    padding: 24px;
+  }
+}
