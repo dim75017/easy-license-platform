@@ -418,7 +418,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
     ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study.jpg"],
     ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-night.jpg"],
     ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano.jpg"],
-    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient.jpg"],
+    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient-fog.jpg"],
     ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg"],
     ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg"],
     ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg"],

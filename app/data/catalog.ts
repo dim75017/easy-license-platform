@@ -127,8 +127,8 @@ export const lofiGirlPlaylists = [
     use: "cinematic",
     genre: "Ambient",
     moods: ["Dark", "Dreamy", "Cinematic"],
-    image: "/images/unsplash/playlists/dark-ambient.jpg",
-    imagePosition: "center 38%",
+    image: "/images/unsplash/playlists/dark-ambient-fog.jpg",
+    imagePosition: "60% center",
     borderColor: "#536B63",
   },
   {
