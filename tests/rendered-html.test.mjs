@@ -333,6 +333,9 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
   assert.match(offerCss, /V59: platform coverage is one balanced editorial composition[\s\S]{0,900}\.creators-landing \.creator-platforms-inner\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, \.95fr\) minmax\(480px, 1\.05fr\)/);
   assert.match(offerCss, /V59: platform coverage[\s\S]{0,1700}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,420}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,420}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,260}var\(--marketing-night\)/);
+  assert.match(offerCss, /V62: swap the visual rhythm[\s\S]{0,1500}\.creators-landing \.creator-editorial\s*\{[\s\S]{0,100}background:\s*#e8ddd1;[\s\S]{0,80}color:\s*var\(--marketing-night\)/);
+  assert.match(offerCss, /\.creators-landing \.creator-editorial-track\s*\{[\s\S]{0,260}background:\s*linear-gradient\([^}]*rgba\(41, 40, 50, \.98\)/);
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\.is-bare\s*\{[\s\S]{0,180}width:\s*clamp\(62px, 4\.5vw, 72px\)/);
   assert.match(offerCss, /@media \(max-width:\s*360px\)[\s\S]{0,200}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /V51: the Creators banner is a full-width rectangle[\s\S]{0,180}\.creators-landing \.offer-hero\s*\{[\s\S]{0,80}border-radius:\s*0;/);

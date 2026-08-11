@@ -2595,3 +2595,78 @@
     padding: 24px;
   }
 }
+
+/* V62: swap the visual rhythm of platform coverage and music discovery. */
+.creators-landing .creator-platforms {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(47, 102, 94, .2), transparent 27%),
+    radial-gradient(circle at 8% 92%, rgba(158, 212, 199, .07), transparent 24%),
+    var(--marketing-night);
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-platforms .offer-section-head h2 {
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-platforms .offer-kicker,
+.creators-landing .creator-platforms .offer-section-head > p:last-child {
+  color: rgba(251, 247, 239, .7);
+}
+
+.creators-landing .creator-platforms .offer-kicker > span {
+  color: var(--marketing-clay-soft);
+}
+
+.creators-landing .creator-platform-grid {
+  border-color: rgba(251, 247, 239, .2);
+  background: rgba(251, 247, 239, .94);
+  box-shadow: 0 24px 60px rgba(8, 8, 12, .2);
+}
+
+.creators-landing .creator-editorial {
+  background: #e8ddd1;
+  color: var(--marketing-night);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading h2 {
+  color: var(--marketing-night);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker,
+.creators-landing .creator-editorial .creator-editorial-heading > p:last-child {
+  color: rgba(41, 40, 50, .7);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker > span {
+  color: var(--marketing-night);
+}
+
+.creators-landing .creator-editorial-track {
+  border-color: rgba(41, 40, 50, .12);
+  background: linear-gradient(135deg, rgba(41, 40, 50, .98), rgba(58, 55, 66, .96));
+  box-shadow: 0 18px 44px rgba(41, 40, 50, .14);
+}
+
+.creators-landing .creator-editorial-track:hover,
+.creators-landing .creator-editorial-track.is-selected {
+  border-color: rgba(41, 40, 50, .28);
+  background: linear-gradient(135deg, #34323d, #292832);
+  box-shadow: 0 24px 54px rgba(41, 40, 50, .22);
+}
+
+.creators-landing .creator-editorial-player {
+  border-color: rgba(41, 40, 50, .18);
+  background: var(--marketing-night);
+  box-shadow: 0 20px 48px rgba(41, 40, 50, .16);
+}
+
+.creators-landing .creator-editorial-action .offer-catalogue-link {
+  border-color: var(--marketing-night);
+  background: var(--marketing-night);
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-editorial-action .offer-catalogue-link span:last-child {
+  background: rgba(251, 247, 239, .12);
+}
