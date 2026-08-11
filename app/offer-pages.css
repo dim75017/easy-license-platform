@@ -834,10 +834,13 @@
   bottom: 12px;
   left: 12px;
   border-radius: 999px;
-  padding: 8px 13px;
+  padding: 11px 16px;
   background: rgba(25,24,29,.74);
   color: var(--marketing-paper);
-  font-size: 12px;
+  font-size: clamp(17px, 1.25vw, 21px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.1;
   backdrop-filter: blur(8px);
 }
 

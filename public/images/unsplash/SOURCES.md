@@ -1,5 +1,14 @@
 # Added Unsplash image sources
 
+## Retail refresh (2026-08-11)
+
+- `retail/store.jpg` — https://unsplash.com/photos/Fx9DbEUcERA (Unsplash+ License)
+- `retail/office.jpg` — https://unsplash.com/photos/QckxruozjRg (Unsplash License)
+- `retail/restaurant-new.jpg` — https://unsplash.com/photos/Orz90t6o0e4 (Unsplash License)
+- `retail/hotel.jpg` — https://unsplash.com/photos/pGeCP2Bj_Qw (Unsplash+ License)
+- `retail/gym.jpg` — https://unsplash.com/photos/uRVwjUia9fE (Unsplash+ License)
+- `massage.jpg` and `retail/spa.jpg` — https://unsplash.com/photos/JQA6aZ18-OQ (Unsplash+ License, downloaded without watermark)
+
 - `hero-turntable.jpg` — Caught In Joy, https://unsplash.com/photos/ptVBlniJi50 (Unsplash License)
 
 - `food-hospitality.jpg` — Alex Haney, https://unsplash.com/photos/CAhjZmVk5H4 (Unsplash License)
