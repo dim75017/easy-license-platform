@@ -62,3 +62,7 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 - `business-license-vinyl.webp` — Jamakassi, https://unsplash.com/photos/person-holding-elvis-presley-vinyl-sleeve-wejxKZ-9IZg (Unsplash License, locally resized WebP derivative)
 - `business-commission-guitar.webp` — Soundtrap, https://unsplash.com/photos/woman-playing-brown-acoustic-guitar-4DAH0YhV3Qg (Unsplash License, locally resized WebP derivative)
 - `business-physical-coffee.webp` — Joshua Rodriguez, https://unsplash.com/photos/man-buying-coffee-on-counter-f7zm5TDOi4g (Unsplash License, locally resized WebP derivative)
+
+## Homepage Business hero refresh (2026-08-12)
+
+- `business-headphones-B88PgQXS4qg.jpg` — Viktor Forgacs, https://unsplash.com/photos/black-and-white-remote-control-beside-black-headphones-B88PgQXS4qg (Unsplash License, original download at 2400 × 1600)

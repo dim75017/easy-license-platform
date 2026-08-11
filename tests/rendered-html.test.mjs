@@ -59,7 +59,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
   assert.match(page, /creator-editing-keyboard\.webp/i);
-  assert.match(page, /filmmaker-desk\.jpg/i);
+  assert.match(page, /business-headphones-B88PgQXS4qg\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
   assert.match(page, /Hoogway/i);
@@ -755,6 +755,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/podcast-home.jpg", root)),
     access(new URL("public/images/unsplash/study-focus-clean.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
+    access(new URL("public/images/unsplash/business-headphones-B88PgQXS4qg.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
