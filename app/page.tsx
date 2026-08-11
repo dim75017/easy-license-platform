@@ -20,7 +20,7 @@ const useCollections = [
     title: "Study, Focus & Tutorials",
     copy: "Steady instrumental music that supports explanation without competing with it.",
     slug: "study-focus",
-    image: "/images/unsplash/study.jpg",
+    image: "/images/unsplash/study-focus-clean.jpg",
   },
   {
     title: "Livestreams & Gaming",

@@ -22,7 +22,7 @@ The matching `.webp` files are locally resized derivatives used by the Business 
 - `massage.jpg` — Getty Images, https://unsplash.com/photos/JQA6aZ18-OQ (Unsplash+ License)
 - `streamer.jpg` — ELLA DON, https://unsplash.com/photos/mKWi7LHcfcU (Unsplash License)
 - `podcast-home.jpg` — Stephanie Berbec, https://unsplash.com/photos/fu5mrNNvTIE (Unsplash+ License)
-- `study.jpg` — Kateryna Hliznitsova, https://unsplash.com/photos/JT5IUQHtL7E (Unsplash+ License)
+- `study-focus-clean.jpg` — Kateryna Hliznitsova, https://unsplash.com/photos/JT5IUQHtL7E (Unsplash+ License, original Premium download without watermark; locally resized JPEG derivative)
 - `creator-piano.jpg` — Benoît Deschasaux, https://unsplash.com/photos/yXRWCqGJBSc (Unsplash+ License)
 - `creator-streamer.jpg` — Getty Images, https://unsplash.com/photos/f3QGaG1BXJg (Unsplash+ License)
 - `creator-social.jpg` — Daiga Ellaby, https://unsplash.com/photos/-ihKKt1g4To (Unsplash+ License)

@@ -452,6 +452,22 @@ test("ships the requested Travel and Film collection photographs", async () => {
   );
 });
 
+test("ships the clean Premium Study photograph without the watermarked preview", async () => {
+  const [page, catalogueData, sources] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/data/catalog.ts"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const cleanStudyImage = "/images/unsplash/study-focus-clean.jpg";
+  const metadata = await stat(new URL(`public${cleanStudyImage}`, root));
+
+  assert.match(page, /Study, Focus & Tutorials[\s\S]{0,260}study-focus-clean\.jpg/);
+  assert.match(catalogueData, /slug: "study-focus"[\s\S]{0,260}study-focus-clean\.jpg/);
+  assert.doesNotMatch(`${page}\n${catalogueData}`, /\/images\/unsplash\/study\.jpg/);
+  assert.match(sources, /study-focus-clean\.jpg[\s\S]{0,220}JT5IUQHtL7E[\s\S]{0,220}original Premium download without watermark/i);
+  assert.ok(metadata.size <= 140_000, "the clean Study photograph should stay below 140 KB");
+});
+
 test("ships the Business process backdrop locally and documents its source", async () => {
   const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
   const sources = await source("public/images/unsplash/SOURCES.md");
@@ -627,7 +643,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/food-hospitality.jpg", root)),
     access(new URL("public/images/unsplash/music-header.jpg", root)),
     access(new URL("public/images/unsplash/podcast-home.jpg", root)),
-    access(new URL("public/images/unsplash/study.jpg", root)),
+    access(new URL("public/images/unsplash/study-focus-clean.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),

@@ -21,7 +21,7 @@ export const useCategories = [
     slug: "study-focus",
     label: "Study & Focus",
     description: "Long-form work, study sessions and calm tutorials.",
-    image: "/images/unsplash/study.jpg",
+    image: "/images/unsplash/study-focus-clean.jpg",
   },
   {
     slug: "gaming-streaming",
