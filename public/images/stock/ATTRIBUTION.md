@@ -50,3 +50,11 @@ These are official Spotify cover thumbnails for tracks selected from the local c
 | `catalogue/532pm.jpg` | The Deli — 5:32pm | https://open.spotify.com/track/0Q2LHrREFF9rtX3PuMUoNL |
 | `catalogue/blue-and-green.jpg` | Aso — Blue and Green | https://open.spotify.com/track/6BFm6CduJnfZ1RsMYjWO9G |
 | `catalogue/drifting-away.jpg` | Charlee Nguyen — Drifting away | https://open.spotify.com/track/4aw3VYsMAEhqaq87YXyvKA |
+| `catalogue/creator-playlist-tracks/snowflakes.webp` | Pandrezz — Snowflakes | https://open.spotify.com/track/4ytksG38eM66TkmAjn3PmU |
+| `catalogue/creator-playlist-tracks/celestial-awakening.webp` | Opal — Celestial Awakening | https://open.spotify.com/track/0pbcr9ya4OHHDwMKOb5YZr |
+| `catalogue/creator-playlist-tracks/the-places-we-used-to-walk.webp` | Mariposa — The Places We Used to Walk | https://open.spotify.com/track/2tWn2VgQTOAU0IwAjMHkOn |
+| `catalogue/creator-playlist-tracks/lightswitch.webp` | Stilte, schimmerlicht — Lightswitch | https://open.spotify.com/track/1bcrf3BtzGyHCfc27jqcCi |
+| `catalogue/creator-playlist-tracks/frozen-bubbles.webp` | Worldtraveller, Max Merseny, Viktor Minsky — Frozen Bubbles | https://open.spotify.com/track/2mnWnyRWdsTHUcOMrD6JgC |
+| `catalogue/creator-playlist-tracks/tempel.webp` | Morning life — Tempel | https://open.spotify.com/track/5PRK2YEF3iSufclolLWqaQ |
+| `catalogue/creator-playlist-tracks/flickering-dust.webp` | anębu — Flickering Dust | https://open.spotify.com/track/7N0SEnpPcc28E1kBhRFoKQ |
+| `catalogue/creator-playlist-tracks/green-glimmers.webp` | Antonio Roberto — Green Glimmers | https://open.spotify.com/track/0kjzCZ5nEUb7WN9tIwOjKI |

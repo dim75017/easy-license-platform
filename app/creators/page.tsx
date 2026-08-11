@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CatalogueExplorer } from "../components/CatalogueExplorer";
+import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
 import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PublicShell } from "../components/PublicShell";
 
@@ -73,14 +73,14 @@ export default function CreatorsPage() {
           </div>
         </section>
 
-        <section className="offer-catalogue" aria-labelledby="creator-catalogue-title">
-          <div className="offer-section-head offer-section-head-light" data-reveal="group">
+        <section className="offer-catalogue creator-editorial" aria-labelledby="creator-catalogue-title">
+          <div className="offer-section-head offer-section-head-light creator-editorial-heading" data-reveal="group">
             <p className="offer-kicker"><span>04</span> Browse the music</p>
             <h2 id="creator-catalogue-title">Search by mood,<br />style or use.</h2>
-            <p>Search for a specific track by mood, style or intended use. Or start with a professionally curated playlist made for a stream, edit or a particular kind of content.</p>
+            <p>Search for a specific track by mood, style or intended use. Or begin with these eight tracks — one from each of our main playlists, selected for streams, edits and different kinds of content.</p>
           </div>
-          <div className="offer-catalogue-console" data-reveal="scale"><CatalogueExplorer compact /></div>
-          <Link className="offer-button offer-button-light offer-catalogue-link" href="/catalog">Browse all 10,000+ tracks <span>↗</span></Link>
+          <div data-reveal="scale"><CreatorTrackShowcase /></div>
+          <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link" href="/catalog">Explore the full music library <span>↗</span></Link></div>
         </section>
 
         <section className="offer-flow" aria-labelledby="creator-flow-title">

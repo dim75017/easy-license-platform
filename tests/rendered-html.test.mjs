@@ -162,7 +162,8 @@ test("defines every public and connected product surface", async () => {
     source("app/sync/page.tsx"),
   ]);
   assert.match(creators, /Music that leaves room/i);
-  assert.match(creators, /<CatalogueExplorer compact \/>/i);
+  assert.doesNotMatch(creators, /CatalogueExplorer/i);
+  assert.match(creators, /<CreatorTrackShowcase \/>/i);
   assert.doesNotMatch(creators, /PricingCards|creator-pricing-cards/i);
   assert.match(creators, /creator-pricing-cta[\s\S]*href="\/pricing"[\s\S]*Discover pricing/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
@@ -187,6 +188,61 @@ test("defines every public and connected product surface", async () => {
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);
   assert.match(sync, /Symbiose/i);
+});
+
+test("presents one real track from each main playlist on the Creators page", async () => {
+  const [creators, showcase, catalogueData, offerCss, artworkSources] = await Promise.all([
+    source("app/creators/page.tsx"),
+    source("app/components/CreatorTrackShowcase.tsx"),
+    source("app/data/catalog.ts"),
+    source("app/offer-pages.css"),
+    source("public/images/stock/ATTRIBUTION.md"),
+  ]);
+
+  assert.match(creators, /these eight tracks — one from each of our main playlists/i);
+  assert.match(showcase, /creatorPlaylistTracks\.slice\(0, 8\)\.map/);
+  assert.match(showcase, /className=\{isSelected \? "creator-editorial-track is-selected" : "creator-editorial-track"\}/);
+  assert.match(showcase, /\{track\.title\}/);
+  assert.match(showcase, /\{track\.artist\}/);
+  assert.match(showcase, /\{track\.genre\}/);
+  assert.match(showcase, /\{track\.duration\}/);
+  assert.match(showcase, /src=\{track\.cover\}[\s\S]{0,220}width=\{640\}[\s\S]{0,100}height=\{640\}[\s\S]{0,120}loading="lazy"[\s\S]{0,120}decoding="async"/);
+  assert.match(showcase, /open\.spotify\.com\/embed\/track\/\$\{selectedTrack\.spotifyId\}/);
+
+  const featureBlock = catalogueData.match(/export const creatorPlaylistTracks = \[([\s\S]*?)\]\s+satisfies readonly CreatorPlaylistTrack\[\];/);
+  assert.ok(featureBlock, "creatorPlaylistTracks should be exported as a typed list");
+  const featureSource = featureBlock[1];
+  const playlistIds = [...featureSource.matchAll(/playlistId:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(playlistIds.length, 8);
+  assert.equal(new Set(playlistIds).size, 8);
+  assert.deepEqual(
+    new Set(playlistIds),
+    new Set(["lofi-study", "synthwave-night", "peaceful-piano", "dark-ambient", "jazz-lofi", "chill-house", "sleep-ambient", "chill-guitar"]),
+  );
+
+  const durations = [...featureSource.matchAll(/duration:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(durations.length, 8);
+  assert.ok(durations.every((value) => /^\d{1,2}:\d{2}$/.test(value)), "every editorial track needs an m:ss duration");
+
+  const covers = [...featureSource.matchAll(/cover:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(covers.length, 8);
+  assert.equal(new Set(covers).size, 8);
+  let coverBytes = 0;
+  for (const cover of covers) {
+    const file = new URL(`public${cover}`, root);
+    await access(file);
+    const metadata = await stat(file);
+    coverBytes += metadata.size;
+    assert.ok(metadata.size <= 120_000, `${cover} should stay below 120 KB`);
+    assert.match(artworkSources, new RegExp(cover.split("/").at(-1).replace(".", "\\.")), `${cover} source should be documented`);
+  }
+  assert.ok(coverBytes <= 500_000, "the eight editorial covers should stay below 500 KB");
+
+  assert.match(offerCss, /\.creator-editorial-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /\.creator-editorial-track\s*\{[\s\S]{0,260}grid-template-columns:\s*92px minmax\(0, 1fr\) 82px 52px/);
+  assert.match(offerCss, /\.creator-editorial-cover\s*\{[\s\S]{0,180}aspect-ratio:\s*1/);
+  assert.match(offerCss, /\.creator-editorial-cover img\s*\{[\s\S]{0,180}object-fit:\s*cover/);
+  assert.match(offerCss, /@media \(max-width: 760px\)[\s\S]{0,160}\.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {

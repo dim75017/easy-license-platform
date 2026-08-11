@@ -185,6 +185,113 @@ export const lofiGirlPlaylists = [
   },
 ] satisfies readonly LofiGirlPlaylist[];
 
+export type CreatorPlaylistTrack = {
+  playlistId: string;
+  playlistTitle: string;
+  spotifyId: string;
+  title: string;
+  artist: string;
+  genre: string;
+  duration: `${number}:${number}`;
+  durationIso: `PT${number}M${number}S`;
+  cover: `/images/catalogue/creator-playlist-tracks/${string}.webp`;
+};
+
+/**
+ * One current track from each main public playlist, verified from Spotify's
+ * public embeds on 2026-08-11. Artwork is stored locally for a fast preview.
+ */
+export const creatorPlaylistTracks = [
+  {
+    playlistId: "lofi-study",
+    playlistTitle: "Lofi Study",
+    spotifyId: "4ytksG38eM66TkmAjn3PmU",
+    title: "Snowflakes",
+    artist: "Pandrezz",
+    genre: "Lofi",
+    duration: "3:20",
+    durationIso: "PT3M20S",
+    cover: "/images/catalogue/creator-playlist-tracks/snowflakes.webp",
+  },
+  {
+    playlistId: "synthwave-night",
+    playlistTitle: "Synthwave Night",
+    spotifyId: "0pbcr9ya4OHHDwMKOb5YZr",
+    title: "Celestial Awakening",
+    artist: "Opal",
+    genre: "Synthwave",
+    duration: "3:01",
+    durationIso: "PT3M1S",
+    cover: "/images/catalogue/creator-playlist-tracks/celestial-awakening.webp",
+  },
+  {
+    playlistId: "peaceful-piano",
+    playlistTitle: "Peaceful Piano",
+    spotifyId: "2tWn2VgQTOAU0IwAjMHkOn",
+    title: "The Places We Used to Walk",
+    artist: "Mariposa",
+    genre: "Piano",
+    duration: "3:01",
+    durationIso: "PT3M1S",
+    cover: "/images/catalogue/creator-playlist-tracks/the-places-we-used-to-walk.webp",
+  },
+  {
+    playlistId: "dark-ambient",
+    playlistTitle: "Dark Ambient",
+    spotifyId: "1bcrf3BtzGyHCfc27jqcCi",
+    title: "Lightswitch",
+    artist: "Stilte, schimmerlicht",
+    genre: "Ambient",
+    duration: "1:51",
+    durationIso: "PT1M51S",
+    cover: "/images/catalogue/creator-playlist-tracks/lightswitch.webp",
+  },
+  {
+    playlistId: "jazz-lofi",
+    playlistTitle: "Jazz Lofi",
+    spotifyId: "2mnWnyRWdsTHUcOMrD6JgC",
+    title: "Frozen Bubbles",
+    artist: "Worldtraveller, Max Merseny, Viktor Minsky",
+    genre: "Jazz Lofi",
+    duration: "2:08",
+    durationIso: "PT2M8S",
+    cover: "/images/catalogue/creator-playlist-tracks/frozen-bubbles.webp",
+  },
+  {
+    playlistId: "chill-house",
+    playlistTitle: "Chill House",
+    spotifyId: "5PRK2YEF3iSufclolLWqaQ",
+    title: "Tempel",
+    artist: "Morning life",
+    genre: "Chill House",
+    duration: "2:26",
+    durationIso: "PT2M26S",
+    cover: "/images/catalogue/creator-playlist-tracks/tempel.webp",
+  },
+  {
+    playlistId: "sleep-ambient",
+    playlistTitle: "Sleep Ambient",
+    spotifyId: "7N0SEnpPcc28E1kBhRFoKQ",
+    title: "Flickering Dust",
+    artist: "anębu",
+    genre: "Ambient",
+    duration: "2:08",
+    durationIso: "PT2M8S",
+    cover: "/images/catalogue/creator-playlist-tracks/flickering-dust.webp",
+  },
+  {
+    playlistId: "chill-guitar",
+    playlistTitle: "Chill Guitar",
+    spotifyId: "0kjzCZ5nEUb7WN9tIwOjKI",
+    title: "Green Glimmers",
+    artist: "Antonio Roberto",
+    genre: "Acoustic",
+    duration: "2:26",
+    durationIso: "PT2M26S",
+    cover: "/images/catalogue/creator-playlist-tracks/green-glimmers.webp",
+  },
+] satisfies readonly CreatorPlaylistTrack[];
+
 export type Track = {
   id: string;
   spotifyId: string;
