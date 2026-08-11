@@ -202,6 +202,7 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,160}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\s*\{[\s\S]{0,160}width:\s*80px;[\s\S]{0,80}height:\s*80px;/);
   assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
+  assert.match(offerCss, /V51: the Creators banner is a full-width rectangle[\s\S]{0,180}\.creators-landing \.offer-hero\s*\{[\s\S]{0,80}border-radius:\s*0;/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));

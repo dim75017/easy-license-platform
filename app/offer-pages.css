@@ -1816,3 +1816,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* V51: the Creators banner is a full-width rectangle at every breakpoint. */
+.creators-landing .offer-hero {
+  border-radius: 0;
+}
