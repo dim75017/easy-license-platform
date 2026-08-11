@@ -235,12 +235,13 @@ test("keeps each public page free of repeated image assets", async () => {
 });
 
 test("ships progressive, accessible motion without an animation dependency", async () => {
-  const [page, shell, motion, css, homeCss, cozyCss, booth, packageJson] = await Promise.all([
+  const [page, shell, motion, css, homeCss, home26Css, cozyCss, booth, packageJson] = await Promise.all([
     source("app/page.tsx"),
     source("app/components/PublicShell.tsx"),
     source("app/components/MotionLayer.tsx"),
     source("app/globals.css"),
     source("app/home-v5.css"),
+    source("app/home-v26.css"),
     source("app/home-v6.css"),
     source("app/components/LicenseBooth.tsx"),
     source("package.json"),
@@ -257,6 +258,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(motion, /prefers-reduced-motion/);
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
   assert.match(homeCss, /@keyframes v5Scan/);
+  assert.match(home26Css, /\.home26-artist-grid article\s*\{[\s\S]{0,120}flex:\s*0 0 clamp\(220px, 23vw, 310px\)/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(cozyCss, /animation:\s*none\s*!important/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);

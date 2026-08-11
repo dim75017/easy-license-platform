@@ -610,7 +610,7 @@
 }
 
 .home26-artist-grid article {
-  min-width: clamp(220px, 23vw, 310px);
+  flex: 0 0 clamp(220px, 23vw, 310px);
   scroll-snap-align: start;
   overflow: hidden;
   border: 1px solid rgba(251, 247, 239, .14);
@@ -619,6 +619,7 @@
 }
 
 .home26-artist-grid img {
+  display: block;
   width: 100%;
   aspect-ratio: .88;
   object-fit: cover;
