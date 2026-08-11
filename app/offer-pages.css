@@ -549,13 +549,13 @@
 
 /* Business brief: a tighter editorial block with the principles kept in one row. */
 .business-curation {
-  margin-block: 72px 92px;
-  grid-template-columns: minmax(340px, .82fr) minmax(0, 1.18fr);
+  margin-block: 88px 108px;
+  grid-template-columns: minmax(380px, .88fr) minmax(0, 1.12fr);
 }
 
 .business-curation figure {
-  min-height: 460px;
-  max-height: 520px;
+  min-height: 620px;
+  max-height: 680px;
 }
 
 .business-curation img {
@@ -564,35 +564,35 @@
 }
 
 .business-curation .offer-curation-copy {
-  padding: clamp(34px, 4vw, 58px);
+  padding: clamp(48px, 5vw, 76px);
 }
 
 .business-curation h2 {
-  font-size: clamp(43px, 4vw, 64px);
+  font-size: clamp(49px, 4.5vw, 72px);
 }
 
 .business-curation .offer-curation-copy > p {
-  margin-top: 18px;
-  font-size: clamp(16px, 1.2vw, 18px);
+  margin-top: 22px;
+  font-size: clamp(17px, 1.3vw, 19px);
 }
 
 .business-curation .offer-principles {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .business-curation .offer-principles article {
   display: block;
   border-right: 1px solid var(--marketing-rule);
   border-bottom: 0;
-  padding: 17px 18px 0;
+  padding: 22px 24px 4px;
 }
 
 .business-curation .offer-principles article:first-child { padding-left: 0; }
 .business-curation .offer-principles article:last-child { border-right: 0; padding-right: 0; }
-.business-curation .offer-principles article > span { display: block; margin-bottom: 8px; }
-.business-curation .offer-principles h3 { margin-bottom: 5px; }
-.business-curation .offer-principles p { font-size: 14px; line-height: 1.38; }
+.business-curation .offer-principles article > span { display: block; margin-bottom: 10px; }
+.business-curation .offer-principles h3 { margin-bottom: 7px; font-size: 20px; }
+.business-curation .offer-principles p { font-size: 15px; line-height: 1.45; }
 
 .offer-uses,
 .offer-flow,
@@ -926,7 +926,7 @@
   .business-option { min-height: 430px; }
   .business-retail { gap: 42px; }
 
-  .business-curation figure { min-height: 420px; max-height: 460px; }
+  .business-curation figure { min-height: 470px; max-height: 520px; }
 }
 
 @media (max-width: 800px) {
@@ -1013,7 +1013,8 @@
   .offer-final-cta { padding-inline: 22px; }
   .offer-final-cta h2 { font-size: 45px; }
 
-  .business-curation { margin-block: 42px 72px; }
+  .business-curation { margin-block: 52px 82px; }
+  .business-curation figure { min-height: 380px; max-height: none; }
   .business-curation .offer-principles { grid-template-columns: 1fr; }
   .business-curation .offer-principles article,
   .business-curation .offer-principles article:first-child,
