@@ -118,6 +118,7 @@ test("defines every public and connected product surface", async () => {
   assert.doesNotMatch(creators, /PricingCards|creator-pricing-cards/i);
   assert.match(creators, /creator-pricing-cta[\s\S]*href="\/pricing"[\s\S]*Discover pricing/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
+  assert.doesNotMatch(creators, /Artists and payments|More than 1,000 artists|offer-human/i);
   assert.match(business, /Commercial Sync/i);
   assert.match(business, /Custom Commission/i);
   assert.match(business, /Music for Retail · Coming soon/i);
@@ -128,6 +129,7 @@ test("defines every public and connected product surface", async () => {
   assert.match(business, /<LeadForm type="sync" \/>/i);
   assert.match(business, /href="#business-brief"/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
+  assert.doesNotMatch(business, /Artists and music team|More than 1,000 artists|offer-human/i);
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /Rights built around/i);
   assert.match(pricing, /Commercial Sync/i);
@@ -354,7 +356,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(page, /A precise, high-quality catalogue/i);
   assert.match(page, /licensing income is paid directly and fairly/i);
   assert.match(page, /\/artists\/charlee\.jpg/);
-  assert.match(business, /\/artists\/meadow\.jpg/);
+  assert.doesNotMatch(business, /\/artists\/meadow\.jpg/);
   assert.match(booth, /My channel/);
   assert.match(layout, /openGraph/);
   assert.match(layout, /og\.png/);

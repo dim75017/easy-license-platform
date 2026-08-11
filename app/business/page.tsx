@@ -93,18 +93,9 @@ export default function BusinessPage() {
           </div>
         </section>
 
-        <section className="offer-human offer-human-business" aria-labelledby="business-human-title">
-          <figure data-reveal="scale"><img src="/artists/meadow.jpg" alt="Portrait of Symbiose artist M e a d o w" /></figure>
-          <div data-reveal="right">
-            <p className="offer-kicker"><span>05</span> Artists and music team</p>
-            <h2 id="business-human-title">More than 1,000 artists<br />contribute to the catalogue.</h2>
-            <p>Every track is created by a real artist, and no generative AI is used in the music catalogue. Our music team selects work for composition, production quality and suitability for commercial use. Artists are credited and paid directly and fairly when their music is licensed through Symbiose.</p>
-          </div>
-        </section>
-
         <section className="business-quote" id="business-brief" aria-labelledby="business-brief-title">
           <div className="business-quote-copy" data-reveal="left">
-            <p className="offer-kicker"><span>06</span> Made-to-measure quotes</p>
+            <p className="offer-kicker"><span>05</span> Made-to-measure quotes</p>
             <h2 id="business-brief-title">Every business project gets a custom quote.</h2>
             <p>Share the project, media, territories, timing and indicative budget. Our team will confirm the right music route, define the required rights and prepare a quote around the real use.</p>
             <div className="business-quote-factors" aria-label="The four factors used to prepare a quote">
