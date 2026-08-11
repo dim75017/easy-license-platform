@@ -144,6 +144,8 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   ]);
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
+  assert.match(creators, /className="creator-platform-logo"[^>]*role="img"[^>]*aria-label=\{name\}/);
+  assert.doesNotMatch(creators, /<PlatformLogo platform=\{name\} \/>\{name\}/);
   assert.match(pricing, /<PlatformLogo platform=\{name\}/);
   assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
   assert.doesNotMatch(platformLogo, /creatorPlatforms[^;]*Apple Podcasts/);
@@ -171,6 +173,8 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon svg/);
   assert.match(offerCss, /\.creator-platform-grid \.platform-brand-icon img/);
   assert.match(offerCss, /creator-platform-grid \{[^}]*grid-template-columns:repeat\(3/s);
+  assert.match(offerCss, /\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,160}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\s*\{[\s\S]{0,160}width:\s*80px;[\s\S]{0,80}height:\s*80px;/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));

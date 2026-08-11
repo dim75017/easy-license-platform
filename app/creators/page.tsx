@@ -70,7 +70,7 @@ export default function CreatorsPage() {
             <p>Connect the channels and profiles covered by your plan. Creator licences are for your own content and do not replace a commercial campaign licence.</p>
           </div>
           <div className="creator-platform-grid" data-reveal="group">
-            {creatorPlatforms.map((name) => <span key={name}><PlatformLogo platform={name} />{name}</span>)}
+            {creatorPlatforms.map((name) => <span className="creator-platform-logo" key={name} role="img" aria-label={name} title={name}><PlatformLogo platform={name} /></span>)}
           </div>
         </section>
 
