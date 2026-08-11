@@ -2193,3 +2193,13 @@
   border-radius: 0;
   box-shadow: none;
 }
+
+/* V54: the first Business story continues directly from the hero, full bleed. */
+.business-landing .business-curation {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 clamp(82px, 8vw, 108px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
