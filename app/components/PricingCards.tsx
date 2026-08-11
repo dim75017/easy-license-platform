@@ -55,7 +55,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             {expanded && <li><i>✓</i> Centralised downloads and licences</li>}
           </ul>
           <Link className="button button-light button-full" href="/app">License my channels</Link>
-          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Symbiose for Business.</p>
+          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Symbiome for Business.</p>
         </article>
 
       </div>

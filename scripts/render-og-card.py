@@ -1,4 +1,4 @@
-"""Render the hand-composed Symbiose social card."""
+"""Render the hand-composed Symbiome social card."""
 
 from __future__ import annotations
 
@@ -16,11 +16,11 @@ OUTPUT = ROOT / "public" / "og.png"
 
 NIGHT = "#292832"
 NIGHT_SOFT = "#36333d"
-OAT = "#f3ece0"
-PAPER = "#fbf7ef"
-CLAY = "#2f665e"
-SAGE = "#7e8976"
-LAMP = "#d1a25e"
+OAT = "#f7ebdd"
+PAPER = "#fff9f1"
+CLAY = "#e06343"
+SAGE = "#8b6347"
+LAMP = "#f0b84c"
 
 
 def font(name: str, size: int) -> ImageFont.FreeTypeFont:
@@ -41,13 +41,13 @@ def main() -> None:
         x = random.randrange(WIDTH)
         y = random.randrange(HEIGHT)
         alpha = random.randrange(4, 15)
-        tone = (243, 236, 224, alpha) if random.random() > 0.45 else (0, 0, 0, alpha)
+        tone = (247, 235, 221, alpha) if random.random() > 0.45 else (0, 0, 0, alpha)
         draw.point((x, y), fill=tone)
 
     # Editorial frame and soft listening-room glow.
-    rounded(draw, (32, 32, WIDTH - 32, HEIGHT - 32), 36, None, (243, 236, 224, 40), 2)
+    rounded(draw, (32, 32, WIDTH - 32, HEIGHT - 32), 36, None, (247, 235, 221, 40), 2)
     for radius, alpha in ((360, 10), (270, 16), (185, 22)):
-        draw.ellipse((1325 - radius, 262 - radius, 1325 + radius, 262 + radius), fill=(209, 162, 94, alpha))
+        draw.ellipse((1325 - radius, 262 - radius, 1325 + radius, 262 + radius), fill=(240, 184, 76, alpha))
 
     # Wordmark and restrained proof line.
     brand = font("seguisb.ttf", 34)
@@ -58,24 +58,24 @@ def main() -> None:
 
     draw.text((112, 91), "SYMB", font=brand, fill=OAT)
     symb_width = draw.textlength("SYMB", font=brand)
-    draw.text((112 + symb_width, 91), "IOSE", font=brand, fill=CLAY)
-    draw.text((112, 143), "by Lofi Girl", font=label, fill=(243, 236, 224, 155))
+    draw.text((112 + symb_width, 91), "IOME", font=brand, fill=CLAY)
+    draw.text((112, 143), "by Lofi Girl", font=label, fill=(247, 235, 221, 155))
 
     draw.text((108, 254), "Music for", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
     draw.text((108, 368), "every project.", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
-    draw.text((112, 515), "High-quality instrumental music for creators", font=body, fill=(243, 236, 224, 205))
-    draw.text((112, 558), "and businesses. Made by people.", font=body, fill=(243, 236, 224, 205))
+    draw.text((112, 515), "High-quality instrumental music for creators", font=body, fill=(247, 235, 221, 205))
+    draw.text((112, 558), "and businesses. Made by people.", font=body, fill=(247, 235, 221, 205))
 
     chip_y = 666
-    rounded(draw, (108, chip_y, 415, chip_y + 62), 31, (243, 236, 224, 22), (243, 236, 224, 54), 1)
-    rounded(draw, (429, chip_y, 746, chip_y + 62), 31, (47, 102, 94, 32), (47, 102, 94, 90), 1)
+    rounded(draw, (108, chip_y, 415, chip_y + 62), 31, (247, 235, 221, 22), (247, 235, 221, 54), 1)
+    rounded(draw, (429, chip_y, 746, chip_y + 62), 31, (224, 99, 67, 32), (224, 99, 67, 90), 1)
     draw.text((136, chip_y + 17), "10,000+ TRACKS", font=chip, fill=OAT)
     draw.text((457, chip_y + 17), "ZERO AI MUSIC", font=chip, fill=OAT)
 
     # Code-built listening-room vignette: record, sleeve, desk and lamp.
     rounded(draw, (1010, 180, 1548, 695), 30, PAPER, None)
     draw.rectangle((1010, 180, 1105, 695), fill=CLAY)
-    draw.ellipse((855, 78, 1255, 478), fill=(47, 102, 94, 225))
+    draw.ellipse((855, 78, 1255, 478), fill=(224, 99, 67, 225))
     draw.ellipse((908, 131, 1202, 425), fill=NIGHT_SOFT)
 
     # Vinyl with subtle grooves.
@@ -88,18 +88,18 @@ def main() -> None:
     draw.ellipse((cx - 8, cy - 8, cx + 8, cy + 8), fill=NIGHT)
 
     # Wooden desk and a small warm lamp.
-    rounded(draw, (872, 684, 1650, 786), 18, (54, 45, 42, 255), (243, 236, 224, 28), 2)
-    draw.ellipse((1425, 546, 1627, 665), fill=(47, 102, 94, 255))
+    rounded(draw, (872, 684, 1650, 786), 18, (54, 45, 42, 255), (247, 235, 221, 28), 2)
+    draw.ellipse((1425, 546, 1627, 665), fill=(224, 99, 67, 255))
     rounded(draw, (1515, 635, 1534, 748), 9, LAMP)
     rounded(draw, (1460, 735, 1594, 758), 12, LAMP)
-    draw.ellipse((1487, 629, 1562, 702), fill=(209, 162, 94, 40))
+    draw.ellipse((1487, 629, 1562, 702), fill=(240, 184, 76, 40))
 
     # A minimal plant silhouette softens the edge without becoming illustrative.
-    draw.line((1644, 445, 1600, 696), fill=(126, 137, 118, 170), width=9)
+    draw.line((1644, 445, 1600, 696), fill=(139, 99, 71, 170), width=9)
     for x, y, angle in ((1615, 508, -18), (1642, 548, 20), (1598, 583, -22), (1625, 625, 18)):
         leaf = Image.new("RGBA", (96, 52), (0, 0, 0, 0))
         leaf_draw = ImageDraw.Draw(leaf, "RGBA")
-        leaf_draw.ellipse((3, 6, 92, 47), fill=(126, 137, 118, 150))
+        leaf_draw.ellipse((3, 6, 92, 47), fill=(139, 99, 71, 150))
         leaf = leaf.rotate(angle, expand=True, resample=Image.Resampling.BICUBIC)
         image.paste(leaf, (x - leaf.width // 2, y - leaf.height // 2), leaf)
 

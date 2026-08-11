@@ -1,8 +1,21 @@
-/* Warm Groove — the shared Symbiose identity */
+/* Warm Groove â€” the shared Symbiome identity */
+
+:root {
+  --symbiose-night: #292832;
+  --symbiose-paper: #fff9f1;
+  --symbiose-warm: #e06343;
+  --symbiose-warm-deep: #9f3f2b;
+  --symbiose-peach: #f2b5a0;
+  --symbiose-wash: #f5ded5;
+  --symbiose-honey: #f0b84c;
+  --accent: var(--symbiose-warm);
+  --accent-light: var(--symbiose-peach);
+  --accent-bg: rgba(224, 99, 67, .12);
+}
 
 .brand-warm {
-  --symbiose-brand-base: #292832;
-  --symbiose-brand-warm: #e06343;
+  --symbiose-brand-base: var(--symbiose-night);
+  --symbiose-brand-warm: var(--symbiose-warm);
   gap: 12px;
 }
 
@@ -33,18 +46,15 @@
 }
 
 .brand-warm .brand-groove path {
-  fill: none;
-  stroke-width: 13;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke: none;
 }
 
 .brand-warm .brand-groove-warm {
-  stroke: var(--symbiose-brand-warm);
+  fill: var(--symbiose-brand-warm);
 }
 
 .brand-warm .brand-groove-base {
-  stroke: var(--symbiose-brand-base);
+  fill: var(--symbiose-brand-base);
 }
 
 .brand-warm .brand-copy {
@@ -84,7 +94,7 @@
 .site-footer .brand-warm,
 .dashboard-shell .brand-warm,
 .creator-music-app .brand-warm {
-  --symbiose-brand-base: #f7ebdd;
+  --symbiose-brand-base: var(--symbiose-paper);
 }
 
 .dashboard-shell .brand-warm .brand-groove,
@@ -116,7 +126,6 @@
     font-size: 19px;
   }
 }
-
 @media (max-width: 900px) {
   .dashboard-brand-row .brand-warm .brand-groove {
     width: 37px;

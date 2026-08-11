@@ -1,12 +1,12 @@
 /* V40: two clear pricing routes — fixed Creator plans and custom Business quotes. */
 .pricing-v39 {
   --price-ink: #292832;
-  --price-paper: #f3ece0;
-  --price-cream: #fbf7ef;
-  --price-sand: #e8ddd1;
-  --price-clay: #2f665e;
-  --price-clay-deep: #234f4a;
-  --price-clay-soft: #9ed4c7;
+  --price-paper: #f7ebdd;
+  --price-cream: #fff9f1;
+  --price-sand: #efd6c7;
+  --price-clay: #e06343;
+  --price-clay-deep: #9f3f2b;
+  --price-clay-soft: #f2b5a0;
   background: var(--price-paper);
   color: var(--price-ink);
 }
@@ -57,7 +57,7 @@
 .pricing-v39-hero p {
   max-width: 62ch;
   margin: 0 auto;
-  color: rgba(251, 247, 239, .74);
+  color: rgba(255, 249, 241, .74);
   font-size: clamp(17px, 1.4vw, 20px);
   line-height: 1.55;
 }
@@ -168,8 +168,8 @@
 }
 
 .pricing-v39 .price-card-featured .plan-icon {
-  border-color: rgba(251, 247, 239, .28);
-  background: rgba(251, 247, 239, .12);
+  border-color: rgba(255, 249, 241, .28);
+  background: rgba(255, 249, 241, .12);
   color: var(--price-cream);
 }
 
@@ -187,7 +187,7 @@
 .pricing-v39 .price-card-featured .billing-note,
 .pricing-v39 .price-card-featured .fine-print,
 .pricing-v39 .price-card-featured .feature-list li {
-  color: rgba(251, 247, 239, .76);
+  color: rgba(255, 249, 241, .76);
 }
 
 .pricing-v39 .price strong { font-size: 70px; }
@@ -200,19 +200,19 @@
   padding-top: 22px;
 }
 
-.pricing-v39 .price-card-featured .feature-list { border-color: rgba(251, 247, 239, .18); }
+.pricing-v39 .price-card-featured .feature-list { border-color: rgba(255, 249, 241, .18); }
 .pricing-v39 .feature-list li { gap: 10px; margin: 13px 0; line-height: 1.35; }
 
 .pricing-v39 .feature-list i {
   width: 18px;
   height: 18px;
-  background: rgba(47, 102, 94, .14);
+  background: rgba(224, 99, 67, .14);
   color: var(--price-clay-deep);
   font-size: 11px;
 }
 
 .pricing-v39 .price-card-featured .feature-list i {
-  background: rgba(158, 212, 199, .2);
+  background: rgba(242, 181, 160, .2);
   color: var(--price-clay-soft);
 }
 
@@ -237,7 +237,7 @@
 .pricing-v39-business-intro > p {
   max-width: 620px;
   margin-top: 26px;
-  color: rgba(251, 247, 239, .72);
+  color: rgba(255, 249, 241, .72);
 }
 
 .pricing-v39-business-form {
@@ -302,7 +302,7 @@
 .pricing-v39-business-form .lead-form select:focus,
 .pricing-v39-business-form .lead-form textarea:focus {
   border-color: var(--price-clay);
-  box-shadow: 0 0 0 3px rgba(47, 102, 94, .14);
+  box-shadow: 0 0 0 3px rgba(224, 99, 67, .14);
 }
 
 .pricing-v39-business-form .lead-form .button-primary {
@@ -328,10 +328,10 @@
 .pricing-v39 .business-coming-soon strong { font-weight: 760; }
 
 .pricing-v39 .business-coming-soon {
-  border: 1px solid rgba(47, 102, 94, .24);
+  border: 1px solid rgba(224, 99, 67, .24);
   border-radius: 16px;
   padding: 20px;
-  background: #dceae5;
+  background: #f5ded5;
 }
 
 .pricing-v39 .business-coming-soon p {

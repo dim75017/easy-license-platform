@@ -35,7 +35,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 Symbiose.</span>
+        <span>© 2026 Symbiome.</span>
         <span>Powered by Lofi Girl.</span>
       </div>
     </footer>

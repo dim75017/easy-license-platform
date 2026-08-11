@@ -131,7 +131,7 @@
   width: 38px;
   height: 38px;
   margin-top: 3px;
-  border: 1px solid rgba(243, 236, 224, .36);
+  border: 1px solid rgba(247, 235, 221, .36);
   border-radius: 50%;
   content: "▶";
   display: grid;
@@ -141,7 +141,7 @@
 
 .retail-v2-hero-image figcaption span { color: var(--cozy-clay-soft); font-size: 10px; font-weight: 760; letter-spacing: .08em; }
 .retail-v2-hero-image figcaption strong { font-size: 20px; font-weight: 650; }
-.retail-v2-hero-image figcaption small { color: rgba(243, 236, 224, .72); font-size: 12px; }
+.retail-v2-hero-image figcaption small { color: rgba(247, 235, 221, .72); font-size: 12px; }
 
 .retail-v2-proof {
   display: grid;
@@ -193,14 +193,14 @@
 .retail-v2-space-copy p:last-child { max-width: 450px; margin: 0; }
 
 .retail-v2-artists { display: grid; grid-template-columns: .92fr 1.08fr; gap: clamp(42px, 8vw, 142px); border-radius: 30px; padding: clamp(44px, 6vw, 93px); background: var(--cozy-night); color: var(--cozy-oat); }
-.retail-v2-artists .retail-v2-kicker { color: rgba(243, 236, 224, .7); }
+.retail-v2-artists .retail-v2-kicker { color: rgba(247, 235, 221, .7); }
 .retail-v2-artists .retail-v2-kicker span { background: rgba(220, 234, 229, .14); color: var(--cozy-clay-soft); }
 .retail-v2-artists h2 { max-width: 680px; margin-bottom: 0; }
-.retail-v2-artist-copy > p { max-width: 560px; margin-top: 0; color: rgba(243, 236, 224, .7); font-size: 18px; }
-.retail-v2-artist-copy > div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; margin-top: 23px; border-top: 1px solid rgba(243, 236, 224, .14); padding-top: 20px; }
+.retail-v2-artist-copy > p { max-width: 560px; margin-top: 0; color: rgba(247, 235, 221, .7); font-size: 18px; }
+.retail-v2-artist-copy > div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; margin-top: 23px; border-top: 1px solid rgba(247, 235, 221, .14); padding-top: 20px; }
 .retail-v2-artist-copy > div > span { color: var(--cozy-clay-soft); font-family: var(--font-display); font-size: 35px; font-weight: 650; letter-spacing: -.065em; }
 .retail-v2-artist-copy > div p { display: flex; flex-direction: column; gap: 2px; margin: 0; color: var(--cozy-oat); font-size: 14px; }
-.retail-v2-artist-copy > div small { color: rgba(243, 236, 224, .56); font-size: 12px; }
+.retail-v2-artist-copy > div small { color: rgba(247, 235, 221, .56); font-size: 12px; }
 
 .retail-v2-access { display: grid; grid-template-columns: .86fr 1.14fr; gap: clamp(46px, 9vw, 142px); padding-block: 132px; }
 .retail-v2-access h2 { margin-bottom: 18px; }
@@ -273,10 +273,10 @@
 /* V35: Retail returns to the same warm, human-made palette. */
 .retail-v2 {
   --cozy-night: #292832;
-  --cozy-oat: #f3ece0;
-  --cozy-paper: #fbf7ef;
-  --cozy-clay: #2f665e;
-  --cozy-clay-soft: #dceae5;
+  --cozy-oat: #f7ebdd;
+  --cozy-paper: #fff9f1;
+  --cozy-clay: #e06343;
+  --cozy-clay-soft: #f5ded5;
   --cozy-rule: rgba(41, 40, 50, .15);
   background: var(--cozy-oat);
   color: var(--cozy-night);

@@ -49,7 +49,7 @@ export function AdminWorkspace() {
     <DashboardShell area="admin" items={items} active={active} onChange={setActive}>
       <header className="dashboard-topbar">
         <div>
-          <span className="dashboard-overline">Symbiose CMS</span>
+          <span className="dashboard-overline">Symbiome CMS</span>
           <h1>{items.find((item) => item.id === active)?.label}</h1>
         </div>
         <div className="dashboard-top-actions">

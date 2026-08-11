@@ -85,7 +85,7 @@ export default function Home() {
           <img className="home26-hero-image" src="/images/unsplash/hero-producer.jpg" alt="Music producer working at a recording console" />
           <span className="home26-hero-wash" aria-hidden="true" />
           <div className="home26-hero-copy" data-reveal="left">
-            <p className="home26-eyebrow">Symbiose · Powered by Lofi Girl</p>
+            <p className="home26-eyebrow">Symbiome · Powered by Lofi Girl</p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
             <p className="home26-hero-lede">
               Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
@@ -117,7 +117,7 @@ export default function Home() {
                 <li>TikTok and Instagram</li>
                 <li>Podcasts</li>
               </ul>
-              <Link className="home26-button home26-button-primary home26-audience-button" href="/creators">Explore Symbiose for Creators <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-primary home26-audience-button" href="/creators">Explore Symbiome for Creators <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </section>
@@ -128,7 +128,7 @@ export default function Home() {
               <p className="home26-eyebrow">For businesses</p>
               <h2 id="home26-business-title">Music and rights shaped around the project.</h2>
               <p>License an existing track for a campaign, film, game, advert or branded production, or commission original music from an artist. Media, territories, duration and exclusivity are confirmed from your brief, so the quote reflects the use you actually need.</p>
-              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiose for Businesses <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiome for Businesses <span aria-hidden="true">→</span></Link>
               <ul className="home26-audience-points" aria-label="Business services">
                 <li>Commercial Sync</li>
                 <li>Custom Commission</li>
