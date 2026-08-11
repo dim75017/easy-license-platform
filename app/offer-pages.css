@@ -2549,6 +2549,7 @@
   max-width: 1240px;
   margin: clamp(50px, 6vw, 76px) auto 0;
   border-color: rgba(251, 247, 239, .24);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .creators-landing .creator-flow .offer-flow-grid article {
@@ -2563,12 +2564,6 @@
 
 .creators-landing .creator-flow .offer-flow-grid p {
   color: rgba(251, 247, 239, .7);
-}
-
-@media (min-width: 761px) {
-  .creators-landing .creator-flow .offer-flow-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
