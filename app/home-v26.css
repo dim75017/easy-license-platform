@@ -1789,3 +1789,10 @@
     flex-basis: min(84vw, 340px);
   }
 }
+
+/* V54: keep the next photographic section below the opening viewport. */
+@media (min-width: 901px) and (min-height: 800px) {
+  .home26-hero {
+    min-height: max(720px, calc(100svh - 245px));
+  }
+}
