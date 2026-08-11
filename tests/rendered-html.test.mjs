@@ -167,9 +167,11 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   ]);
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
+  assert.match(creators, /<PlatformLogo platform=\{name\} bare \/>/);
   assert.match(creators, /className="creator-platform-logo"[^>]*role="img"[^>]*aria-label=\{name\}/);
   assert.doesNotMatch(creators, /<PlatformLogo platform=\{name\} \/>\{name\}/);
   assert.match(pricing, /<PlatformLogo platform=\{name\}/);
+  assert.doesNotMatch(pricing, /<PlatformLogo platform=\{name\} bare/);
   assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
   assert.doesNotMatch(platformLogo, /creatorPlatforms[^;]*Apple Podcasts/);
   assert.doesNotMatch(creators, /\["YouTube", "▶"\]|\["Twitch", "✦"\]|\["TikTok", "♪"\]/);
@@ -177,7 +179,8 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(platformLogo, /<svg viewBox="0 0 24 24"/);
   assert.match(platformLogo, /aria-hidden="true"/);
   assert.match(platformLogo, /background: "#000000"/);
-  assert.match(platformLogo, /platform === "TikTok" \? "#FFFFFF"/);
+  assert.match(platformLogo, /platform === "TikTok" \? \(bare \? icon\.color : "#FFFFFF"\)/);
+  assert.match(platformLogo, /style=\{bare \? undefined : \{ backgroundColor: icon\.background \}\}/);
   assert.match(platformLogo, /platform-logo-youtube-play[^>]*fill="#FFFFFF"/);
   assert.match(platformLogo, /platform-logo-twitch-face[^>]*fill="#FFFFFF"/);
   assert.match(platformLogo, /platform-logo-twitch-eyes/);
@@ -198,6 +201,7 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /creator-platform-grid \{[^}]*grid-template-columns:repeat\(3/s);
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,160}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\s*\{[\s\S]{0,160}width:\s*80px;[\s\S]{0,80}height:\s*80px;/);
+  assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
   assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));

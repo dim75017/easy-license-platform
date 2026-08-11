@@ -47,11 +47,11 @@ const platformIcons: Record<PlatformName, PlatformIcon> = {
 
 export const creatorPlatforms: PlatformName[] = ["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"];
 
-export function PlatformLogo({ platform }: { platform: PlatformName }) {
+export function PlatformLogo({ platform, bare = false }: { platform: PlatformName; bare?: boolean }) {
   const icon = platformIcons[platform];
 
   return (
-    <span className="platform-brand-icon" style={{ backgroundColor: icon.background }} aria-hidden="true">
+    <span className={`platform-brand-icon${bare ? " is-bare" : ""}`} style={bare ? undefined : { backgroundColor: icon.background }} aria-hidden="true">
       {platform === "Instagram" ? (
         <img src="/images/platforms/instagram-glyph-gradient.svg" alt="" />
       ) : platform === "YouTube" ? (
@@ -66,7 +66,7 @@ export function PlatformLogo({ platform }: { platform: PlatformName }) {
           <path className="platform-logo-twitch-eyes" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714z" fill={icon.color} />
         </svg>
       ) : (
-        <svg viewBox="0 0 24 24" role="presentation" focusable="false" fill={platform === "TikTok" ? "#FFFFFF" : icon.color}>
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false" fill={platform === "TikTok" ? (bare ? icon.color : "#FFFFFF") : icon.color}>
           <path d={icon.path} />
         </svg>
       )}
