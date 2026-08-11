@@ -142,7 +142,7 @@ test("defines every public and connected product surface", async () => {
     ["app/creators/page.tsx", /Music that fits/i],
     ["app/business/page.tsx", /Music with the rights/i],
     ["app/catalog/page.tsx", /A real music/i],
-    ["app/pricing/page.tsx", /Simple plans for/i],
+    ["app/pricing/page.tsx", /Simple pricing for/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
@@ -153,11 +153,13 @@ test("defines every public and connected product surface", async () => {
     assert.match(await source(path), expected, path);
   }
 
-  const [creators, business, pricing, pricingCards, retail, sync] = await Promise.all([
+  const [creators, business, pricing, pricingCards, pricingCss, leadForm, retail, sync] = await Promise.all([
     source("app/creators/page.tsx"),
     source("app/business/page.tsx"),
     source("app/pricing/page.tsx"),
     source("app/components/PricingCards.tsx"),
+    source("app/pricing-v39.css"),
+    source("app/components/LeadForm.tsx"),
     source("app/retail/page.tsx"),
     source("app/sync/page.tsx"),
   ]);
@@ -173,17 +175,27 @@ test("defines every public and connected product surface", async () => {
   assert.match(business, /Music for Retail · Coming soon/i);
   assert.match(business, /Music that can carry/i);
   assert.match(business, /Rights fit/i);
-  assert.match(business, /Every business project gets a custom quote/i);
+  assert.match(business, /Choose what you need/i);
   assert.match(business, /id="business-brief"/i);
-  assert.match(business, /<LeadForm type="sync" \/>/i);
+  assert.match(business, /<LeadForm type="business" \/>/i);
   assert.match(business, /href="#business-brief"/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.doesNotMatch(business, /Artists and music team|More than 1,000 artists|offer-human/i);
   assert.match(pricing, /FOR CREATORS/i);
-  assert.match(pricing, /Rights built around/i);
-  assert.match(pricing, /Commercial Sync/i);
-  assert.match(pricing, /Custom Commission/i);
-  assert.match(pricing, /MUSIC FOR RETAIL/i);
+  assert.match(pricing, /FOR BUSINESSES/i);
+  assert.match(pricing, /<PricingCards expanded \/>/i);
+  assert.match(pricing, /<LeadForm type="business" \/>/i);
+  assert.equal([...pricing.matchAll(/<section/g)].length, 3, "Pricing should contain only its compact hero and two product routes");
+  assert.doesNotMatch(pricing, /pricing-v39-platforms|pricing-v39-comparison|pricing-v39-faq|pricing-v39-cta|comparison-table|pricingFaq|const comparison|business-option-grid/i);
+  assert.match(pricingCss, /\.pricing-v39 \.price-card\s*\{[\s\S]{0,220}border-radius:\s*30px/);
+  assert.match(pricingCss, /\.pricing-v39-business\s*\{[\s\S]{0,260}grid-template-columns:/);
+  assert.match(leadForm, /License an existing track/);
+  assert.match(leadForm, /Commission original music/);
+  assert.match(leadForm, /Music for a physical place — Coming soon/);
+  assert.match(leadForm, /type:\s*"retail_waitlist" as const/);
+  assert.match(leadForm, /type:\s*isBusiness \? "sync" as const : type/);
+  assert.match(leadForm, /businessNeedLabels\[businessNeed\][^\n]*project/);
+  assert.match(leadForm, /Physical places is coming soon/);
   assert.doesNotMatch(pricingCards, /SY–03 \/ BUSINESS/i);
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);
@@ -246,24 +258,19 @@ test("presents one real track from each main playlist on the Creators page", asy
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
-  const [creators, pricing, platformLogo, offerCss, pricingCss] = await Promise.all([
+  const [creators, platformLogo, offerCss] = await Promise.all([
     source("app/creators/page.tsx"),
-    source("app/pricing/page.tsx"),
     source("app/components/PlatformLogo.tsx"),
     source("app/offer-pages.css"),
-    source("app/pricing-v39.css"),
   ]);
 
   assert.match(creators, /<PlatformLogo platform=\{name\}/);
   assert.match(creators, /<PlatformLogo platform=\{name\} bare \/>/);
   assert.match(creators, /className="creator-platform-logo"[^>]*role="img"[^>]*aria-label=\{name\}/);
   assert.doesNotMatch(creators, /<PlatformLogo platform=\{name\} \/>\{name\}/);
-  assert.match(pricing, /<PlatformLogo platform=\{name\}/);
-  assert.doesNotMatch(pricing, /<PlatformLogo platform=\{name\} bare/);
   assert.match(platformLogo, /creatorPlatforms: PlatformName\[\] = \["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Spotify"\]/);
   assert.doesNotMatch(platformLogo, /creatorPlatforms[^;]*Apple Podcasts/);
   assert.doesNotMatch(creators, /\["YouTube", "▶"\]|\["Twitch", "✦"\]|\["TikTok", "♪"\]/);
-  assert.doesNotMatch(pricing, /\["Instagram", "◎"\]|\["Kick", "K"\]|\["Spotify", "≋"\]/);
   assert.match(platformLogo, /<svg viewBox="0 0 24 24"/);
   assert.match(platformLogo, /aria-hidden="true"/);
   assert.match(platformLogo, /background: "#000000"/);
@@ -291,8 +298,6 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /\.creators-landing \.creator-platform-grid \.platform-brand-icon\s*\{[\s\S]{0,160}width:\s*80px;[\s\S]{0,80}height:\s*80px;/);
   assert.match(offerCss, /V50: Creators shows the platform marks themselves[\s\S]{0,900}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,260}background:\s*transparent;[\s\S]{0,80}box-shadow:\s*none;/);
   assert.match(offerCss, /V51: the Creators banner is a full-width rectangle[\s\S]{0,180}\.creators-landing \.offer-hero\s*\{[\s\S]{0,80}border-radius:\s*0;/);
-  assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon svg/);
-  assert.match(pricingCss, /\.pricing-v39-platform-grid \.platform-brand-icon img/);
   await access(new URL("public/images/platforms/instagram-glyph-gradient.svg", root));
 });
 
@@ -678,4 +683,5 @@ test("ships a public GitHub Pages mockup without collecting form data", async ()
   assert.match(workflow, /pages: write/);
   assert.match(leadForm, /Public prototype: no information is sent or stored\./);
   assert.match(leadForm, /nothing was sent or stored\./);
+  assert.ok(leadForm.indexOf("if (isStaticDemo)") < leadForm.indexOf('fetch("/api/leads"'), "the static demo must stop before any network request");
 });

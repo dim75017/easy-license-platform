@@ -1728,6 +1728,27 @@
   font-weight: 720;
 }
 
+.business-quote .business-need-field select { font-weight: 760; }
+
+.business-quote .business-coming-soon {
+  border: 1px solid rgba(47, 102, 94, .24);
+  border-radius: 16px;
+  padding: 20px;
+  background: #dceae5;
+}
+
+.business-quote .business-coming-soon strong {
+  color: var(--marketing-night);
+  font-size: 18px;
+}
+
+.business-quote .business-coming-soon p {
+  margin: 6px 0 0;
+  color: rgba(41, 40, 50, .66);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
 @media (max-width: 1050px) {
   .business-quote {
     grid-template-columns: 1fr;

@@ -95,16 +95,13 @@ export default function BusinessPage() {
 
         <section className="business-quote" id="business-brief" aria-labelledby="business-brief-title">
           <div className="business-quote-copy" data-reveal="left">
-            <p className="offer-kicker"><span>05</span> Made-to-measure quotes</p>
-            <h2 id="business-brief-title">Every business project gets a custom quote.</h2>
-            <p>Share the project, media, territories, timing and indicative budget. Our team will confirm the right music route, define the required rights and prepare a quote around the real use.</p>
-            <div className="business-quote-factors" aria-label="The four factors used to prepare a quote">
-              <span>Media</span><span>Territories</span><span>Term</span><span>Exclusivity</span>
-            </div>
+            <p className="offer-kicker"><span>05</span> Start here</p>
+            <h2 id="business-brief-title">Choose what you need.</h2>
+            <p>Select an existing track licence, original music or physical places. We will ask only for the information needed for that route.</p>
           </div>
           <div className="form-panel business-quote-form" data-reveal="right">
-            <div className="form-panel-head"><span>CUSTOM QUOTE REQUEST</span><small>Start with the brief — we will help with the licence</small></div>
-            <LeadForm type="sync" />
+            <div className="form-panel-head"><span>BUSINESS MUSIC REQUEST</span><small>Choose one option to begin</small></div>
+            <LeadForm type="business" />
           </div>
         </section>
       </div>
