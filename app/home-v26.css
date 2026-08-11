@@ -445,6 +445,7 @@
   transition: transform 650ms cubic-bezier(.2,.8,.2,1);
 }
 
+.home26-collection-card:nth-child(1) img { object-position: 50% 62%; }
 .home26-collection-card:nth-child(4) img { object-position: 58% center; }
 
 .home26-collection-card:hover img {

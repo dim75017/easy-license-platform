@@ -8,7 +8,7 @@ const useCollections = [
     title: "Travel & Outdoors",
     copy: "Open, atmospheric music for journeys, landscapes and destination films.",
     slug: "travel",
-    image: "/images/unsplash/hero-listening.jpg",
+    image: "/images/unsplash/collection-travel-bridge.webp",
   },
   {
     title: "Vlogs & Everyday Life",
@@ -38,7 +38,7 @@ const useCollections = [
     title: "Film, Documentary & Brand",
     copy: "Narrative music for films, visual essays, launches and branded productions.",
     slug: "cinematic",
-    image: "/images/unsplash/campaign-filmset.jpg",
+    image: "/images/unsplash/collection-film-camera.webp",
   },
   {
     title: "Wellness & Slow Living",
@@ -150,7 +150,7 @@ export default function Home() {
           <div className="home26-collection-grid" data-reveal="group">
             {useCollections.map((collection) => (
               <Link className="home26-collection-card" href={`/catalog?use=${collection.slug}`} key={collection.title}>
-                <img src={collection.image} alt="" />
+                <img src={collection.image} alt="" loading="lazy" decoding="async" fetchPriority="low" />
                 <span className="home26-collection-overlay" />
                 <span className="home26-collection-copy">
                   <strong>{collection.title}</strong>

@@ -47,7 +47,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
-  assert.match(page, /editing-desk\.jpg/i);
+  assert.match(page, /creator-editing-keyboard\.webp/i);
   assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
@@ -404,6 +404,34 @@ test("keeps each public page free of repeated image assets", async () => {
   ]);
   assertUniquePageImages("Retail", imagePaths(retail));
   assertUniquePageImages("Catalogue", imagePaths(catalogueData));
+});
+
+test("ships the requested Travel and Film collection photographs", async () => {
+  const [page, catalogueData, sources] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/data/catalog.ts"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const collectionImages = [
+    ["Travel & Outdoors", "/images/unsplash/collection-travel-bridge.webp", "8sOuWN9ebKk"],
+    ["Film, Documentary & Brand", "/images/unsplash/collection-film-camera.webp", "ditCL6ubLRc"],
+  ];
+  assert.match(page, /src=\{collection\.image\} alt="" loading="lazy" decoding="async" fetchPriority="low"/);
+  let collectionImageBytes = 0;
+  for (const [title, image, sourceId] of collectionImages) {
+    assert.match(page, new RegExp(`${title}[\\s\\S]{0,260}${image.replaceAll("/", "\\/")}`));
+    const metadata = await stat(new URL(`public${image}`, root));
+    collectionImageBytes += metadata.size;
+    assert.ok(metadata.size <= 160_000, `${image} should stay below 160 KB`);
+    assert.match(sources, new RegExp(`${image.split("/").at(-1)}[\\s\\S]{0,240}${sourceId}`));
+  }
+  assert.equal(new Set(collectionImages.map(([, image]) => image)).size, 2);
+  assert.ok(collectionImageBytes <= 220_000, "the two collection photographs should stay below 220 KB");
+  assert.doesNotMatch(
+    catalogueData,
+    /collection-travel-bridge\.webp|collection-film-camera\.webp/,
+    "the new homepage collection photographs should not be reused in the catalogue",
+  );
 });
 
 test("ships the Business process backdrop locally and documents its source", async () => {

@@ -52,6 +52,11 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 
 - `creator-editing-keyboard.webp` — TheRegisti, https://unsplash.com/photos/a-person-typing-on-a-keyboard-next-to-a-laptop-ziSzilQLSOM (Unsplash License, locally resized WebP derivative)
 
+## Homepage project collections refresh (2026-08-11)
+
+- `collection-travel-bridge.webp` — Christopher Burns, https://unsplash.com/photos/man-and-woman-crossing-bridge-8sOuWN9ebKk (Unsplash License, locally resized WebP derivative)
+- `collection-film-camera.webp` — Frank van Hulst, https://unsplash.com/photos/a-man-standing-in-a-field-with-a-camera-ditCL6ubLRc (Unsplash+ License, original subscriber download, locally resized WebP derivative)
+
 ## Business service cards refresh (2026-08-11)
 
 - `business-license-vinyl.webp` — Jamakassi, https://unsplash.com/photos/person-holding-elvis-presley-vinyl-sleeve-wejxKZ-9IZg (Unsplash License, locally resized WebP derivative)
