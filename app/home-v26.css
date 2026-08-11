@@ -2545,3 +2545,77 @@
     font-size: 18px;
   }
 }
+
+/* V66: each main homepage story owns a complete desktop viewport. */
+@media (min-width: 981px) {
+  .home26-audience-panel,
+  .home26-audience-business .home26-audience-panel {
+    height: auto;
+    min-height: max(900px, calc(100svh - 90px));
+  }
+
+  .home26-audience-business .home26-audience-copy {
+    min-height: max(900px, calc(100svh - 90px));
+  }
+
+  .home26-artists,
+  .home26-plan-preview {
+    display: grid;
+    min-height: max(900px, calc(100svh - 90px));
+    align-content: center;
+  }
+}
+
+/* V67: a short, warm FAQ closes the information journey before the final CTA. */
+.home26-quick-faq {
+  width: 100%;
+  max-width: none;
+  border-top: 1px solid var(--home26-rule);
+  padding: clamp(86px, 8vw, 126px) clamp(24px, 4vw, 76px);
+  background: var(--home26-oat);
+}
+
+.home26-quick-faq .home26-section-heading {
+  max-width: 620px;
+}
+
+.home26-quick-faq .home26-section-heading > p:last-of-type {
+  max-width: 560px;
+}
+
+.home26-quick-faq .home26-text-link {
+  margin-top: 28px;
+}
+
+.home26-quick-faq .home26-faq-list {
+  min-width: 0;
+}
+
+.home26-quick-faq .home26-faq-list summary:focus-visible {
+  border-radius: 8px;
+  outline: 3px solid var(--home26-night);
+  outline-offset: 4px;
+}
+
+@media (max-width: 900px) {
+  .home26-quick-faq {
+    width: 100%;
+    padding: 82px 24px;
+  }
+}
+
+@media (max-width: 620px) {
+  .home26-quick-faq {
+    padding: 70px 20px;
+  }
+
+  .home26-quick-faq .home26-text-link {
+    margin-top: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home26-quick-faq .home26-faq-list summary span {
+    transition: none;
+  }
+}

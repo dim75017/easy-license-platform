@@ -77,6 +77,29 @@ const artists = [
   { name: "Sebastian Kamae", style: "Jazzhop · Vinyl", image: "/artists/sebastian-kamae.webp" },
 ];
 
+const quickFaqs = [
+  {
+    question: "What is Symbiome?",
+    answer: "Symbiome is a human-made instrumental music catalogue and licensing platform for creators and businesses, powered by Lofi Girl.",
+  },
+  {
+    question: "Can I listen before choosing a licence?",
+    answer: "Yes. Browse and preview the music first. A preview helps you choose, but it does not give permission to publish the track.",
+  },
+  {
+    question: "Which licensing route should I use?",
+    answer: "Choose Creators for eligible content on channels you own. Choose Businesses for advertising, client work, films, games, branded projects or original commissions.",
+  },
+  {
+    question: "Who makes the music?",
+    answer: "Every track in the catalogue is written and produced by artists. Generative AI music is not accepted, and artists remain credited and are paid directly and fairly when their work is licensed.",
+  },
+  {
+    question: "Can every track be used in every project?",
+    answer: "No. Eligibility and rights can vary by plan and intended use. Confirm that the track and project are covered before you publish.",
+  },
+];
+
 export default function Home() {
   return (
     <PublicShell>
@@ -219,6 +242,23 @@ export default function Home() {
             <div className="home26-plan-action" data-reveal="up">
               <Link className="home26-button home26-button-primary" href="/pricing">Compare all pricing and licensing options</Link>
             </div>
+          </div>
+        </section>
+
+        <section className="home26-section home26-faq home26-quick-faq" aria-labelledby="home26-faq-title">
+          <div className="home26-section-heading" data-reveal="left">
+            <p className="home26-eyebrow">Quick answers</p>
+            <h2 id="home26-faq-title">What to know before you publish.</h2>
+            <p>The short version on listening, licences and who makes the music.</p>
+            <Link className="home26-text-link" href="/help">Explore the full Help Center <span aria-hidden="true">→</span></Link>
+          </div>
+          <div className="home26-faq-list" data-reveal="right">
+            {quickFaqs.map((item) => (
+              <details key={item.question}>
+                <summary>{item.question}<span aria-hidden="true">+</span></summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
           </div>
         </section>
 
