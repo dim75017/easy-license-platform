@@ -259,6 +259,8 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(css, /\.motion-enhanced \[data-reveal\]/);
   assert.match(homeCss, /@keyframes v5Scan/);
   assert.match(home26Css, /\.home26-artist-grid article\s*\{[\s\S]{0,120}flex:\s*0 0 clamp\(220px, 23vw, 310px\)/);
+  assert.match(home26Css, /@media \(min-width: 901px\)[\s\S]*?\.home26-artists \.home26-section-heading\s*\{[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}text-align:\s*center;/);
+  assert.match(home26Css, /\.home26-artists \.home26-artist-grid\s*\{[\s\S]{0,120}width:\s*fit-content;[\s\S]{0,100}max-width:\s*100%;[\s\S]{0,100}margin-inline:\s*auto;/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(cozyCss, /animation:\s*none\s*!important/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);

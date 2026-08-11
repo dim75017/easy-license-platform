@@ -1424,3 +1424,21 @@
 
   .home26-facts { width: 100%; }
 }
+
+/* V44: center the artist story as one editorial block on wide screens. */
+@media (min-width: 901px) {
+  .home26-artists .home26-section-heading {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .home26-artists .home26-section-heading > p:last-of-type {
+    margin-inline: auto;
+  }
+
+  .home26-artists .home26-artist-grid {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+}
