@@ -9,7 +9,7 @@ async function source(path) {
 }
 
 test("contains the complete Symbiose music licensing homepage", async () => {
-  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts, unsplashSources] = await Promise.all([
+  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
@@ -20,7 +20,6 @@ test("contains the complete Symbiose music licensing homepage", async () => {
     source("app/components/ArtistMarquee.tsx"),
     source("public/artists/SOURCES.md"),
     source("app/components/CatalogueFacts.tsx"),
-    source("public/images/unsplash/SOURCES.md"),
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
@@ -48,8 +47,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
-  assert.match(page, /creator-editing-keyboard\.webp/i);
-  assert.match(unsplashSources, /creator-editing-keyboard\.webp[\s\S]*ziSzilQLSOM/i);
+  assert.match(page, /editing-desk\.jpg/i);
   assert.match(page, /filmmaker-desk\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
@@ -408,28 +406,6 @@ test("keeps each public page free of repeated image assets", async () => {
   assertUniquePageImages("Catalogue", imagePaths(catalogueData));
 });
 
-test("ships three unique Business service photographs", async () => {
-  const [offerCss, sources] = await Promise.all([
-    source("app/offer-pages.css"),
-    source("public/images/unsplash/SOURCES.md"),
-  ]);
-  const serviceImages = [
-    [".business-option-sync", "/images/unsplash/business-license-vinyl.webp", "wejxKZ-9IZg"],
-    [".business-option-custom", "/images/unsplash/business-commission-guitar.webp", "4DAH0YhV3Qg"],
-    [".business-option-retail", "/images/unsplash/business-physical-coffee.webp", "f7zm5TDOi4g"],
-  ];
-  let serviceImageBytes = 0;
-  for (const [selector, image, sourceId] of serviceImages) {
-    assert.equal(backgroundImage(offerCss, selector), image);
-    const metadata = await stat(new URL(`public${image}`, root));
-    serviceImageBytes += metadata.size;
-    assert.ok(metadata.size <= 200_000, `${image} should stay below 200 KB`);
-    assert.match(sources, new RegExp(`${image.split("/").at(-1)}[\\s\\S]{0,220}${sourceId}`));
-  }
-  assert.equal(new Set(serviceImages.map(([, image]) => image)).size, 3);
-  assert.ok(serviceImageBytes <= 400_000, "the three Business service photographs should stay below 400 KB");
-});
-
 test("ships the Business process backdrop locally and documents its source", async () => {
   const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
   const sources = await source("public/images/unsplash/SOURCES.md");
@@ -608,7 +584,6 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/study.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
-    access(new URL("public/images/unsplash/creator-editing-keyboard.webp", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
     access(new URL("public/images/unsplash/hero-turntable.jpg", root)),
@@ -660,17 +635,31 @@ test("uses the eucalyptus accent instead of the retired brown UI palette", async
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
+  const [layout, workspaceCss, symbioseBrandCss, brand, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
+    source("app/symbiose-brand.css"),
+    source("app/components/Brand.tsx"),
+    source("app/components/DashboardShell.tsx"),
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
     source("app/data/catalog.ts"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
+  assert.match(layout, /symbiose-brand\.css/);
   assert.match(workspaceCss, /studio-artist\.jpg/);
   assert.match(workspaceCss, /font-size:\s*36px/);
+  assert.match(brand, /className="brand brand-warm"/);
+  assert.match(brand, /brand-groove-warm/);
+  assert.match(brand, /brand-groove-base/);
+  assert.match(dashboardShell, /<Brand compact \/>/);
+  assert.match(musicWorkspace, /<Brand compact \/>/);
+  assert.match(symbioseBrandCss, /--symbiose-brand-warm:\s*#e06343/i);
+  assert.match(symbioseBrandCss, /--symbiose-brand-base:\s*#292832/i);
+  assert.match(symbioseBrandCss, /\.brand-warm \.brand-groove path[\s\S]*stroke-width:\s*13/);
+  assert.match(symbioseBrandCss, /\.site-header \.brand-warm \.brand-name/);
+  assert.match(symbioseBrandCss, /\.site-footer \.brand-warm/);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);
