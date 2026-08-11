@@ -41,6 +41,7 @@ test("contains the complete Easy License music licensing homepage", async () => 
   }
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
   assert.match(page, /A precise, high-quality catalogue/i);
+  assert.match(page, /Find the perfect music for every project/i);
   assert.match(page, /hero-turntable\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /M e a d o w/i);

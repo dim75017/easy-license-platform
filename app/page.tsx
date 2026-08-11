@@ -91,7 +91,7 @@ export default function Home() {
         <section className="home26-section home26-collections" aria-labelledby="home26-collections-title">
           <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
             <p className="home26-eyebrow">Browse by project</p>
-            <h2 id="home26-collections-title">Find music for the project you are working on.</h2>
+            <h2 id="home26-collections-title">Find the perfect music for every project.</h2>
             <p>Genres and moods are useful, but sometimes the quickest place to start is the job the music needs to do. These collections are organised around common formats and real creative briefs.</p>
           </div>
           <div className="home26-collection-grid" data-reveal="group">
