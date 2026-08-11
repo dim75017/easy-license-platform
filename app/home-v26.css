@@ -284,10 +284,12 @@
 .home26-facts > div {
   display: flex;
   min-height: 155px;
+  align-items: center;
   justify-content: center;
   border-right: 1px solid var(--home26-rule);
   padding: 30px clamp(24px, 3vw, 54px);
   flex-direction: column;
+  text-align: center;
 }
 
 .home26-facts > div:last-child {

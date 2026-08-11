@@ -124,6 +124,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-hero/);
   assert.match(homeCss, /\.home26-facts\s*\{\s*width:\s*min\(1440px,\s*calc\(100% - 72px\)\)/);
   assert.match(homeCss, /\.home26-facts\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /\.home26-facts > div\s*\{[\s\S]{0,180}align-items:\s*center;[\s\S]{0,220}text-align:\s*center;/);
   assert.match(homeCss, /\.home26-collection-grid/);
   assert.match(homeCss, /\.home26-audience-panel/);
   assert.match(homeCss, /grid-template-areas:\s*"media copy"/);
