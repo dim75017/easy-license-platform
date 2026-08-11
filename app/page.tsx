@@ -94,7 +94,6 @@ export default function Home() {
               <Link className="home26-button home26-button-primary" href="/catalog">Browse music</Link>
               <Link className="home26-button home26-button-secondary" href="#services">Explore licensing</Link>
             </div>
-            <p className="home26-hero-note">No AI-generated music · Artists credited and paid directly</p>
           </div>
 
           <p className="home26-hero-credit">A catalogue made by artists, for the people making the work.</p>
@@ -126,8 +125,8 @@ export default function Home() {
           <div className="home26-audience-panel">
             <div className="home26-audience-copy" data-reveal="left">
               <p className="home26-eyebrow">For businesses</p>
-              <h2 id="home26-business-title">Music and rights shaped around the project.</h2>
-              <p>License an existing track for a campaign, film, game, advert or branded production, or commission original music from an artist. Media, territories, duration and exclusivity are confirmed from your brief, so the quote reflects the use you actually need.</p>
+              <h2 id="home26-business-title">License an existing track or commission original music.</h2>
+              <p>Choose music from the catalogue for a campaign, film, game, advert or branded production, or ask an artist to create something new. Tell us where and how it will be used, and we’ll prepare the right quote and licence.</p>
               <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiome for Businesses <span aria-hidden="true">→</span></Link>
               <ul className="home26-audience-points" aria-label="Business services">
                 <li>Commercial Sync</li>

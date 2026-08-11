@@ -44,13 +44,14 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   }
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
   assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
-  assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
+  assert.match(page, /home26-audience-business[\s\S]*License an existing track or commission original music[\s\S]*href="\/business"/i);
+  assert.doesNotMatch(page, /home26-hero-note|No AI-generated music · Artists credited and paid directly/i);
   const businessRouteStart = page.indexOf('className="home26-section home26-audience home26-audience-business"');
   const catalogueRouteStart = page.indexOf('className="home26-section home26-collections"');
   const businessRoute = page.slice(businessRouteStart, catalogueRouteStart);
   assert.ok(businessRouteStart !== -1 && catalogueRouteStart > businessRouteStart, "homepage should isolate the Business route before the catalogue");
   assert.match(businessRoute, /aria-labelledby="home26-business-title"/);
-  assert.match(businessRoute, /<h2 id="home26-business-title">Music and rights shaped around the project\.<\/h2>/);
+  assert.match(businessRoute, /<h2 id="home26-business-title">License an existing track or commission original music\.<\/h2>/);
   assert.match(businessRoute, /Commercial Sync[\s\S]*Custom Commission[\s\S]*Music for Retail[\s\S]*Coming soon/i);
   assert.match(businessRoute, /href="\/business"/);
   assert.match(businessRoute, /home26-audience-media" aria-hidden="true"[\s\S]{0,180}alt=""/);
@@ -130,6 +131,10 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
   assert.match(homeCss, /V64: Business is a cinematic project canvas, not a mirrored Creator split\.[\s\S]{0,360}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,180}display:\s*block;[\s\S]{0,180}isolation:\s*isolate/);
   assert.match(homeCss, /V64: Business is a cinematic project canvas[\s\S]{0,1800}\.home26-audience-business \.home26-audience-points\s*\{[\s\S]{0,260}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,320}\.home26 \.home26-audience \.home26-eyebrow\s*\{[^}]*font-size:\s*clamp\(20px, 1\.45vw, 24px\)/s);
+  assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,650}\.home26-audience-business \.home26-audience-points li\s*\{[^}]*font-size:\s*clamp\(19px, 1\.45vw, 23px\)/s);
+  assert.match(homeCss, /\.home26-hero \+ \.home26-facts,[\s\S]{0,120}border-top:\s*0/);
+  assert.match(homeCss, /\.home26-audience-creators \.home26-audience-panel\s*\{[^}]*border-bottom:\s*0/s);
   assert.match(homeCss, /V54: keep the next photographic section below the opening viewport[\s\S]{0,260}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(homeCss, /V55: artist portraits fill each card[\s\S]{0,900}\.home26-artist-meta\s*\{[\s\S]{0,260}position:\s*absolute;[\s\S]{0,260}color:\s*#fff;/);
   assert.match(homeCss, /V56: a continuous artist marquee[\s\S]{0,900}animation:\s*home26ArtistsLeft 200s linear infinite/);
