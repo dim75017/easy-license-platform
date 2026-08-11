@@ -44,13 +44,14 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   }
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
   assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
-  assert.match(page, /home26-audience-business[\s\S]*Music and rights shaped around the project[\s\S]*href="\/business"/i);
+  assert.match(page, /home26-audience-business[\s\S]*License an existing track or commission original music[\s\S]*href="\/business"/i);
+  assert.doesNotMatch(page, /home26-hero-note|No AI-generated music · Artists credited and paid directly/i);
   const businessRouteStart = page.indexOf('className="home26-section home26-audience home26-audience-business"');
   const catalogueRouteStart = page.indexOf('className="home26-section home26-collections"');
   const businessRoute = page.slice(businessRouteStart, catalogueRouteStart);
   assert.ok(businessRouteStart !== -1 && catalogueRouteStart > businessRouteStart, "homepage should isolate the Business route before the catalogue");
   assert.match(businessRoute, /aria-labelledby="home26-business-title"/);
-  assert.match(businessRoute, /<h2 id="home26-business-title">Music and rights shaped around the project\.<\/h2>/);
+  assert.match(businessRoute, /<h2 id="home26-business-title">License an existing track or commission original music\.<\/h2>/);
   assert.match(businessRoute, /Commercial Sync[\s\S]*Custom Commission[\s\S]*Music for Retail[\s\S]*Coming soon/i);
   assert.match(businessRoute, /href="\/business"/);
   assert.match(businessRoute, /home26-audience-media" aria-hidden="true"[\s\S]{0,180}alt=""/);
@@ -130,6 +131,10 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(homeCss, /V52: equal audience stages and larger artist portraits[\s\S]{0,700}height:\s*clamp\(900px, 48vw, 940px\)/);
   assert.match(homeCss, /V64: Business is a cinematic project canvas, not a mirrored Creator split\.[\s\S]{0,360}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,180}display:\s*block;[\s\S]{0,180}isolation:\s*isolate/);
   assert.match(homeCss, /V64: Business is a cinematic project canvas[\s\S]{0,1800}\.home26-audience-business \.home26-audience-points\s*\{[\s\S]{0,260}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,320}\.home26 \.home26-audience \.home26-eyebrow\s*\{[^}]*font-size:\s*clamp\(20px, 1\.45vw, 24px\)/s);
+  assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,650}\.home26-audience-business \.home26-audience-points li\s*\{[^}]*font-size:\s*clamp\(19px, 1\.45vw, 23px\)/s);
+  assert.match(homeCss, /\.home26-hero \+ \.home26-facts,[\s\S]{0,120}border-top:\s*0/);
+  assert.match(homeCss, /\.home26-audience-creators \.home26-audience-panel\s*\{[^}]*border-bottom:\s*0/s);
   assert.match(homeCss, /V54: keep the next photographic section below the opening viewport[\s\S]{0,260}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(homeCss, /V55: artist portraits fill each card[\s\S]{0,900}\.home26-artist-meta\s*\{[\s\S]{0,260}position:\s*absolute;[\s\S]{0,260}color:\s*#fff;/);
   assert.match(homeCss, /V56: a continuous artist marquee[\s\S]{0,900}animation:\s*home26ArtistsLeft 200s linear infinite/);
@@ -791,7 +796,7 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
+  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
     source("app/symbiose-brand.css"),
@@ -804,6 +809,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
     source("app/data/catalog.ts"),
+    source("app/catalog/page.tsx"),
+    source("public/images/unsplash/playlists/SOURCES.md"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
@@ -820,6 +827,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal(markPaths.length, 2, "the reusable mark should keep the two canonical lobes");
   assert.deepEqual(markPaths, iconPaths, "every rendered mark should preserve the board geometry and spacing");
   assert.match(icon, /<title>Symbiome<\/title>/);
+  assert.doesNotMatch(icon, /<(?:rect|image)\b/i, "the favicon should keep a transparent canvas");
+  assert.match(icon, /fill="#e06343"/i, "the favicon should keep the warm lobe");
+  assert.match(icon, /path:last-of-type\s*\{\s*fill:\s*#292832/i, "the favicon should stay visible on light browser chrome");
+  assert.match(icon, /prefers-color-scheme:\s*dark[\s\S]{0,100}fill:\s*#fff9f1/i, "the favicon should match the cream logo on dark browser chrome");
   assert.match(heroMockup, /className="mock-logo"[\s\S]{0,120}<SymbiomeMark \/>/);
   assert.doesNotMatch(heroMockup, /className="mock-logo">s<\/span>/);
   assert.match(ogScript, /ICON = ROOT \/ "app" \/ "icon\.svg"/);
@@ -834,6 +845,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(symbioseBrandCss, /stroke-width:\s*13/);
   assert.match(symbioseBrandCss, /\.site-header \.brand-warm \.brand-name/);
   assert.match(symbioseBrandCss, /\.site-footer \.brand-warm/);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-name\s*\{[^}]*font-size:\s*26px/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-powered\s*\{[^}]*font-size:\s*12px/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-nav > a\s*\{[^}]*font-size:\s*18px/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*1100px\) and \(min-width:\s*981px\)[\s\S]{0,260}font-size:\s*16px/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]{0,260}font-size:\s*18px/s);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);
@@ -850,22 +866,38 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
   assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-border/);
   assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
+  assert.match(cataloguePage, /width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
+  assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"/);
 
-  for (const [title, spotifyId, image] of [
-    ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study.jpg"],
-    ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-night.jpg"],
-    ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano.jpg"],
-    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient-fog.jpg"],
-    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg"],
-    ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg"],
-    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg"],
-    ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar.jpg"],
+  let refreshedPlaylistBytes = 0;
+  for (const [title, spotifyId, image, sourceId] of [
+    ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study-laptop-dwZlYC-6-9c.jpg", "dwZlYC-6-9c"],
+    ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-console-p0j-mE6mGo4.jpg", "p0j-mE6mGo4"],
+    ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano-hands-5P1-Bemnb0c.jpg", "5P1-Bemnb0c"],
+    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient-fog.jpg", null],
+    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg", null],
+    ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg", null],
+    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg", null],
+    ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar-couch-KEtvAfDlpWI.jpg", "KEtvAfDlpWI"],
   ]) {
     assert.match(catalogueData, new RegExp(title), title);
     assert.match(catalogueData, new RegExp(spotifyId), spotifyId);
-    await access(new URL(`public/images/unsplash/playlists/${image}`, root));
+    const imageFile = new URL(`public/images/unsplash/playlists/${image}`, root);
+    await access(imageFile);
+    if (sourceId) {
+      assert.match(catalogueData, new RegExp(sourceId), `${title} source ID`);
+      assert.match(playlistSources, new RegExp(sourceId), `${title} source attribution`);
+      const metadata = await stat(imageFile);
+      assert.ok(metadata.size <= 250_000, `${title} playlist image should stay below 250 KB`);
+      refreshedPlaylistBytes += metadata.size;
+    }
   }
-  await access(new URL("public/images/unsplash/playlists/SOURCES.md", root));
+  assert.ok(refreshedPlaylistBytes <= 725_000, "the four refreshed playlist images should stay lightweight");
+  assert.equal([...playlistSources.matchAll(/original download without watermark/g)].length, 2, "both Unsplash+ originals should be documented as watermark-free downloads");
+  for (const retiredImage of ["lofi-study.jpg", "synthwave-night.jpg", "peaceful-piano.jpg", "chill-guitar.jpg"]) {
+    assert.doesNotMatch(catalogueData, new RegExp(`playlists/${retiredImage.replace(".", "\\.")}`), retiredImage);
+    assert.doesNotMatch(playlistSources, new RegExp(retiredImage.replace(".", "\\.")), retiredImage);
+  }
 });
 
 test("build emits product assets and removes starter artifacts", async () => {

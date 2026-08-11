@@ -88,8 +88,8 @@ export const lofiGirlPlaylists = [
     use: "study-focus",
     genre: "Lofi",
     moods: ["Warm", "Calm", "Focused"],
-    image: "/images/unsplash/playlists/lofi-study.jpg",
-    imagePosition: "center 42%",
+    image: "/images/unsplash/playlists/lofi-study-laptop-dwZlYC-6-9c.jpg",
+    imagePosition: "66% 44%",
     borderColor: "#e06343",
   },
   {
@@ -101,8 +101,8 @@ export const lofiGirlPlaylists = [
     use: "gaming-streaming",
     genre: "Synthwave",
     moods: ["Neon", "Driving", "Focused"],
-    image: "/images/unsplash/playlists/synthwave-night.jpg",
-    imagePosition: "center 50%",
+    image: "/images/unsplash/playlists/synthwave-console-p0j-mE6mGo4.jpg",
+    imagePosition: "50% 50%",
     borderColor: "#e06343",
   },
   {
@@ -114,8 +114,8 @@ export const lofiGirlPlaylists = [
     use: "study-focus",
     genre: "Piano",
     moods: ["Peaceful", "Reflective", "Soft"],
-    image: "/images/unsplash/playlists/peaceful-piano.jpg",
-    imagePosition: "center 48%",
+    image: "/images/unsplash/playlists/peaceful-piano-hands-5P1-Bemnb0c.jpg",
+    imagePosition: "52% 50%",
     borderColor: "#e06343",
   },
   {
@@ -179,8 +179,8 @@ export const lofiGirlPlaylists = [
     use: "lifestyle-vlogs",
     genre: "Acoustic",
     moods: ["Organic", "Intimate", "Easygoing"],
-    image: "/images/unsplash/playlists/chill-guitar.jpg",
-    imagePosition: "center 50%",
+    image: "/images/unsplash/playlists/chill-guitar-couch-KEtvAfDlpWI.jpg",
+    imagePosition: "46% 47%",
     borderColor: "#e06343",
   },
 ] satisfies readonly LofiGirlPlaylist[];

@@ -46,7 +46,15 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
 
   return (
     <button className="workspace-playlist" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.spotifyTitle}>
-      <img className="workspace-playlist-photo" src={playlist.image} alt="" />
+      <img
+        className="workspace-playlist-photo"
+        src={playlist.image}
+        alt=""
+        width={1600}
+        height={1200}
+        loading="lazy"
+        decoding="async"
+      />
       <span className="workspace-playlist-shade" aria-hidden="true" />
       <span className="workspace-playlist-copy">
         <small>{playlist.genre} · {playlist.moods[0]}</small>

@@ -434,3 +434,56 @@ body {
 .public-shell:has(.sync-page-hero) .lead-form textarea {
   background: var(--symbiose-night);
 }
+
+/* V3: the public lockup and navigation stay legible at normal viewing distance. */
+.public-shell .site-header .brand-warm {
+  gap: 14px;
+}
+
+.public-shell .site-header .brand-warm .brand-name {
+  font-size: 26px;
+  letter-spacing: -.045em;
+}
+
+.public-shell .site-header .brand-warm .brand-powered {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.public-shell .site-header .site-nav > a {
+  min-height: 56px;
+  padding-inline: 20px;
+  font-size: 18px;
+  font-weight: 640;
+}
+
+@media (max-width: 1100px) and (min-width: 981px) {
+  .public-shell .site-header .site-nav > a {
+    padding-inline: 12px;
+    font-size: 16px;
+  }
+
+  .public-shell .header-login,
+  .public-shell .site-header .button-primary {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 980px) {
+  .public-shell .site-header .site-nav > a {
+    min-height: 58px;
+    padding-inline: 18px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 700px) {
+  .public-shell .site-header .brand-warm .brand-name {
+    font-size: 22px;
+  }
+
+  .public-shell .site-header .brand-warm .brand-powered {
+    font-size: 11px;
+  }
+}

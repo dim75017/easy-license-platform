@@ -30,7 +30,15 @@ export default function CataloguePage() {
             {lofiGirlPlaylists.map((playlist, index) => (
               <a className="music-playlist-card" href={`https://open.spotify.com/playlist/${playlist.spotifyId}`} key={playlist.id}>
                 <span className="music-playlist-number">{String(index + 1).padStart(2, "0")}</span>
-                <img src={playlist.image} alt="" style={{ objectPosition: playlist.imagePosition ?? "center" }} />
+                <img
+                  src={playlist.image}
+                  alt=""
+                  width={1600}
+                  height={1200}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ objectPosition: playlist.imagePosition ?? "center" }}
+                />
                 <span className="music-playlist-copy"><small>{playlist.genre} · {playlist.moods.slice(0, 2).join(" · ")}</small><strong>{playlist.title}</strong><em>{playlist.description}</em></span>
                 <b>Open on Spotify ↗</b>
               </a>

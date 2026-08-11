@@ -143,12 +143,6 @@
   background: rgba(255, 249, 241, .08);
 }
 
-.home26-hero-note {
-  margin: 22px 0 0;
-  color: rgba(41, 40, 50, .59);
-  font-size: 14px;
-}
-
 .home26-hero-music {
   position: relative;
   min-width: 0;
@@ -1289,7 +1283,6 @@
 .home26-hero .home26-eyebrow { color: #f2b5a0; }
 .home26-hero h1 { color: var(--home26-paper); }
 .home26-hero-lede { color: rgba(255, 249, 241, .79); }
-.home26-hero-note { color: rgba(255, 249, 241, .63); }
 .home26-hero .home26-button-secondary { border-color: rgba(255, 249, 241, .45); background: rgba(255, 249, 241, .08); color: var(--home26-paper); }
 .home26-hero .home26-button-secondary:hover { border-color: var(--home26-paper); background: rgba(255, 249, 241, .18); }
 .home26-hero-credit {
@@ -2520,5 +2513,33 @@
 
   .home26-audience-business .home26-audience-points li:last-child {
     border-bottom: 0;
+  }
+}
+
+/* V65: audience routes have clear labels, larger service names and seamless joins. */
+.home26 .home26-audience .home26-eyebrow {
+  font-size: clamp(20px, 1.45vw, 24px);
+  line-height: 1.2;
+}
+
+.home26-audience-business .home26-audience-points li {
+  font-size: clamp(19px, 1.45vw, 23px);
+  font-weight: 720;
+  line-height: 1.25;
+}
+
+.home26-hero + .home26-facts,
+.home26-audience-business .home26-audience-panel {
+  border-top: 0;
+}
+
+.home26-audience-creators .home26-audience-panel {
+  border-bottom: 0;
+}
+
+@media (max-width: 620px) {
+  .home26 .home26-audience .home26-eyebrow,
+  .home26-audience-business .home26-audience-points li {
+    font-size: 18px;
   }
 }
