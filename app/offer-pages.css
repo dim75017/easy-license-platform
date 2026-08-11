@@ -2861,3 +2861,66 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* V64: the two main Creator stories each own a complete desktop viewport. */
+@media (min-width: 1101px) {
+  .creators-landing .offer-curation,
+  .creators-landing .offer-uses {
+    box-sizing: border-box;
+    min-height: max(900px, calc(100svh - 90px));
+  }
+
+  .creators-landing .offer-curation {
+    margin: 0;
+  }
+
+  .creators-landing .offer-uses {
+    display: flex;
+    justify-content: center;
+    padding-top: clamp(64px, 7vh, 92px);
+    padding-bottom: clamp(64px, 7vh, 92px);
+    flex-direction: column;
+  }
+}
+
+/* V65: Creator pricing closes the page as a square, full-width beige band. */
+.creators-landing .creator-pricing-cta {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 510px;
+  margin: 0;
+  border-radius: 0;
+  padding: clamp(72px, 8vw, 120px) clamp(28px, 4vw, 76px);
+  background: var(--marketing-paper);
+  color: var(--marketing-night);
+  box-shadow: none;
+}
+
+.creators-landing .creator-pricing-cta h2 {
+  color: var(--marketing-night);
+}
+
+.creators-landing .creator-pricing-cta > p {
+  color: rgba(41, 40, 50, .62);
+}
+
+.creators-landing .creator-pricing-cta .offer-button-light {
+  border-color: var(--marketing-night);
+  background: var(--marketing-night);
+  color: var(--marketing-paper);
+}
+
+.creators-landing .creator-pricing-cta .offer-button-light span:last-child {
+  background: rgba(255, 249, 241, .12);
+}
+
+@media (max-width: 620px) {
+  .creators-landing .creator-pricing-cta {
+    width: 100%;
+    min-height: 420px;
+    margin: 0;
+    border-radius: 0;
+    padding: 64px 22px;
+  }
+}

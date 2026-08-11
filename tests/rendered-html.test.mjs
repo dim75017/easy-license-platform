@@ -254,6 +254,8 @@ test("defines every public and connected product surface", async () => {
   assert.match(creators, /<CreatorTrackShowcase \/>/i);
   assert.doesNotMatch(creators, /PricingCards|creator-pricing-cards/i);
   assert.match(creators, /creator-pricing-cta[\s\S]*href="\/pricing"[\s\S]*Discover pricing/i);
+  assert.doesNotMatch(creators, /className="offer-faq"|Common licensing questions|offer-faq-help|Can I use the music in videos and livestreams/i);
+  assert.match(creators, /className="offer-flow creator-flow"[\s\S]*?<\/section>\s*<section className="offer-final-cta creator-pricing-cta"/i);
   assert.match(creators, /<CatalogueFacts \/>/);
   assert.doesNotMatch(creators, /offer-hero-proof|Human-made tracks|AI-generated tracks|Artists worldwide/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
@@ -339,7 +341,7 @@ test("ships a complete footer, detailed help and honest public information pages
   assert.match(supportCss, /@media \(max-width: 700px\)[\s\S]{0,900}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(supportCss, /@media \(max-width: 420px\)[\s\S]{0,160}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*1fr/);
 
-  assert.match(creators, /offer-faq[\s\S]*className="offer-faq-help"[\s\S]*href="\/help#creator-licensing"[\s\S]*Explore the Help Center/i);
+  assert.doesNotMatch(creators, /className="offer-faq"|Common licensing questions|offer-faq-help/i);
   assert.match(help, /id:\s*"creator-licensing"/);
   assert.equal([...help.matchAll(/question:\s*"/g)].length, 30, "Help Center should answer thirty concrete questions");
   for (const category of ["getting-started", "creator-licensing", "business-licensing", "catalogue-artists", "account-billing-support"]) {
@@ -740,7 +742,11 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[\s\S]{0,240}position:\s*absolute[\s\S]{0,240}height:\s*100%/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,500}\.creators-landing \.creator-platforms\s*\{[\s\S]{0,240}border-radius:\s*0/);
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
-  assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(84px, 8vw, 112px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,260}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V64: the two main Creator stories each own a complete desktop viewport\.[\s\S]{0,120}@media \(min-width: 1101px\)[\s\S]{0,180}\.creators-landing \.offer-curation,[\s\S]{0,80}\.creators-landing \.offer-uses\s*\{[\s\S]{0,140}min-height:\s*max\(900px, calc\(100svh - 90px\)\)/);
+  assert.match(offerCss, /V64: the two main Creator stories each own a complete desktop viewport\.[\s\S]{0,500}\.creators-landing \.offer-curation\s*\{[\s\S]{0,80}margin:\s*0;/);
+  assert.match(offerCss, /V64: the two main Creator stories each own a complete desktop viewport\.[\s\S]{0,700}\.creators-landing \.offer-uses\s*\{[\s\S]{0,180}display:\s*flex;[\s\S]{0,100}justify-content:\s*center;[\s\S]{0,240}flex-direction:\s*column;/);
+  assert.match(offerCss, /V65: Creator pricing closes the page as a square, full-width beige band\.[\s\S]{0,180}\.creators-landing \.creator-pricing-cta\s*\{[\s\S]{0,200}width:\s*100%;[\s\S]{0,120}max-width:\s*none;[\s\S]{0,160}margin:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,220}background:\s*var\(--marketing-paper\);[\s\S]{0,120}box-shadow:\s*none;/);
   assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(82px, 8vw, 108px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,260}\.offer-landing \.offer-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,100}align-items:\s*center;/);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,1200}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,180}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);

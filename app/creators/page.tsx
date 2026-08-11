@@ -96,20 +96,6 @@ export default function CreatorsPage() {
           </div>
         </section>
 
-        <section className="offer-faq" aria-labelledby="creator-faq-title">
-          <div data-reveal="left">
-            <p className="offer-kicker"><span>06</span> Creator FAQ</p>
-            <h2 id="creator-faq-title">Common licensing questions.</h2>
-            <Link className="offer-faq-help" href="/help#creator-licensing">Explore the Help Center <span aria-hidden="true">→</span></Link>
-          </div>
-          <div className="offer-faq-list" data-reveal="group">
-            <details open><summary>Can I use the music in videos and livestreams?<span>+</span></summary><p>Yes. Eligible music can cover your own supported videos, livestreams, podcasts and social content.</p></details>
-            <details><summary>Can I browse the catalogue before choosing?<span>+</span></summary><p>Yes. You can search the library and listen to the available tracks and playlists before choosing a licence.</p></details>
-            <details><summary>What if I receive a Content ID claim?<span>+</span></summary><p>Automated claims can still happen. Your workspace keeps the relevant track and licence information ready for support.</p></details>
-            <details><summary>Does this cover commercial campaigns?<span>+</span></summary><p>No. Paid advertising, brand campaigns, films, games and broader commercial uses need Symbiome for Business.</p></details>
-          </div>
-        </section>
-
         <section className="offer-final-cta creator-pricing-cta" id="creator-plans" aria-labelledby="creator-plans-title" data-reveal="group">
           <p>CREATOR PRICING</p><h2 id="creator-plans-title">Discover pricing for your creator channels.</h2>
           <div className="offer-actions"><Link className="offer-button offer-button-light" href="/pricing">Discover pricing <span>↗</span></Link></div>
