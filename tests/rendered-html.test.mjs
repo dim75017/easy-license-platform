@@ -82,7 +82,16 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.doesNotMatch(page, /Dario Lessing/i);
   assert.match(page, /food-hospitality\.jpg/i);
   assert.doesNotMatch(page, /home26-curation|home26-faq|home26-final/i);
-  assert.doesNotMatch(page, /href="\/pricing"/i);
+  assert.match(page, /home26-plan-preview[\s\S]*Creator[\s\S]*€6\.67[\s\S]*Pro[\s\S]*€16\.67/i);
+  assert.match(page, /home26-plan-row-business[\s\S]*Businesses[\s\S]*Custom quote[\s\S]*href="\/business#business-brief"|href="\/business#business-brief"[\s\S]*Custom quote/i);
+  assert.match(page, /home26-plan-preview[\s\S]*href="\/pricing"/i);
+  assert.match(page, /home26-closing[\s\S]*href="\/catalog"[\s\S]*href="\/pricing"/i);
+  const artistsIndex = page.indexOf('className="home26-section home26-artists"');
+  const pricingIndex = page.indexOf('className="home26-plan-preview"');
+  const closingIndex = page.indexOf('className="home26-closing"');
+  assert.ok(artistsIndex !== -1, "homepage should include the artist section");
+  assert.ok(pricingIndex > artistsIndex, "pricing preview should follow the artist section");
+  assert.ok(closingIndex > pricingIndex, "the concluding CTA should follow pricing");
   assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
   assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
   assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
@@ -112,6 +121,9 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /@keyframes home26ArtistsLeft[\s\S]{0,180}translate3d\(-50%, 0, 0\)/);
   assert.match(homeCss, /\.home26-artist-grid:hover \.home26-artist-track,[\s\S]{0,180}focus-within[\s\S]{0,180}animation-play-state:\s*paused/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,900}\.home26-artist-sequence\.is-duplicate[\s\S]{0,120}display:\s*none/);
+  assert.match(homeCss, /V57: a compact pricing route[\s\S]{0,1200}\.home26-plan-preview-inner\s*\{[\s\S]{0,260}grid-template-columns:/);
+  assert.match(homeCss, /\.home26-plan-board\s*\{[\s\S]{0,260}border-radius:\s*30px/);
+  assert.match(homeCss, /\.home26-closing\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,420}var\(--home26-night\)/);
   assert.match(homeCss, /\.home26-audience-panel,[\s\S]{0,100}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,220}border-radius:\s*0;[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(homeCss, /scroll-snap-type: x mandatory/);
   assert.match(catalogueCss, /\.catalogue-v26/);
