@@ -127,7 +127,7 @@ export default function Home() {
         <section className="home26-section home26-audience home26-audience-creators" id="services" aria-labelledby="home26-creators-title">
           <div className="home26-audience-panel">
             <figure className="home26-audience-media" data-reveal="scale">
-              <img src="/images/unsplash/creator-editing-keyboard.webp" alt="Creator editing a video from a laptop and dedicated control keyboard" width={1800} height={1200} loading="lazy" decoding="async" />
+              <img src="/images/unsplash/creator-video-editor-WsJBwU9psWI.webp" alt="Video creator editing at a desk with a laptop and dedicated control keyboard" width={1800} height={1200} loading="lazy" decoding="async" />
             </figure>
             <div className="home26-audience-copy" data-reveal="right">
               <p className="home26-eyebrow">For content creators</p>
