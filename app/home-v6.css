@@ -2,13 +2,13 @@
 
 :root {
   --cozy-night: #292832;
-  --cozy-night-soft: #36333d;
+  --cozy-night-soft: #292832;
   --cozy-oat: #f7ebdd;
   --cozy-paper: #fff9f1;
   --cozy-clay: #e06343;
-  --cozy-clay-soft: #f5ded5;
-  --cozy-sage: #8b6347;
-  --cozy-lamp: #f0b84c;
+  --cozy-clay-soft: #e06343;
+  --cozy-sage: #e06343;
+  --cozy-lamp: #e06343;
   --cozy-rule: rgba(41, 40, 50, .15);
   --cozy-shadow: 0 24px 70px rgba(41, 40, 50, .12);
 

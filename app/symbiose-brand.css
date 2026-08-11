@@ -3,14 +3,38 @@
 :root {
   --symbiose-night: #292832;
   --symbiose-paper: #fff9f1;
+  --symbiose-oat: #f7ebdd;
   --symbiose-warm: #e06343;
-  --symbiose-warm-deep: #9f3f2b;
-  --symbiose-peach: #f2b5a0;
-  --symbiose-wash: #f5ded5;
-  --symbiose-honey: #f0b84c;
+  --symbiose-warm-deep: var(--symbiose-warm);
+  --symbiose-peach: var(--symbiose-warm);
+  --symbiose-wash: var(--symbiose-oat);
+  --symbiose-honey: var(--symbiose-warm);
+  --bg: var(--symbiose-night);
+  --bg-deep: var(--symbiose-night);
+  --panel: var(--symbiose-night);
+  --panel-raised: var(--symbiose-night);
+  --panel-soft: rgba(41, 40, 50, .88);
+  --border: rgba(255, 249, 241, .14);
+  --border-active: rgba(224, 99, 67, .48);
+  --text: var(--symbiose-paper);
+  --text-soft: rgba(255, 249, 241, .72);
+  --text-muted: rgba(255, 249, 241, .5);
   --accent: var(--symbiose-warm);
-  --accent-light: var(--symbiose-peach);
+  --accent-light: var(--symbiose-warm);
   --accent-bg: rgba(224, 99, 67, .12);
+  --cyan: var(--symbiose-warm);
+  --blue: var(--symbiose-warm);
+  --peach: var(--symbiose-warm);
+  --ledger-paper: var(--symbiose-oat);
+  --ledger-ink: var(--symbiose-night);
+  --cozy-night: var(--symbiose-night);
+  --cozy-night-soft: var(--symbiose-night);
+  --cozy-oat: var(--symbiose-oat);
+  --cozy-paper: var(--symbiose-paper);
+  --cozy-clay: var(--symbiose-warm);
+  --cozy-clay-soft: var(--symbiose-warm);
+  --cozy-sage: var(--symbiose-warm);
+  --cozy-lamp: var(--symbiose-warm);
 }
 
 .brand-warm {
@@ -132,4 +156,281 @@
     height: 37px;
     flex-basis: 37px;
   }
+}
+
+/* Symbiome surface system: beige neutrals, then only the two logo colours. */
+
+html,
+body {
+  background: var(--symbiose-night);
+}
+
+::selection {
+  background: rgba(224, 99, 67, .32);
+  color: var(--symbiose-paper);
+}
+
+.home26 {
+  --home26-night: var(--symbiose-night);
+  --home26-night-soft: var(--symbiose-night);
+  --home26-paper: var(--symbiose-paper);
+  --home26-oat: var(--symbiose-oat);
+  --home26-clay: var(--symbiose-warm);
+  --home26-clay-dark: var(--symbiose-warm);
+  --home26-sage: var(--symbiose-warm);
+}
+
+.gateway-page,
+.offer-landing {
+  --marketing-night: var(--symbiose-night);
+  --marketing-ink: var(--symbiose-night);
+  --marketing-paper: var(--symbiose-oat);
+  --marketing-cream: var(--symbiose-paper);
+  --marketing-clay: var(--symbiose-warm);
+  --marketing-clay-soft: var(--symbiose-warm);
+  --marketing-sage: var(--symbiose-warm);
+}
+
+.music-v26-page,
+.catalogue-v26 {
+  --music-night: var(--symbiose-night);
+  --music-night-soft: var(--symbiose-night);
+  --music-paper: var(--symbiose-oat);
+  --music-cream: var(--symbiose-paper);
+  --music-clay: var(--symbiose-warm);
+  --music-clay-deep: var(--symbiose-warm);
+  --music-sage: var(--symbiose-warm);
+}
+
+.pricing-v39 {
+  --price-ink: var(--symbiose-night);
+  --price-paper: var(--symbiose-oat);
+  --price-cream: var(--symbiose-paper);
+  --price-sand: var(--symbiose-paper);
+  --price-clay: var(--symbiose-warm);
+  --price-clay-deep: var(--symbiose-warm);
+  --price-clay-soft: var(--symbiose-warm);
+}
+
+.retail-v2 {
+  --cozy-night: var(--symbiose-night);
+  --cozy-oat: var(--symbiose-oat);
+  --cozy-paper: var(--symbiose-paper);
+  --cozy-clay: var(--symbiose-warm);
+  --cozy-clay-soft: var(--symbiose-warm);
+}
+
+.creator-music-app {
+  --wm-ink: var(--symbiose-night);
+  --wm-side: var(--symbiose-night);
+  --wm-side-soft: var(--symbiose-night);
+  --wm-paper: var(--symbiose-oat);
+  --wm-cream: var(--symbiose-paper);
+  --wm-sand: var(--symbiose-oat);
+  --wm-clay: var(--symbiose-warm);
+  --wm-clay-deep: var(--symbiose-warm);
+  --wm-clay-soft: var(--symbiose-warm);
+  --wm-sage: var(--symbiose-warm);
+}
+
+.public-shell {
+  background: var(--symbiose-oat);
+}
+
+.public-shell .site-header .button-primary:hover::after,
+.public-shell .button:hover::after,
+.home26 .home26-button-primary:hover {
+  border-color: var(--symbiose-night);
+  background: var(--symbiose-night);
+  color: var(--symbiose-paper);
+}
+
+.public-shell .site-footer {
+  border-top-color: rgba(255, 249, 241, .14);
+  background: var(--symbiose-night);
+  box-shadow: 0 0 0 100vmax var(--symbiose-night);
+  color: var(--symbiose-paper) !important;
+}
+
+.public-shell .site-footer .brand,
+.public-shell .site-footer .brand-name,
+.public-shell .site-footer .footer-brand > p,
+.public-shell .site-footer .footer-links a,
+.public-shell .site-footer .footer-bottom {
+  color: var(--symbiose-paper) !important;
+}
+
+.public-shell .site-footer .brand-powered,
+.public-shell .site-footer .footer-label {
+  color: var(--symbiose-warm) !important;
+}
+
+.public-shell .site-footer .footer-bottom {
+  border-top-color: rgba(255, 249, 241, .14);
+  color: rgba(255, 249, 241, .62) !important;
+}
+
+.public-shell .site-footer .footer-brand > p,
+.public-shell .site-footer .footer-links a {
+  color: rgba(255, 249, 241, .76) !important;
+}
+
+.public-shell .site-footer .footer-links a:hover {
+  color: var(--symbiose-warm) !important;
+}
+
+.creators-landing .creator-platforms {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(224, 99, 67, .3), transparent 31%),
+    var(--symbiose-night);
+}
+
+.creators-landing .creator-editorial {
+  background: var(--symbiose-warm);
+  color: var(--symbiose-night);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading h2,
+.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker,
+.creators-landing .creator-editorial .creator-editorial-heading > p:last-child,
+.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker > span {
+  color: var(--symbiose-night);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading > p:last-child {
+  font-size: clamp(19px, 1.35vw, 21px);
+  font-weight: 620;
+}
+
+.creators-landing .creator-editorial-track,
+.creators-landing .creator-editorial-track:hover,
+.creators-landing .creator-editorial-track.is-selected,
+.creators-landing .creator-editorial-player {
+  background-color: var(--symbiose-night);
+}
+
+.music-mood-shelf {
+  background: var(--symbiose-warm);
+  color: var(--symbiose-night);
+}
+
+.music-mood-shelf > div {
+  border-color: rgba(41, 40, 50, .3);
+}
+
+.music-mood-shelf a {
+  border-color: rgba(41, 40, 50, .24);
+  background: var(--symbiose-paper);
+  color: var(--symbiose-night);
+}
+
+.music-mood-shelf a span {
+  color: rgba(41, 40, 50, .68);
+}
+
+.music-mood-shelf a:hover {
+  background: var(--symbiose-night);
+  color: var(--symbiose-paper);
+}
+
+.music-mood-shelf a:hover span {
+  color: var(--symbiose-warm);
+}
+
+.music-library-editorial {
+  background:
+    radial-gradient(circle at 92% 7%, rgba(224, 99, 67, .24), transparent 28%),
+    radial-gradient(circle at 7% 94%, rgba(224, 99, 67, .08), transparent 25%),
+    var(--symbiose-night);
+}
+
+.music-library-editorial .catalogue-v26-listen:hover,
+.pricing-v39 .business-coming-soon {
+  background: var(--symbiose-paper);
+}
+
+.dashboard-shell {
+  background:
+    radial-gradient(circle at 86% 0, rgba(224, 99, 67, .12), transparent 25%),
+    radial-gradient(circle at 18% 80%, rgba(224, 99, 67, .07), transparent 32%),
+    var(--symbiose-night);
+}
+
+.dashboard-shell .dashboard-sidebar,
+.workspace-audio-player,
+.music-app-sidebar,
+.music-setup-intro,
+.workspace-playlist {
+  background-color: var(--symbiose-night);
+}
+
+.dashboard-shell .dashboard-sidebar {
+  background-image: none;
+}
+
+.dashboard-shell .metric-grid article,
+.dashboard-shell .workspace-track {
+  background: rgba(255, 249, 241, .055);
+}
+
+.dashboard-shell .dashboard-panel,
+.dashboard-shell .rights-panel {
+  background: linear-gradient(180deg, rgba(255, 249, 241, .07), rgba(255, 249, 241, .025));
+}
+
+.dashboard-shell .rights-orbit > span,
+.music-app-account > span {
+  background: rgba(224, 99, 67, .16);
+  color: var(--symbiose-warm);
+}
+
+.dashboard-shell .attribution-panel code,
+.music-setup-backdrop {
+  background-color: rgba(41, 40, 50, .78);
+}
+
+.music-discovery-intro {
+  background: linear-gradient(135deg, rgba(224, 99, 67, .22), var(--symbiose-paper));
+}
+
+.music-catalogue-proof i {
+  background: var(--symbiose-warm);
+  color: var(--symbiose-night);
+}
+
+.music-track-row:hover,
+.music-track-row.is-selected {
+  background: rgba(224, 99, 67, .12);
+}
+
+.public-shell:has(.sync-page-hero) {
+  background: var(--symbiose-night);
+  color: var(--symbiose-paper);
+}
+
+.public-shell:has(.sync-page-hero) .sync-eyebrow > span,
+.public-shell:has(.sync-page-hero) .brief-options span.is-active,
+.public-shell:has(.sync-page-hero) .path-icon,
+.public-shell:has(.sync-page-hero) .custom-path .path-icon,
+.public-shell:has(.sync-page-hero) .process-line article > span {
+  border-color: rgba(224, 99, 67, .34);
+  background: rgba(224, 99, 67, .12);
+  color: var(--symbiose-warm);
+}
+
+.public-shell:has(.sync-page-hero) .brief-options span,
+.public-shell:has(.sync-page-hero) .process-line article,
+.public-shell:has(.sync-page-hero) .brief-contact-notes i {
+  background-color: rgba(255, 249, 241, .055);
+}
+
+.public-shell:has(.sync-page-hero) .brief-progress i,
+.public-shell:has(.sync-page-hero) .process-line > i {
+  background: var(--symbiose-warm);
+}
+
+.public-shell:has(.sync-page-hero) .lead-form input,
+.public-shell:has(.sync-page-hero) .lead-form select,
+.public-shell:has(.sync-page-hero) .lead-form textarea {
+  background: var(--symbiose-night);
 }

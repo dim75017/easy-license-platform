@@ -2,12 +2,12 @@
 
 .home26 {
   --home26-night: #292832;
-  --home26-night-soft: #3a3742;
+  --home26-night-soft: #292832;
   --home26-paper: #fff9f1;
   --home26-oat: #f7ebdd;
   --home26-clay: #e06343;
-  --home26-clay-dark: #9f3f2b;
-  --home26-sage: #886043;
+  --home26-clay-dark: #e06343;
+  --home26-sage: #e06343;
   --home26-rule: rgba(41, 40, 50, .16);
   min-width: 0;
   overflow: hidden;
@@ -1333,11 +1333,11 @@
 /* V35: return to the warm editorial palette. */
 .home26 {
   --home26-night: #292832;
-  --home26-night-soft: #3a3742;
+  --home26-night-soft: #292832;
   --home26-paper: #fff9f1;
   --home26-oat: #f7ebdd;
   --home26-clay: #e06343;
-  --home26-clay-dark: #9f3f2b;
+  --home26-clay-dark: #e06343;
   --home26-sage: #886043;
   --home26-rule: rgba(41, 40, 50, .16);
   background: var(--home26-oat);
