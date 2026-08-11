@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 
 type LeadType = "sync" | "retail_waitlist" | "business";
-type BusinessNeed = "existing_track" | "custom_music" | "physical_places";
+export type BusinessNeed = "existing_track" | "custom_music" | "physical_places";
 
 const businessNeedLabels: Record<BusinessNeed, string> = {
   existing_track: "License an existing track",
@@ -13,11 +13,11 @@ const businessNeedLabels: Record<BusinessNeed, string> = {
 
 const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
 
-export function LeadForm({ type }: { type: LeadType }) {
+export function LeadForm({ type, initialBusinessNeed = "existing_track" }: { type: LeadType; initialBusinessNeed?: BusinessNeed }) {
   const isBusiness = type === "business";
   const isSync = type === "sync" || isBusiness;
   const isGuidedBusinessForm = isBusiness;
-  const [businessNeed, setBusinessNeed] = useState<BusinessNeed>("existing_track");
+  const [businessNeed, setBusinessNeed] = useState<BusinessNeed>(initialBusinessNeed);
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -55,7 +55,7 @@ export function LeadForm({ type }: { type: LeadType }) {
       setState("sent");
       setMessage("Public demo only — nothing was sent or stored.");
       event.currentTarget.reset();
-      setBusinessNeed("existing_track");
+      setBusinessNeed(initialBusinessNeed);
       return;
     }
 
@@ -70,7 +70,7 @@ export function LeadForm({ type }: { type: LeadType }) {
       setState("sent");
       setMessage(isPhysicalPlacesRequest || !isSync ? "You’re on the early access list." : "Brief received. Our licensing team will review it next.");
       event.currentTarget.reset();
-      setBusinessNeed("existing_track");
+      setBusinessNeed(initialBusinessNeed);
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Something went wrong. Please try again.");

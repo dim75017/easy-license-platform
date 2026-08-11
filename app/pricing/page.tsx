@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { BusinessLeadForm } from "../components/BusinessLeadForm";
 import { LeadForm } from "../components/LeadForm";
 import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
@@ -38,12 +40,14 @@ export default function PricingPage() {
             <h2 id="business-pricing-title">Choose what you need.</h2>
             <p>License an existing track or commission original music for a project. Music for physical places is coming soon, and you can join the early-access list here.</p>
           </div>
-          <div className="form-panel pricing-v39-business-form">
+          <div className="form-panel pricing-v39-business-form" id="business-request">
             <div className="form-panel-head">
               <span>BUSINESS MUSIC REQUEST</span>
               <small>Every active project receives a custom quote</small>
             </div>
-            <LeadForm type="business" />
+            <Suspense fallback={<LeadForm type="business" />}>
+              <BusinessLeadForm />
+            </Suspense>
           </div>
         </section>
       </div>

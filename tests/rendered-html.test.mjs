@@ -196,13 +196,15 @@ test("defines every public and connected product surface", async () => {
     assert.match(await source(path), expected, path);
   }
 
-  const [creators, business, pricing, pricingCards, pricingCss, leadForm, retail, sync] = await Promise.all([
+  const [creators, business, pricing, pricingCards, pricingCss, leadForm, businessLeadForm, footer, retail, sync] = await Promise.all([
     source("app/creators/page.tsx"),
     source("app/business/page.tsx"),
     source("app/pricing/page.tsx"),
     source("app/components/PricingCards.tsx"),
     source("app/pricing-v39.css"),
     source("app/components/LeadForm.tsx"),
+    source("app/components/BusinessLeadForm.tsx"),
+    source("app/components/SiteFooter.tsx"),
     source("app/retail/page.tsx"),
     source("app/sync/page.tsx"),
   ]);
@@ -231,11 +233,13 @@ test("defines every public and connected product surface", async () => {
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /FOR BUSINESSES/i);
   assert.match(pricing, /<PricingCards expanded \/>/i);
-  assert.match(pricing, /<LeadForm type="business" \/>/i);
+  assert.match(pricing, /id="business-request"/i);
+  assert.match(pricing, /<Suspense fallback=\{<LeadForm type="business" \/>\}>[\s\S]*<BusinessLeadForm \/>[\s\S]*<\/Suspense>/i);
   assert.equal([...pricing.matchAll(/<section/g)].length, 3, "Pricing should contain only its compact hero and two product routes");
   assert.doesNotMatch(pricing, /pricing-v39-platforms|pricing-v39-comparison|pricing-v39-faq|pricing-v39-cta|comparison-table|pricingFaq|const comparison|business-option-grid/i);
   assert.match(pricingCss, /\.pricing-v39 \.price-card\s*\{[\s\S]{0,220}border-radius:\s*30px/);
   assert.match(pricingCss, /\.pricing-v39-business\s*\{[\s\S]{0,260}grid-template-columns:/);
+  assert.match(pricingCss, /\.pricing-v39-business-form\s*\{[\s\S]{0,120}scroll-margin-top:\s*110px/);
   assert.match(leadForm, /License an existing track/);
   assert.match(leadForm, /Commission original music/);
   assert.match(leadForm, /Music for a physical place — Coming soon/);
@@ -243,6 +247,19 @@ test("defines every public and connected product surface", async () => {
   assert.match(leadForm, /type:\s*isBusiness \? "sync" as const : type/);
   assert.match(leadForm, /businessNeedLabels\[businessNeed\][^\n]*project/);
   assert.match(leadForm, /Physical places is coming soon/);
+  assert.match(leadForm, /initialBusinessNeed\?: BusinessNeed/);
+  assert.match(leadForm, /useState<BusinessNeed>\(initialBusinessNeed\)/);
+  assert.equal([...leadForm.matchAll(/setBusinessNeed\(initialBusinessNeed\)/g)].length, 2, "the selected footer route should survive both form reset paths");
+  assert.doesNotMatch(leadForm, /setBusinessNeed\("existing_track"\)/);
+  assert.match(businessLeadForm, /useSearchParams\(\)/);
+  assert.match(businessLeadForm, /businessNeeds\.has\(requestedNeed as BusinessNeed\)/);
+  assert.match(businessLeadForm, /<LeadForm key=\{initialBusinessNeed\} type="business" initialBusinessNeed=\{initialBusinessNeed\} \/>/);
+  assert.match(footer, /href="\/catalog#music-library"/);
+  assert.match(footer, /href="\/pricing#creator-pricing-title"[\s\S]*Creator &amp; Pro plans/);
+  assert.match(footer, /href="\/pricing\?business_need=existing_track#business-request"[\s\S]*Commercial Sync/);
+  assert.match(footer, /href="\/pricing\?business_need=custom_music#business-request"[\s\S]*Custom Commission/);
+  assert.match(footer, /href="\/pricing\?business_need=physical_places#business-request"[\s\S]*Music for Retail/);
+  assert.doesNotMatch(footer, /href="\/(?:sync|retail)(?:[#"])/);
   assert.doesNotMatch(pricingCards, /SY–03 \/ BUSINESS/i);
   assert.match(retail, /Music for Retail — Coming soon/i);
   assert.doesNotMatch(retail, /Music for Business/i);

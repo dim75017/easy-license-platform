@@ -241,12 +241,15 @@
 }
 
 .pricing-v39-business-form {
+  scroll-margin-top: 110px;
   border-color: rgba(41, 40, 50, .16);
   border-radius: 28px;
   background: var(--price-cream);
   color: var(--price-ink);
   box-shadow: 0 28px 70px rgba(0, 0, 0, .24);
 }
+
+#creator-pricing-title { scroll-margin-top: 110px; }
 
 .pricing-v39-business-form .form-panel-head {
   min-height: 70px;
