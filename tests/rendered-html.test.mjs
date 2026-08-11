@@ -58,7 +58,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.doesNotMatch(businessRoute, /home26-audience-media" data-reveal="scale"/);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
-  assert.match(page, /creator-editing-keyboard\.webp/i);
+  assert.match(page, /creator-video-editor-WsJBwU9psWI\.webp/i);
   assert.match(page, /business-headphones-B88PgQXS4qg\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
@@ -594,6 +594,21 @@ test("ships the clean Premium Study photograph without the watermarked preview",
   assert.ok(metadata.size <= 140_000, "the clean Study photograph should stay below 140 KB");
 });
 
+test("ships the requested homepage Creator photograph and documents its source", async () => {
+  const [page, sources] = await Promise.all([
+    source("app/page.tsx"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const creatorImage = new URL("public/images/unsplash/creator-video-editor-WsJBwU9psWI.webp", root);
+
+  await access(creatorImage);
+  const metadata = await stat(creatorImage);
+  assert.ok(metadata.size <= 140_000, "the homepage Creator photograph should stay below 140 KB");
+  assert.match(page, /creator-video-editor-WsJBwU9psWI\.webp/);
+  assert.doesNotMatch(page, /creator-editing-keyboard\.webp/);
+  assert.match(sources, /creator-video-editor-WsJBwU9psWI\.webp[\s\S]{0,180}TheRegisti[\s\S]{0,180}WsJBwU9psWI/);
+});
+
 test("ships the Business process backdrop locally and documents its source", async () => {
   const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
   const sources = await source("public/images/unsplash/SOURCES.md");
@@ -767,6 +782,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/creator-streamer-card.webp", root)),
     access(new URL("public/images/unsplash/creator-social-card.webp", root)),
     access(new URL("public/images/unsplash/creator-podcast-card.webp", root)),
+    access(new URL("public/images/unsplash/creator-video-editor-WsJBwU9psWI.webp", root)),
     access(new URL("public/images/unsplash/food-hospitality.jpg", root)),
     access(new URL("public/images/unsplash/music-header.jpg", root)),
     access(new URL("public/images/unsplash/podcast-home.jpg", root)),
