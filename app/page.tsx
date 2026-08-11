@@ -183,34 +183,49 @@ export default function Home() {
 
         <section className="home26-plan-preview" aria-labelledby="home26-plan-preview-title">
           <div className="home26-plan-preview-inner">
-            <div className="home26-plan-preview-copy" data-reveal="left">
+            <div className="home26-plan-preview-copy" data-reveal="group">
               <p className="home26-eyebrow">Plans and licensing</p>
               <h2 id="home26-plan-preview-title">Fixed plans for creators. Custom quotes for businesses.</h2>
               <p>Choose a simple subscription for the channels you own, or tell us what your commercial project needs. If you are not sure yet, you can start with the music and decide later.</p>
-              <Link className="home26-button home26-button-primary" href="/pricing">See all pricing</Link>
             </div>
 
-            <div className="home26-plan-board" data-reveal="right">
-              <Link className="home26-plan-row" href="/pricing#creator-pricing-title">
+            <div className="home26-plan-board" data-reveal="group">
+              <Link className="home26-plan-row home26-plan-card-creator" href="/pricing#creator-pricing-title">
                 <span className="home26-plan-name"><strong>Creator</strong><span>For your own content</span></span>
-                <span className="home26-plan-description">One channel per supported platform for videos, streams, podcasts and social content.</span>
                 <span className="home26-plan-price"><strong>€6.67</strong><span>/ month · billed yearly</span></span>
-                <span className="home26-plan-arrow" aria-hidden="true">→</span>
+                <ul className="home26-plan-features">
+                  <li>One channel per supported platform</li>
+                  <li>Videos, streams, podcasts and social content</li>
+                  <li>Licence and Content ID support</li>
+                </ul>
+                <span className="home26-plan-detail">View Creator details <span aria-hidden="true">→</span></span>
               </Link>
 
-              <Link className="home26-plan-row" href="/pricing#creator-pricing-title">
+              <Link className="home26-plan-row home26-plan-card-pro" href="/pricing#creator-pricing-title">
                 <span className="home26-plan-name"><strong>Pro</strong><span>For multi-channel creators</span></span>
-                <span className="home26-plan-description">Up to three channels per platform, with a shared workspace and priority support.</span>
                 <span className="home26-plan-price"><strong>€16.67</strong><span>/ month · billed yearly</span></span>
-                <span className="home26-plan-arrow" aria-hidden="true">→</span>
+                <ul className="home26-plan-features">
+                  <li>Up to three channels per platform</li>
+                  <li>Multi-channel and team workspace</li>
+                  <li>Priority support</li>
+                </ul>
+                <span className="home26-plan-detail">View Pro details <span aria-hidden="true">→</span></span>
               </Link>
 
-              <Link className="home26-plan-row home26-plan-row-business" href="/business#business-brief">
+              <Link className="home26-plan-row home26-plan-row-business" href="/pricing#business-pricing-title">
                 <span className="home26-plan-name"><strong>Businesses</strong><span>For commercial projects</span></span>
-                <span className="home26-plan-description">License an existing track or commission original music. Physical places are coming soon.</span>
                 <span className="home26-plan-price"><strong>Custom quote</strong><span>based on your brief</span></span>
-                <span className="home26-plan-arrow" aria-hidden="true">→</span>
+                <ul className="home26-plan-features">
+                  <li>License an existing track</li>
+                  <li>Commission original music</li>
+                  <li>Physical places · Coming soon</li>
+                </ul>
+                <span className="home26-plan-detail">View Business details <span aria-hidden="true">→</span></span>
               </Link>
+            </div>
+
+            <div className="home26-plan-action" data-reveal="up">
+              <Link className="home26-button home26-button-primary" href="/pricing">Compare all pricing and licensing options</Link>
             </div>
           </div>
         </section>

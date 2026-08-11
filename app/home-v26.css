@@ -2198,6 +2198,196 @@
   background: var(--home26-night-soft);
 }
 
+/* V60: the homepage presents all three routes as equal vertical pricing cards. */
+.home26-plan-preview-inner {
+  display: block;
+}
+
+.home26-plan-preview-copy {
+  max-width: 980px;
+  margin: 0 auto clamp(46px, 5vw, 68px);
+  text-align: center;
+}
+
+.home26-plan-preview-copy > p:last-of-type {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.home26-plan-board {
+  display: grid;
+  width: min(1440px, 100%);
+  max-width: 1440px;
+  margin-inline: auto;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 1.6vw, 24px);
+}
+
+.home26-plan-row {
+  display: flex;
+  min-height: 500px;
+  align-items: stretch;
+  border: 1px solid var(--home26-rule);
+  border-radius: 30px;
+  padding: clamp(30px, 3vw, 44px);
+  background: var(--home26-oat);
+  color: var(--home26-night);
+  flex-direction: column;
+  gap: 0;
+  box-shadow: 0 18px 48px rgba(41, 40, 50, .08);
+  transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+}
+
+.home26-plan-row:hover,
+.home26-plan-row:focus-visible {
+  background: var(--home26-paper);
+  box-shadow: 0 26px 60px rgba(41, 40, 50, .13);
+  outline: none;
+  transform: translateY(-5px);
+}
+
+.home26-plan-card-pro,
+.home26-plan-card-pro:hover,
+.home26-plan-card-pro:focus-visible {
+  border-color: rgba(251, 247, 239, .16);
+  background: var(--home26-night);
+  color: var(--home26-paper);
+}
+
+.home26-plan-row-business,
+.home26-plan-row-business:hover,
+.home26-plan-row-business:focus-visible {
+  border-color: rgba(41, 40, 50, .26);
+  background: var(--home26-paper);
+  color: var(--home26-night);
+}
+
+.home26-plan-name {
+  min-height: 76px;
+}
+
+.home26-plan-name strong {
+  font-size: clamp(32px, 3vw, 44px);
+}
+
+.home26-plan-name > span,
+.home26-plan-price > span {
+  margin-top: 7px;
+  color: rgba(41, 40, 50, .62);
+  font-size: 15px;
+}
+
+.home26-plan-price {
+  margin: 34px 0 8px;
+  text-align: left;
+}
+
+.home26-plan-price strong {
+  font-size: clamp(48px, 4.5vw, 68px);
+  line-height: .98;
+}
+
+.home26-plan-row-business .home26-plan-price strong {
+  max-width: 330px;
+  font-size: clamp(42px, 3.7vw, 58px);
+}
+
+.home26-plan-card-pro .home26-plan-name > span,
+.home26-plan-card-pro .home26-plan-price > span {
+  color: rgba(251, 247, 239, .68);
+}
+
+.home26-plan-row-business .home26-plan-name > span,
+.home26-plan-row-business .home26-plan-price > span {
+  color: rgba(41, 40, 50, .62);
+}
+
+.home26-plan-features {
+  margin: 30px 0 34px;
+  padding: 0;
+  list-style: none;
+}
+
+.home26-plan-features li {
+  border-top: 1px solid var(--home26-rule);
+  padding: 14px 0;
+  color: rgba(41, 40, 50, .74);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.home26-plan-features li:last-child {
+  border-bottom: 1px solid var(--home26-rule);
+}
+
+.home26-plan-card-pro .home26-plan-features li {
+  border-color: rgba(251, 247, 239, .16);
+  color: rgba(251, 247, 239, .78);
+}
+
+.home26-plan-detail {
+  display: flex;
+  margin-top: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.home26-plan-detail > span {
+  font-size: 22px;
+  transition: transform .2s ease;
+}
+
+.home26-plan-row:hover .home26-plan-detail > span,
+.home26-plan-row:focus-visible .home26-plan-detail > span {
+  transform: translateX(5px);
+}
+
+.home26-plan-action {
+  display: flex;
+  margin-top: 38px;
+  justify-content: center;
+}
+
+@media (max-width: 980px) {
+  .home26-plan-board {
+    width: min(100%, 720px);
+    grid-template-columns: 1fr;
+  }
+
+  .home26-plan-row {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .home26-plan-preview {
+    padding: 70px 16px;
+  }
+
+  .home26-plan-preview-copy {
+    margin-bottom: 38px;
+    text-align: left;
+  }
+
+  .home26-plan-row {
+    border-radius: 24px;
+    padding: 30px 24px;
+  }
+
+  .home26-plan-action,
+  .home26-plan-action .home26-button {
+    width: 100%;
+  }
+}
+
 .home26-hero .home26-button-primary {
   border-color: rgba(251, 247, 239, .58);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .22);

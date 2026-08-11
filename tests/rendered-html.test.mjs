@@ -83,8 +83,10 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(page, /food-hospitality\.jpg/i);
   assert.doesNotMatch(page, /home26-curation|home26-faq|home26-final/i);
   assert.match(page, /home26-plan-preview[\s\S]*Creator[\s\S]*€6\.67[\s\S]*Pro[\s\S]*€16\.67/i);
-  assert.match(page, /home26-plan-row-business[\s\S]*Businesses[\s\S]*Custom quote[\s\S]*href="\/business#business-brief"|href="\/business#business-brief"[\s\S]*Custom quote/i);
+  assert.match(page, /home26-plan-row-business[\s\S]*Businesses[\s\S]*Custom quote[\s\S]*href="\/pricing#business-pricing-title"|href="\/pricing#business-pricing-title"[\s\S]*Custom quote/i);
   assert.match(page, /home26-plan-preview[\s\S]*href="\/pricing"/i);
+  assert.match(page, /home26-plan-preview[\s\S]*home26-plan-features[\s\S]*home26-plan-detail/i);
+  assert.doesNotMatch(page, /home26-plan-preview[\s\S]*href="\/business/);
   assert.match(page, /home26-closing[\s\S]*href="\/catalog"[\s\S]*href="\/pricing"/i);
   const artistsIndex = page.indexOf('className="home26-section home26-artists"');
   const pricingIndex = page.indexOf('className="home26-plan-preview"');
@@ -122,8 +124,9 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-artist-track\[data-paused="true"\]\s*\{[\s\S]{0,100}animation-play-state:\s*paused/);
   assert.doesNotMatch(homeCss, /home26-artist-grid:(?:hover|focus-within) \.home26-artist-track/);
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,900}\.home26-artist-sequence\.is-duplicate[\s\S]{0,120}display:\s*none/);
-  assert.match(homeCss, /V57: a compact pricing route[\s\S]{0,1200}\.home26-plan-preview-inner\s*\{[\s\S]{0,260}grid-template-columns:/);
-  assert.match(homeCss, /\.home26-plan-board\s*\{[\s\S]{0,260}border-radius:\s*30px/);
+  assert.match(homeCss, /V60: the homepage presents all three routes[\s\S]{0,1000}\.home26-plan-board\s*\{[\s\S]{0,420}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /V60: the homepage presents all three routes[\s\S]{0,1600}\.home26-plan-row\s*\{[\s\S]{0,320}display:\s*flex;[\s\S]{0,420}flex-direction:\s*column/);
+  assert.match(homeCss, /\.home26-plan-row\s*\{[\s\S]{0,420}border-radius:\s*30px/);
   assert.match(homeCss, /\.home26-closing\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,420}var\(--home26-night\)/);
   assert.match(homeCss, /V58: primary actions use the same navy[\s\S]{0,260}\.home26 \.home26-button-primary\s*\{[\s\S]{0,180}background:\s*var\(--home26-night\)/);
   assert.match(css, /V38: public button hover details stay navy[\s\S]{0,220}background:\s*#3a3742/);
