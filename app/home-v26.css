@@ -1796,3 +1796,44 @@
     min-height: max(720px, calc(100svh - 245px));
   }
 }
+
+/* V55: artist portraits fill each card, with readable details over the image. */
+.home26-artist-grid article {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: .72;
+}
+
+.home26-artist-grid article::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 36%, rgba(18, 17, 22, .16) 57%, rgba(18, 17, 22, .9) 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.home26-artist-photo {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+}
+
+.home26-artist-meta {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: clamp(22px, 1.8vw, 30px);
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .34);
+}
+
+.home26-artist-meta strong {
+  color: #fff;
+}
+
+.home26-artist-meta span {
+  color: rgba(255, 255, 255, .78);
+}
