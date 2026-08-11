@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
 import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PublicShell } from "../components/PublicShell";
@@ -30,12 +31,9 @@ export default function CreatorsPage() {
               <a className="offer-inline-link offer-inline-light" href="#creator-plans">Discover pricing <span>↓</span></a>
             </div>
           </div>
-          <div className="offer-hero-proof" data-reveal="group">
-            <div><strong>10,000+</strong><span>Human-made tracks</span></div>
-            <div><strong>0</strong><span>AI-generated tracks</span></div>
-            <div><strong>1,000+</strong><span>Artists worldwide</span></div>
-          </div>
         </section>
+
+        <CatalogueFacts />
 
         <section className="offer-curation" aria-labelledby="creator-curation-title">
           <figure data-reveal="scale"><img src="/images/unsplash/creator-audio-editor.webp" alt="Creator editing audio at a studio workstation" width={1600} height={1124} loading="eager" decoding="async" /></figure>

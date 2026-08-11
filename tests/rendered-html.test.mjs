@@ -9,7 +9,7 @@ async function source(path) {
 }
 
 test("contains the complete Symbiose music licensing homepage", async () => {
-  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources] = await Promise.all([
+  const [page, layout, css, homeCss, catalogueCss, offerCss, packageJson, artistMarquee, artistSources, catalogueFacts] = await Promise.all([
     source("app/page.tsx"),
     source("app/layout.tsx"),
     source("app/globals.css"),
@@ -19,6 +19,7 @@ test("contains the complete Symbiose music licensing homepage", async () => {
     source("package.json"),
     source("app/components/ArtistMarquee.tsx"),
     source("public/artists/SOURCES.md"),
+    source("app/components/CatalogueFacts.tsx"),
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
@@ -94,11 +95,12 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.ok(artistsIndex !== -1, "homepage should include the artist section");
   assert.ok(pricingIndex > artistsIndex, "pricing preview should follow the artist section");
   assert.ok(closingIndex > pricingIndex, "the concluding CTA should follow pricing");
-  assert.match(page, /10,000\+[\s\S]*instrumental and background tracks/i);
-  assert.match(page, /0[\s\S]*AI-generated tracks accepted/i);
-  assert.match(page, /1,000\+[\s\S]*artists represented worldwide/i);
-  assert.match(page, /featuredGenreCount[\s\S]*music genres across our featured playlists/i);
-  assert.match(page, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
+  assert.match(page, /<CatalogueFacts \/>/);
+  assert.match(catalogueFacts, /10,000\+[\s\S]*instrumental and background tracks/i);
+  assert.match(catalogueFacts, /0[\s\S]*AI-generated tracks accepted/i);
+  assert.match(catalogueFacts, /1,000\+[\s\S]*artists represented worldwide/i);
+  assert.match(catalogueFacts, /featuredGenreCount[\s\S]*music genres across our featured playlists/i);
+  assert.match(catalogueFacts, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
   assert.match(layout, /Symbiose — High-quality instrumental music for creators and businesses/);
@@ -187,6 +189,8 @@ test("defines every public and connected product surface", async () => {
   assert.match(creators, /<CreatorTrackShowcase \/>/i);
   assert.doesNotMatch(creators, /PricingCards|creator-pricing-cards/i);
   assert.match(creators, /creator-pricing-cta[\s\S]*href="\/pricing"[\s\S]*Discover pricing/i);
+  assert.match(creators, /<CatalogueFacts \/>/);
+  assert.doesNotMatch(creators, /offer-hero-proof|Human-made tracks|AI-generated tracks|Artists worldwide/i);
   assert.doesNotMatch(creators, /Commercial Sync|Custom Commission|Music for Retail/i);
   assert.doesNotMatch(creators, /Artists and payments|More than 1,000 artists|offer-human/i);
   assert.match(business, /Commercial Sync/i);
@@ -197,6 +201,8 @@ test("defines every public and connected product surface", async () => {
   assert.match(business, /Choose what you need/i);
   assert.match(business, /id="business-brief"/i);
   assert.match(business, /<LeadForm type="business" \/>/i);
+  assert.match(business, /<CatalogueFacts \/>/);
+  assert.doesNotMatch(business, /offer-hero-proof|Human-made tracks|AI-generated tracks|Quote for every brief/i);
   assert.match(business, /href="#business-brief"/i);
   assert.doesNotMatch(business, /Creator &amp; Pro|€6\.67|€16\.67/i);
   assert.doesNotMatch(business, /Artists and music team|More than 1,000 artists|offer-human/i);
@@ -487,8 +493,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.doesNotMatch(catalogueData, /EL-CAT-/);
   assert.match(creators, /creator-youtube-card\.webp/i);
   assert.match(creators, /creator-audio-editor\.webp/i);
-  assert.match(creators, /className="offer-hero offer-hero-creators"[\s\S]*?<\/section>\s*<section className="offer-curation"/);
-  assert.match(business, /className="offer-hero offer-hero-business"[\s\S]*?<\/section>\s*<section className="offer-curation offer-curation-reverse business-curation"/);
+  assert.match(creators, /className="offer-hero offer-hero-creators"[\s\S]*?<\/section>\s*<CatalogueFacts \/>\s*<section className="offer-curation"/);
+  assert.match(business, /className="offer-hero offer-hero-business"[\s\S]*?<\/section>\s*<CatalogueFacts \/>\s*<section className="offer-curation offer-curation-reverse business-curation"/);
   assert.doesNotMatch(creators, /creator-piano-human\.webp/i);
   assert.match(creators, /creator-streamer-card\.webp/i);
   assert.match(creators, /creator-social-card\.webp/i);
@@ -500,6 +506,9 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /\.creators-landing \.offer-curation figure\s*\{[\s\S]{0,120}height:\s*clamp\(420px, 50vw, 560px\);[\s\S]{0,80}min-height:\s*0;/);
   assert.match(offerCss, /V53: the first Creators story continues directly from the hero, full bleed\.[\s\S]{0,120}\.creators-landing \.offer-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(84px, 8vw, 112px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
   assert.match(offerCss, /V54: the first Business story continues directly from the hero, full bleed\.[\s\S]{0,120}\.business-landing \.business-curation\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}margin:\s*0 0 clamp\(82px, 8vw, 108px\);[\s\S]{0,100}border:\s*0;[\s\S]{0,100}border-radius:\s*0;[\s\S]{0,100}box-shadow:\s*none;/);
+  assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,260}\.offer-landing \.offer-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,100}align-items:\s*center;/);
+  assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,1200}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,180}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
+  assert.match(offerCss, /\.offer-landing \.catalogue-facts\s*\{[\s\S]{0,240}--home26-paper:\s*var\(--marketing-cream\);[\s\S]{0,180}background:\s*var\(--marketing-cream\)/);
   assert.match(offerCss, /V55: a cinematic visual pause for the commercial licensing process\.[\s\S]{0,420}\.business-landing \.business-flow::before\s*\{[\s\S]{0,220}business-process-blur\.webp/);
   assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
   assert.match(offerCss, /\.business-landing \.business-flow \.offer-section-head h2\s*\{[\s\S]{0,180}color:\s*var\(--marketing-paper\);[\s\S]{0,100}font-size:\s*clamp\(54px, 6vw, 92px\)/);

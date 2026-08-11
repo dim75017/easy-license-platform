@@ -2435,3 +2435,47 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* V60: Creators and Business share the homepage opening rhythm and facts. */
+.offer-landing .offer-hero {
+  min-height: 720px;
+  align-items: center;
+}
+
+.offer-landing .offer-hero-copy {
+  padding: clamp(58px, 8vw, 122px) clamp(28px, 4vw, 76px);
+}
+
+.offer-landing .catalogue-facts {
+  --home26-paper: var(--marketing-cream);
+  --home26-rule: var(--marketing-rule);
+  background: var(--marketing-cream);
+  color: var(--marketing-night);
+}
+
+.offer-landing .catalogue-facts > div,
+.offer-landing .catalogue-facts > div:nth-child(2),
+.offer-landing .catalogue-facts > div:nth-child(-n+2) {
+  border-color: var(--marketing-rule);
+}
+
+.offer-landing .catalogue-facts span {
+  color: rgba(41, 40, 50, .68);
+}
+
+@media (min-width: 901px) and (min-height: 800px) {
+  .offer-landing .offer-hero {
+    min-height: max(720px, calc(100svh - 245px));
+  }
+}
+
+@media (max-width: 760px) {
+  .offer-landing .offer-hero {
+    min-height: 620px;
+  }
+
+  .offer-landing .offer-hero-copy {
+    width: 100%;
+    padding: 62px 24px 100px;
+  }
+}

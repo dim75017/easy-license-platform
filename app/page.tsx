@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { ArtistMarquee } from "./components/ArtistMarquee";
+import { CatalogueFacts } from "./components/CatalogueFacts";
 import { PublicShell } from "./components/PublicShell";
-import { lofiGirlPlaylists } from "./data/catalog";
-
-const featuredGenreCount = new Set(lofiGirlPlaylists.map((playlist) => playlist.genre)).size;
 
 const useCollections = [
   {
@@ -102,12 +100,7 @@ export default function Home() {
           <p className="home26-hero-credit">A catalogue made by artists, for the people making the work.</p>
         </section>
 
-        <section className="home26-facts" aria-label="Symbiose catalogue facts" data-reveal="group">
-          <div><strong>10,000+</strong><span>instrumental and background tracks</span></div>
-          <div><strong>1,000+</strong><span>artists represented worldwide</span></div>
-          <div><strong>{featuredGenreCount}</strong><span>music genres across our featured playlists</span></div>
-          <div><strong>0</strong><span>AI-generated tracks accepted</span></div>
-        </section>
+        <CatalogueFacts />
 
         <section className="home26-section home26-audience home26-audience-creators" id="services" aria-labelledby="home26-creators-title">
           <div className="home26-audience-panel">

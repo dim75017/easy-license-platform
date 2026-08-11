@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CatalogueFacts } from "../components/CatalogueFacts";
 import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
@@ -22,12 +23,9 @@ export default function BusinessPage() {
               <a className="offer-inline-link offer-inline-light" href="#business-options">Review business services <span>↓</span></a>
             </div>
           </div>
-          <div className="offer-hero-proof" data-reveal="group">
-            <div><strong>10,000+</strong><span>Human-made tracks</span></div>
-            <div><strong>0</strong><span>AI-generated tracks</span></div>
-            <div><strong>Custom</strong><span>Quote for every brief</span></div>
-          </div>
         </section>
+
+        <CatalogueFacts />
 
         <section className="offer-curation offer-curation-reverse business-curation" aria-labelledby="business-curation-title">
           <figure data-reveal="scale"><img src="/images/unsplash/business-studio.webp" alt="Sound engineer producing music in a recording studio" width={1400} height={912} loading="eager" fetchPriority="high" decoding="async" /></figure>
