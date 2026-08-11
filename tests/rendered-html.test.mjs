@@ -796,7 +796,7 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData] = await Promise.all([
+  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
     source("app/symbiose-brand.css"),
@@ -809,6 +809,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
     source("app/data/catalog.ts"),
+    source("app/catalog/page.tsx"),
+    source("public/images/unsplash/playlists/SOURCES.md"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
@@ -864,22 +866,38 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
   assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-border/);
   assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
+  assert.match(cataloguePage, /width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
+  assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"/);
 
-  for (const [title, spotifyId, image] of [
-    ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study.jpg"],
-    ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-night.jpg"],
-    ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano.jpg"],
-    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient-fog.jpg"],
-    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg"],
-    ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg"],
-    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg"],
-    ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar.jpg"],
+  let refreshedPlaylistBytes = 0;
+  for (const [title, spotifyId, image, sourceId] of [
+    ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study-laptop-dwZlYC-6-9c.jpg", "dwZlYC-6-9c"],
+    ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-console-p0j-mE6mGo4.jpg", "p0j-mE6mGo4"],
+    ["Peaceful Piano", "1u4F50HA53L3Jwxbnk9IeO", "peaceful-piano-hands-5P1-Bemnb0c.jpg", "5P1-Bemnb0c"],
+    ["Dark Ambient", "07lYUEyTkWP3NqIa7Kzyqx", "dark-ambient-fog.jpg", null],
+    ["Jazz Lofi", "6abvvGTDj4WuFRNDMsHsw8", "jazz-lofi-saxophone.jpg", null],
+    ["Chill House", "4lqntZDCCDC5ySCz9Y5eJn", "chill-house.jpg", null],
+    ["Sleep Ambient", "4AITFDgLpIPPLYmFIKgsvr", "sleep-ambient-bedside.jpg", null],
+    ["Chill Guitar", "1NvyHldjNnayEvqpyk3AYr", "chill-guitar-couch-KEtvAfDlpWI.jpg", "KEtvAfDlpWI"],
   ]) {
     assert.match(catalogueData, new RegExp(title), title);
     assert.match(catalogueData, new RegExp(spotifyId), spotifyId);
-    await access(new URL(`public/images/unsplash/playlists/${image}`, root));
+    const imageFile = new URL(`public/images/unsplash/playlists/${image}`, root);
+    await access(imageFile);
+    if (sourceId) {
+      assert.match(catalogueData, new RegExp(sourceId), `${title} source ID`);
+      assert.match(playlistSources, new RegExp(sourceId), `${title} source attribution`);
+      const metadata = await stat(imageFile);
+      assert.ok(metadata.size <= 250_000, `${title} playlist image should stay below 250 KB`);
+      refreshedPlaylistBytes += metadata.size;
+    }
   }
-  await access(new URL("public/images/unsplash/playlists/SOURCES.md", root));
+  assert.ok(refreshedPlaylistBytes <= 725_000, "the four refreshed playlist images should stay lightweight");
+  assert.equal([...playlistSources.matchAll(/original download without watermark/g)].length, 2, "both Unsplash+ originals should be documented as watermark-free downloads");
+  for (const retiredImage of ["lofi-study.jpg", "synthwave-night.jpg", "peaceful-piano.jpg", "chill-guitar.jpg"]) {
+    assert.doesNotMatch(catalogueData, new RegExp(`playlists/${retiredImage.replace(".", "\\.")}`), retiredImage);
+    assert.doesNotMatch(playlistSources, new RegExp(retiredImage.replace(".", "\\.")), retiredImage);
+  }
 });
 
 test("build emits product assets and removes starter artifacts", async () => {
