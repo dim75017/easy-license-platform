@@ -306,8 +306,9 @@ test("ships a complete footer, detailed help and honest public information pages
   assert.deepEqual(footerGroups, ["Music", "For Creators", "For Businesses", "Help", "About", "Legal"]);
   assert.doesNotMatch(footer, /href="\/blog"|>\s*Blog\s*</i);
   assert.match(layout, /support-pages\.css/);
-  assert.match(supportCss, /\.site-footer \.footer-links\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
-  assert.match(supportCss, /@media \(max-width: 1180px\)[\s\S]{0,320}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(supportCss, /\.public-shell \.site-footer \.footer-main,\s*\.public-shell \.site-footer \.footer-bottom\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,120}max-width:\s*none;[\s\S]{0,120}margin-inline:\s*0;/);
+  assert.match(supportCss, /\.site-footer \.footer-links\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(6, auto\);[\s\S]{0,120}justify-content:\s*space-between/);
+  assert.match(supportCss, /@media \(max-width: 1280px\)[\s\S]{0,320}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(supportCss, /@media \(max-width: 700px\)[\s\S]{0,900}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(supportCss, /@media \(max-width: 420px\)[\s\S]{0,160}\.site-footer \.footer-links\s*\{\s*grid-template-columns:\s*1fr/);
 
