@@ -1,0 +1,126 @@
+/* Warm Groove — the shared Symbiose identity */
+
+.brand-warm {
+  --symbiose-brand-base: #292832;
+  --symbiose-brand-warm: #e06343;
+  gap: 12px;
+}
+
+.brand-warm .brand-groove,
+.site-header .brand-warm .brand-groove,
+.site-footer .brand-warm .brand-groove {
+  display: block;
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+}
+
+.brand-warm .brand-groove::after {
+  content: none;
+}
+
+.brand-warm .brand-groove svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.brand-warm .brand-groove path {
+  fill: none;
+  stroke-width: 13;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-warm .brand-groove-warm {
+  stroke: var(--symbiose-brand-warm);
+}
+
+.brand-warm .brand-groove-base {
+  stroke: var(--symbiose-brand-base);
+}
+
+.brand-warm .brand-copy {
+  line-height: .95;
+}
+
+.brand-warm .brand-name,
+.site-header .brand-warm .brand-name,
+.site-footer .brand-warm .brand-name,
+.dashboard-shell .brand-warm .brand-name,
+.music-app-brand .brand-warm .brand-name {
+  display: block;
+  color: var(--symbiose-brand-base);
+  font-family: "Afacad Flux", "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: 22px;
+  font-weight: 680;
+  letter-spacing: -.055em;
+}
+
+.brand-warm .brand-accent,
+.site-header .brand-warm .brand-accent,
+.site-footer .brand-warm .brand-accent {
+  color: inherit;
+}
+
+.brand-warm .brand-powered,
+.site-header .brand-warm .brand-powered,
+.site-footer .brand-warm .brand-powered {
+  margin-top: 5px;
+  color: var(--symbiose-brand-warm);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .055em;
+  text-transform: none;
+}
+
+.site-footer .brand-warm,
+.dashboard-shell .brand-warm,
+.creator-music-app .brand-warm {
+  --symbiose-brand-base: #f7ebdd;
+}
+
+.dashboard-shell .brand-warm .brand-groove,
+.creator-music-app .brand-warm .brand-groove {
+  width: 39px;
+  height: 39px;
+  flex-basis: 39px;
+}
+
+.dashboard-shell .brand-warm .brand-name,
+.creator-music-app .brand-warm .brand-name {
+  font-size: 20px;
+}
+
+.brand-warm:focus-visible {
+  border-radius: 7px;
+  outline: 2px solid var(--symbiose-brand-warm);
+  outline-offset: 5px;
+}
+
+@media (max-width: 700px) {
+  .site-header .brand-warm .brand-groove {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .site-header .brand-warm .brand-name {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-brand-row .brand-warm .brand-groove {
+    width: 37px;
+    height: 37px;
+    flex-basis: 37px;
+  }
+}
