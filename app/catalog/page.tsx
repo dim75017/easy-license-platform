@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default function CataloguePage() {
+  const featuredMoods = moods.filter((item) => item !== "All moods").slice(0, 10);
+
   return (
     <PublicShell>
       <div className="music-v26-page">
@@ -47,10 +49,25 @@ export default function CataloguePage() {
           <a className="music-playlists-all" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists <span>↗</span></a>
         </section>
 
-        <section className="music-mood-shelf" aria-labelledby="music-moods-title">
-          <p className="music-v26-kicker"><span>02</span> Moods</p>
-          <h2 id="music-moods-title">Browse by mood.</h2>
-          <div>{moods.filter((item) => item !== "All moods").map((mood) => <Link href={`/catalog?q=${encodeURIComponent(mood)}#music-library`} key={mood}>{mood}<span>Search the library</span></Link>)}</div>
+        <section className="catalogue-moods" aria-labelledby="music-moods-title">
+          <div className="catalogue-moods-head" data-reveal="group">
+            <div>
+              <p className="music-v26-kicker"><span>02</span> Moods</p>
+              <h2 id="music-moods-title">Browse by mood.</h2>
+            </div>
+            <p>Start with the feeling you want, then narrow the library by track, artist or style.</p>
+          </div>
+          <ul className="catalogue-moods-grid" data-reveal="group">
+            {featuredMoods.map((mood, index) => (
+              <li key={mood}>
+                <Link className="catalogue-mood-card" href={`/catalog?q=${encodeURIComponent(mood)}#music-library`}>
+                  <span className="catalogue-mood-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{mood}</strong>
+                  <span className="catalogue-mood-action">Browse tracks <i aria-hidden="true">↗</i></span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="music-v26-library music-library-editorial" id="music-library" aria-labelledby="music-library-title">

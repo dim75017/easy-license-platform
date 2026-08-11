@@ -286,15 +286,18 @@ body {
 }
 
 .creators-landing .creator-editorial {
-  background: var(--symbiose-warm);
+  background: var(--symbiose-oat);
   color: var(--symbiose-night);
 }
 
 .creators-landing .creator-editorial .creator-editorial-heading h2,
-.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker,
-.creators-landing .creator-editorial .creator-editorial-heading > p:last-child,
 .creators-landing .creator-editorial .creator-editorial-heading .offer-kicker > span {
   color: var(--symbiose-night);
+}
+
+.creators-landing .creator-editorial .creator-editorial-heading .offer-kicker,
+.creators-landing .creator-editorial .creator-editorial-heading > p:last-child {
+  color: rgba(41, 40, 50, .66);
 }
 
 .creators-landing .creator-editorial .creator-editorial-heading > p:last-child {
@@ -302,12 +305,10 @@ body {
   font-weight: 620;
 }
 
-.creators-landing .creator-editorial-track,
+.creators-landing .creator-editorial-track { background-color: var(--symbiose-paper); }
 .creators-landing .creator-editorial-track:hover,
-.creators-landing .creator-editorial-track.is-selected,
-.creators-landing .creator-editorial-player {
-  background-color: var(--symbiose-night);
-}
+.creators-landing .creator-editorial-track.is-selected { background-color: #f1e5d8; }
+.creators-landing .creator-editorial-player { background-color: var(--symbiose-night); }
 
 .music-mood-shelf {
   background: var(--symbiose-warm);
