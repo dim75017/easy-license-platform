@@ -34,7 +34,7 @@ function getServerLocationSearch() {
   return "";
 }
 
-export function CatalogueExplorer({ compact = false, showUseCases = true }: { compact?: boolean; showUseCases?: boolean }) {
+export function CatalogueExplorer({ compact = false, showUseCases = true, editorial = false }: { compact?: boolean; showUseCases?: boolean; editorial?: boolean }) {
   const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const urlParams = useMemo(() => new URLSearchParams(locationSearch), [locationSearch]);
   const urlUse = urlParams.get("use");
@@ -126,7 +126,7 @@ export function CatalogueExplorer({ compact = false, showUseCases = true }: { co
   }
 
   return (
-    <div className="catalogue-v26">
+    <div className={editorial ? "catalogue-v26 catalogue-v26-editorial" : "catalogue-v26"}>
       <div className="catalogue-v26-search-row">
         <label className="catalogue-v26-search">
           <span>Search the catalogue</span>
@@ -174,6 +174,7 @@ export function CatalogueExplorer({ compact = false, showUseCases = true }: { co
           {results.map((track, index) => (
             <article className={selectedTrackId === track.id ? "catalogue-v26-track is-open" : "catalogue-v26-track"} key={track.id}>
               <span className="catalogue-v26-track-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              {editorial && <img className="catalogue-v26-track-cover" src={track.cover} alt={`Album cover for ${track.title} by ${track.artist}`} width={640} height={640} loading="lazy" decoding="async" />}
               <div className="catalogue-v26-track-copy">
                 <span>{track.genre}</span>
                 <h4>{track.title}</h4>
@@ -184,7 +185,14 @@ export function CatalogueExplorer({ compact = false, showUseCases = true }: { co
                 {track.suggestedUses.slice(0, 3).map((slug) => <span key={slug}>{useNames.get(slug)}</span>)}
               </div>
               <span className="catalogue-v26-streams">{track.streams}</span>
-              <button className="catalogue-v26-listen" type="button" onClick={() => chooseTrack(track)} aria-expanded={selectedTrackId === track.id}>
+              <button
+                className="catalogue-v26-listen"
+                type="button"
+                onClick={() => chooseTrack(track)}
+                aria-expanded={selectedTrackId === track.id}
+                aria-controls={selectedTrackId === track.id ? "catalogue-track-player" : undefined}
+                aria-label={`${selectedTrackId === track.id ? "Close" : "Play"} ${track.title} by ${track.artist}`}
+              >
                 <span aria-hidden="true">{selectedTrackId === track.id ? "×" : "▶"}</span>{selectedTrackId === track.id ? "Close" : "Play"}
               </button>
               {selectedTrackId === track.id && <SpotifyPlayer track={track} onClose={() => setSelectedTrackId(null)} />}
@@ -204,7 +212,7 @@ export function CatalogueExplorer({ compact = false, showUseCases = true }: { co
 
 function SpotifyPlayer({ track, compact = false, onClose }: { track: Track; compact?: boolean; onClose: () => void }) {
   return (
-    <div className={compact ? "catalogue-v26-player is-compact" : "catalogue-v26-player"}>
+    <div className={compact ? "catalogue-v26-player is-compact" : "catalogue-v26-player"} id={compact ? "catalogue-featured-player" : "catalogue-track-player"}>
       <div className="catalogue-v26-player-head">
         <span><small>TRACK PREVIEW</small><strong>{track.title}</strong><em>{track.artist}</em></span>
         <button type="button" onClick={onClose} aria-label={`Close ${track.title} player`}>Close</button>

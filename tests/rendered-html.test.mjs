@@ -141,6 +141,14 @@ test("contains the complete Symbiose music licensing homepage", async () => {
   assert.match(cataloguePage, /lofiGirlPlaylists/);
   assert.match(cataloguePage, /Explore all playlists/);
   assert.match(cataloguePage, /Browse by mood/);
+  assert.match(cataloguePage, /className="music-v26-library music-library-editorial"/);
+  assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search the library<br \/>by mood, style or use\./);
+  assert.match(cataloguePage, /<CatalogueExplorer showUseCases=\{false\} editorial \/>/);
+  assert.doesNotMatch(cataloguePage, /<CreatorTrackShowcase/);
+  assert.match(catalogueCss, /V44: the full library uses the same editorial rhythm as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
+  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track-list\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(catalogueCss, /@media \(max-width: 760px\)[\s\S]{0,180}\.music-library-editorial \.catalogue-v26-track-list\s*\{[\s\S]{0,100}grid-template-columns:\s*1fr/);
+  assert.match(catalogueCss, /@media \(max-width: 560px\)[\s\S]{0,480}\.music-library-editorial-heading h2\s*\{[\s\S]{0,120}font-size:\s*clamp\(40px, 12vw, 52px\)/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
   assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
   assert.doesNotMatch(cataloguePage, /Symbiose<\/span> Music/);

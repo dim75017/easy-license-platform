@@ -45,13 +45,13 @@ export default function CataloguePage() {
           <div>{moods.filter((item) => item !== "All moods").map((mood) => <Link href={`/catalog?q=${encodeURIComponent(mood)}#music-library`} key={mood}>{mood}<span>Search the library</span></Link>)}</div>
         </section>
 
-        <section className="music-v26-library" id="music-library" aria-labelledby="music-library-title">
-          <div className="music-v26-section-head" data-reveal="group">
+        <section className="music-v26-library music-library-editorial" id="music-library" aria-labelledby="music-library-title">
+          <div className="music-v26-section-head music-library-editorial-heading" data-reveal="group">
             <p className="music-v26-kicker"><span>03</span> Music library</p>
-            <h2 id="music-library-title">All music.</h2>
-            <p>Search by track, artist, mood or genre. Play a preview and use the catalogue as the starting point for your next piece of content.</p>
+            <h2 id="music-library-title">Search the library<br />by mood, style or use.</h2>
+            <p>Search by track, artist, mood or genre. Play a preview, compare directions and narrow the library without leaving the page.</p>
           </div>
-          <div data-reveal="scale"><CatalogueExplorer showUseCases={false} /></div>
+          <div data-reveal="scale"><CatalogueExplorer showUseCases={false} editorial /></div>
         </section>
       </div>
     </PublicShell>
