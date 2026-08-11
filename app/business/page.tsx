@@ -28,8 +28,8 @@ export default function BusinessPage() {
           </div>
         </section>
 
-        <section className="offer-curation offer-curation-reverse" aria-labelledby="business-curation-title">
-          <figure data-reveal="scale"><img src="/images/stock/studio-artist.jpg" alt="Music producer working at a recording console" /></figure>
+        <section className="offer-curation offer-curation-reverse business-curation" aria-labelledby="business-curation-title">
+          <figure data-reveal="scale"><img src="/images/unsplash/business-studio.jpg" alt="Sound engineer producing music in a recording studio" /></figure>
           <div className="offer-curation-copy" data-reveal="left">
             <p className="offer-kicker"><span>01</span> Start from the brief</p>
             <h2 id="business-curation-title">Music that can carry<br />a brand or a story.</h2>

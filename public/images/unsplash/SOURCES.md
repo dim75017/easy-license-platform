@@ -1,5 +1,7 @@
 # Added Unsplash image sources
 
+- `business-studio.jpg` — Getty Images, https://unsplash.com/photos/sH8cT7-bQ9I (Unsplash+ License, original download)
+
 ## Retail refresh (2026-08-11)
 
 - `retail/store.jpg` — https://unsplash.com/photos/Fx9DbEUcERA (Unsplash+ License)
