@@ -173,6 +173,9 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /\.catalogue-v26/);
   assert.match(catalogueCss, /\.catalogue-v26-use-grid/);
   const cataloguePage = await source("app/catalog/page.tsx");
+  assert.match(cataloguePage, /import \{ CatalogueFacts \} from "\.\.\/components\/CatalogueFacts"/);
+  assert.equal((cataloguePage.match(/<CatalogueFacts \/>/g) ?? []).length, 1, "Music should render the shared catalogue facts once");
+  assert.match(cataloguePage, /className="music-library-hero"[\s\S]*?<\/section>\s*<CatalogueFacts \/>\s*<section className="music-playlists"/);
   assert.match(cataloguePage, /lofiGirlPlaylists/);
   assert.match(cataloguePage, /Explore all playlists/);
   assert.match(cataloguePage, /Browse by mood/);
@@ -191,6 +194,8 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,180}\.music-v26-page \.music-library-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,80}align-items:\s*center/);
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,480}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,160}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,700}@media \(max-width: 760px\)[\s\S]{0,140}min-height:\s*620px/);
+  assert.match(catalogueCss, /V47: Music shares the same catalogue proof band as every public route\.[\s\S]{0,260}\.music-v26-page \.catalogue-facts\s*\{[^}]*--home26-paper:\s*var\(--music-cream\);[^}]*--home26-rule:\s*var\(--music-rule\);[^}]*background:\s*var\(--music-cream\)/s);
+  assert.match(catalogueCss, /\.music-v26-page \.music-library-hero \+ \.catalogue-facts\s*\{[^}]*border-top:\s*0/s);
   assert.match(catalogueCss, /\.catalogue-moods\s*\{[\s\S]{0,260}background:\s*var\(--music-paper\)/);
   assert.match(catalogueCss, /\.catalogue-moods-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 1100px\)[\s\S]{0,160}\.catalogue-moods-grid\s*\{[^}]*repeat\(2, minmax\(0, 1fr\)\)/);

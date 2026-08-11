@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CatalogueExplorer } from "../components/CatalogueExplorer";
 import { PublicShell } from "../components/PublicShell";
 import { lofiGirlPlaylists, moods } from "../data/catalog";
@@ -22,6 +23,8 @@ export default function CataloguePage() {
             <a className="music-v26-button music-v26-button-light" href="#music-library">Open the library <span>↓</span></a>
           </div>
         </section>
+
+        <CatalogueFacts />
 
         <section className="music-playlists" aria-labelledby="music-playlists-title">
           <div className="music-library-section-head" data-reveal="group">

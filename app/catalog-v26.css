@@ -1983,6 +1983,28 @@
   }
 }
 
+/* V47: Music shares the same catalogue proof band as every public route. */
+.music-v26-page .catalogue-facts {
+  --home26-paper: var(--music-cream);
+  --home26-rule: var(--music-rule);
+  background: var(--music-cream);
+  color: var(--music-night);
+}
+
+.music-v26-page .catalogue-facts > div,
+.music-v26-page .catalogue-facts > div:nth-child(2),
+.music-v26-page .catalogue-facts > div:nth-child(-n+2) {
+  border-color: var(--music-rule);
+}
+
+.music-v26-page .catalogue-facts span {
+  color: rgba(41, 40, 50, .68);
+}
+
+.music-v26-page .music-library-hero + .catalogue-facts {
+  border-top: 0;
+}
+
 /* V46: twelve playlist directions fit within one desktop view. */
 @media (min-width: 1180px) and (min-height: 760px) {
   .music-v26-page .music-playlists {
