@@ -1857,12 +1857,10 @@
 .home26-artist-track {
   display: flex;
   width: max-content;
-  animation: home26ArtistsLeft 100s linear infinite;
+  animation: home26ArtistsLeft 200s linear infinite;
 }
 
-.home26-artist-track[data-paused="true"],
-.home26-artist-grid:hover .home26-artist-track,
-.home26-artist-grid:focus-within .home26-artist-track {
+.home26-artist-track[data-paused="true"] {
   animation-play-state: paused;
 }
 
@@ -2186,4 +2184,25 @@
     grid-column: 1;
     text-align: left;
   }
+}
+
+/* V58: primary actions use the same navy as the artist section. */
+.home26 .home26-button-primary {
+  border-color: var(--home26-night);
+  background: var(--home26-night);
+  color: var(--home26-paper);
+}
+
+.home26 .home26-button-primary:hover {
+  border-color: var(--home26-night-soft);
+  background: var(--home26-night-soft);
+}
+
+.home26-hero .home26-button-primary {
+  border-color: rgba(251, 247, 239, .58);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+}
+
+.home26-hero .home26-button-primary:hover {
+  border-color: rgba(251, 247, 239, .72);
 }

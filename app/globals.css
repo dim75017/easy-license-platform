@@ -8698,6 +8698,13 @@ button {
   color: #292832;
 }
 
+/* V38: public button hover details stay navy instead of introducing another accent. */
+.public-shell .button:hover::after,
+.public-shell .site-header .button-primary:hover::after {
+  background: #3a3742;
+  color: #fbf7ef;
+}
+
 @media (max-width: 800px) {
   .public-shell .site-header .site-nav { gap: 4px; padding: 6px; }
   .public-shell .site-header .site-nav > a,
