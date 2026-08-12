@@ -255,16 +255,22 @@
   min-height: 70px;
   border-color: rgba(41, 40, 50, .14);
   padding-inline: 28px;
+  font-family: var(--font-ui);
 }
 
 .pricing-v39-business-form .form-panel-head span {
   color: var(--price-clay-deep);
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 720;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .pricing-v39-business-form .form-panel-head small {
   color: rgba(41, 40, 50, .56);
   font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .pricing-v39-business-form .lead-form {
@@ -276,8 +282,11 @@
 
 .pricing-v39-business-form .lead-form label > span {
   color: rgba(41, 40, 50, .76);
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 720;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .pricing-v39-business-form .lead-form input,
@@ -311,7 +320,11 @@
   border-radius: 14px;
   background: var(--price-ink);
   color: var(--price-cream);
+  font-family: var(--font-ui);
   font-size: 16px;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .pricing-v39-business-form .form-privacy,

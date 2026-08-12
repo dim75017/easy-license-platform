@@ -98,7 +98,7 @@ export default function BusinessPage() {
             <p>Select an existing track licence, original music or physical places. We will ask only for the information needed for that route.</p>
           </div>
           <div className="form-panel business-quote-form" data-reveal="right">
-            <div className="form-panel-head"><span>BUSINESS MUSIC REQUEST</span><small>Choose one option to begin</small></div>
+            <div className="form-panel-head"><span>Business music request</span><small>Choose one option to begin</small></div>
             <LeadForm type="business" />
           </div>
         </section>

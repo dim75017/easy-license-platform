@@ -42,7 +42,7 @@ export default function PricingPage() {
           </div>
           <div className="form-panel pricing-v39-business-form" id="business-request">
             <div className="form-panel-head">
-              <span>BUSINESS MUSIC REQUEST</span>
+              <span>Business music request</span>
               <small>Every active project receives a custom quote</small>
             </div>
             <Suspense fallback={<LeadForm type="business" />}>

@@ -1657,17 +1657,22 @@
   min-height: 68px;
   border-bottom: 1px solid rgba(41, 40, 50, .14);
   padding: 0 28px;
+  font-family: var(--font-ui);
 }
 
 .business-quote .form-panel-head span {
   color: var(--marketing-clay);
-  font-size: 12px;
-  letter-spacing: .08em;
+  font-size: 14px;
+  font-weight: 720;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .business-quote .form-panel-head small {
   color: rgba(41, 40, 50, .58);
   font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .business-quote .lead-form {
@@ -1679,7 +1684,7 @@
 
 .business-quote .lead-form label > span {
   color: rgba(41, 40, 50, .76);
-  font-family: inherit;
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0;
@@ -1719,8 +1724,11 @@
   border-radius: 14px;
   background: var(--marketing-night);
   color: var(--marketing-paper);
+  font-family: var(--font-ui);
   font-size: 16px;
   font-weight: 760;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .business-quote .form-privacy,
