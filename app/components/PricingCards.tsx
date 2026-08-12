@@ -15,7 +15,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
         <button type="button" className={annual ? "is-active" : ""} onClick={() => setAnnual(true)}>Yearly <span>2 months free</span></button>
       </div>
       <div className={expanded ? "pricing-grid pricing-grid-expanded" : "pricing-grid"}>
-        <article className="price-card" data-pointer-glow="">
+        <article className="price-card">
           <span className="plan-code">SY–01 / CREATOR</span>
           <div className="price-card-top">
             <span className="plan-icon plan-creator">C</span>
@@ -36,7 +36,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
           <p className="fine-print">For individual creators publishing their own content.</p>
         </article>
 
-        <article className="price-card price-card-featured" data-pointer-glow="">
+        <article className="price-card price-card-featured">
           <span className="popular-pill">Recommended scope</span>
           <span className="plan-code">SY–02 / PRO</span>
           <div className="price-card-top">

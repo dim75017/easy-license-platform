@@ -1041,6 +1041,29 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.doesNotMatch(supportCss, /rgba\(150, 180, 255|rgba\(164, 178, 206/i);
 });
 
+test("uses one calm plan-card hover across Home and Pricing", async () => {
+  const [layout, home, pricingCards, planMotion] = await Promise.all([
+    source("app/layout.tsx"),
+    source("app/page.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("app/plan-card-motion.css"),
+  ]);
+
+  assert.match(layout, /import "\.\/plan-card-motion\.css"/);
+  assert.equal((home.match(/className="home26-plan-row/g) ?? []).length, 3);
+  assert.equal((pricingCards.match(/<article className="price-card/g) ?? []).length, 2);
+  assert.doesNotMatch(pricingCards, /data-pointer-glow/, "pricing plans should not combine a moving glow with the card lift");
+  assert.match(planMotion, /\.public-shell \.home26-plan-row,[\s\S]{0,100}\.public-shell \.pricing-v39 \.price-card\s*\{[^}]*transform:\s*translate3d\(0, 0, 0\);[^}]*translate:\s*none;[^}]*transform 560ms cubic-bezier\(\.16, 1, \.3, 1\)/s);
+  assert.match(planMotion, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]{0,220}transform:\s*translate3d\(0, -3px, 0\)/s);
+  assert.doesNotMatch(planMotion, /transition:\s*all/);
+  assert.match(planMotion, /\.public-shell \.home26-plan-row:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--home26-night\);[^}]*outline-offset:\s*5px/s);
+  assert.match(planMotion, /\.public-shell \.pricing-v39 \.price-card:focus-within\s*\{[^}]*border-color:/s);
+  assert.match(planMotion, /@media \(hover: none\), \(pointer: coarse\)[\s\S]{0,320}transform:\s*none;[^}]*translate:\s*none/s);
+  assert.match(planMotion, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,360}transform:\s*none !important;[^}]*transition:\s*none !important/s);
+  assert.match(planMotion, /@media \(forced-colors: active\)[\s\S]{0,280}outline-color:\s*Highlight/s);
+  assert.doesNotMatch(planMotion, /cta-swipe/, "card motion should remain independent from CTA swipe motion");
+});
+
 test("gives every public call to action one accessible colour-swipe interaction", async () => {
   const [
     layout,
