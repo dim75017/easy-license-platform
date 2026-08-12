@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { CatalogueFacts } from "../components/CatalogueFacts";
-import { CatalogueExplorer } from "../components/CatalogueExplorer";
+import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
+import { FilteredCreatorTrackShowcase } from "../components/FilteredCreatorTrackShowcase";
 import { PublicShell } from "../components/PublicShell";
 import { lofiGirlPlaylists, moods } from "../data/catalog";
 
@@ -73,13 +75,17 @@ export default function CataloguePage() {
           </ul>
         </section>
 
-        <section className="music-v26-library music-library-editorial" id="music-library" aria-labelledby="music-library-title">
+        <section className="music-v26-library music-library-editorial music-library-showcase" id="music-library" aria-labelledby="music-library-title">
           <div className="music-v26-section-head music-library-editorial-heading" data-reveal="group">
-            <p className="music-v26-kicker"><span>03</span> Music library</p>
-            <h2 id="music-library-title">Search the library<br />by mood, style or use.</h2>
-            <p>Search by track, artist, mood or genre. Play a preview, compare directions and narrow the library without leaving the page.</p>
+            <p className="music-v26-kicker"><span>03</span> Browse the music</p>
+            <h2 id="music-library-title">Search by mood,<br />style or use.</h2>
+            <p>Search for a specific track by mood, style or intended use. Or begin with eight editor-selected tracks drawn from our main playlists for streams, edits and different kinds of content.</p>
           </div>
-          <div data-reveal="scale"><CatalogueExplorer showUseCases={false} editorial /></div>
+          <div data-reveal="scale">
+            <Suspense fallback={<CreatorTrackShowcase />}>
+              <FilteredCreatorTrackShowcase />
+            </Suspense>
+          </div>
         </section>
       </div>
     </PublicShell>

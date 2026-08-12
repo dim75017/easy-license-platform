@@ -248,7 +248,12 @@ export type CreatorPlaylistTrack = {
   duration: `${number}:${number}`;
   durationIso: `PT${number}M${number}S`;
   cover: `/images/catalogue/creator-playlist-tracks/${string}.webp`;
+  suggestedUses: readonly MusicUseSlug[];
+  moods: readonly FeaturedMood[];
 };
+
+export const featuredMoods = ["Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy"] as const;
+export type FeaturedMood = (typeof featuredMoods)[number];
 
 /**
  * Eight editor-selected tracks drawn from the featured public playlists,
@@ -267,6 +272,8 @@ export const creatorPlaylistTracks = [
     duration: "3:20",
     durationIso: "PT3M20S",
     cover: "/images/catalogue/creator-playlist-tracks/snowflakes.webp",
+    suggestedUses: ["study-focus"],
+    moods: ["Warm", "Calm"],
   },
   {
     playlistId: "synthwave-night",
@@ -279,6 +286,8 @@ export const creatorPlaylistTracks = [
     duration: "3:01",
     durationIso: "PT3M1S",
     cover: "/images/catalogue/creator-playlist-tracks/celestial-awakening.webp",
+    suggestedUses: ["gaming-streaming"],
+    moods: ["Bright", "Open"],
   },
   {
     playlistId: "peaceful-piano",
@@ -291,6 +300,8 @@ export const creatorPlaylistTracks = [
     duration: "3:01",
     durationIso: "PT3M1S",
     cover: "/images/catalogue/creator-playlist-tracks/the-places-we-used-to-walk.webp",
+    suggestedUses: ["podcasts"],
+    moods: ["Reflective"],
   },
   {
     playlistId: "dark-ambient",
@@ -303,6 +314,8 @@ export const creatorPlaylistTracks = [
     duration: "1:51",
     durationIso: "PT1M51S",
     cover: "/images/catalogue/creator-playlist-tracks/lightswitch.webp",
+    suggestedUses: ["cinematic"],
+    moods: ["Dreamy"],
   },
   {
     playlistId: "jazz-lofi",
@@ -315,6 +328,8 @@ export const creatorPlaylistTracks = [
     duration: "2:08",
     durationIso: "PT2M8S",
     cover: "/images/catalogue/creator-playlist-tracks/frozen-bubbles.webp",
+    suggestedUses: ["food-hospitality"],
+    moods: ["Cozy"],
   },
   {
     playlistId: "chill-house",
@@ -327,6 +342,8 @@ export const creatorPlaylistTracks = [
     duration: "2:26",
     durationIso: "PT2M26S",
     cover: "/images/catalogue/creator-playlist-tracks/tempel.webp",
+    suggestedUses: ["travel"],
+    moods: ["Easygoing"],
   },
   {
     playlistId: "sleep-ambient",
@@ -339,6 +356,8 @@ export const creatorPlaylistTracks = [
     duration: "2:08",
     durationIso: "PT2M8S",
     cover: "/images/catalogue/creator-playlist-tracks/flickering-dust.webp",
+    suggestedUses: ["wellness"],
+    moods: ["Gentle"],
   },
   {
     playlistId: "chill-guitar",
@@ -351,6 +370,8 @@ export const creatorPlaylistTracks = [
     duration: "2:26",
     durationIso: "PT2M26S",
     cover: "/images/catalogue/creator-playlist-tracks/green-glimmers.webp",
+    suggestedUses: ["lifestyle-vlogs"],
+    moods: ["Intimate"],
   },
 ] satisfies readonly CreatorPlaylistTrack[];
 
@@ -451,5 +472,5 @@ export const tracks: Track[] = [
 
 export const featuredTracks = tracks;
 export const genres = ["All genres", ...Array.from(new Set(tracks.map((track) => track.genre)))];
-export const moods = ["All moods", ...Array.from(new Set(tracks.flatMap((track) => track.moods)))];
+export const moods = ["All moods", ...featuredMoods];
 export const uses = ["All uses", ...useCategories.map((category) => category.label)];

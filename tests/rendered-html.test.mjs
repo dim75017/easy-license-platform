@@ -192,21 +192,24 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /className="catalogue-moods-grid"[\s\S]{0,1000}className="catalogue-mood-card"/);
   assert.match(cataloguePage, /featuredMoods = moods\.filter\([\s\S]{0,120}\.slice\(0, 10\)/);
   assert.match(cataloguePage, /featuredMoods\.map\(\(mood, index\)/);
-  assert.match(cataloguePage, /className="music-v26-library music-library-editorial"/);
-  assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search the library<br \/>by mood, style or use\./);
-  assert.match(cataloguePage, /<CatalogueExplorer showUseCases=\{false\} editorial \/>/);
-  assert.doesNotMatch(cataloguePage, /<CreatorTrackShowcase/);
+  assert.match(cataloguePage, /import \{ CreatorTrackShowcase \} from "\.\.\/components\/CreatorTrackShowcase"/);
+  assert.match(cataloguePage, /className="music-v26-library music-library-editorial music-library-showcase"/);
+  assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search by mood,<br \/>style or use\./);
+  assert.match(cataloguePage, /<Suspense fallback=\{<CreatorTrackShowcase \/>\}>[\s\S]{0,120}<FilteredCreatorTrackShowcase \/>/);
+  assert.doesNotMatch(cataloguePage, /CatalogueExplorer|catalogue-v26-search-row|Search the catalogue/i);
+  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?q=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
+  assert.match(page, /href=\{`\/catalog\?use=\$\{collection\.slug\}#music-library`\}/);
   assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
   assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
   assert.match(catalogueCss, /\.music-library-editorial-heading h2\s*\{[^}]*font-size:\s*clamp\(45px, 5\.2vw, 82px\);[^}]*line-height:\s*\.91/s);
-  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track\s*\{[\s\S]{0,520}background:\s*var\(--music-cream\);[\s\S]{0,120}color:\s*var\(--music-night\)/);
-  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track:hover,[\s\S]{0,180}background:\s*#f1e5d8/);
-  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-listen\s*\{[\s\S]{0,420}background:\s*var\(--music-night\);[\s\S]{0,100}color:\s*var\(--music-cream\)/);
-  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track-list\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(catalogueCss, /V48: library previews play in place[\s\S]{0,220}grid-template-columns:\s*92px minmax\(0, 1fr\) minmax\(150px, 180px\) 52px/);
-  assert.match(catalogueCss, /V48: library previews play in place[\s\S]{0,1000}\.music-library-editorial \.catalogue-v26-track \.catalogue-v26-waveform i\s*\{[^}]*max-width:\s*none;[^}]*flex:\s*1 1 0;[^}]*opacity:\s*\.28/s);
-  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track \.catalogue-v26-waveform i\.is-played\s*\{[^}]*background:\s*var\(--music-night\);[^}]*opacity:\s*\.92/s);
-  assert.match(catalogueCss, /V48: library previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,160}\.music-library-editorial \.catalogue-v26-track-list\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(catalogueCss, /V49: Music uses the same eight-track editorial sampler as Creators\.[\s\S]{0,320}\.music-library-showcase\s*\{[^}]*padding-right:\s*max\(40px, calc\(\(100vw - 1440px\) \/ 2\)\);[^}]*padding-left:\s*max\(40px, calc\(\(100vw - 1440px\) \/ 2\)\)/s);
+  assert.match(catalogueCss, /V49: Music uses the same eight-track editorial sampler as Creators\.[\s\S]{0,620}\.music-library-showcase \.creator-editorial-showcase\s*\{[^}]*max-width:\s*1440px/);
+  assert.match(catalogueCss, /@media \(max-width: 520px\)[\s\S]{0,160}\.music-library-showcase\s*\{[^}]*padding-right:\s*16px;[^}]*padding-left:\s*16px/s);
+  assert.match(offerCss, /V69: shared previews play in place[\s\S]{0,500}\.creator-editorial-showcase \.creator-editorial-track\s*\{[^}]*grid-template-columns:\s*92px minmax\(0, 1fr\) minmax\(150px, 180px\) 52px/s);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track:hover,[\s\S]{0,180}background:\s*#f1e5d8/);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\s*\{[^}]*max-width:\s*none;[^}]*flex:\s*1 1 0;[^}]*opacity:\s*\.28/s);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\.is-played\s*\{[^}]*background:\s*var\(--marketing-night\);[^}]*opacity:\s*\.92/s);
+  assert.match(offerCss, /V69: shared previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,160}\.creator-editorial-showcase \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
   assert.match(catalogueCss, /@media \(max-width: 560px\)[\s\S]{0,480}\.music-library-editorial-heading h2\s*\{[\s\S]{0,120}font-size:\s*clamp\(40px, 12vw, 52px\)/);
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,180}\.music-v26-page \.music-library-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,80}align-items:\s*center/);
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,480}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,160}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);
@@ -421,10 +424,12 @@ test("ships a complete footer, detailed help and honest public information pages
   assert.match(cookies, /one preference in the browser(?:&apos;|')s local storage[\s\S]*device-level interface preference rather than an advertising profile/i);
 });
 
-test("plays eight editor-selected track previews directly on the Creators page", async () => {
-  const [creators, showcase, previewHook, catalogueData, offerCss, artworkSources] = await Promise.all([
+test("plays the shared eight-track editorial sampler directly on Creators and Music", async () => {
+  const [creators, cataloguePage, showcase, filteredShowcase, previewHook, catalogueData, offerCss, artworkSources] = await Promise.all([
     source("app/creators/page.tsx"),
+    source("app/catalog/page.tsx"),
     source("app/components/CreatorTrackShowcase.tsx"),
+    source("app/components/FilteredCreatorTrackShowcase.tsx"),
     source("app/hooks/useTrackPreview.ts"),
     source("app/data/catalog.ts"),
     source("app/offer-pages.css"),
@@ -432,9 +437,18 @@ test("plays eight editor-selected track previews directly on the Creators page",
   ]);
 
   assert.match(creators, /eight editor-selected tracks drawn from our main playlists/i);
-  assert.match(showcase, /creatorPlaylistTracks\.slice\(0, 8\)\.map/);
+  assert.equal((creators.match(/<CreatorTrackShowcase \/>/g) ?? []).length, 1, "Creators should render the shared sampler once");
+  assert.equal((cataloguePage.match(/<CreatorTrackShowcase \/>/g) ?? []).length, 1, "Music should provide the shared sampler as its static fallback");
+  assert.equal((cataloguePage.match(/<FilteredCreatorTrackShowcase \/>/g) ?? []).length, 1, "Music should render the URL-aware shared sampler once");
+  assert.match(showcase, /defaultTracks = creatorPlaylistTracks\.slice\(0, 8\)/);
+  assert.match(showcase, /\{tracks\.map\(\(track, index\)/);
   assert.match(showcase, /className=\{`\$\{isActive \? "creator-editorial-track is-selected" : "creator-editorial-track"\}\$\{hasError \? " has-preview-error" : ""\}`\}/);
   assert.match(showcase, /<article/);
+  assert.match(showcase, /role="list"/);
+  assert.match(showcase, /role="listitem"/);
+  assert.match(showcase, /aria-label=\{`\$\{track\.title\} by \$\{track\.artist\}`\}/);
+  assert.match(showcase, /role="status"[\s\S]{0,260}Show all tracks/);
+  assert.match(showcase, /!tracks\.some\(\(track\) => track\.spotifyId === preview\.activeTrackId\)[\s\S]{0,60}preview\.stop\(\)/);
   assert.match(showcase, /useTrackPreview\(\)/);
   assert.match(showcase, /\{track\.title\}/);
   assert.match(showcase, /\{track\.artist\}/);
@@ -447,6 +461,10 @@ test("plays eight editor-selected track previews directly on the Creators page",
   assert.match(showcase, /Array\.from\(\{ length: 48 \}/);
   assert.match(showcase, /https:\/\/open\.spotify\.com\/track\/\$\{track\.spotifyId\}/);
   assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|open\.spotify\.com\/embed/);
+  assert.match(filteredShowcase, /useSearchParams\(\)/);
+  assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
+  assert.match(filteredShowcase, /track\.suggestedUses\.includes\(use\)/);
+  assert.match(filteredShowcase, /<CreatorTrackShowcase tracks=\{tracks\} filterLabel=\{filterLabel \|\| undefined\} \/>/);
   assert.match(previewHook, /audio\.src = previewUrl/);
   assert.match(previewHook, /activeTrackId === id/);
   assert.match(previewHook, /if \(audio\.paused\)[\s\S]{0,120}await audio\.play\(\)/);
@@ -476,6 +494,13 @@ test("plays eight editor-selected track previews directly on the Creators page",
   assert.equal(new Set(previewUrls).size, 8);
   assert.ok(previewUrls.every((value) => /^https:\/\/p\.scdn\.co\/mp3-preview\/[a-f0-9]+$/.test(value)), "every Creator track needs a remote Spotify preview");
 
+  const suggestedUseGroups = [...featureSource.matchAll(/suggestedUses:\s*\[([^\]]+)\]/g)].map((match) => [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]));
+  const moodGroups = [...featureSource.matchAll(/moods:\s*\[([^\]]+)\]/g)].map((match) => [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]));
+  assert.equal(suggestedUseGroups.length, 8);
+  assert.equal(moodGroups.length, 8);
+  assert.deepEqual(new Set(suggestedUseGroups.flat()), new Set(["travel", "cinematic", "lifestyle-vlogs", "study-focus", "gaming-streaming", "podcasts", "wellness", "food-hospitality"]));
+  assert.deepEqual(new Set(moodGroups.flat()), new Set(["Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy"]));
+
   const covers = [...featureSource.matchAll(/cover:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.equal(covers.length, 8);
   assert.equal(new Set(covers).size, 8);
@@ -491,12 +516,12 @@ test("plays eight editor-selected track previews directly on the Creators page",
   assert.ok(coverBytes <= 500_000, "the eight editorial covers should stay below 500 KB");
 
   assert.match(offerCss, /\.creator-editorial-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(offerCss, /V69: Creator previews play in place[\s\S]{0,220}grid-template-columns:\s*92px minmax\(0, 1fr\) minmax\(150px, 180px\) 52px/);
-  assert.match(offerCss, /V69: Creator previews play in place[\s\S]{0,1200}\.creators-landing \.creator-editorial-wave i\s*\{[^}]*flex:\s*1 1 0;[^}]*opacity:\s*\.28/s);
-  assert.match(offerCss, /\.creators-landing \.creator-editorial-wave i\.is-played\s*\{[^}]*background:\s*var\(--marketing-night\);[^}]*opacity:\s*\.92/s);
+  assert.match(offerCss, /V69: shared previews play in place[\s\S]{0,500}\.creator-editorial-showcase \.creator-editorial-track\s*\{[^}]*grid-template-columns:\s*92px minmax\(0, 1fr\) minmax\(150px, 180px\) 52px/s);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\s*\{[^}]*flex:\s*1 1 0;[^}]*opacity:\s*\.28/s);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\.is-played\s*\{[^}]*background:\s*var\(--marketing-night\);[^}]*opacity:\s*\.92/s);
   assert.match(offerCss, /\.creator-editorial-cover\s*\{[\s\S]{0,180}aspect-ratio:\s*1/);
   assert.match(offerCss, /\.creator-editorial-cover img\s*\{[\s\S]{0,180}object-fit:\s*cover/);
-  assert.match(offerCss, /V69: Creator previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,100}\.creators-landing \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(offerCss, /V69: shared previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,100}\.creator-editorial-showcase \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -546,8 +571,8 @@ test("uses real platform logos instead of placeholder glyphs", async () => {
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,1100}\.creators-landing \.creator-platforms \.offer-section-head\s*\{[\s\S]{0,180}text-align:\s*center/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,2400}\.creators-landing \.creator-platform-grid\s*\{[\s\S]{0,700}background:\s*transparent;[\s\S]{0,120}box-shadow:\s*none;[\s\S]{0,150}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--marketing-paper\)/s);
-  assert.match(offerCss, /\.creators-landing \.creator-editorial-track\s*\{[\s\S]{0,300}background:\s*var\(--marketing-cream\)/);
-  assert.match(offerCss, /\.creators-landing \.creator-editorial-track:hover,[\s\S]{0,160}background:\s*#f1e5d8/);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track\s*\{[\s\S]{0,300}background:\s*var\(--marketing-cream\)/);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track:hover,[\s\S]{0,160}background:\s*#f1e5d8/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,3300}\.platform-brand-icon\.is-bare\s*\{[\s\S]{0,160}width:\s*clamp\(74px, 5vw, 88px\)/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,5200}@media \(max-width: 700px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(offerCss, /V63: platforms become a full-width brand rail[\s\S]{0,7000}@media \(max-width: 360px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
@@ -747,7 +772,7 @@ test("ships progressive, accessible motion without an animation dependency", asy
 });
 
 test("ships the cozy Lofi Girl identity, focused navigation and real artist profiles", async () => {
-  const [css, homeCss, cozyCss, catalogCss, offerCss, layout, brand, header, catalogue, catalogueData, page, creators, business, booth] = await Promise.all([
+  const [css, homeCss, cozyCss, catalogCss, offerCss, layout, brand, header, cataloguePage, catalogueData, page, creators, business, booth] = await Promise.all([
     source("app/globals.css"),
     source("app/home-v5.css"),
     source("app/home-v6.css"),
@@ -756,7 +781,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     source("app/layout.tsx"),
     source("app/components/Brand.tsx"),
     source("app/components/SiteHeader.tsx"),
-    source("app/components/CatalogueExplorer.tsx"),
+    source("app/catalog/page.tsx"),
     source("app/data/catalog.ts"),
     source("app/page.tsx"),
     source("app/creators/page.tsx"),
@@ -794,17 +819,9 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
-  assert.match(catalogue, /useTrackPreview\(\)/);
-  assert.match(catalogue, /<audio[\s\S]{0,180}preload="none"/);
-  assert.match(catalogue, /data-playing=\{isPlaying \|\| undefined\}/);
-  assert.match(catalogue, /preview\.toggle\(\{ id: track\.id, previewUrl: track\.previewUrl \}\)/);
-  assert.match(catalogue, /Array\.from\(\{ length: 48 \}/);
-  assert.match(catalogue, /className="catalogue-v26-preview-source"[\s\S]{0,160}href=\{track\.spotifyUrl\}/);
-  assert.doesNotMatch(catalogue, /<iframe|SpotifyPlayer|open\.spotify\.com\/embed/);
-  assert.match(catalogue, /Play a preview/i);
-  assert.match(catalogue, /catalogue-v26-waveform/);
-  assert.match(catalogue, /Search the catalogue/i);
-  assert.doesNotMatch(catalogue, /EL-CAT-|download=|Download track|Fake player|Prototype data|Demo tracks/i);
+  assert.match(cataloguePage, /<CreatorTrackShowcase \/>/);
+  assert.match(cataloguePage, /Search by mood,<br \/>style or use\./i);
+  assert.doesNotMatch(cataloguePage, /CatalogueExplorer|Search the catalogue|catalogue-v26-search-row/i);
   assert.match(catalogueData, /Melting Snowman/);
   assert.match(catalogueData, /5:32pm/);
   assert.match(catalogueData, /Blue and Green/);
@@ -955,7 +972,7 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track\s*\{[^}]*background-color:\s*var\(--symbiose-paper\)/s);
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track:hover,[\s\S]{0,180}background-color:\s*#f1e5d8/);
   assert.match(brandCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--symbiose-oat\);[^}]*color:\s*var\(--symbiose-night\)/s);
-  assert.match(brandCss, /\.music-library-editorial \.catalogue-v26-listen:hover\s*\{[^}]*background:\s*#464551/s);
+  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track:hover \.creator-editorial-side i,[\s\S]{0,180}background:\s*#464551/s);
   assert.doesNotMatch(brandCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--symbiose-warm\)/s);
   assert.match(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--marketing-paper\)/s);
   assert.match(catalogueCss, /\.catalogue-moods\s*\{[^}]*background:\s*var\(--music-paper\)/s);

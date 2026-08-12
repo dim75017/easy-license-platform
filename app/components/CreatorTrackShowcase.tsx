@@ -1,6 +1,8 @@
 "use client";
 
-import { creatorPlaylistTracks } from "../data/catalog";
+import Link from "next/link";
+import { useEffect } from "react";
+import { creatorPlaylistTracks, type CreatorPlaylistTrack } from "../data/catalog";
 import { useTrackPreview } from "../hooks/useTrackPreview";
 import { PlatformLogo } from "./PlatformLogo";
 
@@ -21,13 +23,26 @@ function TrackWave({ active, offset, progress }: { active: boolean; offset: numb
   );
 }
 
-export function CreatorTrackShowcase() {
+const defaultTracks = creatorPlaylistTracks.slice(0, 8);
+
+export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { tracks?: readonly CreatorPlaylistTrack[]; filterLabel?: string }) {
   const preview = useTrackPreview();
+
+  useEffect(() => {
+    if (preview.activeTrackId && !tracks.some((track) => track.spotifyId === preview.activeTrackId)) preview.stop();
+  }, [preview.activeTrackId, preview.stop, tracks]);
 
   return (
     <div className="creator-editorial-showcase">
-      <div className="creator-editorial-grid" aria-label="Eight tracks selected across featured Symbiome playlists">
-        {creatorPlaylistTracks.slice(0, 8).map((track, index) => {
+      {filterLabel && (
+        <div className="creator-editorial-filter" role="status">
+          <span>{tracks.length} {tracks.length === 1 ? "track" : "tracks"} for <strong>{filterLabel}</strong></span>
+          <Link href="/catalog#music-library">Show all tracks</Link>
+        </div>
+      )}
+
+      {tracks.length > 0 ? <div className="creator-editorial-grid" role="list" aria-label={`${tracks.length} tracks selected across featured Symbiome playlists`}>
+        {tracks.map((track, index) => {
           const isActive = preview.activeTrackId === track.spotifyId;
           const isPlaying = isActive && preview.isPlaying;
           const hasError = preview.errorTrackId === track.spotifyId;
@@ -36,6 +51,8 @@ export function CreatorTrackShowcase() {
             <article
               className={`${isActive ? "creator-editorial-track is-selected" : "creator-editorial-track"}${hasError ? " has-preview-error" : ""}`}
               key={track.playlistId}
+              role="listitem"
+              aria-label={`${track.title} by ${track.artist}`}
             >
               <span className="creator-editorial-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <span className="creator-editorial-cover">
@@ -72,7 +89,12 @@ export function CreatorTrackShowcase() {
             </article>
           );
         })}
-      </div>
+      </div> : (
+        <div className="creator-editorial-empty" role="status">
+          <strong>No tracks match this selection yet.</strong>
+          <Link href="/catalog#music-library">Show all editor-selected tracks</Link>
+        </div>
+      )}
 
       <audio
         ref={preview.audioRef}

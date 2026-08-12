@@ -170,7 +170,7 @@ export default function Home() {
           </div>
           <div className="home26-collection-grid" data-reveal="group">
             {useCollections.map((collection) => (
-              <Link className="home26-collection-card" href={`/catalog?use=${collection.slug}`} key={collection.title}>
+              <Link className="home26-collection-card" href={`/catalog?use=${collection.slug}#music-library`} key={collection.title}>
                 <img src={collection.image} alt="" loading="lazy" decoding="async" fetchPriority="low" />
                 <span className="home26-collection-overlay" />
                 <span className="home26-collection-copy">
