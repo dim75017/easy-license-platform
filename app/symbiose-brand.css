@@ -577,3 +577,102 @@ body {
     padding-inline: clamp(28px, 4vw, 76px);
   }
 }
+
+/* V6: the official Lofi Girl wordmark replaces typed brand signatures. */
+.lofi-girl-wordmark {
+  --lofi-wordmark-height: 1em;
+  display: inline-block;
+  width: calc(var(--lofi-wordmark-height) * 2.568);
+  height: var(--lofi-wordmark-height);
+  flex: 0 0 auto;
+  background-color: currentColor;
+  -webkit-mask: url("/images/brand/lofi-girl-wordmark.png") center / contain no-repeat;
+  mask: url("/images/brand/lofi-girl-wordmark.png") center / contain no-repeat;
+  vertical-align: -.08em;
+}
+
+.brand-powered,
+.home26-lofi-signature,
+.footer-lofi-credit,
+.offer-lofi-signature,
+.v5-lofi-signature {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.brand-powered { gap: .38em; }
+.brand-powered .lofi-girl-wordmark { --lofi-wordmark-height: 1.08em; color: currentColor; }
+
+.home26-lofi-signature {
+  gap: .48em;
+}
+
+.home26-lofi-signature .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.15em;
+  color: #f2b5a0;
+}
+
+.offer-lofi-signature {
+  flex-wrap: wrap;
+  gap: .52em;
+}
+
+.offer-hero-copy .offer-lofi-signature .offer-powered-label {
+  color: inherit;
+}
+
+.offer-lofi-signature .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.22em;
+  color: var(--marketing-clay-soft);
+}
+
+.footer-lofi-credit {
+  gap: .45em;
+}
+
+.public-shell .site-footer .footer-lofi-credit .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.12em;
+  color: var(--symbiose-warm);
+}
+
+.v5-lofi-signature {
+  gap: .42em;
+}
+
+.v5-lofi-signature .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.08em;
+}
+
+.lofi-girl-wordmark-heading {
+  --lofi-wordmark-height: .78em;
+  color: currentColor;
+  vertical-align: -.02em;
+}
+
+.lofi-girl-wordmark-inline {
+  --lofi-wordmark-height: .78em;
+  margin-inline: .08em;
+  color: currentColor;
+  vertical-align: -.02em;
+}
+
+.offer-lofi-signature > .lofi-girl-wordmark {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 620px) {
+  .offer-lofi-signature {
+    white-space: normal;
+  }
+
+  .lofi-girl-wordmark-heading {
+    --lofi-wordmark-height: .72em;
+  }
+}

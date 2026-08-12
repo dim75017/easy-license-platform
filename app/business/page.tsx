@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueFacts } from "../components/CatalogueFacts";
 import { LeadForm } from "../components/LeadForm";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default function BusinessPage() {
       <div className="offer-landing business-landing">
         <section className="offer-hero offer-hero-business">
           <div className="offer-hero-copy" data-reveal="left">
-            <p className="offer-kicker"><span>SYMBIOME / BUSINESS</span> Powered by Lofi Girl</p>
+            <p className="offer-kicker offer-lofi-signature"><span>SYMBIOME / BUSINESS</span><span className="offer-powered-label">Powered by</span><LofiGirlWordmark /></p>
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
             <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">

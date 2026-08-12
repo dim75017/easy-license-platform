@@ -23,7 +23,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   ]);
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
-  assert.match(page, /Powered by Lofi Girl/i);
+  assert.match(page, /className="home26-eyebrow home26-lofi-signature"[\s\S]{0,140}<LofiGirlWordmark \/>/i);
   assert.match(page, /Browse more than 10,000 instrumental and background tracks created by real artists/i);
   assert.doesNotMatch(page, /home26-hero-credit|A catalogue made by artists, for the people making the work/i);
   assert.doesNotMatch(page, /Music team[\s\S]*professional review and detailed tagging/i);
@@ -1077,6 +1077,72 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
 });
 
+test("uses the official Lofi Girl wordmark everywhere the brand name is visible", async () => {
+  const [wordmark, brandCss, offerCss, supportCss, brand, footer, home, creators, business, workspace, booth, about, press, careers, contact, privacy, legal, help, editorial, ogScript, asset] = await Promise.all([
+    source("app/components/LofiGirlWordmark.tsx"),
+    source("app/symbiose-brand.css"),
+    source("app/offer-pages.css"),
+    source("app/support-pages.css"),
+    source("app/components/Brand.tsx"),
+    source("app/components/SiteFooter.tsx"),
+    source("app/page.tsx"),
+    source("app/creators/page.tsx"),
+    source("app/business/page.tsx"),
+    source("app/components/CreatorWorkspace.tsx"),
+    source("app/components/LicenseBooth.tsx"),
+    source("app/about/page.tsx"),
+    source("app/press/page.tsx"),
+    source("app/careers/page.tsx"),
+    source("app/contact/page.tsx"),
+    source("app/privacy/page.tsx"),
+    source("app/legal/page.tsx"),
+    source("app/help/page.tsx"),
+    source("app/components/EditorialInfoPage.tsx"),
+    source("scripts/render-og-card.py"),
+    readFile(new URL("public/images/brand/lofi-girl-wordmark.png", root)),
+  ]);
+
+  assert.match(wordmark, /role="img" aria-label="Lofi Girl"/);
+  assert.match(wordmark, /aria-hidden="true"/);
+  assert.match(brandCss, /V6: the official Lofi Girl wordmark replaces typed brand signatures\./);
+  assert.match(brandCss, /\.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1em;[^}]*width:\s*calc\(var\(--lofi-wordmark-height\) \* 2\.568\);[^}]*height:\s*var\(--lofi-wordmark-height\);[^}]*background-color:\s*currentColor/s);
+  assert.match(brandCss, /-webkit-mask:\s*url\("\/images\/brand\/lofi-girl-wordmark\.png"\) center \/ contain no-repeat/);
+  assert.match(brandCss, /(?<!-webkit-)mask:\s*url\("\/images\/brand\/lofi-girl-wordmark\.png"\) center \/ contain no-repeat/);
+  assert.match(brandCss, /\.lofi-girl-wordmark-inline\s*\{[^}]*--lofi-wordmark-height:\s*\.78em;[^}]*color:\s*currentColor/s);
+  assert.match(brandCss, /\.offer-lofi-signature > \.lofi-girl-wordmark\s*\{[^}]*min-height:\s*0;[^}]*border:\s*0;[^}]*padding:\s*0/s);
+  assert.match(offerCss, /\.gateway-kicker > span:first-child,\s*\.offer-kicker > span:first-child\s*\{/);
+  assert.doesNotMatch(offerCss, /^\.gateway-kicker > span,\s*\n\.offer-kicker > span\s*\{/m);
+  assert.match(supportCss, /\.support-button > span:last-child\s*\{[^}]*transition:/);
+  assert.match(supportCss, /\.support-toc a > span:first-child\s*\{/);
+  assert.equal(asset.readUInt32BE(16), 2188, "official wordmark width");
+  assert.equal(asset.readUInt32BE(20), 852, "official wordmark height");
+  assert.equal(asset[25], 6, "official wordmark should remain RGBA");
+  assert.ok(asset.length <= 80_000, "official wordmark should stay lightweight");
+
+  assert.match(brand, /className="brand-powered">by <LofiGirlWordmark decorative \/>/);
+  assert.doesNotMatch(brand, />by Lofi Girl</);
+  assert.match(footer, /className="footer-lofi-credit">Powered by <LofiGirlWordmark \/>/);
+  assert.match(home, /home26-lofi-signature[\s\S]{0,120}<LofiGirlWordmark \/>/);
+  assert.match(creators, /offer-lofi-signature[\s\S]{0,180}<LofiGirlWordmark \/>/);
+  assert.match(business, /offer-lofi-signature[\s\S]{0,180}<LofiGirlWordmark \/>/);
+  assert.match(workspace, /workspace-lofi-credit[\s\S]{0,100}<LofiGirlWordmark \/>/);
+  assert.equal((workspace.match(/workspace-lofi-kicker/g) ?? []).length, 2);
+  assert.match(booth, /v5-lofi-signature[\s\S]{0,100}<LofiGirlWordmark \/>/);
+  assert.match(about, /tocTitle:\s*<>Powered by <LofiGirlWordmark[\s\S]{0,160}title:\s*<>Powered by <LofiGirlWordmark/);
+  assert.match(press, /tocTitle:\s*<>Powered by <LofiGirlWordmark[\s\S]{0,160}title:\s*<>Powered by <LofiGirlWordmark/);
+  assert.match(editorial, /label:\s*ReactNode;[\s\S]{0,60}ariaLabel\?:\s*string;/);
+  assert.match(editorial, /title:\s*ReactNode;[\s\S]{0,60}tocTitle\?:\s*ReactNode;/);
+  assert.match(editorial, /section\.tocTitle \?\? section\.title/);
+  assert.match(workspace, /PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);
+  for (const visualSource of [brand, footer, home, creators, business, workspace, booth, about, press, careers, contact, privacy, legal, help]) {
+    const withoutAccessibleLabels = visualSource.replace(/ariaLabel:\s*"[^"]+"/g, "");
+    assert.doesNotMatch(withoutAccessibleLabels, /Lofi Girl/i, "visible brand references should use the official wordmark");
+  }
+  assert.match(ogScript, /LOFI_GIRL_WORDMARK = ROOT \/ "public" \/ "images" \/ "brand" \/ "lofi-girl-wordmark\.png"/);
+  assert.match(ogScript, /render_lofi_girl_wordmark\(36, signature_color\)/);
+  assert.doesNotMatch(ogScript, /"by Lofi Girl"/);
+});
+
 test("keeps the connected workspace readable and artist-led", async () => {
   const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources] = await Promise.all([
     source("app/layout.tsx"),
@@ -1147,7 +1213,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /music-track-table/);
   assert.match(musicWorkspace, /open\.spotify\.com\/embed\/track/);
   assert.match(musicWorkspace, /easy-license-library-tuned/);
-  assert.match(musicWorkspace, /INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS/);
+  assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);
   assert.match(musicWorkspace, /workspace-playlist-photo/);
   assert.match(musicWorkspace, /lofiGirlPlaylists\.map/);
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);

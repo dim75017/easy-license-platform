@@ -16,6 +16,7 @@ HEIGHT = 876
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "public" / "og.png"
 ICON = ROOT / "app" / "icon.svg"
+LOFI_GIRL_WORDMARK = ROOT / "public" / "images" / "brand" / "lofi-girl-wordmark.png"
 
 NIGHT = "#292832"
 NIGHT_SOFT = "#36333d"
@@ -102,6 +103,19 @@ def render_symbiome_mark(size: int) -> Image.Image:
     return mark.resize((size, size), Image.Resampling.LANCZOS)
 
 
+def render_lofi_girl_wordmark(height: int, color: tuple[int, int, int, int]) -> Image.Image:
+    """Recolour the supplied transparent wordmark without changing its proportions."""
+    source = Image.open(LOFI_GIRL_WORDMARK).convert("RGBA")
+    width = round(height * source.width / source.height)
+    source = source.resize((width, height), Image.Resampling.LANCZOS)
+    alpha = source.getchannel("A")
+    if color[3] < 255:
+        alpha = alpha.point(lambda value: round(value * color[3] / 255))
+    wordmark = Image.new("RGBA", source.size, (*color[:3], 0))
+    wordmark.putalpha(alpha)
+    return wordmark
+
+
 def main() -> None:
     random.seed(75017)
     image = Image.new("RGB", (WIDTH, HEIGHT), NIGHT)
@@ -134,7 +148,11 @@ def main() -> None:
     draw.text((wordmark_x, 91), "SYMB", font=brand, fill=OAT)
     symb_width = draw.textlength("SYMB", font=brand)
     draw.text((wordmark_x + symb_width, 91), "IOME", font=brand, fill=CLAY)
-    draw.text((wordmark_x, 143), "by Lofi Girl", font=label, fill=(247, 235, 221, 155))
+    signature_color = (247, 235, 221, 190)
+    draw.text((wordmark_x, 143), "by", font=label, fill=signature_color)
+    by_width = round(draw.textlength("by", font=label))
+    lofi_girl_wordmark = render_lofi_girl_wordmark(36, signature_color)
+    image.paste(lofi_girl_wordmark, (wordmark_x + by_width + 10, 140), lofi_girl_wordmark)
 
     draw.text((108, 254), "Music for", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)
     draw.text((108, 368), "every project.", font=title, fill=OAT, stroke_width=1, stroke_fill=OAT)

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "About Symbiome",
@@ -15,7 +16,7 @@ export default function AboutPage() {
       lead="The name combines symbiosis and biome. It describes a music ecosystem where artists, the label, creators and businesses each bring something useful to the relationship, and each benefits when the music finds the right project."
       actions={[
         { label: "Explore the music", href: "/catalog" },
-        { label: "Discover Lofi Girl", href: "https://www.lofigirl.com/", external: true, secondary: true },
+        { label: <>Discover <LofiGirlWordmark className="lofi-girl-wordmark-inline" /></>, ariaLabel: "Discover Lofi Girl", href: "https://www.lofigirl.com/", external: true, secondary: true },
       ]}
       highlights={[
         { value: "10,000+", label: "instrumental and background tracks" },
@@ -78,11 +79,12 @@ export default function AboutPage() {
         {
           id: "powered-by-lofi-girl",
           eyebrow: "The connection",
-          title: "Powered by Lofi Girl.",
+          tocTitle: <>Powered by <LofiGirlWordmark className="lofi-girl-wordmark-inline" />.</>,
+          title: <>Powered by <LofiGirlWordmark className="lofi-girl-wordmark-heading" />.</>,
           content: (
             <>
-              <p>Symbiome is presented as an independent licensing product powered by Lofi Girl. It brings the catalogue, artists and long experience of instrumental listening into a service made for videos, streams and commercial projects.</p>
-              <p>You can explore the wider music, livestreams and releases on the <a href="https://www.lofigirl.com/" target="_blank" rel="noreferrer">official Lofi Girl website</a>.</p>
+              <p>Symbiome is presented as an independent licensing product powered by <LofiGirlWordmark className="lofi-girl-wordmark-inline" />. It brings the catalogue, artists and long experience of instrumental listening into a service made for videos, streams and commercial projects.</p>
+              <p>You can explore the wider music, livestreams and releases on the <a href="https://www.lofigirl.com/" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website</a>.</p>
             </>
           ),
         },

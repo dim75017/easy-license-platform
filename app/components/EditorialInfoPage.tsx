@@ -3,7 +3,8 @@ import Link from "next/link";
 import { PublicShell } from "./PublicShell";
 
 export type EditorialAction = {
-  label: string;
+  label: ReactNode;
+  ariaLabel?: string;
   href: string;
   external?: boolean;
   secondary?: boolean;
@@ -12,16 +13,17 @@ export type EditorialAction = {
 export type EditorialSection = {
   id: string;
   eyebrow: string;
-  title: string;
+  title: ReactNode;
+  tocTitle?: ReactNode;
   content: ReactNode;
 };
 
 function ActionLink({ action }: { action: EditorialAction }) {
   const className = action.secondary ? "support-button support-button-secondary cta-swipe" : "support-button cta-swipe";
   if (action.external) {
-    return <a className={className} href={action.href} target="_blank" rel="noreferrer">{action.label}<span aria-hidden="true">↗</span></a>;
+    return <a className={className} href={action.href} target="_blank" rel="noreferrer" aria-label={action.ariaLabel}>{action.label}<span aria-hidden="true">↗</span></a>;
   }
-  return <Link className={className} href={action.href}>{action.label}<span aria-hidden="true">→</span></Link>;
+  return <Link className={className} href={action.href} aria-label={action.ariaLabel}>{action.label}<span aria-hidden="true">→</span></Link>;
 }
 
 export function EditorialInfoPage({
@@ -47,7 +49,7 @@ export function EditorialInfoPage({
             <p className="support-kicker">{eyebrow}</p>
             <h1>{title}</h1>
             <p className="support-lead">{lead}</p>
-            {actions.length > 0 && <div className="support-actions">{actions.map((action) => <ActionLink action={action} key={action.label} />)}</div>}
+            {actions.length > 0 && <div className="support-actions">{actions.map((action, index) => <ActionLink action={action} key={`${action.href}-${index}`} />)}</div>}
           </div>
         </header>
 
@@ -60,7 +62,7 @@ export function EditorialInfoPage({
         <div className="support-layout">
           <nav className="support-toc" aria-label={`${eyebrow} sections`}>
             <p>On this page</p>
-            {sections.map((section, index) => <a href={`#${section.id}`} key={section.id}><span>{String(index + 1).padStart(2, "0")}</span>{section.title}</a>)}
+            {sections.map((section, index) => <a href={`#${section.id}`} key={section.id}><span>{String(index + 1).padStart(2, "0")}</span><span className="support-toc-label">{section.tocTitle ?? section.title}</span></a>)}
           </nav>
           <div className="support-content">
             {sections.map((section, index) => (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -15,7 +16,7 @@ export default function ContactPage() {
       lead="The quickest route depends on what you are trying to do. Use the Help Center for licensing questions, or send a focused business brief when music is needed for a commercial project."
       actions={[
         { label: "Open the Help Center", href: "/help" },
-        { label: "Official Lofi Girl contact", href: "https://www.lofigirl.com/contact", external: true, secondary: true },
+        { label: <>Official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact</>, ariaLabel: "Official Lofi Girl contact", href: "https://www.lofigirl.com/contact", external: true, secondary: true },
       ]}
       sections={[
         {
@@ -50,10 +51,10 @@ export default function ContactPage() {
         {
           id: "press-and-partnerships",
           eyebrow: "Press and general enquiries",
-          title: "Use the official contact route for the wider Lofi Girl team.",
+          title: <>Use the official contact route for the wider <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> team.</>,
           content: (
             <>
-              <p>For press, partnerships or questions that are not about a Symbiome creator plan or business quote, use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official Lofi Girl contact form</a>. Give the enquiry a clear subject so it can reach the appropriate team.</p>
+              <p>For press, partnerships or questions that are not about a Symbiome creator plan or business quote, use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact form</a>. Give the enquiry a clear subject so it can reach the appropriate team.</p>
               <p className="support-notice">A dedicated Symbiome support address is not published yet. Confirmed service contacts will be added here before direct support opens.</p>
             </>
           ),

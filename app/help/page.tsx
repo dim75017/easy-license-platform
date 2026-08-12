@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { PublicShell } from "../components/PublicShell";
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ const categories: HelpCategory[] = [
     questions: [
       {
         question: "What is Symbiome?",
-        answer: <>Symbiome is a human-made instrumental music catalogue and licensing platform for creators and businesses, powered by Lofi Girl.</>,
+        answer: <>Symbiome is a human-made instrumental music catalogue and licensing platform for creators and businesses, powered by <LofiGirlWordmark className="lofi-girl-wordmark-inline" />.</>,
       },
       {
         question: "Can I listen before choosing a licence?",

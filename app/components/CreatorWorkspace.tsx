@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Brand } from "./Brand";
+import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { genres, lofiGirlPlaylists, moods, tracks, type LofiGirlPlaylist, type MusicUseSlug, type Track } from "../data/catalog";
 import "../workspace-music.css";
 
@@ -45,7 +46,7 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
   } as CSSProperties;
 
   return (
-    <button className="workspace-playlist" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.spotifyTitle}>
+    <button className="workspace-playlist" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.title}>
       <img
         className="workspace-playlist-photo"
         src={playlist.image}
@@ -60,7 +61,7 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
         <small>{playlist.genre} · {playlist.moods[0]}</small>
         <strong>{playlist.title}</strong>
         <em>{playlist.description}</em>
-        <b>Lofi Girl public playlist</b>
+        <b className="workspace-lofi-credit"><LofiGirlWordmark /> <span>public playlist</span></b>
       </span>
       <i aria-hidden="true">→</i>
     </button>
@@ -199,7 +200,7 @@ export function CreatorWorkspace() {
             </section>
 
             <section className="music-shelf" aria-labelledby="project-playlists-title">
-              <div className="music-shelf-head"><div><span>INSPIRED BY LOFI GIRL'S PUBLIC PLAYLISTS</span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>From lofi and ambient to classical, bossa and seasonal listening — twelve distinct directions for the work in front of you.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
+              <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>From lofi and ambient to classical, bossa and seasonal listening — twelve distinct directions for the work in front of you.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
               <div className="music-playlist-shelf">
                 {lofiGirlPlaylists.slice(0, 8).map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
               </div>
@@ -272,7 +273,7 @@ export function CreatorWorkspace() {
 }
 
 function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => void }) {
-  return <div className="music-secondary-view"><header><span>LOFI GIRL LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public Lofi Girl profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
+  return <div className="music-secondary-view"><header><span className="workspace-lofi-kicker"><LofiGirlWordmark /> LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
 function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {

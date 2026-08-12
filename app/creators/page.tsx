@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PublicShell } from "../components/PublicShell";
 
@@ -23,7 +24,7 @@ export default function CreatorsPage() {
       <div className="offer-landing creators-landing">
         <section className="offer-hero offer-hero-creators">
           <div className="offer-hero-copy" data-reveal="left">
-            <p className="offer-kicker"><span>SYMBIOME / CREATORS</span> Powered by Lofi Girl</p>
+            <p className="offer-kicker offer-lofi-signature"><span>SYMBIOME / CREATORS</span><span className="offer-powered-label">Powered by</span><LofiGirlWordmark /></p>
             <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
             <p>Find instrumental music for the edit, the stream or the opening of a new episode. Symbiome is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
             <div className="offer-actions">

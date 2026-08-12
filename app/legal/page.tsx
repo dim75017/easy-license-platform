@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "Legal Information",
@@ -63,7 +64,7 @@ export default function LegalPage() {
           content: (
             <>
               <p>Symbiome is currently presented as a pre-launch service. The legal identity of the operator, registered address, company registration details and publication director will be published here before Symbiome issues licences or accepts payments.</p>
-              <p>Until that commercial launch, general legal enquiries can use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official Lofi Girl contact form</a>. The current Lofi Girl website terms are available on its <a href="https://www.lofigirl.com/terms" target="_blank" rel="noreferrer">official legal page</a>.</p>
+              <p>Until that commercial launch, general legal enquiries can use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact form</a>. The current <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website terms are available on its <a href="https://www.lofigirl.com/terms" target="_blank" rel="noreferrer">official legal page</a>.</p>
               <p>For information about personal data and browser storage, read the <Link href="/privacy">Privacy page</Link> and <Link href="/cookies">Cookies page</Link>.</p>
             </>
           ),

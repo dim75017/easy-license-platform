@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -15,7 +16,7 @@ export default function PrivacyPage() {
       lead="Symbiome should collect only the information needed to answer a creator support question, review a business brief or manage early access. This page describes the current public version and identifies the details still required before production launch."
       actions={[
         { label: "Read about browser storage", href: "/cookies" },
-        { label: "Lofi Girl privacy policy", href: "https://www.lofigirl.com/privacy", external: true, secondary: true },
+        { label: <><LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</>, ariaLabel: "Lofi Girl privacy policy", href: "https://www.lofigirl.com/privacy", external: true, secondary: true },
       ]}
       sections={[
         {
@@ -63,7 +64,7 @@ export default function PrivacyPage() {
           content: (
             <>
               <p>Depending on applicable law, people may have rights to access, correct, delete, restrict or object to the processing of their personal information. A production privacy policy must identify the verified data controller, lawful bases, service providers, international transfers, retention periods and the route for exercising those rights.</p>
-              <p>Those Symbiome-specific details will be published before live data collection begins. For the separate Lofi Girl website and its associated domains, consult the <a href="https://www.lofigirl.com/privacy" target="_blank" rel="noreferrer">official Lofi Girl privacy policy</a>.</p>
+              <p>Those Symbiome-specific details will be published before live data collection begins. For the separate <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website and its associated domains, consult the <a href="https://www.lofigirl.com/privacy" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</a>.</p>
               <p className="support-notice">Last updated: 11 August 2026. This page should be updated before any production collection or material change in the service.</p>
             </>
           ),

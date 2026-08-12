@@ -39,8 +39,8 @@
   letter-spacing: .025em;
 }
 
-.gateway-kicker > span,
-.offer-kicker > span {
+.gateway-kicker > span:first-child,
+.offer-kicker > span:first-child {
   display: inline-flex;
   min-height: 28px;
   align-items: center;

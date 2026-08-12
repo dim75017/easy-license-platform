@@ -79,6 +79,28 @@
 .music-track-row.is-selected {
   background: rgba(224,99,67,.12);
 }
+
+/* Official Lofi Girl wordmark on the connected playlist surfaces. */
+.creator-music-app .workspace-lofi-credit,
+.creator-music-app .workspace-lofi-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .48em;
+}
+
+.creator-music-app .workspace-lofi-credit .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.35em;
+  color: #fff9f1;
+}
+
+.creator-music-app .workspace-lofi-kicker {
+  flex-wrap: wrap;
+}
+
+.creator-music-app .workspace-lofi-kicker .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.32em;
+  color: currentColor;
+}
 .music-setup-backdrop { background: rgba(41,40,50,.78); }
 .music-app-account > span {
   background: rgba(224,99,67,.16);

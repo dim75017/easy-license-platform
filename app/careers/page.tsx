@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
+import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -15,7 +16,7 @@ export default function CareersPage() {
       lead="Symbiome sits where music, product, rights and creator support meet. The aim is practical: make excellent instrumental music easier to find and license while keeping artists visible in the process."
       actions={[
         { label: "Learn about Symbiome", href: "/about" },
-        { label: "Lofi Girl careers", href: "https://studio.lofigirl.com/careers", external: true, secondary: true },
+        { label: <><LofiGirlWordmark className="lofi-girl-wordmark-inline" /> careers</>, ariaLabel: "Lofi Girl careers", href: "https://studio.lofigirl.com/careers", external: true, secondary: true },
       ]}
       sections={[
         {
@@ -52,7 +53,7 @@ export default function CareersPage() {
           content: (
             <>
               <p>This page will list active Symbiome opportunities when roles are ready to be advertised. If a role is not shown here, there is no confirmed opening to apply for through the Symbiome site.</p>
-              <p>Open roles for the wider Lofi Girl team are published on the <a href="https://studio.lofigirl.com/careers" target="_blank" rel="noreferrer">official Lofi Girl careers page</a>.</p>
+              <p>Open roles for the wider <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> team are published on the <a href="https://studio.lofigirl.com/careers" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> careers page</a>.</p>
               <p className="support-notice">A future listing should always include the team, location or working arrangement, responsibilities, expected experience and a verified application route.</p>
             </>
           ),
