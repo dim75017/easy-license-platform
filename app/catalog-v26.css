@@ -2086,3 +2086,132 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* V48: library previews play in place and use the full waveform lane. */
+.music-library-editorial .catalogue-v26-track {
+  grid-template-columns: 92px minmax(0, 1fr) minmax(150px, 180px) 52px;
+}
+
+.music-library-editorial .catalogue-v26-preview-source {
+  display: inline-flex;
+  margin-top: 5px;
+  align-items: center;
+  gap: 4px;
+  color: rgba(41, 40, 50, .68);
+  font-size: 10px;
+  font-weight: 720;
+  text-decoration: none;
+}
+
+.music-library-editorial .catalogue-v26-preview-source .platform-brand-icon.is-bare {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.music-library-editorial .catalogue-v26-preview-source:hover {
+  color: var(--music-night);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.music-library-editorial .catalogue-v26-track .catalogue-v26-waveform {
+  display: flex;
+  width: 100%;
+  gap: 2px;
+}
+
+.music-library-editorial .catalogue-v26-track .catalogue-v26-waveform i {
+  width: auto;
+  min-width: 1px;
+  max-width: none;
+  flex: 1 1 0;
+  opacity: .28;
+  transition: background-color .18s ease, opacity .18s ease;
+}
+
+.music-library-editorial .catalogue-v26-track .catalogue-v26-waveform i.is-played {
+  background: var(--music-night);
+  opacity: .92;
+}
+
+.music-library-editorial .catalogue-v26-listen[data-playing="true"] {
+  background: #464551;
+}
+
+.music-library-editorial .catalogue-v26-preview-error {
+  grid-column: 2 / 4;
+  grid-row: 3;
+  margin-top: -6px;
+  color: #9f3f2b;
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.music-library-editorial .catalogue-v26-preview-error a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 1120px) {
+  .music-library-editorial .catalogue-v26-track {
+    grid-template-columns: 82px minmax(0, 1fr) minmax(96px, 126px) 48px;
+  }
+
+  .music-library-editorial .catalogue-v26-track .catalogue-v26-waveform {
+    display: flex;
+    grid-column: 3;
+    gap: 1px;
+  }
+
+  .music-library-editorial .catalogue-v26-listen { grid-column: 4; }
+}
+
+@media (max-width: 900px) {
+  .music-library-editorial .catalogue-v26-track-list { grid-template-columns: 1fr; }
+
+  .music-library-editorial .catalogue-v26-track {
+    grid-template-columns: 82px minmax(0, 1fr) minmax(140px, 180px) 48px;
+  }
+}
+
+@media (max-width: 560px) {
+  .music-library-editorial .catalogue-v26-track {
+    min-height: 142px;
+    grid-template-columns: 70px minmax(0, 1fr) 44px;
+    grid-template-rows: auto auto 32px;
+  }
+
+  .music-library-editorial .catalogue-v26-track-cover { grid-row: 1 / span 2; }
+  .music-library-editorial .catalogue-v26-track-copy { grid-row: 1 / span 2; }
+  .music-library-editorial .catalogue-v26-listen {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .music-library-editorial .catalogue-v26-track .catalogue-v26-waveform {
+    height: 28px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    gap: 2px;
+  }
+
+  .music-library-editorial .catalogue-v26-preview-source { display: none; }
+  .music-library-editorial .catalogue-v26-track.has-preview-error {
+    min-height: 168px;
+    grid-template-rows: auto auto 32px auto;
+  }
+
+  .music-library-editorial .catalogue-v26-preview-error {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-library-editorial .catalogue-v26-track .catalogue-v26-waveform i { transition: none; }
+}

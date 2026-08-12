@@ -241,6 +241,7 @@ export type CreatorPlaylistTrack = {
   playlistId: string;
   playlistTitle: string;
   spotifyId: string;
+  previewUrl: `https://p.scdn.co/mp3-preview/${string}`;
   title: string;
   artist: string;
   genre: string;
@@ -252,13 +253,14 @@ export type CreatorPlaylistTrack = {
 /**
  * Eight editor-selected tracks drawn from the featured public playlists,
  * verified from Spotify's public embeds on 2026-08-11. Artwork is stored
- * locally for a fast preview.
+ * locally; promotional audio previews remain remote and are never cached.
  */
 export const creatorPlaylistTracks = [
   {
     playlistId: "lofi-study",
     playlistTitle: "Lofi Study",
     spotifyId: "4ytksG38eM66TkmAjn3PmU",
+    previewUrl: "https://p.scdn.co/mp3-preview/96689c48a7af6e6061a9fd4a48d470ee83875714",
     title: "Snowflakes",
     artist: "Pandrezz",
     genre: "Lofi",
@@ -270,6 +272,7 @@ export const creatorPlaylistTracks = [
     playlistId: "synthwave-night",
     playlistTitle: "Synthwave Night",
     spotifyId: "0pbcr9ya4OHHDwMKOb5YZr",
+    previewUrl: "https://p.scdn.co/mp3-preview/9ac1edb67776450aa20d66e525b128751f526db8",
     title: "Celestial Awakening",
     artist: "Opal",
     genre: "Synthwave",
@@ -281,6 +284,7 @@ export const creatorPlaylistTracks = [
     playlistId: "peaceful-piano",
     playlistTitle: "Peaceful Piano",
     spotifyId: "2tWn2VgQTOAU0IwAjMHkOn",
+    previewUrl: "https://p.scdn.co/mp3-preview/456c4002a241bb502b608502c394beeac29a08e8",
     title: "The Places We Used to Walk",
     artist: "Mariposa",
     genre: "Piano",
@@ -292,6 +296,7 @@ export const creatorPlaylistTracks = [
     playlistId: "dark-ambient",
     playlistTitle: "Dark Ambient",
     spotifyId: "1bcrf3BtzGyHCfc27jqcCi",
+    previewUrl: "https://p.scdn.co/mp3-preview/64fcff60ab297f39ffce22394b4174e3528befc0",
     title: "Lightswitch",
     artist: "Stilte, schimmerlicht",
     genre: "Ambient",
@@ -303,6 +308,7 @@ export const creatorPlaylistTracks = [
     playlistId: "jazz-lofi",
     playlistTitle: "Jazz Lofi",
     spotifyId: "2mnWnyRWdsTHUcOMrD6JgC",
+    previewUrl: "https://p.scdn.co/mp3-preview/9f04914e875c55adeb4bd870ed60ccd29a3a6ecb",
     title: "Frozen Bubbles",
     artist: "Worldtraveller, Max Merseny, Viktor Minsky",
     genre: "Jazz Lofi",
@@ -314,6 +320,7 @@ export const creatorPlaylistTracks = [
     playlistId: "chill-house",
     playlistTitle: "Chill House",
     spotifyId: "5PRK2YEF3iSufclolLWqaQ",
+    previewUrl: "https://p.scdn.co/mp3-preview/ccc8c3e33d7c84fe938bd5a11b2153422618f348",
     title: "Tempel",
     artist: "Morning life",
     genre: "Chill House",
@@ -325,6 +332,7 @@ export const creatorPlaylistTracks = [
     playlistId: "sleep-ambient",
     playlistTitle: "Sleep Ambient",
     spotifyId: "7N0SEnpPcc28E1kBhRFoKQ",
+    previewUrl: "https://p.scdn.co/mp3-preview/096223c9326975fd256d46b78c94a13a0771c320",
     title: "Flickering Dust",
     artist: "anębu",
     genre: "Ambient",
@@ -336,6 +344,7 @@ export const creatorPlaylistTracks = [
     playlistId: "chill-guitar",
     playlistTitle: "Chill Guitar",
     spotifyId: "0kjzCZ5nEUb7WN9tIwOjKI",
+    previewUrl: "https://p.scdn.co/mp3-preview/825d8362abacc77191cfb4f2af96e9277b163ca5",
     title: "Green Glimmers",
     artist: "Antonio Roberto",
     genre: "Acoustic",
@@ -348,6 +357,7 @@ export const creatorPlaylistTracks = [
 export type Track = {
   id: string;
   spotifyId: string;
+  previewUrl: `https://p.scdn.co/mp3-preview/${string}`;
   title: string;
   artist: string;
   genre: string;
@@ -368,6 +378,7 @@ export const tracks: Track[] = [
   {
     id: "EL-FEAT-001",
     spotifyId: "5Nsf7Z3GKvdWj2FEP12QUy",
+    previewUrl: "https://p.scdn.co/mp3-preview/1f9010c8d1247012b47cbe912912d8a91052f958",
     title: "Melting Snowman",
     artist: "Mujo",
     genre: "Lofi",
@@ -385,6 +396,7 @@ export const tracks: Track[] = [
   {
     id: "EL-FEAT-002",
     spotifyId: "0Q2LHrREFF9rtX3PuMUoNL",
+    previewUrl: "https://p.scdn.co/mp3-preview/bd2312921fd60bcd65401541cb608fecc96b525e",
     title: "5:32pm",
     artist: "The Deli",
     genre: "Jazzhop",
@@ -402,6 +414,7 @@ export const tracks: Track[] = [
   {
     id: "EL-FEAT-003",
     spotifyId: "6BFm6CduJnfZ1RsMYjWO9G",
+    previewUrl: "https://p.scdn.co/mp3-preview/271745d56b282f5b081c84c1fc57aaed1ed5d6e4",
     title: "Blue and Green",
     artist: "Aso",
     genre: "Chillhop",
@@ -419,6 +432,7 @@ export const tracks: Track[] = [
   {
     id: "EL-FEAT-004",
     spotifyId: "4aw3VYsMAEhqaq87YXyvKA",
+    previewUrl: "https://p.scdn.co/mp3-preview/7c12e967ceb03fa2efb04e48617b19e35e1dbe4a",
     title: "Drifting away",
     artist: "Charlee Nguyen",
     genre: "Ambient",

@@ -1,18 +1,27 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { genres, tracks, useCategories, type MusicUseSlug, type Track } from "../data/catalog";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { genres, tracks, useCategories, type MusicUseSlug } from "../data/catalog";
+import { useTrackPreview } from "../hooks/useTrackPreview";
 import "../catalog-v26.css";
+import { PlatformLogo } from "./PlatformLogo";
 
 const useNames = new Map(useCategories.map((category) => [category.slug, category.label]));
 
-const waveHeights = [26, 54, 36, 72, 46, 92, 58, 34, 68, 42, 80, 52, 30, 64, 44, 88, 38, 60, 28, 56, 76, 40, 66, 32];
+const wavePattern = [26, 54, 36, 72, 46, 92, 58, 34, 68, 42, 80, 52, 30, 64, 44, 88, 38, 60, 28, 56, 76, 40, 66, 32];
+const waveHeights = Array.from({ length: 48 }, (_, index) => wavePattern[index % wavePattern.length]);
 
-function Waveform({ trackId }: { trackId: string }) {
+function Waveform({ active, progress, trackId }: { active: boolean; progress: number; trackId: string }) {
   const offset = trackId.charCodeAt(trackId.length - 1) % waveHeights.length;
   return (
     <span className="catalogue-v26-waveform" aria-hidden="true">
-      {waveHeights.map((_, index) => <i key={index} style={{ height: `${waveHeights[(index + offset) % waveHeights.length]}%` }} />)}
+      {waveHeights.map((_, index) => (
+        <i
+          className={active && index / waveHeights.length < progress ? "is-played" : undefined}
+          key={index}
+          style={{ height: `${waveHeights[(index + offset) % waveHeights.length]}%` }}
+        />
+      ))}
     </span>
   );
 }
@@ -34,7 +43,7 @@ function getServerLocationSearch() {
   return "";
 }
 
-export function CatalogueExplorer({ compact = false, showUseCases = true, editorial = false }: { compact?: boolean; showUseCases?: boolean; editorial?: boolean }) {
+export function CatalogueExplorer({ showUseCases = true, editorial = false }: { showUseCases?: boolean; editorial?: boolean }) {
   const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const urlParams = useMemo(() => new URLSearchParams(locationSearch), [locationSearch]);
   const urlUse = urlParams.get("use");
@@ -44,13 +53,12 @@ export function CatalogueExplorer({ compact = false, showUseCases = true, editor
   const [queryDraft, setQueryDraft] = useState<string | null>(null);
   const [useDraft, setUseDraft] = useState<MusicUseSlug | "all" | null>(null);
   const [genreDraft, setGenreDraft] = useState<string | null>(null);
-  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const preview = useTrackPreview();
   const query = queryDraft ?? urlParams.get("q") ?? "";
   const activeUse = useDraft ?? validUrlUse;
   const genre = genreDraft ?? validUrlGenre;
 
   const updateLocation = (nextQuery: string, nextUse: MusicUseSlug | "all", nextGenre: string) => {
-    if (compact) return;
     const url = new URL(window.location.href);
     if (nextQuery.trim()) url.searchParams.set("q", nextQuery.trim());
     else url.searchParams.delete("q");
@@ -90,40 +98,16 @@ export function CatalogueExplorer({ compact = false, showUseCases = true, editor
     });
   }, [activeUse, genre, query]);
 
-  const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? null;
-  const chooseTrack = (track: Track) => setSelectedTrackId((current) => current === track.id ? null : track.id);
+  useEffect(() => {
+    if (preview.activeTrackId && !results.some((track) => track.id === preview.activeTrackId)) preview.stop();
+  }, [preview.activeTrackId, preview.stop, results]);
+
   const resetFilters = () => {
     setQueryDraft("");
     setGenreDraft("All genres");
     setUseDraft("all");
     updateLocation("", "all", "All genres");
   };
-
-  if (compact) {
-    return (
-      <div className="catalogue-v26 catalogue-v26-compact">
-        <div className="catalogue-featured" aria-label="Featured tracks from the Symbiome catalogue">
-          {tracks.map((track, index) => (
-            <button
-              className={selectedTrackId === track.id ? "featured-track is-selected" : "featured-track"}
-              type="button"
-              onClick={() => chooseTrack(track)}
-              aria-expanded={selectedTrackId === track.id}
-              key={track.id}
-            >
-              <img src={track.cover} alt={`Cover art for ${track.title} by ${track.artist}`} />
-              <span className="featured-track-number">0{index + 1}</span>
-              <span className="featured-track-meta"><small>{track.genre} · {track.streams}</small><strong>{track.title}</strong><em>{track.artist}</em></span>
-              <i aria-hidden="true">Listen</i>
-              <Waveform trackId={track.id} />
-              <i className="featured-track-play" aria-hidden="true">{selectedTrackId === track.id ? "×" : "▶"}</i>
-            </button>
-          ))}
-        </div>
-        {selectedTrack && <SpotifyPlayer track={selectedTrack} compact onClose={() => setSelectedTrackId(null)} />}
-      </div>
-    );
-  }
 
   return (
     <div className={editorial ? "catalogue-v26 catalogue-v26-editorial" : "catalogue-v26"}>
@@ -170,34 +154,47 @@ export function CatalogueExplorer({ compact = false, showUseCases = true, editor
           <p>Play a preview, then check eligibility for your intended use before downloading.</p>
         </div>
 
-        <div className="catalogue-v26-track-list" aria-live="polite">
-          {results.map((track, index) => (
-            <article className={selectedTrackId === track.id ? "catalogue-v26-track is-open" : "catalogue-v26-track"} key={track.id}>
-              <span className="catalogue-v26-track-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              {editorial && <img className="catalogue-v26-track-cover" src={track.cover} alt={`Album cover for ${track.title} by ${track.artist}`} width={640} height={640} loading="lazy" decoding="async" />}
-              <div className="catalogue-v26-track-copy">
-                <span>{track.genre}</span>
-                <h4>{track.title}</h4>
-                <p>{track.artist}</p>
-              </div>
-              <Waveform trackId={track.id} />
-              <div className="catalogue-v26-track-uses" aria-label="Suggested uses">
-                {track.suggestedUses.slice(0, 3).map((slug) => <span key={slug}>{useNames.get(slug)}</span>)}
-              </div>
-              <span className="catalogue-v26-streams">{track.streams}</span>
-              <button
-                className="catalogue-v26-listen"
-                type="button"
-                onClick={() => chooseTrack(track)}
-                aria-expanded={selectedTrackId === track.id}
-                aria-controls={selectedTrackId === track.id ? "catalogue-track-player" : undefined}
-                aria-label={`${selectedTrackId === track.id ? "Close" : "Play"} ${track.title} by ${track.artist}`}
-              >
-                <span aria-hidden="true">{selectedTrackId === track.id ? "×" : "▶"}</span>{selectedTrackId === track.id ? "Close" : "Play"}
-              </button>
-              {selectedTrackId === track.id && <SpotifyPlayer track={track} onClose={() => setSelectedTrackId(null)} />}
-            </article>
-          ))}
+        <div className="catalogue-v26-track-list">
+          {results.map((track, index) => {
+            const isActive = preview.activeTrackId === track.id;
+            const isPlaying = isActive && preview.isPlaying;
+            const hasError = preview.errorTrackId === track.id;
+
+            return (
+              <article className={`${isActive ? "catalogue-v26-track is-open" : "catalogue-v26-track"}${hasError ? " has-preview-error" : ""}`} key={track.id}>
+                <span className="catalogue-v26-track-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                {editorial && <img className="catalogue-v26-track-cover" src={track.cover} alt={`Album cover for ${track.title} by ${track.artist}`} width={640} height={640} loading="lazy" decoding="async" />}
+                <div className="catalogue-v26-track-copy">
+                  <span>{track.genre}</span>
+                  <h4>{track.title}</h4>
+                  <p>{track.artist}</p>
+                  <a className="catalogue-v26-preview-source" href={track.spotifyUrl} target="_blank" rel="noreferrer" aria-label={`Open ${track.title} on Spotify`}>
+                    <PlatformLogo platform="Spotify" bare />
+                    <span>Spotify ↗</span>
+                  </a>
+                </div>
+                <Waveform active={isActive} progress={isActive ? preview.progress : 0} trackId={track.id} />
+                <div className="catalogue-v26-track-uses" aria-label="Suggested uses">
+                  {track.suggestedUses.slice(0, 3).map((slug) => <span key={slug}>{useNames.get(slug)}</span>)}
+                </div>
+                <span className="catalogue-v26-streams">{track.streams}</span>
+                <button
+                  className="catalogue-v26-listen"
+                  type="button"
+                  onClick={() => preview.toggle({ id: track.id, previewUrl: track.previewUrl })}
+                  data-playing={isPlaying || undefined}
+                  aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`}
+                >
+                  <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>{isPlaying ? "Pause" : "Play"}
+                </button>
+                {hasError && (
+                  <span className="catalogue-v26-preview-error" role="status">
+                    Preview unavailable. <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Open on Spotify ↗</a>
+                  </span>
+                )}
+              </article>
+            );
+          })}
           {results.length === 0 && (
             <div className="catalogue-v26-empty">
               <span aria-hidden="true">⌕</span><h4>No track matches these filters.</h4><p>Try a broader search or return to the full selection.</p>
@@ -206,24 +203,16 @@ export function CatalogueExplorer({ compact = false, showUseCases = true, editor
           )}
         </div>
       </section>
-    </div>
-  );
-}
 
-function SpotifyPlayer({ track, compact = false, onClose }: { track: Track; compact?: boolean; onClose: () => void }) {
-  return (
-    <div className={compact ? "catalogue-v26-player is-compact" : "catalogue-v26-player"} id={compact ? "catalogue-featured-player" : "catalogue-track-player"}>
-      <div className="catalogue-v26-player-head">
-        <span><small>TRACK PREVIEW</small><strong>{track.title}</strong><em>{track.artist}</em></span>
-        <button type="button" onClick={onClose} aria-label={`Close ${track.title} player`}>Close</button>
-      </div>
-      <iframe
-        src={`https://open.spotify.com/embed/track/${track.spotifyId}?utm_source=generator&theme=0`}
-        title={`Spotify player for ${track.title} by ${track.artist}`}
-        width="100%"
-        height="152"
-        loading="lazy"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      <audio
+        ref={preview.audioRef}
+        preload="none"
+        onPlay={preview.onPlay}
+        onPause={preview.onPause}
+        onTimeUpdate={preview.onTimeUpdate}
+        onEnded={preview.onEnded}
+        onError={preview.onError}
+        hidden
       />
     </div>
   );
