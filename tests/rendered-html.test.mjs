@@ -104,13 +104,13 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   const pricingIndex = page.indexOf('className="home26-plan-preview"');
   const faqIndex = page.indexOf('className="home26-section home26-faq home26-quick-faq"');
   const closingIndex = page.indexOf('className="home26-closing"');
-  const pricingRoute = page.slice(pricingIndex, faqIndex);
+  const pricingRoute = page.slice(pricingIndex, closingIndex);
   assert.ok(artistsIndex !== -1, "homepage should include the artist section");
   assert.ok(pricingIndex > artistsIndex, "pricing preview should follow the artist section");
-  assert.ok(faqIndex > pricingIndex, "the quick FAQ should follow pricing");
-  assert.ok(closingIndex > faqIndex, "the concluding CTA should follow the quick FAQ");
+  assert.ok(closingIndex > pricingIndex, "the concluding CTA should follow pricing");
+  assert.ok(faqIndex > closingIndex, "the quick FAQ should close the homepage after the concluding CTA");
   assert.doesNotMatch(pricingRoute, /href="\/business/);
-  const faqRoute = page.slice(faqIndex, closingIndex);
+  const faqRoute = page.slice(faqIndex);
   const quickFaqBlock = page.match(/const quickFaqs = \[([\s\S]*?)\];/);
   assert.ok(quickFaqBlock, "homepage should define its quick FAQ content");
   assert.equal([...quickFaqBlock[1].matchAll(/question:/g)].length, 5, "homepage should keep the FAQ concise");
