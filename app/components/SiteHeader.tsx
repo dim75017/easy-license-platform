@@ -42,26 +42,24 @@ export function SiteHeader() {
           <span />
           <span />
         </button>
-        <nav id="site-navigation" className={open ? "site-nav is-open" : "site-nav"} aria-label="Main navigation">
-          {navItems.map((item, index) => (
-            <Link
-              className={isActive(item.href) ? "is-active" : ""}
-              href={item.href}
-              key={`${item.href}-${item.label}`}
-              onClick={() => setOpen(false)}
-            >
-              <span className="nav-index">0{index + 1}</span>
-              {item.label}
-            </Link>
-          ))}
-          <div className="mobile-account-actions">
+        <div id="site-navigation" className={open ? "site-navigation-shell is-open" : "site-navigation-shell"}>
+          <nav className="site-nav" aria-label="Main navigation">
+            {navItems.map((item, index) => (
+              <Link
+                className={isActive(item.href) ? "is-active" : ""}
+                href={item.href}
+                key={`${item.href}-${item.label}`}
+                onClick={() => setOpen(false)}
+              >
+                <span className="nav-index">0{index + 1}</span>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="site-header-actions">
             <Link className="header-login" href="/app" onClick={() => setOpen(false)}>Log in</Link>
             <Link className="button button-small button-primary" href="/pricing" onClick={() => setOpen(false)}>Create account</Link>
           </div>
-        </nav>
-        <div className="site-header-actions">
-          <Link className="header-login" href="/app">Log in</Link>
-          <Link className="button button-small button-primary" href="/pricing">Create account</Link>
         </div>
       </div>
     </header>

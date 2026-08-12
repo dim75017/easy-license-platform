@@ -804,8 +804,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(homeCss, /\.site-header \.site-nav > a:hover::after,[\s\S]{0,120}transform:\s*scaleX\(1\)/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
   assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biome<\/span>/);
-  assert.match(header, /Log in/);
-  assert.match(header, /Create account/);
+  assert.equal((header.match(/>Log in<\/Link>/g) ?? []).length, 1);
+  assert.equal((header.match(/>Create account<\/Link>/g) ?? []).length, 1);
   assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
   assert.match(header, /if \(href === "\/"\) return pathname === "\/";/);
   assert.match(header, /For Creators/);
@@ -816,7 +816,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(header, /href:\s*"\/pricing",\s*label:\s*"Pricing"/);
   assert.doesNotMatch(header, /\/#creators|\/#business/);
   assert.doesNotMatch(header, /Start a brief/);
-  assert.match(header, /mobile-account-actions/);
+  assert.doesNotMatch(header, /mobile-account-actions/);
+  assert.match(header, /site-navigation-shell/);
   assert.match(header, /aria-controls="site-navigation"/);
   assert.doesNotMatch(header, /label: "Sync"|label: "Music for Business"/);
   assert.doesNotMatch(header, /Admin \/ demo|Licence workspace/);
@@ -1040,6 +1041,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /@media \(min-width:\s*1221px\)[\s\S]{0,220}\.public-shell \.site-header \.site-nav\s*\{[^}]*gap:\s*clamp\(12px, 1vw, 18px\)/s);
   assert.match(symbioseBrandCss, /@media \(max-width:\s*1100px\) and \(min-width:\s*981px\)[\s\S]{0,260}font-size:\s*18px/s);
   assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]{0,260}font-size:\s*20px/s);
+  assert.match(symbioseBrandCss, /V4: one account action group serves desktop and mobile without duplication\.[\s\S]{0,200}\.public-shell \.site-header \.site-navigation-shell\s*\{[^}]*display:\s*contents/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]*?\.public-shell \.site-header \.site-navigation-shell\.is-open\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-navigation-shell \.site-header-actions\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*1fr 1\.35fr/s);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);

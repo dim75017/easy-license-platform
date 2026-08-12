@@ -498,3 +498,62 @@ body {
     font-size: 11px;
   }
 }
+
+/* V4: one account action group serves desktop and mobile without duplication. */
+.public-shell .site-header .site-navigation-shell {
+  display: contents;
+}
+
+@media (max-width: 980px) {
+  .public-shell .site-header .site-navigation-shell {
+    position: absolute;
+    top: 100%;
+    right: 16px;
+    left: 16px;
+    display: none;
+    overflow: hidden;
+    border: 1px solid rgba(41, 40, 50, .2);
+    background: #fff9f1;
+    box-shadow: 0 28px 70px -35px rgba(41, 40, 50, .42);
+  }
+
+  .public-shell .site-header .site-navigation-shell.is-open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .public-shell .site-header .site-navigation-shell .site-nav {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border: 0;
+    padding: 5px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .public-shell .site-header .site-navigation-shell .site-header-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 7px;
+    padding: 10px 11px 11px;
+  }
+
+  .public-shell .site-header .site-navigation-shell .header-login {
+    min-height: 48px;
+    justify-content: center;
+    border: 1px solid rgba(41, 40, 50, .3);
+  }
+
+  .public-shell .site-header .site-navigation-shell .button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 420px) {
+  .public-shell .site-header .site-navigation-shell .site-header-actions {
+    grid-template-columns: 1fr;
+  }
+}
