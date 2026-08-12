@@ -39,8 +39,6 @@
 .support-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
 .support-button { display: inline-flex; min-height: 52px; align-items: center; gap: 18px; border: 1px solid #fff9f1; border-radius: 999px; padding: 0 22px; background: #fff9f1; color: #292832; font-size: 15px; font-weight: 760; text-decoration: none; }
 .support-button-label { display: inline; }
-.support-button > span:last-child { transition: transform .25s ease; }
-.support-button:hover > span:last-child { transform: translateX(4px); }
 .support-button-secondary { background: transparent; color: #fff9f1; }
 
 .support-highlights { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--support-rule); background: var(--support-warm); }
@@ -158,7 +156,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .support-button > span:last-child,
   .support-route-card,
   .help-faq-list summary span { transition: none; }
 }

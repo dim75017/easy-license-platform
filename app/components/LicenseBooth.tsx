@@ -104,10 +104,7 @@ export function LicenseBooth() {
         <div className="v5-booth-price"><strong>{selected.price}</strong><span>{selected.cadence}</span></div>
       </div>
 
-      <Link className="v5-console-action cta-swipe" href={selected.href}>
-        <span>{selected.action}</span>
-        <i aria-hidden="true">↗</i>
-      </Link>
+      <Link className="v5-console-action cta-swipe" href={selected.href}>{selected.action}</Link>
     </div>
   );
 }

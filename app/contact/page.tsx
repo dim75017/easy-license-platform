@@ -27,8 +27,8 @@ export default function ContactPage() {
             <>
               <p>The Help Center explains how creator coverage works, which uses need a business licence, how channel records are organised and what to prepare if an automated Content ID claim appears.</p>
               <div className="support-route-grid">
-                <Link className="support-route-card" href="/help#creator-licensing"><small>Creator licences</small><strong>Understand what a creator plan covers.</strong><span>Read the detailed answers →</span></Link>
-                <Link className="support-route-card" href="/pricing#creator-pricing-title"><small>Plans</small><strong>Compare Creator and Pro.</strong><span>View creator pricing →</span></Link>
+                <Link className="support-route-card" href="/help#creator-licensing"><small>Creator licences</small><strong>Understand what a creator plan covers.</strong><span>Read the detailed answers</span></Link>
+                <Link className="support-route-card" href="/pricing#creator-pricing-title"><small>Plans</small><strong>Compare Creator and Pro.</strong><span>View creator pricing</span></Link>
               </div>
             </>
           ),

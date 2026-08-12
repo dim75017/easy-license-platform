@@ -1079,9 +1079,10 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.match(layout, /import "\.\/cta-swipe\.css"/);
   assert.ok(layout.indexOf('import "./support-pages.css"') < layout.indexOf('import "./cta-swipe.css"'), "the swipe layer should load after every component skin");
   assert.match(swipeCss, /\.public-shell \.cta-swipe\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
+  assert.match(swipeCss, /One public CTA silhouette:[\s\S]{0,180}\.public-shell \.cta-swipe\.cta-swipe\s*\{[^}]*display:\s*inline-flex;[^}]*min-height:\s*54px;[^}]*justify-content:\s*center;[^}]*gap:\s*0;[^}]*clip-path:\s*none;[^}]*border-radius:\s*999px;[^}]*padding:\s*12px 24px;[^}]*text-align:\s*center;[^}]*text-transform:\s*none/s);
   assert.match(swipeCss, /\.public-shell \.cta-swipe::before\s*\{[^}]*inset:\s*0;[^}]*z-index:\s*-1;[^}]*background:\s*var\(--cta-swipe-fill\);[^}]*transform:\s*translate3d\(-101%, 0, 0\);[^}]*transition:\s*transform 520ms cubic-bezier\(\.22, 1, \.36, 1\)/s);
   assert.match(swipeCss, /\.public-shell \.cta-swipe::before\s*\{[^}]*pointer-events:\s*none/s);
-  assert.doesNotMatch(swipeCss, /\.cta-swipe[^,{]*::after\s*\{[^}]*background:/s, "the swipe must not replace existing arrow cells");
+  assert.match(swipeCss, /\.public-shell \.cta-swipe\.cta-swipe::after,[\s\S]{0,140}\.public-shell \.button-primary::after\s*\{[^}]*display:\s*none;[^}]*content:\s*none;/s);
   assert.match(swipeCss, /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*?\.cta-swipe:not\(:disabled\):not\(\[aria-disabled="true"\]\):hover::before\s*\{[^}]*transform:\s*translate3d\(0, 0, 0\)/s);
   assert.match(swipeCss, /\.site-header \.cta-swipe\.button-primary:hover,[\s\S]{0,140}\.home26-button-primary\.cta-swipe:hover\s*\{[^}]*background:\s*var\(--symbiose-night\)/s);
   assert.match(swipeCss, /\.v5-button-dark\.cta-swipe:hover\s*\{[^}]*background:\s*var\(--v5-black\)/s);
@@ -1098,10 +1099,11 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.doesNotMatch(swipeCss, /--cta-swipe-fill:\s*#[0-9a-f]{6}/i, "the swipe should stay tied to the shared brand token");
   assert.match(swipeCss, /\.business-quote \.cta-swipe\.button-primary\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px var\(--symbiose-night\)/s);
 
-  assert.equal((home.match(/cta-swipe/g) ?? []).length, 6, "all six homepage CTA buttons should swipe");
-  assert.equal((creators.match(/cta-swipe/g) ?? []).length, 3, "all three Creator CTA buttons should swipe");
-  assert.equal((business.match(/cta-swipe/g) ?? []).length, 2, "the Business hero and Help Center CTA should swipe");
+  assert.equal((home.match(/cta-swipe/g) ?? []).length, 7, "all seven homepage CTA buttons should swipe");
+  assert.equal((creators.match(/cta-swipe/g) ?? []).length, 4, "all four Creator CTA buttons should swipe");
+  assert.equal((business.match(/cta-swipe/g) ?? []).length, 4, "all four Business CTA buttons should swipe");
   assert.match(catalogue, /music-v26-button music-v26-button-light cta-swipe/);
+  assert.match(catalogue, /music-playlists-all cta-swipe/);
   assert.match(retail, /v5-button v5-button-dark cta-swipe/);
   assert.match(leadForm, /button button-primary button-full cta-swipe/);
   assert.equal((pricingCards.match(/cta-swipe/g) ?? []).length, 2, "both creator pricing actions should swipe");
@@ -1110,6 +1112,12 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.match(editorialInfoPage, /support-button cta-swipe/);
   assert.equal((help.match(/cta-swipe/g) ?? []).length, 3, "all Help Center CTA buttons should swipe");
   assert.match(licenseBooth, /v5-console-action cta-swipe/);
+
+  const publicCtaSource = [home, creators, business, catalogue, retail, leadForm, pricingCards, siteHeader, editorialInfoPage, help, licenseBooth].join("\n");
+  const publicCtaBodies = [...publicCtaSource.matchAll(/<(Link|a|button)\b[^>]*className=(?:"[^"]*\bcta-swipe\b[^"]*"|\{className\})[^>]*>([\s\S]*?)<\/\1>/g)];
+  assert.ok(publicCtaBodies.length >= 27, "every public CTA should be covered by the shared button treatment");
+  for (const [, , body] of publicCtaBodies) assert.doesNotMatch(body, /[↗→↓]/, "CTA labels should not contain decorative arrows");
+  assert.doesNotMatch(publicCtaSource, /(?:Browse collection|View (?:Creator|Pro|Business) details|Open on Spotify|Browse tracks|Explore Commercial Sync|Join early access|Spotify)[^<\n]*[↗→↓]/, "public linked surfaces should not retain decorative arrows");
 
   assert.doesNotMatch(trackShowcase, /cta-swipe/, "track playback controls are not marketing CTA buttons");
   assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
@@ -1150,11 +1158,12 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
   assert.match(brandCss, /\.offer-lofi-signature > \.lofi-girl-wordmark\s*\{[^}]*min-height:\s*0;[^}]*border:\s*0;[^}]*padding:\s*0/s);
   assert.match(offerCss, /\.gateway-kicker > span:first-child,\s*\.offer-kicker > span:first-child\s*\{/);
   assert.doesNotMatch(offerCss, /^\.gateway-kicker > span,\s*\n\.offer-kicker > span\s*\{/m);
-  assert.match(supportCss, /\.support-button > span:last-child\s*\{[^}]*transition:/);
+  assert.doesNotMatch(supportCss, /\.support-button > span:last-child/, "the support label should not move like a former arrow cell");
   assert.match(supportCss, /\.support-button-label\s*\{[^}]*display:\s*inline/);
   assert.match(supportCss, /\.support-toc a > span:first-child\s*\{/);
   assert.match(supportCss, /\.support-toc-label\s*\{[^}]*display:\s*block/);
-  assert.match(editorial, /<span className="support-button-label">\{action\.label\}<\/span><span aria-hidden="true">/);
+  assert.match(editorial, /<span className="support-button-label">\{action\.label\}<\/span><\/(?:a|Link)>/);
+  assert.doesNotMatch(editorial, /aria-hidden="true">[↗→]/);
   assert.equal(asset.readUInt32BE(16), 2188, "official wordmark width");
   assert.equal(asset.readUInt32BE(20), 852, "official wordmark height");
   assert.equal(asset[25], 6, "official wordmark should remain RGBA");

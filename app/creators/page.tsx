@@ -28,8 +28,8 @@ export default function CreatorsPage() {
             <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
             <p>Find instrumental music for the edit, the stream or the opening of a new episode. Symbiome is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
             <div className="offer-actions">
-              <Link className="offer-button offer-button-light cta-swipe" href="/catalog">Explore the music <span>↗</span></Link>
-              <a className="offer-inline-link offer-inline-light" href="#creator-plans">Discover pricing <span>↓</span></a>
+              <Link className="offer-button offer-button-light cta-swipe" href="/catalog">Explore the music</Link>
+              <a className="offer-inline-link offer-inline-light cta-swipe" href="#creator-plans">Discover pricing</a>
             </div>
           </div>
         </section>
@@ -81,7 +81,7 @@ export default function CreatorsPage() {
             <p>Search for a specific track by mood, style or intended use. Or begin with eight editor-selected tracks drawn from our main playlists for streams, edits and different kinds of content.</p>
           </div>
           <div data-reveal="scale"><CreatorTrackShowcase /></div>
-          <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link cta-swipe" href="/catalog">Explore the full music library <span>↗</span></Link></div>
+          <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link cta-swipe" href="/catalog">Explore the full music library</Link></div>
         </section>
 
         <section className="offer-flow creator-flow" aria-labelledby="creator-flow-title">
@@ -99,7 +99,7 @@ export default function CreatorsPage() {
 
         <section className="offer-final-cta creator-pricing-cta" id="creator-plans" aria-labelledby="creator-plans-title" data-reveal="group">
           <p>CREATOR PRICING</p><h2 id="creator-plans-title">Discover pricing for your creator channels.</h2>
-          <div className="offer-actions"><Link className="offer-button offer-button-light cta-swipe" href="/pricing">Discover pricing <span>↗</span></Link></div>
+          <div className="offer-actions"><Link className="offer-button offer-button-light cta-swipe" href="/pricing">Discover pricing</Link></div>
         </section>
       </div>
     </PublicShell>

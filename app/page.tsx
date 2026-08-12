@@ -155,7 +155,7 @@ export default function Home() {
                 <li>TikTok and Instagram</li>
                 <li>Podcasts</li>
               </ul>
-              <Link className="home26-button home26-button-primary home26-audience-button cta-swipe" href="/creators">Explore Symbiome for Creators <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-primary home26-audience-button cta-swipe" href="/creators">Explore Symbiome for Creators</Link>
             </div>
           </div>
         </section>
@@ -166,7 +166,7 @@ export default function Home() {
               <p className="home26-eyebrow">For businesses</p>
               <h2 id="home26-business-title">License an existing track or commission original music.</h2>
               <p>Choose music from the catalogue for a campaign, film, game, advert or branded production, or ask an artist to create something new. Tell us where and how it will be used, and we’ll prepare the right quote and licence.</p>
-              <Link className="home26-button home26-button-light home26-audience-button cta-swipe" href="/business">Explore Symbiome for Businesses <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-light home26-audience-button cta-swipe" href="/business">Explore Symbiome for Businesses</Link>
               <ul className="home26-audience-points" aria-label="Business services">
                 <li>Commercial Sync</li>
                 <li>Custom Commission</li>
@@ -193,13 +193,13 @@ export default function Home() {
                 <span className="home26-collection-copy">
                   <strong>{collection.title}</strong>
                   <small>{collection.copy}</small>
-                  <em>Browse collection →</em>
+                  <em>Browse collection</em>
                 </span>
               </Link>
             ))}
           </div>
           <div className="home26-catalogue-action" data-reveal="group">
-            <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Explore the full music library <span aria-hidden="true">→</span></Link>
+            <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Explore the full music library</Link>
           </div>
         </section>
 
@@ -229,7 +229,7 @@ export default function Home() {
                   <li>Videos, streams, podcasts and social content</li>
                   <li>Licence and Content ID support</li>
                 </ul>
-                <span className="home26-plan-detail">View Creator details <span aria-hidden="true">→</span></span>
+                <span className="home26-plan-detail">View Creator details</span>
               </Link>
 
               <Link className="home26-plan-row home26-plan-card-pro" href="/pricing#creator-pricing-title">
@@ -240,7 +240,7 @@ export default function Home() {
                   <li>Multi-channel and team workspace</li>
                   <li>Priority support</li>
                 </ul>
-                <span className="home26-plan-detail">View Pro details <span aria-hidden="true">→</span></span>
+                <span className="home26-plan-detail">View Pro details</span>
               </Link>
 
               <Link className="home26-plan-row home26-plan-row-business" href="/pricing#business-pricing-title">
@@ -251,7 +251,7 @@ export default function Home() {
                   <li>Commission original music</li>
                   <li>Physical places · Coming soon</li>
                 </ul>
-                <span className="home26-plan-detail">View Business details <span aria-hidden="true">→</span></span>
+                <span className="home26-plan-detail">View Business details</span>
               </Link>
             </div>
 
@@ -266,7 +266,7 @@ export default function Home() {
             <p className="home26-eyebrow">Quick answers</p>
             <h2 id="home26-faq-title">What to know before you publish.</h2>
             <p>The short version on listening, licences and who makes the music.</p>
-            <Link className="home26-text-link" href="/help">Explore the full Help Center <span aria-hidden="true">→</span></Link>
+            <Link className="home26-text-link cta-swipe" href="/help">Explore the full Help Center</Link>
           </div>
           <div className="home26-faq-list" data-reveal="right">
             {quickFaqs.map((item) => (

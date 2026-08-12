@@ -170,7 +170,7 @@ export function CatalogueExplorer({ showUseCases = true, editorial = false }: { 
                   <p>{track.artist}</p>
                   <a className="catalogue-v26-preview-source" href={track.spotifyUrl} target="_blank" rel="noreferrer" aria-label={`Open ${track.title} on Spotify`}>
                     <PlatformLogo platform="Spotify" bare />
-                    <span>Spotify ↗</span>
+                    <span>Spotify</span>
                   </a>
                 </div>
                 <Waveform active={isActive} progress={isActive ? preview.progress : 0} trackId={track.id} />
@@ -189,7 +189,7 @@ export function CatalogueExplorer({ showUseCases = true, editorial = false }: { 
                 </button>
                 {hasError && (
                   <span className="catalogue-v26-preview-error" role="status">
-                    Preview unavailable. <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Open on Spotify ↗</a>
+                    Preview unavailable. <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Open on Spotify</a>
                   </span>
                 )}
               </article>

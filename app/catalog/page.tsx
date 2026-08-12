@@ -22,7 +22,7 @@ export default function CataloguePage() {
           <div data-reveal="left">
             <h1>A real music<br />library for creators.</h1>
             <p>Listen, save your direction, then license the music that fits your video, stream, podcast or project. Every track is made by a real artist.</p>
-            <a className="music-v26-button music-v26-button-light cta-swipe" href="#music-library">Open the library <span>↓</span></a>
+            <a className="music-v26-button music-v26-button-light cta-swipe" href="#music-library">Open the library</a>
           </div>
         </section>
 
@@ -47,11 +47,11 @@ export default function CataloguePage() {
                   style={{ objectPosition: playlist.imagePosition ?? "center" }}
                 />
                 <span className="music-playlist-copy"><small>{playlist.genre} · {playlist.moods.slice(0, 2).join(" · ")}</small><strong>{playlist.title}</strong><em>{playlist.description}</em></span>
-                <b>Open on Spotify ↗</b>
+                <b>Open on Spotify</b>
               </a>
             ))}
           </div>
-          <a className="music-playlists-all" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists <span>↗</span></a>
+          <a className="music-playlists-all cta-swipe" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists</a>
         </section>
 
         <section className="catalogue-moods" aria-labelledby="music-moods-title">
@@ -68,7 +68,7 @@ export default function CataloguePage() {
                 <Link className="catalogue-mood-card" href={`/catalog?q=${encodeURIComponent(mood)}#music-library`}>
                   <span className="catalogue-mood-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <strong>{mood}</strong>
-                  <span className="catalogue-mood-action">Browse tracks <i aria-hidden="true">↗</i></span>
+                  <span className="catalogue-mood-action">Browse tracks</span>
                 </Link>
               </li>
             ))}

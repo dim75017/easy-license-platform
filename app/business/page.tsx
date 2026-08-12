@@ -20,8 +20,8 @@ export default function BusinessPage() {
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
             <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">
-              <a className="offer-button offer-button-light cta-swipe" href="#business-brief">Request a custom quote <span>↓</span></a>
-              <a className="offer-inline-link offer-inline-light" href="#business-options">Review business services <span>↓</span></a>
+              <a className="offer-button offer-button-light cta-swipe" href="#business-brief">Request a custom quote</a>
+              <a className="offer-inline-link offer-inline-light cta-swipe" href="#business-options">Review business services</a>
             </div>
           </div>
         </section>
@@ -50,13 +50,13 @@ export default function BusinessPage() {
           </div>
           <div className="business-option-grid" data-reveal="group">
             <Link className="business-option business-option-sync" href="/sync">
-              <span>01 / COMMERCIAL SYNC</span><div><h3>License existing music.</h3><p>For advertising, film, series, games, trailers, branded content and events, with rights scoped to the project.</p><strong>Explore Commercial Sync ↗</strong></div>
+              <span>01 / COMMERCIAL SYNC</span><div><h3>License existing music.</h3><p>For advertising, film, series, games, trailers, branded content and events, with rights scoped to the project.</p><strong>Explore Commercial Sync</strong></div>
             </Link>
             <Link className="business-option business-option-custom" href="#business-brief">
-              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission original music.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Request a custom quote ↓</strong></div>
+              <span>02 / CUSTOM COMMISSION</span><div><h3>Commission original music.</h3><p>Work with human composers and producers from the first creative reference through composition, revisions and final delivery.</p><strong>Request a custom quote</strong></div>
             </Link>
             <Link className="business-option business-option-retail" href="/retail">
-              <span>03 / MUSIC FOR RETAIL · COMING SOON</span><div><h3>Curated music for physical spaces.</h3><p>An easy, affordable way to soundtrack cafés, restaurants, hotels, boutiques, gyms, studios and spas.</p><strong>Join early access ↗</strong></div>
+              <span>03 / MUSIC FOR RETAIL · COMING SOON</span><div><h3>Curated music for physical spaces.</h3><p>An easy, affordable way to soundtrack cafés, restaurants, hotels, boutiques, gyms, studios and spas.</p><strong>Join early access</strong></div>
             </Link>
           </div>
         </section>
@@ -80,7 +80,7 @@ export default function BusinessPage() {
             <p className="offer-kicker"><span>04</span> Music for Retail · Coming soon</p>
             <h2 id="business-retail-title">Licensed background music<br />for physical spaces.</h2>
             <p>The planned Retail service will provide human-made background music for retail stores, offices, restaurants, hotels, gyms and spas. Businesses will be able to choose professionally curated programming through a simple, affordable subscription designed for in-venue use.</p>
-            <Link className="offer-inline-link" href="/retail">Join the first pilot <span>→</span></Link>
+            <Link className="offer-inline-link cta-swipe" href="/retail">Join the first pilot</Link>
           </div>
           <div className="business-retail-images">
             <figure><img src="/images/unsplash/retail/store.webp" alt="Clothing store interior" width={960} height={720} loading="eager" fetchPriority="high" decoding="async" /><figcaption>Retail stores</figcaption></figure>
@@ -108,7 +108,7 @@ export default function BusinessPage() {
           <div data-reveal="left">
             <p className="offer-kicker"><span>06</span> Business FAQ</p>
             <h2 id="business-faq-title">Common licensing questions.</h2>
-            <Link className="offer-faq-help cta-swipe" href="/help#business-licensing">Explore the Help Center <span aria-hidden="true">→</span></Link>
+            <Link className="offer-faq-help cta-swipe" href="/help#business-licensing">Explore the Help Center</Link>
           </div>
           <div className="offer-faq-list" data-reveal="group">
             <details open><summary>What is the difference between Commercial Sync and Custom Commission?<span aria-hidden="true">+</span></summary><p>Commercial Sync licenses an existing catalogue track for a defined project. Custom Commission creates original music around your brief.</p></details>

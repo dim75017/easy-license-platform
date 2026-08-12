@@ -66,8 +66,8 @@ export default function CareersPage() {
             <>
               <p>The best introduction to the work is the service itself. Explore how the catalogue is organised, how creator licensing works and how a commercial music brief is handled.</p>
               <div className="support-route-grid">
-                <Link className="support-route-card" href="/catalog"><small>The catalogue</small><strong>Explore the music and playlists.</strong><span>Open Music →</span></Link>
-                <Link className="support-route-card" href="/business"><small>The service</small><strong>See how a brief becomes a licence.</strong><span>Open For Businesses →</span></Link>
+                <Link className="support-route-card" href="/catalog"><small>The catalogue</small><strong>Explore the music and playlists.</strong><span>Open Music</span></Link>
+                <Link className="support-route-card" href="/business"><small>The service</small><strong>See how a brief becomes a licence.</strong><span>Open For Businesses</span></Link>
               </div>
             </>
           ),

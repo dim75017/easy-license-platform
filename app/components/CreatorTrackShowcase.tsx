@@ -66,7 +66,7 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
                   <span className="creator-editorial-genre">{track.genre}</span>
                   <a href={`https://open.spotify.com/track/${track.spotifyId}`} target="_blank" rel="noreferrer" aria-label={`Open ${track.title} on Spotify`}>
                     <PlatformLogo platform="Spotify" bare />
-                    <span>Spotify ↗</span>
+                    <span>Spotify</span>
                   </a>
                 </span>
               </span>
@@ -83,7 +83,7 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
               </button>
               {hasError && (
                 <span className="creator-editorial-error" role="status">
-                  Preview unavailable. <a href={`https://open.spotify.com/track/${track.spotifyId}`} target="_blank" rel="noreferrer">Open on Spotify ↗</a>
+                  Preview unavailable. <a href={`https://open.spotify.com/track/${track.spotifyId}`} target="_blank" rel="noreferrer">Open on Spotify</a>
                 </span>
               )}
             </article>

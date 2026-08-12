@@ -55,8 +55,8 @@ export default function AboutPage() {
             <>
               <p>Symbiome is designed around two different needs. Creators can choose a straightforward plan for music used on their own channels. Businesses can request rights shaped around a campaign, film, game, brand project or original commission.</p>
               <div className="support-route-grid">
-                <Link className="support-route-card" href="/creators"><small>For Creators</small><strong>Music for the channels you own.</strong><span>Explore the creator service →</span></Link>
-                <Link className="support-route-card" href="/business"><small>For Businesses</small><strong>Music and rights shaped around a brief.</strong><span>Explore business licensing →</span></Link>
+                <Link className="support-route-card" href="/creators"><small>For Creators</small><strong>Music for the channels you own.</strong><span>Explore the creator service</span></Link>
+                <Link className="support-route-card" href="/business"><small>For Businesses</small><strong>Music and rights shaped around a brief.</strong><span>Explore business licensing</span></Link>
               </div>
             </>
           ),

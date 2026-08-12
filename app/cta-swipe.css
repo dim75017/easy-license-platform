@@ -14,6 +14,40 @@
     translate 320ms cubic-bezier(.22, 1, .36, 1);
 }
 
+/* One public CTA silhouette: centred copy, rounded ends and no icon cell. */
+.public-shell .cta-swipe.cta-swipe {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  clip-path: none;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.public-shell .cta-swipe.cta-swipe::after,
+.public-shell .button::after,
+.public-shell .button-primary::after {
+  display: none;
+  content: none;
+}
+
+.public-shell .v5-console-action.cta-swipe {
+  width: 100%;
+  grid-template-columns: none;
+}
+
 .public-shell .cta-swipe::before {
   position: absolute;
   inset: 0;
