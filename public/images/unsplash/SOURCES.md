@@ -30,6 +30,10 @@ The matching `.webp` files are locally resized derivatives used by the Business 
 - `retail/store.jpg` — Unsplash+, https://unsplash.com/photos/ioRyX4xxnWw (Unsplash+ License)
 - `retail/office.jpg` — Unsplash, https://unsplash.com/photos/yWwob8kwOCk (Unsplash License)
 
+## Homepage collection performance derivatives (2026-08-12)
+
+`collection-vlogs-home.webp`, `collection-study-home.webp`, `collection-gaming-home.webp`, `collection-podcasts-home.webp`, `collection-wellness-home.webp` and `collection-food-home.webp` are locally resized WebP derivatives of the corresponding documented sources above. They preserve the same licensed photographs while loading before their staggered card reveals complete.
+
 ## Creators refresh (2026-08-11)
 
 - `creator-piano-human.jpg` — A. C., https://unsplash.com/photos/yOjwoPIj7Fo (Unsplash+ License, original download)

@@ -2567,3 +2567,22 @@
     font-size: 22px;
   }
 }
+
+/* V69: all eight collection frames reveal in one uninterrupted sequence. */
+@media (min-width: 901px) {
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(1) { --item-delay: 0ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(2) { --item-delay: 90ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(3) { --item-delay: 180ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(4) { --item-delay: 270ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(5) { --item-delay: 360ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(6) { --item-delay: 450ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(7) { --item-delay: 540ms; }
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card:nth-child(8) { --item-delay: 630ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-enhanced .home26-collection-grid[data-reveal="group"] > .home26-collection-card {
+    --item-delay: 0ms;
+    transition-delay: 0ms !important;
+  }
+}

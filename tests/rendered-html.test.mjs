@@ -94,7 +94,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.doesNotMatch(artistMarquee, /aria-live/);
   assert.doesNotMatch(page, /In the studio|Human-made production/i);
   assert.doesNotMatch(page, /Dario Lessing/i);
-  assert.match(page, /food-hospitality\.jpg/i);
+  assert.match(page, /collection-food-home\.webp/i);
   assert.doesNotMatch(page, /home26-curation|home26-final/i);
   assert.match(page, /home26-plan-preview[\s\S]*Creator[\s\S]*€6\.67[\s\S]*Pro[\s\S]*€16\.67/i);
   assert.match(page, /home26-plan-row-business[\s\S]*Businesses[\s\S]*Custom quote[\s\S]*href="\/pricing#business-pricing-title"|href="\/pricing#business-pricing-title"[\s\S]*Custom quote/i);
@@ -667,7 +667,7 @@ test("ships the requested Travel and Film collection photographs", async () => {
     ["Travel & Outdoors", "/images/unsplash/collection-travel-bridge.webp", "8sOuWN9ebKk"],
     ["Film, Documentary & Brand", "/images/unsplash/collection-film-camera.webp", "ditCL6ubLRc"],
   ];
-  assert.match(page, /src=\{collection\.image\} alt="" loading="lazy" decoding="async" fetchPriority="low"/);
+  assert.match(page, /src=\{collection\.image\} alt="" width=\{collection\.width\} height=\{collection\.height\} loading="lazy" decoding="async" fetchPriority="low"/);
   let collectionImageBytes = 0;
   for (const [title, image, sourceId] of collectionImages) {
     assert.match(page, new RegExp(`${title}[\\s\\S]{0,260}${image.replaceAll("/", "\\/")}`));
@@ -694,11 +694,48 @@ test("ships the clean Premium Study photograph without the watermarked preview",
   const cleanStudyImage = "/images/unsplash/study-focus-clean.jpg";
   const metadata = await stat(new URL(`public${cleanStudyImage}`, root));
 
-  assert.match(page, /Study, Focus & Tutorials[\s\S]{0,260}study-focus-clean\.jpg/);
+  assert.match(page, /Study, Focus & Tutorials[\s\S]{0,320}collection-study-home\.webp/);
   assert.match(catalogueData, /slug: "study-focus"[\s\S]{0,260}study-focus-clean\.jpg/);
   assert.doesNotMatch(`${page}\n${catalogueData}`, /\/images\/unsplash\/study\.jpg/);
   assert.match(sources, /study-focus-clean\.jpg[\s\S]{0,220}JT5IUQHtL7E[\s\S]{0,220}original Premium download without watermark/i);
   assert.ok(metadata.size <= 140_000, "the clean Study photograph should stay below 140 KB");
+});
+
+test("reveals every homepage collection frame smoothly and in order", async () => {
+  const [page, homeCss, sources] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/home-v26.css"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const collectionAssets = [
+    "collection-travel-bridge.webp",
+    "collection-vlogs-home.webp",
+    "collection-study-home.webp",
+    "collection-gaming-home.webp",
+    "collection-podcasts-home.webp",
+    "collection-film-camera.webp",
+    "collection-wellness-home.webp",
+    "collection-food-home.webp",
+  ];
+  const delayRules = [...homeCss.matchAll(/\.motion-enhanced \.home26-collection-grid\[data-reveal="group"\] > \.home26-collection-card:nth-child\((\d+)\)\s*\{\s*--item-delay:\s*(\d+)ms;\s*\}/g)]
+    .map((match) => ({ index: Number(match[1]), delay: Number(match[2]) }));
+
+  assert.match(page, /className="home26-collection-grid" data-reveal="group"/);
+  assert.deepEqual(delayRules.map(({ index }) => index), [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.equal(delayRules[0].delay, 0);
+  assert.ok(delayRules.every((rule, index) => index === 0 || rule.delay > delayRules[index - 1].delay));
+  assert.ok(delayRules.at(-1).delay <= 650, "the final frame should not feel delayed");
+  assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.home26-collection-grid\[data-reveal="group"\] > \.home26-collection-card\s*\{[^}]*--item-delay:\s*0ms;[^}]*transition-delay:\s*0ms !important;/s);
+
+  let totalBytes = 0;
+  for (const asset of collectionAssets) {
+    assert.ok(page.includes(asset), `${asset} should be rendered on the homepage`);
+    const metadata = await stat(new URL(`public/images/unsplash/${asset}`, root));
+    assert.ok(metadata.size <= 160_000, `${asset} should load before its frame reveal`);
+    totalBytes += metadata.size;
+  }
+  assert.ok(totalBytes <= 800_000, `homepage collection imagery should stay lightweight, received ${totalBytes} bytes`);
+  assert.match(sources, /Homepage collection performance derivatives[\s\S]{0,600}collection-food-home\.webp/i);
 });
 
 test("ships the requested homepage Creator photograph and documents its source", async () => {

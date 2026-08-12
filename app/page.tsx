@@ -10,48 +10,64 @@ const useCollections = [
     copy: "Open, atmospheric music for journeys, landscapes and destination films.",
     slug: "travel",
     image: "/images/unsplash/collection-travel-bridge.webp",
+    width: 1000,
+    height: 1250,
   },
   {
     title: "Vlogs & Everyday Life",
     copy: "Warm, unobtrusive tracks for routines, stories and day-to-day content.",
     slug: "lifestyle-vlogs",
-    image: "/images/unsplash/vlogger.jpg",
+    image: "/images/unsplash/collection-vlogs-home.webp",
+    width: 1600,
+    height: 900,
   },
   {
     title: "Study, Focus & Tutorials",
     copy: "Steady instrumental music that supports explanation without competing with it.",
     slug: "study-focus",
-    image: "/images/unsplash/study-focus-clean.jpg",
+    image: "/images/unsplash/collection-study-home.webp",
+    width: 1600,
+    height: 1068,
   },
   {
     title: "Livestreams & Gaming",
     copy: "Long-form background music for live sessions, gameplay and community streams.",
     slug: "gaming-streaming",
-    image: "/images/unsplash/streamer.jpg",
+    image: "/images/unsplash/collection-gaming-home.webp",
+    width: 1600,
+    height: 1065,
   },
   {
     title: "Podcasts & Interviews",
     copy: "Intros, transitions and subtle beds for conversation-led formats.",
     slug: "podcasts",
-    image: "/images/unsplash/podcast-home.jpg",
+    image: "/images/unsplash/collection-podcasts-home.webp",
+    width: 1600,
+    height: 1068,
   },
   {
     title: "Film, Documentary & Brand",
     copy: "Narrative music for films, visual essays, launches and branded productions.",
     slug: "cinematic",
     image: "/images/unsplash/collection-film-camera.webp",
+    width: 1500,
+    height: 1000,
   },
   {
     title: "Wellness & Slow Living",
     copy: "Calm, spacious music for meditation, movement, rest and quiet rituals.",
     slug: "wellness",
-    image: "/images/unsplash/massage.jpg",
+    image: "/images/unsplash/collection-wellness-home.webp",
+    width: 1600,
+    height: 1068,
   },
   {
     title: "Food & Hospitality",
     copy: "Warm music for recipes, cafés, restaurants and welcoming spaces.",
     slug: "food-hospitality",
-    image: "/images/unsplash/food-hospitality.jpg",
+    image: "/images/unsplash/collection-food-home.webp",
+    width: 1600,
+    height: 1067,
   },
 ];
 
@@ -172,7 +188,7 @@ export default function Home() {
           <div className="home26-collection-grid" data-reveal="group">
             {useCollections.map((collection) => (
               <Link className="home26-collection-card" href={`/catalog?use=${collection.slug}#music-library`} key={collection.title}>
-                <img src={collection.image} alt="" loading="lazy" decoding="async" fetchPriority="low" />
+                <img src={collection.image} alt="" width={collection.width} height={collection.height} loading="lazy" decoding="async" fetchPriority="low" />
                 <span className="home26-collection-overlay" />
                 <span className="home26-collection-copy">
                   <strong>{collection.title}</strong>
