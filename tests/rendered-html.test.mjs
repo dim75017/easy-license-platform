@@ -1217,9 +1217,10 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
   assert.match(brandCss, /\.footer-lofi-credit\s*\{[^}]*gap:\s*\.12em;/s);
   assert.match(brandCss, /\.v5-lofi-signature\s*\{[^}]*gap:\s*\.12em;/s);
   assert.match(brandCss, /\.brand-powered \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.08em;[^}]*transform:\s*translateY\(\.24em\);/s);
-  assert.match(brandCss, /\.home26-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.15em;[^}]*transform:\s*translateY\(\.24em\);/s);
-  assert.match(brandCss, /\.offer-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.22em;[^}]*transform:\s*translateY\(\.24em\);/s);
-  assert.match(brandCss, /\.v5-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.08em;[^}]*transform:\s*translateY\(\.24em\);/s);
+  assert.match(brandCss, /\.home26-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.15em;[^}]*color:\s*#fff9f1;[^}]*transform:\s*translateY\(\.24em\);/s);
+  assert.match(brandCss, /\.offer-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.22em;[^}]*color:\s*#fff9f1;[^}]*transform:\s*translateY\(\.24em\);/s);
+  assert.match(brandCss, /\.v5-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.08em;[^}]*color:\s*#fff9f1;[^}]*transform:\s*translateY\(\.24em\);/s);
+  assert.doesNotMatch(brandCss, /\.(?:home26|offer|v5)-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*(?:#f2b5a0|var\(--marketing-clay-soft\)|var\(--symbiose-warm\))/s, "banner wordmarks should never inherit the orange accent");
   assert.match(footer, /className="footer-lofi-credit">Powered by<LofiGirlWordmark \/>/);
   assert.match(home, /home26-lofi-signature">Symbiome · Powered by<LofiGirlWordmark \/>/);
   assert.match(creators, /offer-lofi-signature[\s\S]{0,180}offer-powered-lockup[\s\S]{0,120}<LofiGirlWordmark \/>/);
