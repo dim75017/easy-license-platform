@@ -1169,8 +1169,9 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
   assert.equal(asset[25], 6, "official wordmark should remain RGBA");
   assert.ok(asset.length <= 80_000, "official wordmark should stay lightweight");
 
-  assert.match(brand, /className="brand-powered">by <LofiGirlWordmark decorative \/>/);
+  assert.match(brand, /className="brand-powered">by<LofiGirlWordmark decorative \/>/);
   assert.doesNotMatch(brand, />by Lofi Girl</);
+  assert.match(brandCss, /\.brand-powered\s*\{[^}]*gap:\s*\.12em;/s);
   assert.match(brandCss, /\.brand-powered \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.08em;[^}]*transform:\s*translateY\(\.24em\);/s);
   assert.match(brandCss, /\.home26-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.15em;[^}]*transform:\s*translateY\(\.24em\);/s);
   assert.match(brandCss, /\.offer-lofi-signature \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.22em;[^}]*transform:\s*translateY\(\.24em\);/s);

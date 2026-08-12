@@ -601,7 +601,7 @@ body {
   white-space: nowrap;
 }
 
-.brand-powered { gap: .38em; }
+.brand-powered { gap: .12em; }
 .brand-powered .lofi-girl-wordmark {
   --lofi-wordmark-height: 1.08em;
   color: currentColor;
