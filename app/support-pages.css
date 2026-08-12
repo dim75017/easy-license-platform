@@ -38,6 +38,7 @@
 .support-lead { max-width: 780px; margin: 34px 0 0; color: rgba(255,249,241,.74); font-size: clamp(18px, 1.6vw, 22px); line-height: 1.55; }
 .support-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
 .support-button { display: inline-flex; min-height: 52px; align-items: center; gap: 18px; border: 1px solid #fff9f1; border-radius: 999px; padding: 0 22px; background: #fff9f1; color: #292832; font-size: 15px; font-weight: 760; text-decoration: none; }
+.support-button-label { display: inline; }
 .support-button > span:last-child { transition: transform .25s ease; }
 .support-button:hover > span:last-child { transform: translateX(4px); }
 .support-button-secondary { background: transparent; color: #fff9f1; }
@@ -53,7 +54,7 @@
 .support-toc > p { margin: 0; border-bottom: 1px solid var(--support-rule); padding: 18px 0; color: rgba(41,40,50,.52); font-size: 12px; font-weight: 780; letter-spacing: .08em; text-transform: uppercase; }
 .support-toc a { display: grid; grid-template-columns: 34px 1fr; align-items: baseline; border-bottom: 1px solid var(--support-rule); padding: 17px 0; color: rgba(41,40,50,.72); font-size: 15px; font-weight: 650; text-decoration: none; }
 .support-toc a > span:first-child { color: rgba(41,40,50,.4); font-size: 11px; letter-spacing: .08em; }
-.support-toc-label { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .12em; color: inherit; font-size: inherit; letter-spacing: inherit; }
+.support-toc-label { display: block; color: inherit; font-size: inherit; letter-spacing: inherit; }
 .support-toc a:hover { color: #292832; }
 
 .support-content > section { display: grid; scroll-margin-top: 110px; grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr); gap: clamp(40px, 6vw, 90px); border-top: 1px solid var(--support-rule); padding: clamp(52px, 6vw, 88px) 0; }

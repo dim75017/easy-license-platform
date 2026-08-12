@@ -1113,7 +1113,10 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
   assert.match(offerCss, /\.gateway-kicker > span:first-child,\s*\.offer-kicker > span:first-child\s*\{/);
   assert.doesNotMatch(offerCss, /^\.gateway-kicker > span,\s*\n\.offer-kicker > span\s*\{/m);
   assert.match(supportCss, /\.support-button > span:last-child\s*\{[^}]*transition:/);
+  assert.match(supportCss, /\.support-button-label\s*\{[^}]*display:\s*inline/);
   assert.match(supportCss, /\.support-toc a > span:first-child\s*\{/);
+  assert.match(supportCss, /\.support-toc-label\s*\{[^}]*display:\s*block/);
+  assert.match(editorial, /<span className="support-button-label">\{action\.label\}<\/span><span aria-hidden="true">/);
   assert.equal(asset.readUInt32BE(16), 2188, "official wordmark width");
   assert.equal(asset.readUInt32BE(20), 852, "official wordmark height");
   assert.equal(asset[25], 6, "official wordmark should remain RGBA");

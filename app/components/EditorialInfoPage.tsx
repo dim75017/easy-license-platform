@@ -21,9 +21,9 @@ export type EditorialSection = {
 function ActionLink({ action }: { action: EditorialAction }) {
   const className = action.secondary ? "support-button support-button-secondary cta-swipe" : "support-button cta-swipe";
   if (action.external) {
-    return <a className={className} href={action.href} target="_blank" rel="noreferrer" aria-label={action.ariaLabel}>{action.label}<span aria-hidden="true">↗</span></a>;
+    return <a className={className} href={action.href} target="_blank" rel="noreferrer" aria-label={action.ariaLabel}><span className="support-button-label">{action.label}</span><span aria-hidden="true">↗</span></a>;
   }
-  return <Link className={className} href={action.href} aria-label={action.ariaLabel}>{action.label}<span aria-hidden="true">→</span></Link>;
+  return <Link className={className} href={action.href} aria-label={action.ariaLabel}><span className="support-button-label">{action.label}</span><span aria-hidden="true">→</span></Link>;
 }
 
 export function EditorialInfoPage({
