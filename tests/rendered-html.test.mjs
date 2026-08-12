@@ -190,7 +190,12 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search the library<br \/>by mood, style or use\./);
   assert.match(cataloguePage, /<CatalogueExplorer showUseCases=\{false\} editorial \/>/);
   assert.doesNotMatch(cataloguePage, /<CreatorTrackShowcase/);
-  assert.match(catalogueCss, /V44: the full library uses the same editorial rhythm as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
+  assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
+  assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
+  assert.match(catalogueCss, /\.music-library-editorial-heading h2\s*\{[^}]*font-size:\s*clamp\(45px, 5\.2vw, 82px\);[^}]*line-height:\s*\.91/s);
+  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track\s*\{[\s\S]{0,520}background:\s*var\(--music-cream\);[\s\S]{0,120}color:\s*var\(--music-night\)/);
+  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track:hover,[\s\S]{0,180}background:\s*#f1e5d8/);
+  assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-listen\s*\{[\s\S]{0,420}background:\s*var\(--music-night\);[\s\S]{0,100}color:\s*var\(--music-cream\)/);
   assert.match(catalogueCss, /\.music-library-editorial \.catalogue-v26-track-list\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 760px\)[\s\S]{0,180}\.music-library-editorial \.catalogue-v26-track-list\s*\{[\s\S]{0,100}grid-template-columns:\s*1fr/);
   assert.match(catalogueCss, /@media \(max-width: 560px\)[\s\S]{0,480}\.music-library-editorial-heading h2\s*\{[\s\S]{0,120}font-size:\s*clamp\(40px, 12vw, 52px\)/);
@@ -912,6 +917,8 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(brandCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--symbiose-oat\)/s);
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track\s*\{[^}]*background-color:\s*var\(--symbiose-paper\)/s);
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track:hover,[\s\S]{0,180}background-color:\s*#f1e5d8/);
+  assert.match(brandCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--symbiose-oat\);[^}]*color:\s*var\(--symbiose-night\)/s);
+  assert.match(brandCss, /\.music-library-editorial \.catalogue-v26-listen:hover\s*\{[^}]*background:\s*#464551/s);
   assert.doesNotMatch(brandCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--symbiose-warm\)/s);
   assert.match(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--marketing-paper\)/s);
   assert.match(catalogueCss, /\.catalogue-moods\s*\{[^}]*background:\s*var\(--music-paper\)/s);

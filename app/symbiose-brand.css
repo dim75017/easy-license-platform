@@ -339,13 +339,12 @@ body {
 }
 
 .music-library-editorial {
-  background:
-    radial-gradient(circle at 92% 7%, rgba(224, 99, 67, .24), transparent 28%),
-    radial-gradient(circle at 7% 94%, rgba(224, 99, 67, .08), transparent 25%),
-    var(--symbiose-night);
+  background: var(--symbiose-oat);
+  color: var(--symbiose-night);
 }
 
-.music-library-editorial .catalogue-v26-listen:hover,
+.music-library-editorial .catalogue-v26-listen:hover { background: #464551; }
+
 .pricing-v39 .business-coming-soon {
   background: var(--symbiose-paper);
 }
