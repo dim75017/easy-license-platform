@@ -455,12 +455,19 @@ body {
 .public-shell .site-header .site-nav > a {
   min-height: 56px;
   padding-inline: 20px;
+  color: #292832;
   font-family: var(--font-ui);
   font-size: 20px;
   font-weight: 700;
   font-kerning: normal;
   font-synthesis: none;
   text-rendering: geometricPrecision;
+}
+
+@media (min-width: 1221px) {
+  .public-shell .site-header .site-nav {
+    gap: clamp(12px, 1vw, 18px);
+  }
 }
 
 @media (max-width: 1100px) and (min-width: 981px) {
