@@ -1055,10 +1055,10 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.match(swipeCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cta-swipe::before\s*\{[^}]*transition:\s*none/s);
   assert.match(swipeCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cta-swipe:active,[\s\S]*?rotate:\s*0deg !important;[\s\S]*?scale:\s*1 !important/s);
   assert.match(swipeCss, /@media \(forced-colors:\s*active\)[\s\S]*?\.cta-swipe::before\s*\{[^}]*display:\s*none/s);
-  assert.match(swipeCss, /--cta-swipe-fill:\s*color-mix\(in srgb, var\(--symbiose-night\) 28%, var\(--symbiose-paper\)\)/);
-  assert.match(swipeCss, /--cta-swipe-fill:\s*color-mix\(in srgb, var\(--symbiose-paper\) 24%, var\(--symbiose-night\)\)/);
+  assert.match(swipeCss, /--cta-swipe-fill:\s*var\(--symbiose-warm\)/, "every CTA should fill with the Symbiome orange");
+  assert.doesNotMatch(swipeCss, /--cta-swipe-fill:\s*color-mix/, "the orange swipe should not be diluted with navy or paper");
   assert.doesNotMatch(swipeCss, /^\s*color\s+\d+ms/m, "the label ink stays constant while the colour front crosses it");
-  assert.doesNotMatch(swipeCss, /#e06343|--symbiose-warm/, "the CTA swipe should use only navy and paper, never the aggressive orange");
+  assert.doesNotMatch(swipeCss, /--cta-swipe-fill:\s*#[0-9a-f]{6}/i, "the swipe should stay tied to the shared brand token");
   assert.match(swipeCss, /\.business-quote \.cta-swipe\.button-primary\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px var\(--symbiose-night\)/s);
 
   assert.equal((home.match(/cta-swipe/g) ?? []).length, 6, "all six homepage CTA buttons should swipe");

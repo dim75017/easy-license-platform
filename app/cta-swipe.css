@@ -1,6 +1,6 @@
 /* Shared colour-swipe motion for intentional public calls to action. */
 .public-shell .cta-swipe {
-  --cta-swipe-fill: color-mix(in srgb, var(--symbiose-night) 28%, var(--symbiose-paper));
+  --cta-swipe-fill: var(--symbiose-warm);
   --cta-swipe-ink: var(--symbiose-night);
   --cta-swipe-border: var(--symbiose-night);
   position: relative;
@@ -25,7 +25,7 @@
   transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
 }
 
-/* Light actions deepen; dark and outline actions lift without changing label ink. */
+/* The orange brand front crosses every CTA while each resting label keeps its ink. */
 .public-shell .cta-swipe:is(
   .home26-button-primary,
   .home26-button-secondary,
@@ -38,7 +38,6 @@
 .public-shell .pricing-v39-business-form .cta-swipe.button-primary,
 .public-shell .business-quote .cta-swipe.button-primary,
 .public-shell .creators-landing .creator-pricing-cta .cta-swipe.offer-button-light {
-  --cta-swipe-fill: color-mix(in srgb, var(--symbiose-paper) 24%, var(--symbiose-night));
   --cta-swipe-ink: var(--symbiose-paper);
   --cta-swipe-border: var(--symbiose-paper);
 }
