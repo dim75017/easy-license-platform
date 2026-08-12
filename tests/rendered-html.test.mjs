@@ -992,6 +992,7 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track\s*\{[^}]*background-color:\s*var\(--symbiose-paper\)/s);
   assert.match(brandCss, /\.creators-landing \.creator-editorial-track:hover,[\s\S]{0,180}background-color:\s*#f1e5d8/);
   assert.match(brandCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--symbiose-oat\);[^}]*color:\s*var\(--symbiose-night\)/s);
+  assert.match(brandCss, /V7: every form dropdown uses the same soft, rounded outline\.[\s\S]*?\.public-shell \.lead-form select\s*\{[^}]*border-radius:\s*20px;/s);
   assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track:hover \.creator-editorial-side i,[\s\S]{0,180}background:\s*#464551/s);
   assert.doesNotMatch(brandCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--symbiose-warm\)/s);
   assert.match(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--marketing-paper\)/s);

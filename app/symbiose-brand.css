@@ -676,3 +676,8 @@ body {
     --lofi-wordmark-height: .72em;
   }
 }
+
+/* V7: every form dropdown uses the same soft, rounded outline. */
+.public-shell .lead-form select {
+  border-radius: 20px;
+}
