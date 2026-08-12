@@ -688,3 +688,10 @@ body {
 .public-shell .lead-form select {
   border-radius: 20px;
 }
+
+/* V8: the sticky header lockup keeps one height through the desktop scroll threshold. */
+@media (min-width: 801px) {
+  .page-scrolled .public-shell .site-header .site-header-inner {
+    min-height: 90px;
+  }
+}

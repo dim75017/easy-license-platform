@@ -1250,6 +1250,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /V5: the public header stays full-width and sticky in every scroll state\.[\s\S]{0,160}\.public-shell\s*\{[^}]*overflow:\s*clip/s);
   assert.match(symbioseBrandCss, /V5: the public header stays full-width and sticky in every scroll state\.[\s\S]{0,300}\.public-shell \.site-header\s*\{[^}]*position:\s*sticky;[^}]*top:\s*0;/s);
   assert.match(symbioseBrandCss, /@media \(min-width:\s*761px\)[\s\S]{0,180}\.public-shell \.site-header \.site-header-inner\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin-inline:\s*0;[^}]*padding-inline:\s*clamp\(28px, 4vw, 76px\)/s);
+  assert.match(symbioseBrandCss, /V8: the sticky header lockup keeps one height through the desktop scroll threshold\.[\s\S]{0,220}@media \(min-width:\s*801px\)[\s\S]{0,160}\.page-scrolled \.public-shell \.site-header \.site-header-inner\s*\{[^}]*min-height:\s*90px;/s);
+  const stableHeaderRule = symbioseBrandCss.slice(symbioseBrandCss.indexOf("/* V8:"));
+  assert.doesNotMatch(stableHeaderRule, /lofi-girl-wordmark|font-size|--lofi-wordmark-height|transform|scale/, "scroll stability should not resize the wordmark itself");
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);
