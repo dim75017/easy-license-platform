@@ -602,7 +602,11 @@ body {
 }
 
 .brand-powered { gap: .38em; }
-.brand-powered .lofi-girl-wordmark { --lofi-wordmark-height: 1.08em; color: currentColor; }
+.brand-powered .lofi-girl-wordmark {
+  --lofi-wordmark-height: 1.08em;
+  color: currentColor;
+  transform: translateY(.12em);
+}
 
 .home26-lofi-signature {
   gap: .48em;

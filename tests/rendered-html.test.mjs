@@ -1125,6 +1125,7 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
 
   assert.match(brand, /className="brand-powered">by <LofiGirlWordmark decorative \/>/);
   assert.doesNotMatch(brand, />by Lofi Girl</);
+  assert.match(brandCss, /\.brand-powered \.lofi-girl-wordmark\s*\{[^}]*--lofi-wordmark-height:\s*1\.08em;[^}]*transform:\s*translateY\(\.12em\);/s);
   assert.match(footer, /className="footer-lofi-credit">Powered by <LofiGirlWordmark \/>/);
   assert.match(home, /home26-lofi-signature[\s\S]{0,120}<LofiGirlWordmark \/>/);
   assert.match(creators, /offer-lofi-signature[\s\S]{0,180}<LofiGirlWordmark \/>/);
