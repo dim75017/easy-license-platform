@@ -244,20 +244,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="home26-closing" aria-labelledby="home26-closing-title">
-          <div className="home26-closing-inner">
-            <div className="home26-closing-copy" data-reveal="left">
-              <p className="home26-eyebrow">Start with the music</p>
-              <h2 id="home26-closing-title">Find the music your project needs.</h2>
-              <p>Browse the catalogue first. Then choose a creator plan or send us a business brief. The licensing route stays simple from the first listen to publication.</p>
-            </div>
-            <div className="home26-actions" data-reveal="right">
-              <Link className="home26-button home26-button-light" href="/catalog">Browse music</Link>
-              <Link className="home26-button home26-button-outline-light" href="/pricing">View pricing</Link>
-            </div>
-          </div>
-        </section>
-
         <section className="home26-section home26-faq home26-quick-faq" aria-labelledby="home26-faq-title">
           <div className="home26-section-heading" data-reveal="left">
             <p className="home26-eyebrow">Quick answers</p>
