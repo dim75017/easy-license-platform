@@ -615,6 +615,7 @@ body {
 .home26-lofi-signature .lofi-girl-wordmark {
   --lofi-wordmark-height: 1.15em;
   color: #f2b5a0;
+  transform: translateY(.24em);
 }
 
 .offer-lofi-signature {
@@ -629,6 +630,7 @@ body {
 .offer-lofi-signature .lofi-girl-wordmark {
   --lofi-wordmark-height: 1.22em;
   color: var(--marketing-clay-soft);
+  transform: translateY(.24em);
 }
 
 .footer-lofi-credit {
@@ -646,6 +648,7 @@ body {
 
 .v5-lofi-signature .lofi-girl-wordmark {
   --lofi-wordmark-height: 1.08em;
+  transform: translateY(.24em);
 }
 
 .lofi-girl-wordmark-heading {
