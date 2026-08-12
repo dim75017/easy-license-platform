@@ -166,6 +166,11 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(homeCss, /V60: the homepage presents all three routes[\s\S]{0,1600}\.home26-plan-row\s*\{[\s\S]{0,320}display:\s*flex;[\s\S]{0,420}flex-direction:\s*column/);
   assert.match(homeCss, /\.home26-plan-row\s*\{[\s\S]{0,420}border-radius:\s*30px/);
   assert.match(homeCss, /V67: a short, warm FAQ[\s\S]{0,500}\.home26-quick-faq\s*\{[^}]*width:\s*100%;[^}]*background:\s*var\(--home26-oat\)/s);
+  assert.match(homeCss, /V69: the closing CTA and FAQ share one editorial grid[\s\S]{0,260}\.home26-closing-inner,[\s\S]{0,80}\.home26-quick-faq\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.04fr\) minmax\(420px, \.96fr\);[^}]*gap:\s*clamp\(48px, 6vw, 90px\)/s);
+  assert.match(homeCss, /\.home26-closing \.home26-actions\s*\{[^}]*justify-content:\s*flex-start/s);
+  assert.match(homeCss, /\.home26-quick-faq\s*\{[^}]*padding:\s*clamp\(72px, 6\.5vw, 104px\) max\(clamp\(24px, 4vw, 76px\), calc\(\(100% - 1440px\) \/ 2\)\)/s);
+  assert.match(homeCss, /@media \(max-width: 980px\)[\s\S]{0,220}\.home26-closing-inner,[\s\S]{0,80}\.home26-quick-faq\s*\{[^}]*grid-template-columns:\s*1fr;[^}]*gap:\s*44px/s);
+  assert.match(homeCss, /@media \(max-width: 900px\)[\s\S]{0,160}\.home26-quick-faq\s*\{[^}]*padding-block:\s*82px/s);
   assert.match(homeCss, /\.home26-quick-faq \.home26-faq-list summary:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--home26-night\)/s);
   assert.match(homeCss, /\.home26-closing\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,420}var\(--home26-night\)/);
   assert.match(homeCss, /V58: primary actions use the same navy[\s\S]{0,260}\.home26 \.home26-button-primary\s*\{[\s\S]{0,180}background:\s*var\(--home26-night\)/);
