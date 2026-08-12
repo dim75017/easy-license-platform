@@ -2986,3 +2986,8 @@
     transition: none;
   }
 }
+
+/* V68: the Business request stage is square while its form remains a card. */
+.business-landing .business-quote {
+  border-radius: 0;
+}
