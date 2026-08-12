@@ -119,7 +119,6 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="home26-hero-credit">A catalogue made by artists, for the people making the work.</p>
         </section>
 
         <CatalogueFacts />

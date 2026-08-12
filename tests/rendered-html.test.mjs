@@ -25,6 +25,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
   assert.match(page, /Powered by Lofi Girl/i);
   assert.match(page, /Browse more than 10,000 instrumental and background tracks created by real artists/i);
+  assert.doesNotMatch(page, /home26-hero-credit|A catalogue made by artists, for the people making the work/i);
   assert.doesNotMatch(page, /Music team[\s\S]*professional review and detailed tagging/i);
   assert.doesNotMatch(page, /Listen to the catalogue before choosing a licence|Open the music library/i);
   for (const useCase of [
