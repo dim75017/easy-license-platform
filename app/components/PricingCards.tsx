@@ -32,7 +32,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <li><i>✓</i> Content ID support workflow</li>
             {expanded && <li><i>✓</i> New eligible releases added regularly</li>}
           </ul>
-          <Link className="button button-primary button-full" href="/app">License my channel</Link>
+          <Link className="button button-primary button-full cta-swipe" href="/app">License my channel</Link>
           <p className="fine-print">For individual creators publishing their own content.</p>
         </article>
 
@@ -54,7 +54,7 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <li><i>✓</i> Priority Content ID support</li>
             {expanded && <li><i>✓</i> Centralised downloads and licences</li>}
           </ul>
-          <Link className="button button-light button-full" href="/app">License my channels</Link>
+          <Link className="button button-light button-full cta-swipe" href="/app">License my channels</Link>
           <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Symbiome for Business.</p>
         </article>
 

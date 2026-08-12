@@ -19,7 +19,7 @@ export default function BusinessPage() {
             <h1 data-reveal="hero-title">Music with the rights<br /><em>your project actually needs.</em></h1>
             <p>Every Business licence is quoted around the actual project. Tell us what you are making and we will help choose the right route: clear an existing track or commission something original, with the rights shaped around the media, territories, term and exclusivity.</p>
             <div className="offer-actions">
-              <a className="offer-button offer-button-light" href="#business-brief">Request a custom quote <span>↓</span></a>
+              <a className="offer-button offer-button-light cta-swipe" href="#business-brief">Request a custom quote <span>↓</span></a>
               <a className="offer-inline-link offer-inline-light" href="#business-options">Review business services <span>↓</span></a>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function BusinessPage() {
           <div data-reveal="left">
             <p className="offer-kicker"><span>06</span> Business FAQ</p>
             <h2 id="business-faq-title">Common licensing questions.</h2>
-            <Link className="offer-faq-help" href="/help#business-licensing">Explore the Help Center <span aria-hidden="true">→</span></Link>
+            <Link className="offer-faq-help cta-swipe" href="/help#business-licensing">Explore the Help Center <span aria-hidden="true">→</span></Link>
           </div>
           <div className="offer-faq-list" data-reveal="group">
             <details open><summary>What is the difference between Commercial Sync and Custom Commission?<span aria-hidden="true">+</span></summary><p>Commercial Sync licenses an existing catalogue track for a defined project. Custom Commission creates original music around your brief.</p></details>

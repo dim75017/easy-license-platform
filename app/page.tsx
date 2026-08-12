@@ -114,8 +114,8 @@ export default function Home() {
               Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
             </p>
             <div className="home26-actions">
-              <Link className="home26-button home26-button-primary" href="/catalog">Browse music</Link>
-              <Link className="home26-button home26-button-secondary" href="#services">Explore licensing</Link>
+              <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Browse music</Link>
+              <Link className="home26-button home26-button-secondary cta-swipe" href="#services">Explore licensing</Link>
             </div>
           </div>
 
@@ -138,7 +138,7 @@ export default function Home() {
                 <li>TikTok and Instagram</li>
                 <li>Podcasts</li>
               </ul>
-              <Link className="home26-button home26-button-primary home26-audience-button" href="/creators">Explore Symbiome for Creators <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-primary home26-audience-button cta-swipe" href="/creators">Explore Symbiome for Creators <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </section>
@@ -149,7 +149,7 @@ export default function Home() {
               <p className="home26-eyebrow">For businesses</p>
               <h2 id="home26-business-title">License an existing track or commission original music.</h2>
               <p>Choose music from the catalogue for a campaign, film, game, advert or branded production, or ask an artist to create something new. Tell us where and how it will be used, and we’ll prepare the right quote and licence.</p>
-              <Link className="home26-button home26-button-light home26-audience-button" href="/business">Explore Symbiome for Businesses <span aria-hidden="true">→</span></Link>
+              <Link className="home26-button home26-button-light home26-audience-button cta-swipe" href="/business">Explore Symbiome for Businesses <span aria-hidden="true">→</span></Link>
               <ul className="home26-audience-points" aria-label="Business services">
                 <li>Commercial Sync</li>
                 <li>Custom Commission</li>
@@ -182,7 +182,7 @@ export default function Home() {
             ))}
           </div>
           <div className="home26-catalogue-action" data-reveal="group">
-            <Link className="home26-button home26-button-primary" href="/catalog">Explore the full music library <span aria-hidden="true">→</span></Link>
+            <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Explore the full music library <span aria-hidden="true">→</span></Link>
           </div>
         </section>
 
@@ -239,7 +239,7 @@ export default function Home() {
             </div>
 
             <div className="home26-plan-action" data-reveal="up">
-              <Link className="home26-button home26-button-primary" href="/pricing">Compare all pricing and licensing options</Link>
+              <Link className="home26-button home26-button-primary cta-swipe" href="/pricing">Compare all pricing and licensing options</Link>
             </div>
           </div>
         </section>

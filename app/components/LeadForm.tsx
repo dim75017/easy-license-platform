@@ -203,7 +203,7 @@ export function LeadForm({ type, initialBusinessNeed = "existing_track" }: { typ
           )}
         </>
       )}
-      <button className="button button-primary button-full" type="submit" disabled={state === "sending"}>
+      <button className="button button-primary button-full cta-swipe" type="submit" disabled={state === "sending"}>
         {state === "sending"
           ? "Sending…"
           : isGuidedBusinessForm && businessNeed === "physical_places"

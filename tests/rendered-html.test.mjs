@@ -1003,6 +1003,80 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.doesNotMatch(supportCss, /rgba\(150, 180, 255|rgba\(164, 178, 206/i);
 });
 
+test("gives every public call to action one accessible colour-swipe interaction", async () => {
+  const [
+    layout,
+    swipeCss,
+    home,
+    creators,
+    business,
+    catalogue,
+    retail,
+    leadForm,
+    pricingCards,
+    siteHeader,
+    editorialInfoPage,
+    help,
+    licenseBooth,
+    trackShowcase,
+    railControls,
+  ] = await Promise.all([
+    source("app/layout.tsx"),
+    source("app/cta-swipe.css"),
+    source("app/page.tsx"),
+    source("app/creators/page.tsx"),
+    source("app/business/page.tsx"),
+    source("app/catalog/page.tsx"),
+    source("app/retail/page.tsx"),
+    source("app/components/LeadForm.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("app/components/SiteHeader.tsx"),
+    source("app/components/EditorialInfoPage.tsx"),
+    source("app/help/page.tsx"),
+    source("app/components/LicenseBooth.tsx"),
+    source("app/components/CreatorTrackShowcase.tsx"),
+    source("app/components/HorizontalRailControls.tsx"),
+  ]);
+
+  assert.match(layout, /import "\.\/cta-swipe\.css"/);
+  assert.ok(layout.indexOf('import "./support-pages.css"') < layout.indexOf('import "./cta-swipe.css"'), "the swipe layer should load after every component skin");
+  assert.match(swipeCss, /\.public-shell \.cta-swipe\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
+  assert.match(swipeCss, /\.public-shell \.cta-swipe::before\s*\{[^}]*inset:\s*0;[^}]*z-index:\s*-1;[^}]*background:\s*var\(--cta-swipe-fill\);[^}]*transform:\s*translate3d\(-101%, 0, 0\);[^}]*transition:\s*transform 520ms cubic-bezier\(\.22, 1, \.36, 1\)/s);
+  assert.match(swipeCss, /\.public-shell \.cta-swipe::before\s*\{[^}]*pointer-events:\s*none/s);
+  assert.doesNotMatch(swipeCss, /\.cta-swipe[^,{]*::after\s*\{[^}]*background:/s, "the swipe must not replace existing arrow cells");
+  assert.match(swipeCss, /@media \(hover:\s*hover\) and \(pointer:\s*fine\)[\s\S]*?\.cta-swipe:not\(:disabled\):not\(\[aria-disabled="true"\]\):hover::before\s*\{[^}]*transform:\s*translate3d\(0, 0, 0\)/s);
+  assert.match(swipeCss, /\.site-header \.cta-swipe\.button-primary:hover,[\s\S]{0,140}\.home26-button-primary\.cta-swipe:hover\s*\{[^}]*background:\s*var\(--symbiose-night\)/s);
+  assert.match(swipeCss, /\.v5-button-dark\.cta-swipe:hover\s*\{[^}]*background:\s*var\(--v5-black\)/s);
+  assert.match(swipeCss, /\.offer-faq-help\.cta-swipe:hover\s*\{[^}]*background:\s*transparent/s);
+  assert.match(swipeCss, /\.cta-swipe:not\(:disabled\):not\(\[aria-disabled="true"\]\):focus-visible::before\s*\{[^}]*transform:\s*translate3d\(0, 0, 0\)/s);
+  assert.match(swipeCss, /\.cta-swipe:not\(:disabled\):not\(\[aria-disabled="true"\]\):focus-visible\s*\{[^}]*outline:\s*3px solid var\(--symbiose-paper\);[^}]*box-shadow:\s*0 0 0 6px var\(--symbiose-night\)/s);
+  assert.match(swipeCss, /\.cta-swipe:disabled::before,[\s\S]{0,100}\[aria-disabled="true"\]::before\s*\{[^}]*display:\s*none/s);
+  assert.match(swipeCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cta-swipe::before\s*\{[^}]*transition:\s*none/s);
+  assert.match(swipeCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cta-swipe:active,[\s\S]*?rotate:\s*0deg !important;[\s\S]*?scale:\s*1 !important/s);
+  assert.match(swipeCss, /@media \(forced-colors:\s*active\)[\s\S]*?\.cta-swipe::before\s*\{[^}]*display:\s*none/s);
+  assert.match(swipeCss, /--cta-swipe-fill:\s*color-mix\(in srgb, var\(--symbiose-night\) 28%, var\(--symbiose-paper\)\)/);
+  assert.match(swipeCss, /--cta-swipe-fill:\s*color-mix\(in srgb, var\(--symbiose-paper\) 24%, var\(--symbiose-night\)\)/);
+  assert.doesNotMatch(swipeCss, /^\s*color\s+\d+ms/m, "the label ink stays constant while the colour front crosses it");
+  assert.doesNotMatch(swipeCss, /#e06343|--symbiose-warm/, "the CTA swipe should use only navy and paper, never the aggressive orange");
+  assert.match(swipeCss, /\.business-quote \.cta-swipe\.button-primary\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px var\(--symbiose-night\)/s);
+
+  assert.equal((home.match(/cta-swipe/g) ?? []).length, 6, "all six homepage CTA buttons should swipe");
+  assert.equal((creators.match(/cta-swipe/g) ?? []).length, 3, "all three Creator CTA buttons should swipe");
+  assert.equal((business.match(/cta-swipe/g) ?? []).length, 2, "the Business hero and Help Center CTA should swipe");
+  assert.match(catalogue, /music-v26-button music-v26-button-light cta-swipe/);
+  assert.match(retail, /v5-button v5-button-dark cta-swipe/);
+  assert.match(leadForm, /button button-primary button-full cta-swipe/);
+  assert.equal((pricingCards.match(/cta-swipe/g) ?? []).length, 2, "both creator pricing actions should swipe");
+  assert.match(siteHeader, /button button-small button-primary cta-swipe/);
+  assert.match(editorialInfoPage, /support-button support-button-secondary cta-swipe/);
+  assert.match(editorialInfoPage, /support-button cta-swipe/);
+  assert.equal((help.match(/cta-swipe/g) ?? []).length, 3, "all Help Center CTA buttons should swipe");
+  assert.match(licenseBooth, /v5-console-action cta-swipe/);
+
+  assert.doesNotMatch(trackShowcase, /cta-swipe/, "track playback controls are not marketing CTA buttons");
+  assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
+});
+
 test("keeps the connected workspace readable and artist-led", async () => {
   const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources] = await Promise.all([
     source("app/layout.tsx"),

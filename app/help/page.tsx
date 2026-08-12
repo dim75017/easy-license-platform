@@ -200,8 +200,8 @@ export default function HelpCenterPage() {
             <h1 id="help-title">Clear answers,<br />before you publish.</h1>
             <p className="support-lead">Find out how the catalogue, creator plans and business licensing routes work, including what is available in the current public preview.</p>
             <div className="support-actions">
-              <Link className="support-button" href="/catalog">Browse music <span aria-hidden="true">→</span></Link>
-              <Link className="support-button support-button-secondary" href="/pricing">View pricing <span aria-hidden="true">→</span></Link>
+              <Link className="support-button cta-swipe" href="/catalog">Browse music <span aria-hidden="true">→</span></Link>
+              <Link className="support-button support-button-secondary cta-swipe" href="/pricing">View pricing <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </section>
@@ -237,7 +237,7 @@ export default function HelpCenterPage() {
 
         <section className="help-contact" aria-labelledby="help-contact-title" data-reveal="group">
           <h2 id="help-contact-title">Still not sure which route fits your project?</h2>
-          <Link className="support-button" href="/contact">Contact us <span aria-hidden="true">→</span></Link>
+          <Link className="support-button cta-swipe" href="/contact">Contact us <span aria-hidden="true">→</span></Link>
         </section>
       </div>
     </PublicShell>

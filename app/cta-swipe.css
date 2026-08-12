@@ -1,0 +1,130 @@
+/* Shared colour-swipe motion for intentional public calls to action. */
+.public-shell .cta-swipe {
+  --cta-swipe-fill: color-mix(in srgb, var(--symbiose-night) 28%, var(--symbiose-paper));
+  --cta-swipe-ink: var(--symbiose-night);
+  --cta-swipe-border: var(--symbiose-night);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    border-color 320ms ease,
+    background-color 320ms ease,
+    box-shadow 320ms ease,
+    transform 320ms cubic-bezier(.22, 1, .36, 1),
+    translate 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.public-shell .cta-swipe::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--cta-swipe-fill);
+  content: "";
+  pointer-events: none;
+  transform: translate3d(-101%, 0, 0);
+  transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Light actions deepen; dark and outline actions lift without changing label ink. */
+.public-shell .cta-swipe:is(
+  .home26-button-primary,
+  .home26-button-secondary,
+  .offer-button:not(.offer-button-light),
+  .support-button-secondary,
+  .v5-button-dark
+),
+.public-shell .site-header .cta-swipe.button-primary,
+.public-shell .pricing-v39 .price-card .cta-swipe.button-primary,
+.public-shell .pricing-v39-business-form .cta-swipe.button-primary,
+.public-shell .business-quote .cta-swipe.button-primary,
+.public-shell .creators-landing .creator-pricing-cta .cta-swipe.offer-button-light {
+  --cta-swipe-fill: color-mix(in srgb, var(--symbiose-paper) 24%, var(--symbiose-night));
+  --cta-swipe-ink: var(--symbiose-paper);
+  --cta-swipe-border: var(--symbiose-paper);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-shell .cta-swipe:not(:disabled):not([aria-disabled="true"]):hover {
+    border-color: var(--cta-swipe-border);
+    color: var(--cta-swipe-ink);
+  }
+
+  /* Keep legacy hover skins from changing underneath the moving layer. */
+  .public-shell .site-header .cta-swipe.button-primary:hover,
+  .public-shell .home26 .home26-button-primary.cta-swipe:hover {
+    background: var(--symbiose-night);
+  }
+
+  .public-shell .home26-hero .home26-button-secondary.cta-swipe:hover {
+    background: rgba(255, 249, 241, .08);
+  }
+
+  .public-shell .v5-button-dark.cta-swipe:hover {
+    background: var(--v5-black);
+  }
+
+  .public-shell .offer-faq-help.cta-swipe:hover {
+    background: transparent;
+  }
+
+  .public-shell .cta-swipe:not(:disabled):not([aria-disabled="true"]):hover::before {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.public-shell .cta-swipe:not(:disabled):not([aria-disabled="true"]):focus-visible {
+  border-color: var(--cta-swipe-border);
+  outline: 3px solid var(--symbiose-paper);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--symbiose-night);
+  color: var(--cta-swipe-ink);
+}
+
+.public-shell .cta-swipe:not(:disabled):not([aria-disabled="true"]):focus-visible::before {
+  transform: translate3d(0, 0, 0);
+}
+
+.public-shell .cta-swipe:disabled::before,
+.public-shell .cta-swipe[aria-disabled="true"]::before {
+  display: none;
+}
+
+/* Light form panels keep a crisp navy silhouette after the dark-button swipe. */
+.public-shell .pricing-v39-business-form .cta-swipe.button-primary,
+.public-shell .business-quote .cta-swipe.button-primary {
+  box-shadow: inset 0 0 0 1px var(--symbiose-night);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-shell .cta-swipe,
+  .public-shell .cta-swipe::before {
+    transition: none;
+  }
+
+  .public-shell .cta-swipe:hover,
+  .public-shell .cta-swipe:focus-visible,
+  .public-shell .cta-swipe:active,
+  .public-shell .cta-swipe:hover > span,
+  .public-shell .cta-swipe:focus-visible > span,
+  .public-shell .cta-swipe:hover > i,
+  .public-shell .cta-swipe:focus-visible > i {
+    transform: none !important;
+    translate: 0 0 !important;
+    rotate: 0deg !important;
+    scale: 1 !important;
+  }
+
+  .public-shell .cta-swipe::after {
+    translate: 0 0 !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .public-shell .cta-swipe {
+    border: 1px solid ButtonText;
+  }
+
+  .public-shell .cta-swipe::before {
+    display: none;
+  }
+}

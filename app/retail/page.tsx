@@ -17,7 +17,7 @@ export default function RetailPage() {
             <h1>Good music.<br />One less thing<br /><em>to think about.</em></h1>
             <p className="retail-v2-lead">A simple way for cafés, stores, hotels and workspaces to sound as considered as they look. Human-made music, curated for the room, without the headache.</p>
             <div className="retail-v2-actions">
-              <a className="v5-button v5-button-dark" href="#retail-access"><span>Get early access</span><i>↓</i></a>
+              <a className="v5-button v5-button-dark cta-swipe" href="#retail-access"><span>Get early access</span><i>↓</i></a>
               <span>Built for real spaces, not enterprise dashboards.</span>
             </div>
           </div>
