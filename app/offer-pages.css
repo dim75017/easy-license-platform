@@ -3024,8 +3024,12 @@
   }
 }
 
-/* V68: the Business request stage is square while its form remains a card. */
+/* V68: the Business request stage is square and full bleed while its form remains a card. */
 .business-landing .business-quote {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
   border-radius: 0;
 }
 

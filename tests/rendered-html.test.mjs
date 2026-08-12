@@ -855,7 +855,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?\.business-landing \.business-options,[\s\S]*?\.business-landing \.business-flow\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;[^}]*flex-direction:\s*column;/s);
   assert.match(offerCss, /V66: every core Business story owns one complete desktop viewport\.[\s\S]*?\.business-landing \.business-quote\s*\{[^}]*align-items:\s*center;/s);
   assert.match(offerCss, /V67: the Business route closes with a focused beige FAQ\.[\s\S]*?\.business-landing \.business-faq\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0;[^}]*background:\s*var\(--marketing-paper\)/s);
-  assert.match(offerCss, /V68: the Business request stage is square while its form remains a card\.[\s\S]*?\.business-landing \.business-quote\s*\{[^}]*border-radius:\s*0;/s);
+  assert.match(offerCss, /V68: the Business request stage is square and full bleed while its form remains a card\.[\s\S]*?\.business-landing \.business-quote\s*\{[^}]*box-sizing:\s*border-box;[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin-inline:\s*0;[^}]*border-radius:\s*0;/s);
   assert.match(offerCss, /\.business-quote \.form-panel\s*\{[^}]*border-radius:\s*26px;/s);
   assert.match(offerCss, /\.business-landing \.business-faq \.offer-faq-list summary:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--marketing-night\)/s);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,260}\.offer-landing \.offer-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,100}align-items:\s*center;/);
