@@ -2419,7 +2419,7 @@
 }
 
 .home26-audience-business .home26-audience-media img {
-  object-position: center 58%;
+  object-position: center;
 }
 
 .home26-audience-business .home26-audience-copy {
@@ -2617,5 +2617,24 @@
 @media (prefers-reduced-motion: reduce) {
   .home26-quick-faq .home26-faq-list summary span {
     transition: none;
+  }
+}
+
+/* V68: audience labels act as clear, brand-orange section signposts. */
+.home26 .home26-audience .home26-eyebrow {
+  color: #9f3f2b;
+  font-size: clamp(26px, 2vw, 32px);
+  font-weight: 760;
+  line-height: 1.12;
+}
+
+.home26 .home26-audience-business .home26-eyebrow {
+  color: #f2b5a0;
+}
+
+@media (max-width: 620px) {
+  .home26 .home26-audience .home26-eyebrow,
+  .home26 .home26-audience-business .home26-eyebrow {
+    font-size: 22px;
   }
 }

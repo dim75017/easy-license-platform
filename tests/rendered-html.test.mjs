@@ -59,7 +59,8 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
   assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
   assert.match(page, /creator-video-editor-WsJBwU9psWI\.webp/i);
-  assert.match(page, /business-headphones-B88PgQXS4qg\.jpg/i);
+  assert.match(page, /business-headphones-books-T3mKJXfdims\.webp/i);
+  assert.doesNotMatch(page, /business-headphones-B88PgQXS4qg\.jpg/i);
   assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
   assert.match(page, /Hoogway/i);
@@ -148,7 +149,9 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(homeCss, /\.home26-audience-business \.home26-audience-copy\s*\{[^}]*min-height:\s*max\(900px, calc\(100svh - 90px\)\)/s);
   assert.match(homeCss, /V64: Business is a cinematic project canvas, not a mirrored Creator split\.[\s\S]{0,360}\.home26-audience-business \.home26-audience-panel\s*\{[\s\S]{0,180}display:\s*block;[\s\S]{0,180}isolation:\s*isolate/);
   assert.match(homeCss, /V64: Business is a cinematic project canvas[\s\S]{0,1800}\.home26-audience-business \.home26-audience-points\s*\{[\s\S]{0,260}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,320}\.home26 \.home26-audience \.home26-eyebrow\s*\{[^}]*font-size:\s*clamp\(20px, 1\.45vw, 24px\)/s);
+  assert.match(homeCss, /V68: audience labels act as clear, brand-orange section signposts[\s\S]{0,320}\.home26 \.home26-audience \.home26-eyebrow\s*\{[^}]*color:\s*#9f3f2b;[^}]*font-size:\s*clamp\(26px, 2vw, 32px\);[^}]*font-weight:\s*760/s);
+  assert.match(homeCss, /\.home26 \.home26-audience-business \.home26-eyebrow\s*\{[^}]*color:\s*#f2b5a0/s);
+  assert.match(homeCss, /V68: audience labels act as clear, brand-orange section signposts[\s\S]{0,800}@media \(max-width: 620px\)[\s\S]{0,300}font-size:\s*22px/s);
   assert.match(homeCss, /V65: audience routes have clear labels[\s\S]{0,650}\.home26-audience-business \.home26-audience-points li\s*\{[^}]*font-size:\s*clamp\(19px, 1\.45vw, 23px\)/s);
   assert.match(homeCss, /\.home26-hero \+ \.home26-facts,[\s\S]{0,120}border-top:\s*0/);
   assert.match(homeCss, /\.home26-audience-creators \.home26-audience-panel\s*\{[^}]*border-bottom:\s*0/s);
@@ -639,6 +642,21 @@ test("ships the requested homepage Creator photograph and documents its source",
   assert.match(sources, /creator-video-editor-WsJBwU9psWI\.webp[\s\S]{0,180}TheRegisti[\s\S]{0,180}WsJBwU9psWI/);
 });
 
+test("ships the requested homepage Business photograph and documents its source", async () => {
+  const [page, sources] = await Promise.all([
+    source("app/page.tsx"),
+    source("public/images/unsplash/SOURCES.md"),
+  ]);
+  const businessImage = new URL("public/images/unsplash/business-headphones-books-T3mKJXfdims.webp", root);
+
+  await access(businessImage);
+  const metadata = await stat(businessImage);
+  assert.ok(metadata.size <= 300_000, "the homepage Business photograph should stay below 300 KB");
+  assert.match(page, /business-headphones-books-T3mKJXfdims\.webp"[\s\S]{0,120}width=\{2400\} height=\{1600\}/);
+  assert.doesNotMatch(page, /business-headphones-B88PgQXS4qg\.jpg/);
+  assert.match(sources, /business-headphones-books-T3mKJXfdims\.webp[\s\S]{0,220}T3mKJXfdims[\s\S]{0,160}Unsplash License/i);
+});
+
 test("ships the Business process backdrop locally and documents its source", async () => {
   const backdrop = new URL("public/images/unsplash/business-process-blur.webp", root);
   const sources = await source("public/images/unsplash/SOURCES.md");
@@ -828,7 +846,7 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
     access(new URL("public/images/unsplash/podcast-home.jpg", root)),
     access(new URL("public/images/unsplash/study-focus-clean.jpg", root)),
     access(new URL("public/images/unsplash/filmmaker-desk.jpg", root)),
-    access(new URL("public/images/unsplash/business-headphones-B88PgQXS4qg.jpg", root)),
+    access(new URL("public/images/unsplash/business-headphones-books-T3mKJXfdims.webp", root)),
     access(new URL("public/images/unsplash/editing-desk.jpg", root)),
     access(new URL("public/images/unsplash/studio-artist.jpg", root)),
     access(new URL("public/images/unsplash/hero-listening.jpg", root)),
@@ -954,9 +972,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /\.site-footer \.brand-warm/);
   assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-name\s*\{[^}]*font-size:\s*26px/s);
   assert.match(symbioseBrandCss, /\.public-shell \.site-header \.brand-warm \.brand-powered\s*\{[^}]*font-size:\s*12px/s);
-  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-nav > a\s*\{[^}]*font-size:\s*18px/s);
-  assert.match(symbioseBrandCss, /@media \(max-width:\s*1100px\) and \(min-width:\s*981px\)[\s\S]{0,260}font-size:\s*16px/s);
-  assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]{0,260}font-size:\s*18px/s);
+  assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-nav > a\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*font-size:\s*20px;[^}]*font-weight:\s*700;[^}]*font-kerning:\s*normal;[^}]*text-rendering:\s*geometricPrecision/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*1100px\) and \(min-width:\s*981px\)[\s\S]{0,260}font-size:\s*18px/s);
+  assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]{0,260}font-size:\s*20px/s);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);

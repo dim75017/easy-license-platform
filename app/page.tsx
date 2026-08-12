@@ -158,7 +158,7 @@ export default function Home() {
               </ul>
             </div>
             <figure className="home26-audience-media" aria-hidden="true">
-              <img src="/images/unsplash/business-headphones-B88PgQXS4qg.jpg" alt="" width={2400} height={1600} loading="lazy" decoding="async" />
+              <img src="/images/unsplash/business-headphones-books-T3mKJXfdims.webp" alt="" width={2400} height={1600} loading="lazy" decoding="async" />
             </figure>
           </div>
         </section>

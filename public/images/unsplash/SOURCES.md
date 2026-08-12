@@ -65,4 +65,4 @@ The matching `creator-piano-human.webp` and `creator-*-card.webp` files are loca
 
 ## Homepage Business hero refresh (2026-08-12)
 
-- `business-headphones-B88PgQXS4qg.jpg` — Viktor Forgacs, https://unsplash.com/photos/black-and-white-remote-control-beside-black-headphones-B88PgQXS4qg (Unsplash License, original download at 2400 × 1600)
+- `business-headphones-books-T3mKJXfdims.webp` — blocks / Mark Solarski, https://unsplash.com/photos/wireless-headphones-leaning-on-books-T3mKJXfdims (Unsplash License, locally resized 2400 × 1600 WebP derivative)
