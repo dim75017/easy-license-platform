@@ -29,7 +29,6 @@ export default function PricingPage() {
               <span className="pricing-v39-kicker">FOR CREATORS</span>
               <h2 id="creator-pricing-title">Choose the plan that fits your channels.</h2>
             </div>
-            <p>Creator covers one channel per platform. Pro is for multi-channel creators and teams. Both include eligible catalogue downloads for your own content.</p>
           </div>
           <PricingCards expanded />
         </section>
