@@ -330,11 +330,17 @@ test("defines every public and connected product surface", async () => {
   assert.match(pricing, /<span>Business music request<\/span>/);
   assert.doesNotMatch(pricing, />BUSINESS MUSIC REQUEST</);
   assert.match(pricingCss, /\.pricing-v39-business-form \.form-panel-head\s*\{[^}]*font-family:\s*var\(--font-ui\)/s);
+  assert.match(pricingCss, /\.pricing-v39-business-form \.form-panel-head span\s*\{[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(pricingCss, /\.pricing-v39-business-form \.lead-form label > span\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(pricingCss, /\.pricing-v39-business-form \.lead-form \.button-primary\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
+  assert.match(pricingCss, /\.pricing-v39-business-form \.form-success \.text-link\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(leadForm, /License an existing track/);
   assert.match(leadForm, /Commission original music/);
   assert.match(leadForm, /Music for a physical place — Coming soon/);
+  for (const submitLabel of ["Join physical places early access", "Request a custom music quote", "Request a track licence quote"]) {
+    assert.match(leadForm, new RegExp(`"${submitLabel}"`));
+  }
+  assert.doesNotMatch(leadForm, /"(?:JOIN PHYSICAL PLACES EARLY ACCESS|REQUEST A CUSTOM MUSIC QUOTE|REQUEST A TRACK LICENCE QUOTE)"/);
   assert.match(leadForm, /type:\s*"retail_waitlist" as const/);
   assert.match(leadForm, /type:\s*isBusiness \? "sync" as const : type/);
   assert.match(leadForm, /businessNeedLabels\[businessNeed\][^\n]*project/);
@@ -865,8 +871,10 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(business, /<span>Business music request<\/span>/);
   assert.doesNotMatch(business, />BUSINESS MUSIC REQUEST</);
   assert.match(offerCss, /\.business-quote \.form-panel-head\s*\{[^}]*font-family:\s*var\(--font-ui\)/s);
+  assert.match(offerCss, /\.business-quote \.form-panel-head span\s*\{[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(offerCss, /\.business-quote \.lead-form label > span\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(offerCss, /\.business-quote \.lead-form \.button-primary\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
+  assert.match(offerCss, /\.business-quote \.form-success \.text-link\s*\{[^}]*font-family:\s*var\(--font-ui\);[^}]*letter-spacing:\s*0;[^}]*text-transform:\s*none/s);
   assert.match(offerCss, /\.business-landing \.business-faq \.offer-faq-list summary:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--marketing-night\)/s);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,260}\.offer-landing \.offer-hero\s*\{[\s\S]{0,100}min-height:\s*720px;[\s\S]{0,100}align-items:\s*center;/);
   assert.match(offerCss, /V60: Creators and Business share the homepage opening rhythm[\s\S]{0,1200}@media \(min-width: 901px\) and \(min-height: 800px\)[\s\S]{0,180}min-height:\s*max\(720px, calc\(100svh - 245px\)\)/);

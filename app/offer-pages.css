@@ -1743,8 +1743,11 @@
 
 .business-quote .form-success .text-link {
   color: var(--marketing-clay);
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 720;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .business-quote .business-need-field select { font-weight: 760; }

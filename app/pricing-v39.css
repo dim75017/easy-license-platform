@@ -335,7 +335,12 @@
 
 .pricing-v39-business-form .form-error { color: #a04438; }
 .pricing-v39-business-form .form-success p { color: rgba(41, 40, 50, .72); }
-.pricing-v39-business-form .form-success .text-link { color: var(--price-clay-deep); }
+.pricing-v39-business-form .form-success .text-link {
+  color: var(--price-clay-deep);
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
 
 .pricing-v39 .business-need-field select,
 .pricing-v39 .business-coming-soon strong { font-weight: 760; }
