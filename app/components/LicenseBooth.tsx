@@ -55,7 +55,7 @@ export function LicenseBooth() {
   return (
     <div className={`v5-booth v5-booth-${selected.color}`} data-pointer-glow="">
       <div className="v5-booth-topline">
-        <span className="v5-lofi-signature">Symbiome · by <LofiGirlWordmark /></span>
+        <span className="v5-lofi-signature">Symbiome · by<LofiGirlWordmark /></span>
         <span className="v5-live"><i /> Live prototype</span>
       </div>
 

@@ -125,7 +125,7 @@ export default function Home() {
           <img className="home26-hero-image" src="/images/unsplash/hero-producer.jpg" alt="Music producer working at a recording console" />
           <span className="home26-hero-wash" aria-hidden="true" />
           <div className="home26-hero-copy" data-reveal="left">
-            <p className="home26-eyebrow home26-lofi-signature">Symbiome · Powered by <LofiGirlWordmark /></p>
+            <p className="home26-eyebrow home26-lofi-signature">Symbiome · Powered by<LofiGirlWordmark /></p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
             <p className="home26-hero-lede">
               Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.

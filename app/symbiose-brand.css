@@ -609,7 +609,7 @@ body {
 }
 
 .home26-lofi-signature {
-  gap: .48em;
+  gap: .12em;
 }
 
 .home26-lofi-signature .lofi-girl-wordmark {
@@ -623,6 +623,13 @@ body {
   gap: .52em;
 }
 
+.offer-powered-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: .12em;
+  white-space: nowrap;
+}
+
 .offer-hero-copy .offer-lofi-signature .offer-powered-label {
   color: inherit;
 }
@@ -634,7 +641,7 @@ body {
 }
 
 .footer-lofi-credit {
-  gap: .45em;
+  gap: .12em;
 }
 
 .public-shell .site-footer .footer-lofi-credit .lofi-girl-wordmark {
@@ -643,7 +650,7 @@ body {
 }
 
 .v5-lofi-signature {
-  gap: .42em;
+  gap: .12em;
 }
 
 .v5-lofi-signature .lofi-girl-wordmark {

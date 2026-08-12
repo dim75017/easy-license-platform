@@ -51,7 +51,7 @@ export function SiteFooter() {
       </div>
       <div className="footer-bottom">
         <span>© 2026 Symbiome.</span>
-        <span className="footer-lofi-credit">Powered by <LofiGirlWordmark /></span>
+        <span className="footer-lofi-credit">Powered by<LofiGirlWordmark /></span>
       </div>
     </footer>
   );
