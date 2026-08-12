@@ -605,7 +605,7 @@ body {
 .brand-powered .lofi-girl-wordmark {
   --lofi-wordmark-height: 1.08em;
   color: currentColor;
-  transform: translateY(.12em);
+  transform: translateY(.24em);
 }
 
 .home26-lofi-signature {
