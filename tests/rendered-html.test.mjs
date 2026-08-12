@@ -221,6 +221,10 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /V46: twelve playlist directions fit within one desktop view\.[\s\S]{0,1000}grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(min-width: 1800px\) and \(min-height: 760px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(min-width: 901px\) and \(max-width: 1179px\)[\s\S]{0,160}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*box-shadow:\s*none;[^}]*transform:\s*none;/);
+  assert.match(catalogueCss, /\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*scale\(1\.06\)/);
+  assert.doesNotMatch(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*translateY/);
+  assert.match(catalogueCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,420}\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*none/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
   assert.doesNotMatch(cataloguePage, /NOW EXPLORING|Instrumental music<br \/>with a human touch/);
   assert.doesNotMatch(cataloguePage, /Symbiome<\/span> Music/);

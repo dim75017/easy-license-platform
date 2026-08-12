@@ -1426,8 +1426,8 @@
 .music-library-section-head h2, .music-genre-shelf h2 { margin: 12px 0 0; font-family: var(--font-display); font-size: clamp(48px, 5.6vw, 80px); letter-spacing: -.065em; line-height: .88; }
 .music-library-section-head > p { max-width: 43ch; margin: 0; color: rgba(41,40,50,.68); font-size: 17px; line-height: 1.55; }
 .music-playlist-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.music-playlist-card { position: relative; display: grid; min-height: 315px; overflow: hidden; padding: 26px; color: #fff9f1; text-decoration: none; grid-template-rows: auto 1fr auto auto; background: #5b4e63; transition: transform .32s ease, box-shadow .32s ease; }
-.music-playlist-card:hover { box-shadow: 0 22px 42px rgba(41,40,50,.2); transform: translateY(-5px); }.music-playlist-card.is-plum { background:#56465d }.music-playlist-card.is-gold { background:#966d45 }.music-playlist-card.is-forest { background:#4c685b }.music-playlist-card.is-rust { background:#675a82 }.music-playlist-card.is-blue { background:#52677f }.music-playlist-card.is-sage { background:#728172 }
+.music-playlist-card { position: relative; display: grid; min-height: 315px; overflow: hidden; padding: 26px; color: #fff9f1; text-decoration: none; grid-template-rows: auto 1fr auto auto; background: #5b4e63; }
+.music-playlist-card:hover { box-shadow: none; transform: none; }.music-playlist-card.is-plum { background:#56465d }.music-playlist-card.is-gold { background:#966d45 }.music-playlist-card.is-forest { background:#4c685b }.music-playlist-card.is-rust { background:#675a82 }.music-playlist-card.is-blue { background:#52677f }.music-playlist-card.is-sage { background:#728172 }
 .music-playlist-number { color: rgba(255, 249, 241,.65); font-size: 13px; font-weight: 800; letter-spacing: .1em; }.music-playlist-art { align-self: center; height: 80px; transform: rotate(-7deg); }.music-playlist-art i { background: rgba(255, 249, 241,.86); }.music-playlist-art i:nth-child(2n) { height: 38%; }.music-playlist-art i:nth-child(3n) { height: 93%; }.music-playlist-art i:nth-child(5n) { height: 62%; }
 .music-playlist-card > span:last-of-type { display: grid; gap: 7px; }.music-playlist-card small { color: rgba(255, 249, 241,.65); font-size: 12px; }.music-playlist-card strong { font-family: var(--font-display); font-size: clamp(32px, 3vw, 45px); font-weight: 500; letter-spacing: -.055em; line-height: .9; }.music-playlist-card em { color: rgba(255, 249, 241,.82); font-size: 15px; font-style: normal; line-height: 1.4; }.music-playlist-card b { margin-top: 23px; font-size: 12px; letter-spacing: .04em; }
 .music-genre-shelf { padding-top: 0; background: #efd6c7; }.music-genre-shelf > div { display: grid; margin-top: 40px; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid rgba(41,40,50,.2); border-left: 1px solid rgba(41,40,50,.2); }.music-genre-shelf a { display: grid; min-height: 135px; align-content: space-between; border-right: 1px solid rgba(41,40,50,.2); border-bottom: 1px solid rgba(41,40,50,.2); padding: 20px; color: #292832; font-family: var(--font-display); font-size: 29px; text-decoration: none; }.music-genre-shelf a span { color: #9f3f2b; font-family: var(--font-sans); font-size: 12px; font-weight: 800; }.music-genre-shelf a:hover { background: #292832; color: #fff9f1; }.music-genre-shelf a:hover span { color: #f2b5a0; }
@@ -1618,6 +1618,8 @@
   .catalogue-mood-action i { transition: none; }
   .catalogue-mood-card:hover,
   .catalogue-mood-card:hover .catalogue-mood-action i { transform: none; }
+  .music-playlist-card > img { transition: none; }
+  .music-playlist-card:hover > img { transform: none; }
 }
 
 /* V43: the music library fills the canvas rather than a centred column. */
