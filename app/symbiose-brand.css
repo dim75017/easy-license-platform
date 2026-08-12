@@ -557,3 +557,23 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* V5: the public header stays full-width and sticky in every scroll state. */
+.public-shell {
+  overflow: clip;
+}
+
+.public-shell .site-header {
+  position: sticky;
+  z-index: 100;
+  top: 0;
+}
+
+@media (min-width: 761px) {
+  .public-shell .site-header .site-header-inner {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: clamp(28px, 4vw, 76px);
+  }
+}

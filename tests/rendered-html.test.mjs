@@ -1044,6 +1044,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /V4: one account action group serves desktop and mobile without duplication\.[\s\S]{0,200}\.public-shell \.site-header \.site-navigation-shell\s*\{[^}]*display:\s*contents/s);
   assert.match(symbioseBrandCss, /@media \(max-width:\s*980px\)[\s\S]*?\.public-shell \.site-header \.site-navigation-shell\.is-open\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
   assert.match(symbioseBrandCss, /\.public-shell \.site-header \.site-navigation-shell \.site-header-actions\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*1fr 1\.35fr/s);
+  assert.match(symbioseBrandCss, /V5: the public header stays full-width and sticky in every scroll state\.[\s\S]{0,160}\.public-shell\s*\{[^}]*overflow:\s*clip/s);
+  assert.match(symbioseBrandCss, /V5: the public header stays full-width and sticky in every scroll state\.[\s\S]{0,300}\.public-shell \.site-header\s*\{[^}]*position:\s*sticky;[^}]*top:\s*0;/s);
+  assert.match(symbioseBrandCss, /@media \(min-width:\s*761px\)[\s\S]{0,180}\.public-shell \.site-header \.site-header-inner\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin-inline:\s*0;[^}]*padding-inline:\s*clamp\(28px, 4vw, 76px\)/s);
   assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
   assert.match(musicWorkspace, /Sound effects/);
   assert.match(musicWorkspace, /Voices/);
