@@ -1437,7 +1437,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(waveComponent, "the waveform should stay isolated in one memoized component");
   assert.match(waveComponent[0], /const canvasRef = useRef<HTMLCanvasElement>\(null\)/);
   assert.match(waveComponent[0], /const clampedProgress = Math\.max\(0, Math\.min\(1, progress\)\);[\s\S]{0,100}progressRef\.current = clampedProgress/);
-  assert.match(waveComponent[0], /const pitch = dense \? 2\.45 : 4;[\s\S]{0,80}const barWidth = 1;[\s\S]{0,140}const count = Math\.max\(1, Math\.floor\(width \/ pitch\)\);/);
+  assert.match(waveComponent[0], /const pitch = dense \? 5 : 7\.5;[\s\S]{0,80}const barWidth = 2\.25;[\s\S]{0,140}const count = Math\.max\(1, Math\.floor\(width \/ pitch\)\);/);
   assert.match(waveComponent[0], /const snappedBarWidth = Math\.max\(1, Math\.round\(barWidth \* pixelRatio\)\) \/ pixelRatio/);
   assert.match(waveComponent[0], /const playedBars = Math\.round\(progressRef\.current \* count\)/);
   assert.match(waveComponent[0], /const amplitude = Math\.max\(\.22, Math\.min\(1,/);
@@ -1548,14 +1548,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /\.music-player-icon\[data-state="play"\]::before\s*\{[^}]*border-top:\s*6px solid transparent;[^}]*border-bottom:\s*6px solid transparent;[^}]*border-left:\s*10px solid currentColor;[^}]*content:\s*""/s);
   assert.match(musicWorkspaceV13, /\.music-player-icon\[data-state="pause"\]::before,\s*\.music-player-icon\[data-state="pause"\]::after\s*\{[^}]*width:\s*3px;[^}]*height:\s*12px;[^}]*background:\s*currentColor;[^}]*content:\s*""/s);
   assert.match(musicWorkspaceV13, /\.music-player-icon\[data-state="pause"\]::before\s*\{\s*left:\s*2px;\s*\}[\s\S]{0,100}\.music-player-icon\[data-state="pause"\]::after\s*\{\s*right:\s*2px;/);
-  assert.match(musicWorkspaceV13, /\.music-player-wave \.music-wave\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*height:\s*26px;[^}]*color:\s*var\(--wm-ink\)/s);
+  assert.match(musicWorkspaceV13, /\.music-player-wave \.music-wave\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*height:\s*30px;[^}]*color:\s*var\(--wm-ink\)/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-wave \.music-wave i\b/, "V13 should style the canvas itself rather than legacy DOM bars");
   assert.match(musicWorkspaceV13, /\.music-player-seek\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*opacity:\s*0/s);
   assert.match(musicWorkspaceV13, /\.music-player-wave:focus-within\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
   assert.match(musicWorkspaceV13, /\.workspace-audio-player\s*\{[^}]*min-height:\s*76px;[^}]*grid-template-columns:\s*minmax\(190px, 240px\) 40px minmax\(300px, 1fr\) auto;[^}]*padding:\s*8px 24px/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-main\s*\{[^}]*grid-template-columns:\s*48px minmax\(110px, 1fr\)/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-timeline\s*\{[^}]*grid-template-columns:\s*34px minmax\(160px, 1fr\) 34px minmax\(104px, 132px\);[^}]*gap:\s*9px/s);
-  assert.match(musicWorkspaceV13, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{[^}]*height:\s*32px;[^}]*color:\s*var\(--wm-cream\)/s);
+  assert.match(musicWorkspaceV13, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{[^}]*height:\s*36px;[^}]*color:\s*var\(--wm-cream\)/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-volume\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*34px minmax\(54px, 1fr\);[^}]*gap:\s*7px/s);
   assert.match(musicWorkspaceV13, /\.music-player-volume-toggle\s*\{[^}]*width:\s*34px;[^}]*height:\s*40px;[^}]*border-radius:\s*999px/s);
   assert.match(musicWorkspaceV13, /\.music-player-volume-range\s*\{[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*height:\s*40px;[^}]*accent-color:\s*var\(--wm-clay\)/s);
@@ -1584,8 +1584,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13CompactCss, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 30px minmax\(80px, 1fr\) 30px/s);
   assert.match(v13CompactCss, /\.workspace-audio-player\s*\{[^}]*min-height:\s*112px;[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 40px auto;[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/);
   assert.match(v13CompactCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);
-  assert.match(v13CompactCss, /\.music-player-wave \.music-wave\s*\{\s*height:\s*24px/);
-  assert.match(v13CompactCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*28px/);
+  assert.match(v13CompactCss, /\.music-player-wave \.music-wave\s*\{\s*height:\s*28px/);
+  assert.match(v13CompactCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*32px/);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-(?:player-wave|wave)[^\{]*\{[^}]*display:\s*none/s, "the canvas waveform and its seek surface should remain visible at every V13 breakpoint");
   assert.doesNotMatch(musicWorkspaceV13, /\.workspace-player-volume[^\{]*\{[^}]*display:\s*none/s, "the fixed-player volume controls should remain visible at every V13 breakpoint");
   assert.match(v13PhoneCss, /\.music-app-main > \.music-track-browser\s*\{\s*width:\s*calc\(100% - 24px\)/);
@@ -1594,8 +1594,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13PhoneCss, /\.music-player-play\s*\{[^}]*width:\s*42px;[^}]*height:\s*42px/s);
   assert.match(v13PhoneCss, /\.workspace-audio-player\s*\{[^}]*min-height:\s*126px;[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 42px auto;[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline";[^}]*padding-inline:\s*12px/s);
   assert.match(v13PhoneCss, /\.workspace-player-timeline\s*\{[^}]*grid-template-columns:\s*27px minmax\(64px, 1fr\) 27px 88px;[^}]*gap:\s*6px/s);
-  assert.match(v13PhoneCss, /\.music-player-wave \.music-wave\s*\{\s*height:\s*22px/);
-  assert.match(v13PhoneCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*26px/);
+  assert.match(v13PhoneCss, /\.music-player-wave \.music-wave\s*\{\s*height:\s*26px/);
+  assert.match(v13PhoneCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*30px/);
   assert.match(v13PhoneCss, /\.workspace-player-volume\s*\{[^}]*grid-template-columns:\s*32px minmax\(42px, 1fr\);[^}]*gap:\s*5px/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-wave \.music-wave\s*\{[^}]*(?:animation|transition)\s*:/s, "canvas redraws should not introduce CSS motion");
 

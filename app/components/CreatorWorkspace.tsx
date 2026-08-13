@@ -81,8 +81,8 @@ const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: s
     const baseColor = styles.color;
     const playedColor = styles.getPropertyValue("--wm-clay").trim() || "#e06343";
     const seedValue = Array.from(seed).reduce((hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0, 7);
-    const pitch = dense ? 2.45 : 4;
-    const barWidth = 1;
+    const pitch = dense ? 5 : 7.5;
+    const barWidth = 2.25;
     const snappedBarWidth = Math.max(1, Math.round(barWidth * pixelRatio)) / pixelRatio;
     const count = Math.max(1, Math.floor(width / pitch));
     const playedBars = Math.round(progressRef.current * count);
