@@ -1350,19 +1350,120 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /V8: the sticky header lockup keeps one height through the desktop scroll threshold\.[\s\S]{0,220}@media \(min-width:\s*801px\)[\s\S]{0,160}\.page-scrolled \.public-shell \.site-header \.site-header-inner\s*\{[^}]*min-height:\s*90px;/s);
   const stableHeaderRule = symbioseBrandCss.slice(symbioseBrandCss.indexOf("/* V8:"));
   assert.doesNotMatch(stableHeaderRule, /lofi-girl-wordmark|font-size|--lofi-wordmark-height|transform|scale/, "scroll stability should not resize the wordmark itself");
-  assert.match(musicWorkspace, /useState<LibraryView>\("music"\)/);
-  assert.match(musicWorkspace, /Sound effects/);
-  assert.match(musicWorkspace, /Voices/);
-  assert.match(musicWorkspace, /Coming soon/);
+  assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
+  assert.doesNotMatch(musicWorkspace, /ProductNavigation|music-product-nav/);
+  assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
+
+  const navBlock = musicWorkspace.match(/const navGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const viewLabels/);
+  assert.ok(navBlock, "the connected workspace should keep one canonical grouped navigation");
+  const workspaceNavLabels = [...navBlock[1].matchAll(/\{\s*id:\s*"[^"]+",\s*label:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads", "Licences", "Channels"]);
+  assert.match(navBlock[1], /label:\s*"DISCOVER MUSIC"/);
+  assert.match(navBlock[1], /label:\s*"YOUR LIBRARY"/);
+  assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
+  assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
+
+  assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
+  assert.match(musicWorkspace, /type FacetKind = "genre" \| "mood" \| "theme" \| "artist"/);
+  assert.match(musicWorkspace, /title="Genres" items=\{musicSearchTaxonomy\.genres\}/);
+  assert.match(musicWorkspace, /title="Moods" items=\{musicSearchTaxonomy\.moods\}/);
+  assert.match(musicWorkspace, /title="Themes" items=\{musicSearchTaxonomy\.themes\.map\(\(theme\) => theme\.label\)\}/);
+  assert.match(musicWorkspace, /title="Artists" items=\{musicSearchTaxonomy\.artists\}/);
+  assert.match(musicWorkspace, /track\.themes\.includes\(activeUse\)/);
+  assert.match(musicWorkspace, /themeLabels\.join\(" "\)/);
+  for (const label of ["Genre", "Mood", "Theme"]) {
+    assert.match(musicWorkspace, new RegExp(`<label><span>${label}</span><select`));
+  }
+
+  assert.match(musicWorkspace, /className="music-track-table" role="list" aria-label=\{label\}/);
+  assert.match(musicWorkspace, /role="listitem" key=\{track\.id\}/);
+  assert.match(musicWorkspace, /<span>Track<\/span><span>Waveform<\/span><span>Length \/ BPM<\/span><span>Genre \/ mood<\/span><span>Actions<\/span>/);
+  assert.doesNotMatch(musicWorkspace, /\bAudience\b/);
+  assert.match(musicWorkspace, /className="music-track-cover-play"[\s\S]{0,260}aria-label=\{`\$\{isPlaying \? "Pause" : "Play"\} preview of \$\{track\.title\} by \$\{track\.artist\}`\}/);
+  assert.match(musicWorkspace, /src=\{track\.cover\}[\s\S]{0,100}width=\{64\}[\s\S]{0,80}height=\{64\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
+  assert.match(musicWorkspace, /const playedBars = Math\.round\([\s\S]{0,100}progress[\s\S]{0,180}className=\{index < playedBars \? "is-played" : undefined\}/);
+  assert.match(musicWorkspace, /<Wave seed=\{track\.id\} dense progress=\{isActive \? preview\.progress : 0\} \/>/);
+  assert.match(musicWorkspace, /<time dateTime=\{track\.durationIso\}>\{track\.duration\}<\/time>/);
+  assert.match(musicWorkspace, /track\.bpm \? `\$\{track\.bpm\} BPM` : "BPM/);
+  assert.match(musicWorkspace, /aria-pressed=\{liked\.has\(track\.id\)\}/);
+  for (const actionPattern of [
+    /aria-label=\{`Add \$\{track\.title\} to a playlist`\}/,
+    /aria-label=\{`Download \$\{track\.title\}`\}/,
+    /aria-label=\{`More options for \$\{track\.title\}`\}/,
+  ]) {
+    assert.match(musicWorkspace, actionPattern);
+  }
+
+  assert.match(musicWorkspace, /useTrackPreview\(\)/);
+  assert.equal((musicWorkspace.match(/<audio\b/g) ?? []).length, 1, "the workspace should own one shared preview audio element");
+  assert.match(musicWorkspace, /<audio[\s\S]{0,160}preload="none"[\s\S]{0,80}playsInline[\s\S]{0,280}onEnded=\{preview\.onEnded\}[\s\S]{0,100}onError=\{preview\.onError\}/);
+  assert.match(musicWorkspace, /preview\.toggle\(\{ id: track\.id, previewUrl: track\.previewUrl \}\)/);
+  assert.doesNotMatch(musicWorkspace, /<iframe|open\.spotify\.com\/embed/);
+  assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /Tune the library/);
-  assert.match(musicWorkspace, /music-track-table/);
-  assert.match(musicWorkspace, /open\.spotify\.com\/embed\/track/);
   assert.match(musicWorkspace, /easy-license-library-tuned/);
   assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);
   assert.match(musicWorkspace, /workspace-playlist-photo/);
   assert.match(musicWorkspace, /lofiGirlPlaylists\.map/);
+
+  const workspaceTrackType = catalogueData.match(/export type WorkspaceTrack = \{([\s\S]*?)\n\};/);
+  assert.ok(workspaceTrackType, "the connected catalogue should expose one normalized WorkspaceTrack contract");
+  for (const field of ["id", "spotifyId", "previewUrl", "spotifyUrl", "title", "artist", "cover", "genre", "moods", "themes", "duration", "durationIso", "bpm"]) {
+    assert.match(workspaceTrackType[1], new RegExp(`\\b${field}\\s*:`), `WorkspaceTrack should expose ${field}`);
+  }
+
+  const workspaceIndex = catalogueData.match(/export const workspaceTracks: readonly WorkspaceTrack\[\] = \[([\s\S]*?)\n\];/);
+  assert.ok(workspaceIndex, "workspaceTracks should be exported as a typed normalized index");
+  const workspaceMappings = [...workspaceIndex[1].matchAll(/\.\.\.(creatorPlaylistTracks|tracks)\.map\(\(track\) => \(\{([\s\S]*?)\}\)\),/g)];
+  assert.deepEqual(workspaceMappings.map((match) => match[1]), ["creatorPlaylistTracks", "tracks"]);
+  for (const [, sourceName, mapping] of workspaceMappings) {
+    for (const field of ["id", "spotifyId", "previewUrl", "spotifyUrl", "title", "artist", "cover", "genre", "moods", "themes", "duration", "durationIso", "bpm"]) {
+      assert.match(mapping, new RegExp(`\\b${field}\\s*:`), `${sourceName} should map ${field} into WorkspaceTrack`);
+    }
+  }
+
+  const searchTaxonomy = catalogueData.match(/export const musicSearchTaxonomy = \{([\s\S]*?)\}\s+as const;/);
+  assert.ok(searchTaxonomy, "the connected search taxonomy should have one canonical export");
+  assert.match(searchTaxonomy[1], /genres:\s*genres\.slice\(1\)/);
+  assert.match(searchTaxonomy[1], /moods:\s*moods\.slice\(1\)/);
+  assert.match(searchTaxonomy[1], /themes:\s*useCategories\.map\(\(\{ label, slug \}\) => \(\{ label, slug \}\)\)/);
+  assert.match(searchTaxonomy[1], /artists:\s*Array\.from\(new Set\(workspaceTracks\.map\(\(track\) => track\.artist\)\)\)/);
+
+  const v12Start = musicWorkspaceCss.indexOf("/* V12");
+  assert.ok(v12Start >= 0, "the connected music layout should be isolated in the V12 CSS block");
+  const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start);
+  assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
+  assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
+  assert.match(musicWorkspaceV12, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(270px, 1\.15fr\)[^}]*184px/s);
+  assert.match(musicWorkspaceV12, /button\.music-track-cover-play\s*\{[^}]*width:\s*64px;[^}]*height:\s*64px;[^}]*overflow:\s*hidden/s);
+  assert.match(musicWorkspaceV12, /article\.music-track-row\[role="listitem"\] > \.music-wave i\.is-played\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*opacity:\s*1/s);
+  assert.match(musicWorkspaceV12, /\.music-track-actions button,[\s\S]{0,100}\.music-track-actions button:not\(:first-child\)\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px/s);
+  assert.match(musicWorkspaceV12, /\.workspace-audio-player\s*\{[^}]*grid-template-columns:\s*minmax\(260px, \.85fr\) minmax\(180px, 1fr\) 92px auto/s);
+  assert.match(musicWorkspaceV12, /\.workspace-player-main\s*\{[^}]*grid-template-columns:\s*42px 52px minmax\(120px, 1fr\)/s);
+  assert.match(musicWorkspaceV12, /\.workspace-audio-player > \.music-wave\s*\{/);
+  assert.doesNotMatch(musicWorkspaceV12, /\.workspace-player-main > \.music-wave/);
+  assert.match(musicWorkspaceV12, /\.creator-music-app \.music-app-nav button:focus-visible,[\s\S]{0,260}outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
+
+  const mobileNavStart = musicWorkspaceV12.indexOf("@media (max-width: 860px)");
+  const compactRowsStart = musicWorkspaceV12.indexOf("@media (max-width: 760px)");
+  const phoneRowsStart = musicWorkspaceV12.indexOf("@media (max-width: 480px)");
+  const reducedMotionStart = musicWorkspaceV12.indexOf("@media (prefers-reduced-motion: reduce)");
+  assert.ok(mobileNavStart >= 0 && compactRowsStart > mobileNavStart && phoneRowsStart > compactRowsStart && reducedMotionStart > phoneRowsStart);
+  const mobileNavCss = musicWorkspaceV12.slice(mobileNavStart, compactRowsStart);
+  const compactRowsCss = musicWorkspaceV12.slice(compactRowsStart, phoneRowsStart);
+  const phoneRowsCss = musicWorkspaceV12.slice(phoneRowsStart, reducedMotionStart);
+  const reducedMotionCss = musicWorkspaceV12.slice(reducedMotionStart);
+  assert.match(mobileNavCss, /grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(mobileNavCss, /button\[data-mobile-secondary="true"\]\s*\{\s*display:\s*none/);
+  assert.match(compactRowsCss, /article\.music-track-row\[role="listitem"\][\s\S]{0,300}grid-template-areas:[\s\S]{0,180}"actions actions"/);
+  assert.match(compactRowsCss, /"error error"/);
+  assert.match(compactRowsCss, /\.music-track-actions button:not\(:first-child\)\s*\{\s*display:\s*grid/);
+  assert.match(compactRowsCss, /\.workspace-audio-player > \.music-wave\s*\{\s*display:\s*none/);
+  assert.match(phoneRowsCss, /\.music-track-actions button:not\(:first-child\)\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px/s);
+  assert.match(reducedMotionCss, /article\.music-track-row\[role="listitem"\][\s\S]{0,220}transition:\s*none/);
+
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
-  assert.match(musicWorkspaceCss, /\.music-track-identity strong\s*\{[^}]*font-size:\s*15px/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
   assert.match(musicWorkspace, /--playlist-accent":\s*playlistGenreAccents\[playlist\.genre\]/);
   assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-accent/);

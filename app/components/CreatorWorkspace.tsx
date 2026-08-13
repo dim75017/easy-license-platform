@@ -1,40 +1,69 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
-import { genres, lofiGirlPlaylists, moods, playlistGenreAccents, tracks, type LofiGirlPlaylist, type MusicUseSlug, type Track } from "../data/catalog";
+import { useTrackPreview } from "../hooks/useTrackPreview";
+import {
+  genres,
+  lofiGirlPlaylists,
+  moods,
+  musicSearchTaxonomy,
+  playlistGenreAccents,
+  type LofiGirlPlaylist,
+  type MusicUseSlug,
+  type WorkspaceTrack,
+  workspaceTracks,
+} from "../data/catalog";
 import "../workspace-music.css";
 
-type LibraryView = "music" | "playlists" | "downloads" | "channels" | "licences";
+type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences";
+type FacetKind = "genre" | "mood" | "theme" | "artist";
 
 const roles = ["Creator", "Streamer", "Filmmaker", "Brand / agency"];
 const destinations = ["YouTube", "Twitch", "TikTok", "Instagram", "Kick", "Podcasts", "Websites"];
-const listeningDirections: Array<{ label: string; note: string; use: MusicUseSlug }> = [
-  { label: "Calm focus", note: "Lofi · Piano", use: "study-focus" },
-  { label: "Neon energy", note: "Synthwave · Gaming", use: "gaming-streaming" },
-  { label: "Dream state", note: "Ambient · Cinematic", use: "cinematic" },
-  { label: "Late-night warmth", note: "Jazz Lofi · Café", use: "food-hospitality" },
-  { label: "Sunny motion", note: "Chill House · Travel", use: "travel" },
-  { label: "Deep rest", note: "Sleep · Wellness", use: "wellness" },
+
+const navGroups: ReadonlyArray<{
+  label: string;
+  items: ReadonlyArray<{ id: LibraryView; label: string; icon: string; mobileSecondary?: boolean }>;
+}> = [
+  {
+    label: "DISCOVER MUSIC",
+    items: [
+      { id: "discover", label: "Discover", icon: "◎" },
+      { id: "music", label: "Music", icon: "♫" },
+      { id: "playlists", label: "Playlists", icon: "▦" },
+    ],
+  },
+  {
+    label: "YOUR LIBRARY",
+    items: [
+      { id: "liked", label: "Liked tracks", icon: "♡" },
+      { id: "downloads", label: "Downloads", icon: "↓" },
+      { id: "licences", label: "Licences", icon: "◇", mobileSecondary: true },
+      { id: "channels", label: "Channels", icon: "◉", mobileSecondary: true },
+    ],
+  },
 ];
 
-const navItems: Array<{ id: LibraryView; label: string; icon: string; badge?: string }> = [
-  { id: "music", label: "Music", icon: "♫" },
-  { id: "playlists", label: "Playlists", icon: "▤", badge: String(lofiGirlPlaylists.length) },
-  { id: "downloads", label: "Downloads", icon: "↓", badge: "4" },
-  { id: "channels", label: "Channels", icon: "◉" },
-  { id: "licences", label: "Licences", icon: "◇" },
-];
+const viewLabels = Object.fromEntries(navGroups.flatMap((group) => group.items.map((item) => [item.id, item.label]))) as Record<LibraryView, string>;
 
-function Wave({ seed, dense = false }: { seed: string; dense?: boolean }) {
+function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
   const heights = [34, 68, 43, 82, 56, 92, 47, 73, 39, 88, 51, 64, 31, 77, 46, 95, 58, 70, 37, 84, 49, 62, 42, 78];
   const offset = seed.charCodeAt(seed.length - 1) % heights.length;
-  const count = dense ? heights.length : 12;
+  const count = dense ? 48 : 18;
+  const playedBars = Math.round(Math.max(0, Math.min(1, progress)) * count);
+
   return (
     <span className="music-wave" aria-hidden="true">
-      {heights.slice(0, count).map((_, index) => <i key={index} style={{ height: `${heights[(index + offset) % heights.length]}%` }} />)}
+      {Array.from({ length: count }, (_, index) => (
+        <i
+          className={index < playedBars ? "is-played" : undefined}
+          key={index}
+          style={{ height: `${heights[(index + offset) % heights.length]}%` }}
+        />
+      ))}
     </span>
   );
 }
@@ -63,77 +92,122 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
         <em>{playlist.description}</em>
         <b className="workspace-lofi-credit"><LofiGirlWordmark /> <span>public playlist</span></b>
       </span>
-      <i aria-hidden="true">→</i>
     </button>
   );
 }
 
-function ProductNavigation() {
+function DiscoveryFacet({
+  eyebrow,
+  title,
+  items,
+  onSelect,
+}: {
+  eyebrow: string;
+  title: string;
+  items: readonly string[];
+  onSelect: (item: string) => void;
+}) {
   return (
-    <div className="music-product-nav" aria-label="Symbiome products">
-      <button className="is-active" type="button"><span>♫</span><strong>Music</strong></button>
-      <button type="button" aria-disabled="true"><span>⌁</span><strong>Sound effects</strong><small>Coming soon</small></button>
-      <button type="button" aria-disabled="true"><span>◌</span><strong>Voices</strong><small>Coming soon</small></button>
-    </div>
+    <section className="music-discovery-facet" aria-labelledby={`facet-${title.toLowerCase()}`}>
+      <div className="music-discovery-facet-head">
+        <span>{eyebrow}</span>
+        <h3 id={`facet-${title.toLowerCase()}`}>{title}</h3>
+      </div>
+      <div className="music-facet-options">
+        {items.map((item) => (
+          <button className="music-facet-option" type="button" onClick={() => onSelect(item)} key={item}>{item}</button>
+        ))}
+      </div>
+    </section>
   );
 }
 
 export function CreatorWorkspace() {
-  const [view, setView] = useState<LibraryView>("music");
+  const [view, setView] = useState<LibraryView>("discover");
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All genres");
   const [mood, setMood] = useState("All moods");
   const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
-  const [selectedTrackId, setSelectedTrackId] = useState(tracks[0]?.id ?? "");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
+  const [likedReady, setLikedReady] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState("Creator");
   const [selectedDestinations, setSelectedDestinations] = useState<Set<string>>(() => new Set(["YouTube"]));
+  const preview = useTrackPreview();
 
   useEffect(() => {
     try {
       if (!window.localStorage.getItem("easy-license-library-tuned")) setSetupOpen(true);
+      const storedLiked = JSON.parse(window.localStorage.getItem("symbiome-liked-tracks") ?? "[]") as unknown;
+      if (Array.isArray(storedLiked)) setLiked(new Set(storedLiked.filter((id): id is string => typeof id === "string")));
     } catch {
       setSetupOpen(true);
+    } finally {
+      setLikedReady(true);
     }
   }, []);
 
+  useEffect(() => {
+    if (!likedReady) return;
+    try { window.localStorage.setItem("symbiome-liked-tracks", JSON.stringify([...liked])); } catch { /* Storage can be unavailable in previews. */ }
+  }, [liked, likedReady]);
+
   const visibleTracks = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return tracks.filter((track) => {
-      const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${track.suggestedUses.join(" ")}`.toLowerCase();
+    return workspaceTracks.filter((track) => {
+      const themeLabels = track.themes.map((slug) => musicSearchTaxonomy.themes.find((theme) => theme.slug === slug)?.label ?? slug);
+      const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${themeLabels.join(" ")}`.toLowerCase();
       return (!needle || haystack.includes(needle))
         && (genre === "All genres" || track.genre === genre)
         && (mood === "All moods" || track.moods.includes(mood))
-        && (!activeUse || track.suggestedUses.includes(activeUse));
+        && (!activeUse || track.themes.includes(activeUse));
     });
   }, [activeUse, genre, mood, query]);
 
-  const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? tracks[0];
+  const likedTracks = useMemo(() => workspaceTracks.filter((track) => liked.has(track.id)), [liked]);
+  const selectedTrack = workspaceTracks.find((track) => track.id === preview.activeTrackId);
   const activePlaylist = lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId);
+  const activeTheme = musicSearchTaxonomy.themes.find((theme) => theme.slug === activeUse);
+
+  function resetFilters() {
+    setGenre("All genres");
+    setMood("All moods");
+    setActiveUse(null);
+    setActivePlaylistId(null);
+    setQuery("");
+  }
+
+  function showMusic() {
+    setView("music");
+  }
 
   function openPlaylist(playlist: LofiGirlPlaylist) {
     setActivePlaylistId(playlist.id);
     setActiveUse(playlist.use);
     setGenre("All genres");
     setMood("All moods");
-    setView("music");
-    window.setTimeout(() => document.querySelector(".music-track-browser")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+    showMusic();
   }
 
-  function openDirection(use: MusicUseSlug) {
-    setActivePlaylistId(null);
-    setActiveUse(use);
+  function openFacet(kind: FacetKind, value: string) {
     setGenre("All genres");
     setMood("All moods");
-    window.setTimeout(() => document.querySelector(".music-track-browser")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+    setActiveUse(null);
+    setActivePlaylistId(null);
+    setQuery("");
+    if (kind === "genre") setGenre(value);
+    if (kind === "mood") setMood(value);
+    if (kind === "artist") setQuery(value);
+    if (kind === "theme") {
+      const theme = musicSearchTaxonomy.themes.find((item) => item.label === value);
+      if (theme) setActiveUse(theme.slug);
+    }
+    showMusic();
   }
 
-  function openTrack(track: Track) {
-    setSelectedTrackId(track.id);
-    setPreviewOpen(true);
+  function togglePreview(track: WorkspaceTrack) {
+    void preview.toggle({ id: track.id, previewUrl: track.previewUrl });
   }
 
   function toggleLiked(trackId: string) {
@@ -146,7 +220,7 @@ export function CreatorWorkspace() {
   }
 
   function closeSetup() {
-    try { window.localStorage.setItem("easy-license-library-tuned", "1"); } catch { /* local storage can be unavailable in previews */ }
+    try { window.localStorage.setItem("easy-license-library-tuned", "1"); } catch { /* Storage can be unavailable in previews. */ }
     setSetupOpen(false);
   }
 
@@ -159,101 +233,188 @@ export function CreatorWorkspace() {
     });
   }
 
+  function renderTrackTable(source: readonly WorkspaceTrack[], label: string): ReactNode {
+    return (
+      <div className="music-track-table" role="list" aria-label={label}>
+        <div className="music-track-table-head" aria-hidden="true">
+          <span>Track</span><span>Waveform</span><span>Length / BPM</span><span>Genre / mood</span><span>Actions</span>
+        </div>
+        {source.map((track) => {
+          const isActive = preview.activeTrackId === track.id;
+          const isPlaying = isActive && preview.isPlaying;
+          const hasError = preview.errorTrackId === track.id;
+          return (
+            <article className={`music-track-row${isActive ? " is-selected" : ""}${hasError ? " has-preview-error" : ""}`} role="listitem" key={track.id}>
+              <div className="music-track-identity">
+                <button className="music-track-cover-play" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`}>
+                  <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" />
+                  <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+                </button>
+                <span><strong>{track.title}</strong><small>{track.artist}</small></span>
+              </div>
+              <Wave seed={track.id} dense progress={isActive ? preview.progress : 0} />
+              <div className="music-track-meta">
+                {track.duration && track.durationIso ? <time dateTime={track.durationIso}>{track.duration}</time> : <span>Preview</span>}
+                <small>{track.bpm ? `${track.bpm} BPM` : "BPM —"}</small>
+              </div>
+              <div className="music-track-tags"><span>{track.genre}</span><small>{track.moods.slice(0, 2).join(" · ")}</small></div>
+              <div className="music-track-actions">
+                <button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`${liked.has(track.id) ? "Unlike" : "Like"} ${track.title}`} aria-pressed={liked.has(track.id)}>{liked.has(track.id) ? "♥" : "♡"}</button>
+                <button type="button" aria-label={`Add ${track.title} to a playlist`}>＋</button>
+                <button type="button" aria-label={`Download ${track.title}`}>↓</button>
+                <button type="button" aria-label={`More options for ${track.title}`}>•••</button>
+              </div>
+              {hasError && <p className="music-track-preview-error" role="status">Preview unavailable. <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></p>}
+            </article>
+          );
+        })}
+        {source.length === 0 && (
+          <div className="music-no-results">
+            <strong>No matching tracks yet.</strong>
+            <p>Try another category or return to the full music preview.</p>
+            <button type="button" onClick={() => { resetFilters(); setView("music"); }}>Show all music</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="creator-music-app">
       <aside className="music-app-sidebar">
         <div className="music-app-brand"><Brand compact /><span>Creator</span></div>
-        <ProductNavigation />
 
-        <nav className="music-app-nav" aria-label="Creator library navigation">
-          <span>YOUR LIBRARY</span>
-          {navItems.slice(1).map((item) => (
-            <button className={view === item.id ? "is-active" : ""} type="button" onClick={() => setView(item.id)} key={item.id}>
-              <i aria-hidden="true">{item.icon}</i><strong>{item.label}</strong>{item.badge && <small>{item.badge}</small>}
-            </button>
+        <nav className="music-app-nav" aria-label="Creator music navigation">
+          {navGroups.map((group) => (
+            <div className="music-app-nav-section" key={group.label}>
+              <span className="music-app-nav-label">{group.label}</span>
+              {group.items.map((item) => {
+                const badge = item.id === "playlists" ? String(lofiGirlPlaylists.length) : item.id === "liked" && liked.size ? String(liked.size) : undefined;
+                return (
+                  <button
+                    className={view === item.id ? "is-active" : ""}
+                    {...(item.mobileSecondary ? { "data-mobile-secondary": "true" } : {})}
+                    type="button"
+                    onClick={() => setView(item.id)}
+                    aria-current={view === item.id ? "page" : undefined}
+                    key={item.id}
+                  >
+                    <i aria-hidden="true">{item.icon}</i><strong>{item.label}</strong>{badge && <small>{badge}</small>}
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </nav>
 
         <div className="music-app-sidebar-bottom">
           <button className="tune-library-button" type="button" onClick={() => setSetupOpen(true)}><span>✦</span><strong>Tune my library</strong><small>Improve recommendations</small></button>
           <div className="music-app-account"><span>DM</span><div><strong>Demo creator</strong><small>Creator plan</small></div><i>•••</i></div>
-          <Link href="/">← Back to website</Link>
+          <Link href="/">Back to website</Link>
         </div>
       </aside>
 
       <main className="music-app-main">
         <header className="music-app-topbar">
-          <div><span>Symbiome</span><h1>{view === "music" ? "Music library" : navItems.find((item) => item.id === view)?.label}</h1></div>
+          <div><span>Symbiome</span><h1>{viewLabels[view]}</h1></div>
           <label className="music-global-search">
             <span aria-hidden="true">⌕</span>
-            <input value={query} onChange={(event) => { setQuery(event.target.value); setActiveUse(null); setActivePlaylistId(null); setView("music"); }} placeholder="Search tracks, artists, moods or genres" />
-            <kbd>⌘ K</kbd>
+            <input
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setActiveUse(null);
+                setActivePlaylistId(null);
+                setView("music");
+              }}
+              placeholder="Search by track, artist, genre, mood or theme"
+            />
           </label>
-          <button className="music-topbar-action" type="button" onClick={() => setView("downloads")}>Downloads <span>4</span></button>
+          <button className="music-topbar-action" type="button" onClick={() => setView("downloads")}>Downloads</button>
         </header>
 
-        {view === "music" && (
+        {view === "discover" && (
           <div className="music-library-view">
             <section className="music-discovery-intro">
-              <div><p>HUMAN-MADE MUSIC</p><h2>Find the right atmosphere,<br />then keep creating.</h2><span>Instrumental music from real artists, ready for videos, streams, podcasts and more.</span></div>
+              <div><p>HUMAN-MADE MUSIC</p><h2>Start with a direction.<br />Find the right track.</h2><span>Browse the catalogue through real genres, moods, themes and artists.</span></div>
               <div className="music-catalogue-proof"><strong>10,000+</strong><span>tracks in the full catalogue</span><i>0 AI-generated</i></div>
             </section>
 
+            <div className="music-discovery-grid">
+              <DiscoveryFacet eyebrow="01" title="Genres" items={musicSearchTaxonomy.genres} onSelect={(item) => openFacet("genre", item)} />
+              <DiscoveryFacet eyebrow="02" title="Moods" items={musicSearchTaxonomy.moods} onSelect={(item) => openFacet("mood", item)} />
+              <DiscoveryFacet eyebrow="03" title="Themes" items={musicSearchTaxonomy.themes.map((theme) => theme.label)} onSelect={(item) => openFacet("theme", item)} />
+              <DiscoveryFacet eyebrow="04" title="Artists" items={musicSearchTaxonomy.artists} onSelect={(item) => openFacet("artist", item)} />
+            </div>
+
             <section className="music-shelf" aria-labelledby="project-playlists-title">
-              <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Explore by genre and mood.</h3><p>From lofi and ambient to classical, bossa and seasonal listening — twelve distinct directions for the work in front of you.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists →</button></div>
+              <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Start with a playlist.</h3><p>Twelve listening directions using the original playlist photography and a genre colour code.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists</button></div>
               <div className="music-playlist-shelf">
                 {lofiGirlPlaylists.slice(0, 8).map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
-              </div>
-            </section>
-
-            <section className="music-mood-shelf" aria-labelledby="mood-title">
-              <div className="music-shelf-head"><div><span>MOVE BY MOOD</span><h3 id="mood-title">Choose the feeling first.</h3></div></div>
-              <div>{listeningDirections.map((item) => <button className={activeUse === item.use && !activePlaylistId ? "is-active" : ""} type="button" onClick={() => openDirection(item.use)} key={item.label}><span><strong>{item.label}</strong><small>{item.note}</small></span><i>→</i></button>)}</div>
-            </section>
-
-            <section className="music-track-browser" aria-labelledby="tracks-title">
-              <div className="music-track-browser-head">
-                <div><span>SYMBIOME CATALOGUE PREVIEW</span><h3 id="tracks-title">{activePlaylist?.title ?? (activeUse ? listeningDirections.find((item) => item.use === activeUse)?.label : "All music")}</h3><p>{visibleTracks.length} matching licensable tracks in this preview</p></div>
-                <div className="music-filter-row">
-                  <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
-                  <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
-                  {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setActivePlaylistId(null); setQuery(""); }}>Clear filters</button>}
-                </div>
-              </div>
-
-              <div className="music-track-table" aria-live="polite">
-                <div className="music-track-table-head"><span>Track</span><span>Waveform</span><span>Genre / mood</span><span>Audience</span><span>Actions</span></div>
-                {visibleTracks.map((track, index) => (
-                  <article className={selectedTrackId === track.id ? "music-track-row is-selected" : "music-track-row"} key={track.id}>
-                    <div className="music-track-identity"><button type="button" onClick={() => openTrack(track)} aria-label={`Preview ${track.title}`}>{selectedTrackId === track.id && previewOpen ? "■" : "▶"}</button><img src={track.cover} alt="" /><span><strong>{track.title}</strong><small>{track.artist}</small></span></div>
-                    <Wave seed={track.id} dense />
-                    <div className="music-track-tags"><span>{track.genre}</span><small>{track.moods.slice(0, 2).join(" · ")}</small></div>
-                    <span className="music-track-streams">{track.streams}</span>
-                    <div className="music-track-actions"><button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`Like ${track.title}`}>{liked.has(track.id) ? "♥" : "♡"}</button><button type="button" aria-label={`Add ${track.title} to playlist`}>＋</button><button type="button" aria-label={`Download ${track.title}`}>↓</button></div>
-                    <span className="music-track-index">{String(index + 1).padStart(2, "0")}</span>
-                  </article>
-                ))}
-                {visibleTracks.length === 0 && <div className="music-no-results"><strong>No matching tracks yet.</strong><p>Try another mood or clear the filters to return to the full preview.</p><button type="button" onClick={() => { setGenre("All genres"); setMood("All moods"); setActiveUse(null); setActivePlaylistId(null); setQuery(""); }}>Reset library</button></div>}
               </div>
             </section>
           </div>
         )}
 
+        {view === "music" && (
+          <section className="music-track-browser" aria-labelledby="tracks-title">
+            <div className="music-track-browser-head">
+              <div>
+                <span>MUSIC SEARCH</span>
+                <h2 id="tracks-title">{activePlaylist?.title ?? activeTheme?.label ?? (query ? `Results for “${query}”` : "All music")}</h2>
+                <p className="music-track-results-status" role="status">{visibleTracks.length} matching preview {visibleTracks.length === 1 ? "track" : "tracks"}</p>
+              </div>
+              <div className="music-filter-row">
+                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
+                {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
+              </div>
+            </div>
+            {renderTrackTable(visibleTracks, "Matching music tracks")}
+          </section>
+        )}
+
+        {view === "liked" && (
+          <section className="music-track-browser music-liked-view" aria-labelledby="liked-tracks-title">
+            <div className="music-track-browser-head"><div><span>YOUR LIBRARY</span><h2 id="liked-tracks-title">Liked tracks</h2><p className="music-track-results-status" role="status">{likedTracks.length} saved {likedTracks.length === 1 ? "track" : "tracks"}</p></div></div>
+            {renderTrackTable(likedTracks, "Liked tracks")}
+          </section>
+        )}
+
         {view === "playlists" && <PlaylistLibrary onOpen={openPlaylist} />}
-        {view === "downloads" && <DownloadsLibrary onOpen={openTrack} />}
+        {view === "downloads" && <DownloadsLibrary />}
         {view === "channels" && <ChannelsView />}
         {view === "licences" && <LicencesView />}
       </main>
 
+      <audio
+        ref={preview.audioRef}
+        preload="none"
+        playsInline
+        onPlay={preview.onPlay}
+        onPause={preview.onPause}
+        onTimeUpdate={preview.onTimeUpdate}
+        onEnded={preview.onEnded}
+        onError={preview.onError}
+      />
+
       {selectedTrack && (
-        <footer className={previewOpen ? "workspace-audio-player is-open" : "workspace-audio-player"}>
-          <div className="workspace-player-track"><img src={selectedTrack.cover} alt="" /><span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist} · {selectedTrack.genre}</small></span></div>
-          <button className="workspace-player-toggle" type="button" onClick={() => setPreviewOpen((open) => !open)} aria-label={previewOpen ? "Close preview" : "Open preview"}>{previewOpen ? "×" : "▶"}</button>
-          <Wave seed={selectedTrack.id} dense />
-          <span className="workspace-player-time">PREVIEW</span>
-          <div className="workspace-player-actions"><button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)}>♡</button><button type="button">＋ Playlist</button><button type="button">↓ Download</button></div>
-          {previewOpen && <iframe src={`https://open.spotify.com/embed/track/${selectedTrack.spotifyId}?utm_source=generator&theme=0`} title={`Spotify preview for ${selectedTrack.title} by ${selectedTrack.artist}`} width="100%" height="80" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" />}
-        </footer>
+        <section className="workspace-audio-player is-open" aria-label="Track preview player">
+          <div className="workspace-player-main">
+            <button className="workspace-player-toggle" type="button" onClick={() => togglePreview(selectedTrack)} aria-label={`${preview.isPlaying ? "Pause" : "Play"} preview of ${selectedTrack.title}`}><span aria-hidden="true">{preview.isPlaying ? "Ⅱ" : "▶"}</span></button>
+            <img src={selectedTrack.cover} alt="" width={52} height={52} />
+            <span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist}</small></span>
+          </div>
+          <Wave seed={selectedTrack.id} dense progress={preview.progress} />
+          <div className="workspace-player-meta"><span>{selectedTrack.duration ?? "Preview"}</span><small>{selectedTrack.bpm ? `${selectedTrack.bpm} BPM` : selectedTrack.genre}</small></div>
+          <div className="workspace-player-actions">
+            <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}>{liked.has(selectedTrack.id) ? "♥" : "♡"}</button>
+            <button type="button" aria-label={`Add ${selectedTrack.title} to a playlist`}>＋</button>
+            <button type="button" aria-label={`Download ${selectedTrack.title}`}>↓</button>
+          </div>
+          {preview.errorTrackId === selectedTrack.id && <p className="workspace-player-error" role="status">Preview unavailable. <a href={selectedTrack.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></p>}
+        </section>
       )}
 
       {setupOpen && (
@@ -263,7 +424,7 @@ export function CreatorWorkspace() {
             <div className="music-setup-form">
               <section><span>01 · YOUR MAIN ROLE</span><h3>What are you creating as?</h3><div className="music-role-grid">{roles.map((role) => <button className={selectedRole === role ? "is-selected" : ""} type="button" onClick={() => setSelectedRole(role)} key={role}>{role}<i>{selectedRole === role ? "✓" : ""}</i></button>)}</div></section>
               <section><span>02 · WHERE YOU PUBLISH</span><h3>Choose every destination that matters.</h3><div className="music-destination-grid">{destinations.map((destination) => <button className={selectedDestinations.has(destination) ? "is-selected" : ""} type="button" onClick={() => toggleDestination(destination)} key={destination}>{destination}<i>{selectedDestinations.has(destination) ? "✓" : "+"}</i></button>)}</div></section>
-              <button className="music-setup-submit" type="button" onClick={closeSetup}>Open my music library <span>→</span></button>
+              <button className="music-setup-submit" type="button" onClick={closeSetup}>Open my music library</button>
             </div>
           </div>
         </div>
@@ -276,8 +437,8 @@ function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => v
   return <div className="music-secondary-view"><header><span className="workspace-lofi-kicker"><LofiGirlWordmark /> LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
-function DownloadsLibrary({ onOpen }: { onOpen: (track: Track) => void }) {
-  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Your recent music downloads and their licence records.</p></header><div className="music-download-list">{tracks.map((track, index) => <article key={track.id}><button type="button" onClick={() => onOpen(track)}>▶</button><img src={track.cover} alt="" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><span>{["Today", "Yesterday", "31 Jul", "29 Jul"][index]}</span><strong>WAV + MP3</strong><button type="button">↓</button></article>)}</div></div>;
+function DownloadsLibrary() {
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Downloaded masters and licence records will appear here.</p></header><div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a track from Music and it will stay connected to its licence record.</p></div></div>;
 }
 
 function ChannelsView() {

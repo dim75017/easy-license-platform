@@ -392,8 +392,9 @@ export type Track = {
   /** Compatibility fields used by the signed-in workspace preview. */
   mood: string;
   use: string;
-  bpm: "—";
-  duration: string;
+  bpm: number | null;
+  duration: `${number}:${number}` | null;
+  durationIso: `PT${number}M${number}S` | null;
   accent: string;
 };
 
@@ -412,8 +413,9 @@ export const tracks: Track[] = [
     moods: ["Warm", "Calm", "Cozy"],
     mood: "Warm",
     use: "Study & Focus",
-    bpm: "—",
-    duration: "Spotify",
+    bpm: null,
+    duration: "3:01",
+    durationIso: "PT3M1S",
     accent: "violet",
   },
   {
@@ -430,8 +432,9 @@ export const tracks: Track[] = [
     moods: ["Bright", "Easygoing", "Warm"],
     mood: "Easygoing",
     use: "Travel",
-    bpm: "—",
-    duration: "Spotify",
+    bpm: null,
+    duration: "2:08",
+    durationIso: "PT2M8S",
     accent: "peach",
   },
   {
@@ -448,8 +451,9 @@ export const tracks: Track[] = [
     moods: ["Reflective", "Open", "Calm"],
     mood: "Reflective",
     use: "Cinematic",
-    bpm: "—",
-    duration: "Spotify",
+    bpm: null,
+    duration: "2:26",
+    durationIso: "PT2M26S",
     accent: "blue",
   },
   {
@@ -466,13 +470,72 @@ export const tracks: Track[] = [
     moods: ["Gentle", "Intimate", "Dreamy"],
     mood: "Gentle",
     use: "Podcasts",
-    bpm: "—",
-    duration: "Spotify",
+    bpm: null,
+    duration: "2:26",
+    durationIso: "PT2M26S",
     accent: "mint",
   },
 ];
 
+export type WorkspaceTrack = {
+  id: string;
+  spotifyId: string;
+  previewUrl: `https://p.scdn.co/mp3-preview/${string}`;
+  spotifyUrl: string;
+  title: string;
+  artist: string;
+  cover: string;
+  genre: string;
+  moods: readonly string[];
+  themes: readonly MusicUseSlug[];
+  duration: `${number}:${number}` | null;
+  durationIso: `PT${number}M${number}S` | null;
+  bpm: number | null;
+};
+
+/** A normalized, honest preview index for the connected search experience. */
+export const workspaceTracks: readonly WorkspaceTrack[] = [
+  ...creatorPlaylistTracks.map((track) => ({
+    id: `PLAYLIST-${track.spotifyId}`,
+    spotifyId: track.spotifyId,
+    previewUrl: track.previewUrl,
+    spotifyUrl: `https://open.spotify.com/track/${track.spotifyId}`,
+    title: track.title,
+    artist: track.artist,
+    cover: track.cover,
+    genre: track.genre,
+    moods: track.moods,
+    themes: track.suggestedUses,
+    duration: track.duration,
+    durationIso: track.durationIso,
+    bpm: null,
+  })),
+  ...tracks.map((track) => ({
+    id: track.id,
+    spotifyId: track.spotifyId,
+    previewUrl: track.previewUrl,
+    spotifyUrl: track.spotifyUrl,
+    title: track.title,
+    artist: track.artist,
+    cover: track.cover,
+    genre: track.genre,
+    moods: track.moods,
+    themes: track.suggestedUses,
+    duration: track.duration,
+    durationIso: track.durationIso,
+    bpm: track.bpm,
+  })),
+];
+
 export const featuredTracks = tracks;
-export const genres = ["All genres", ...Array.from(new Set(tracks.map((track) => track.genre)))];
-export const moods = ["All moods", ...featuredMoods];
-export const uses = ["All uses", ...useCategories.map((category) => category.label)];
+export const genres = ["All genres", ...Array.from(new Set(workspaceTracks.map((track) => track.genre)))];
+export const moods = ["All moods", ...Array.from(new Set(workspaceTracks.flatMap((track) => track.moods)))];
+export const uses = ["All themes", ...useCategories.map((category) => category.label)];
+
+/** Canonical search language for the connected music library. */
+export const musicSearchTaxonomy = {
+  genres: genres.slice(1),
+  moods: moods.slice(1),
+  themes: useCategories.map(({ label, slug }) => ({ label, slug })),
+  artists: Array.from(new Set(workspaceTracks.map((track) => track.artist))),
+} as const;

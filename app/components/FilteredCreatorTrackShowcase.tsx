@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { creatorPlaylistTracks, useCategories, type MusicUseSlug } from "../data/catalog";
+import { creatorPlaylistTracks, useCategories, type CreatorPlaylistTrack, type MusicUseSlug } from "../data/catalog";
 import { CreatorTrackShowcase } from "./CreatorTrackShowcase";
 
 const useLabels = new Map(useCategories.map((category) => [category.slug, category.label]));
@@ -19,7 +19,7 @@ export function FilteredCreatorTrackShowcase() {
     const normalizedQuery = query.toLocaleLowerCase();
     const normalizedGenre = genre.toLocaleLowerCase();
 
-    return creatorPlaylistTracks.slice(0, 8).filter((track) => {
+    return creatorPlaylistTracks.slice(0, 8).filter((track: CreatorPlaylistTrack) => {
       const haystack = `${track.title} ${track.artist} ${track.playlistTitle} ${track.genre} ${track.moods.join(" ")}`.toLocaleLowerCase();
       return (
         (!normalizedQuery || haystack.includes(normalizedQuery)) &&
