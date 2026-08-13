@@ -1490,43 +1490,78 @@
 }
 .music-playlists-all span { color: #9f3f2b; font-size: 22px; line-height: .7; }
 .catalogue-moods {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: clamp(88px, 9vw, 138px) clamp(28px, 4vw, 76px);
-  border-top: 1px solid rgba(41, 40, 50, .1);
-  background: var(--music-paper);
-  color: var(--music-night);
+  border-top: 0;
+  background-color: var(--music-night);
+  color: var(--music-cream);
+}
+
+.catalogue-moods::before {
+  position: absolute;
+  inset: -12px;
+  z-index: 0;
+  background: url("/images/unsplash/creator-process-blur.webp") center / cover no-repeat;
+  content: "";
+  transform: scale(1.025);
+}
+
+.catalogue-moods::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(110deg, rgba(18, 19, 29, .95), rgba(39, 43, 61, .8) 52%, rgba(18, 19, 29, .93)),
+    linear-gradient(180deg, rgba(18, 19, 29, .2), rgba(18, 19, 29, .78));
+  content: "";
+}
+
+.catalogue-moods > * {
+  position: relative;
+  z-index: 2;
 }
 
 .catalogue-moods-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, .55fr);
-  align-items: end;
-  gap: clamp(32px, 7vw, 112px);
-  margin-bottom: clamp(36px, 4.5vw, 62px);
+  max-width: 1080px;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0 auto clamp(44px, 5vw, 68px);
+  text-align: center;
 }
 
 .catalogue-moods-head h2 {
   margin: 12px 0 0;
+  color: var(--music-cream);
   font-family: var(--font-display);
-  font-size: clamp(48px, 5.4vw, 78px);
+  font-size: clamp(54px, 6vw, 92px);
   letter-spacing: -.04em;
-  line-height: .96;
+  line-height: .92;
 }
 
 .catalogue-moods-head > p {
-  max-width: 520px;
-  margin: 0;
-  color: rgba(41, 40, 50, .68);
+  max-width: 760px;
+  margin: 28px auto 0;
+  color: rgba(255, 249, 241, .74);
   font-size: clamp(17px, 1.35vw, 20px);
   line-height: 1.5;
 }
 
-.catalogue-moods .music-v26-kicker > span { color: var(--music-night); }
+.catalogue-moods .music-v26-kicker {
+  justify-content: center;
+  color: rgba(255, 249, 241, .74);
+}
+
+.catalogue-moods .music-v26-kicker > span { color: #f2b5a0; }
 
 .catalogue-moods-grid {
   display: grid;
+  max-width: 1440px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
   list-style: none;
 }
@@ -1540,18 +1575,18 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 20px;
-  border: 1px solid rgba(41, 40, 50, .13);
+  border: 1px solid rgba(255, 249, 241, .2);
   border-radius: 22px;
   padding: 22px;
-  background: var(--music-cream);
-  color: var(--music-night);
+  background: rgba(18, 19, 29, .7);
+  color: var(--music-cream);
   text-decoration: none;
-  box-shadow: 0 12px 34px rgba(41, 40, 50, .045);
-  transition: transform .35s cubic-bezier(.2, .7, .2, 1), background-color .35s ease, color .35s ease, box-shadow .35s ease;
+  box-shadow: 0 14px 38px rgba(7, 8, 13, .18);
+  transition: border-color .35s ease, background-color .35s ease, box-shadow .35s ease;
 }
 
 .catalogue-mood-number {
-  color: rgba(41, 40, 50, .45);
+  color: #f2b5a0;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: .08em;
@@ -1570,7 +1605,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: rgba(41, 40, 50, .65);
+  color: rgba(255, 249, 241, .74);
   font-size: 14px;
   font-weight: 700;
 }
@@ -1582,16 +1617,16 @@
 }
 
 .catalogue-mood-card:hover {
-  background: var(--music-night);
+  border-color: rgba(255, 249, 241, .42);
+  background: rgba(55, 58, 74, .76);
   color: var(--music-cream);
-  box-shadow: 0 20px 42px rgba(41, 40, 50, .14);
-  transform: translateY(-4px);
+  box-shadow: 0 20px 46px rgba(7, 8, 13, .3);
 }
 
 .catalogue-mood-card:hover .catalogue-mood-number,
-.catalogue-mood-card:hover .catalogue-mood-action { color: rgba(255, 249, 241, .72); }
+.catalogue-mood-card:hover .catalogue-mood-action { color: var(--music-cream); }
 .catalogue-mood-card:hover .catalogue-mood-action i { transform: translate(3px, -3px); }
-.catalogue-mood-card:focus-visible { outline: 3px solid var(--music-night); outline-offset: 3px; }
+.catalogue-mood-card:focus-visible { outline: 3px solid var(--music-cream); outline-offset: 3px; }
 
 @media (max-width: 900px) {
   .music-playlist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1602,7 +1637,6 @@
 }
 
 @media (max-width: 760px) {
-  .catalogue-moods-head { grid-template-columns: 1fr; gap: 22px; }
   .catalogue-moods-head > p { max-width: 620px; }
 }
 
@@ -1610,6 +1644,8 @@
   .music-library-hero h1 { font-size: clamp(50px, 15vw, 70px); line-height: .98; }
   .music-playlist-grid, .catalogue-moods-grid { grid-template-columns: 1fr; }
   .catalogue-moods { padding: 76px 20px; }
+  .catalogue-moods::before { background-position: 58% center; }
+  .catalogue-moods-head h2 { font-size: clamp(44px, 13vw, 58px); }
   .catalogue-mood-card { min-height: 140px; border-radius: 18px; }
 }
 

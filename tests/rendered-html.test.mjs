@@ -213,7 +213,11 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /V45: Music opens on the same banner dimensions as every public route\.[\s\S]{0,700}@media \(max-width: 760px\)[\s\S]{0,140}min-height:\s*620px/);
   assert.match(catalogueCss, /V47: Music shares the same catalogue proof band as every public route\.[\s\S]{0,260}\.music-v26-page \.catalogue-facts\s*\{[^}]*--home26-paper:\s*var\(--music-cream\);[^}]*--home26-rule:\s*var\(--music-rule\);[^}]*background:\s*var\(--music-cream\)/s);
   assert.match(catalogueCss, /\.music-v26-page \.music-library-hero \+ \.catalogue-facts\s*\{[^}]*border-top:\s*0/s);
-  assert.match(catalogueCss, /\.catalogue-moods\s*\{[\s\S]{0,260}background:\s*var\(--music-paper\)/);
+  assert.match(catalogueCss, /\.catalogue-moods\s*\{[\s\S]{0,360}position:\s*relative;[\s\S]{0,160}isolation:\s*isolate;[\s\S]{0,160}overflow:\s*hidden;[\s\S]{0,220}background-color:\s*var\(--music-night\);[\s\S]{0,80}color:\s*var\(--music-cream\)/);
+  assert.match(catalogueCss, /\.catalogue-moods::before\s*\{[\s\S]{0,260}creator-process-blur\.webp[\s\S]{0,120}transform:\s*scale\(1\.025\)/);
+  assert.match(catalogueCss, /\.catalogue-moods::after\s*\{[\s\S]{0,300}linear-gradient/);
+  assert.match(catalogueCss, /\.catalogue-moods > \*\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*2/s);
+  assert.match(catalogueCss, /\.catalogue-mood-card:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--music-cream\)/s);
   assert.match(catalogueCss, /\.catalogue-moods-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 1100px\)[\s\S]{0,160}\.catalogue-moods-grid\s*\{[^}]*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(max-width: 560px\)[\s\S]{0,260}\.music-playlist-grid, \.catalogue-moods-grid\s*\{[^}]*grid-template-columns:\s*1fr/);
@@ -1049,7 +1053,7 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-track:hover \.creator-editorial-side i,[\s\S]{0,180}background:\s*#464551/s);
   assert.doesNotMatch(brandCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--symbiose-warm\)/s);
   assert.match(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*var\(--marketing-paper\)/s);
-  assert.match(catalogueCss, /\.catalogue-moods\s*\{[^}]*background:\s*var\(--music-paper\)/s);
+  assert.match(catalogueCss, /\.catalogue-moods\s*\{[^}]*background-color:\s*var\(--music-night\);[^}]*color:\s*var\(--music-cream\)/s);
   assert.doesNotMatch(offerCss, /\.creators-landing \.creator-editorial\s*\{[^}]*background:\s*#e06343/s);
   assert.doesNotMatch(catalogueCss, /\.catalogue-moods\s*\{[^}]*background:\s*#e06343/s);
   assert.match(supportCss, /--support-ink:\s*#292832[\s\S]*--support-paper:\s*#f7ebdd[\s\S]*--support-warm:\s*#fff9f1/i);
