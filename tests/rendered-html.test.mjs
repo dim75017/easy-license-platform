@@ -1436,8 +1436,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   }
 
   assert.match(musicWorkspace, /className="music-track-table" role="list" aria-label=\{label\}/);
-  assert.match(musicWorkspace, /role="listitem" key=\{track\.id\}/);
-  assert.match(musicWorkspace, /<span>Track<\/span><span>Player<\/span><span>Genre \/ mood<\/span><span>Actions<\/span>/);
+  assert.match(musicWorkspace, /role="listitem"[\s\S]{0,360}key=\{track\.id\}/);
+  assert.match(musicWorkspace, /<span>Track<\/span><span>Player<\/span><span>Genre<\/span><span>Mood<\/span><span>Actions<\/span>/);
+  assert.match(musicWorkspace, /className="music-track-taxonomy music-track-genre"[\s\S]{0,120}>Genre<\/small><span>\{track\.genre\}<\/span>/);
+  assert.match(musicWorkspace, /className="music-track-taxonomy music-track-mood"[\s\S]{0,120}>Mood<\/small><span>\{track\.moods\.slice\(0, 2\)\.join\(/);
   assert.doesNotMatch(musicWorkspace, /<span>Waveform<\/span>|<span>Length \/ BPM<\/span>/);
   assert.doesNotMatch(musicWorkspace, /\bAudience\b/);
   assert.match(musicWorkspace, /className="music-track-inline-player" role="group" aria-label=\{`Preview player for \$\{track\.title\}`\}/);
@@ -1469,14 +1471,28 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal((musicWorkspace.match(/className="music-player-seek"/g) ?? []).length, 2, "inline and fixed players should each expose one real seek range");
   assert.match(musicWorkspace, /className="music-player-seek" type="range" min="0" max=\{isActive && preview\.canSeek \? preview\.duration : 1\}[\s\S]{0,260}onChange=\{\(event\) => preview\.seekTo\(Number\(event\.currentTarget\.value\)\)\}[\s\S]{0,180}disabled=\{!isActive \|\| !preview\.canSeek\}/);
   assert.match(musicWorkspace, /className="music-player-time" dateTime=\{`PT\$\{Math\.floor\(isActive \? preview\.currentTime : 0\)\}S`\}>\{formatPlaybackTime\(isActive \? preview\.currentTime : 0\)\}<\/time>/);
-  assert.match(musicWorkspace, /aria-pressed=\{liked\.has\(track\.id\)\}/);
-  for (const actionPattern of [
-    /aria-label=\{`Add \$\{track\.title\} to a playlist`\}/,
-    /aria-label=\{`Download \$\{track\.title\}`\}/,
-    /aria-label=\{`More options for \$\{track\.title\}`\}/,
-  ]) {
-    assert.match(musicWorkspace, actionPattern);
-  }
+  const rowActions = musicWorkspace.match(/<div className="music-track-actions">([\s\S]*?)<\/div>/);
+  assert.ok(rowActions, "every music row should expose its three primary actions");
+  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 3, "track rows should expose Like, Add and Download only");
+  assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
+  assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
+  assert.match(rowActions[1], /onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,260}aria-label=\{`Download preview of \$\{track\.title\}[\s\S]{0,100}<TrackActionIcon kind="download"/);
+  assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
+  const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
+  assert.ok(fixedPlayerActions, "the fixed player should mirror the three primary actions");
+  assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 3, "the fixed player should expose Like, Add and Download only");
+  assert.doesNotMatch(musicWorkspace, /More options for|music-track-more|>\s*(?:â€¢â€¢â€¢|•••)\s*<\/button>/, "the obsolete More action should not return");
+  assert.match(musicWorkspace, /function TrackActionIcon[\s\S]{0,520}music-action-like[\s\S]{0,180}music-action-playlist[\s\S]{0,180}music-action-download/);
+
+  assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(\(event\.target as HTMLElement\)\.closest\("button, a, input, select, textarea"\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions"\);/);
+  assert.match(musicWorkspace, /id="music-track-context-menu"\s*className="music-track-context-menu"\s*role=\{state\.mode === "actions" \? "menu" : "dialog"\}\s*aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : `Add \$\{track\.title\} to a playlist`\}/);
+  assert.match(musicWorkspace, /role="menuitemcheckbox" aria-checked=\{liked\}[\s\S]{0,360}role="menuitem"[\s\S]{0,260}role="menuitem"/);
+  assert.match(musicWorkspace, /aria-pressed=\{containsTrack\}[\s\S]{0,260}Remove from playlist/);
+  assert.match(musicWorkspace, /popover\.querySelector<HTMLButtonElement>\("button:not\(\[disabled\]\)"\)\?\.focus\(\)/);
+  assert.match(musicWorkspace, /if \(event\.key === "Escape"\)[\s\S]{0,100}onClose\(true\)[\s\S]{0,180}\["ArrowDown", "ArrowUp", "Home", "End"\]/);
+  assert.match(musicWorkspace, /document\.addEventListener\("pointerdown", handlePointerDown, true\)[\s\S]{0,180}window\.addEventListener\("scroll", handleViewportChange, true\)/);
+  assert.match(musicWorkspace, /const nextX = Math\.max\(gutter, Math\.min\(state\.x, window\.innerWidth - rect\.width - gutter\)\)[\s\S]{0,180}const nextY = Math\.max/);
+  assert.match(musicWorkspace, /requestAnimationFrame\(\(\) => trackMenuOpenerRef\.current\?\.focus\(\)\)/);
 
   assert.match(musicWorkspace, /useTrackPreview\(\)/);
   assert.equal((musicWorkspace.match(/<audio\b/g) ?? []).length, 1, "the workspace should own one shared preview audio element");
@@ -1498,6 +1514,19 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /preview\.toggle\(\{ id: track\.id, previewUrl: track\.previewUrl \}\)/);
   assert.doesNotMatch(musicWorkspace, /<iframe|open\.spotify\.com\/embed/);
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
+  assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
+  assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
+  assert.match(musicWorkspace, /const knownTrackIds = new Set\(workspaceTracks\.map\(\(track\) => track\.id\)\)/);
+  assert.match(musicWorkspace, /record\.trackIds\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
+  assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
+  assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
+  assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
+  assert.match(musicWorkspace, /fetch\(track\.previewUrl\)[\s\S]{0,500}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\} \(preview\)\.mp3`[\s\S]{0,320}setDownloadedTrackIds/);
+  assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
+  assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
+  assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
+  assert.match(musicWorkspace, /Preview downloads are listed here\. Licensed masters will replace them when checkout and rights verification are connected\./);
+  assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);
   assert.match(musicWorkspace, /Tune the library/);
   assert.match(musicWorkspace, /easy-license-library-tuned/);
   assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);
@@ -1531,8 +1560,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v12Start >= 0, "the connected music layout should be isolated in the V12 CSS block");
   const v13Start = musicWorkspaceCss.indexOf("/* V13");
   assert.ok(v13Start > v12Start, "the functional player overrides should follow the connected layout");
+  const v14Start = musicWorkspaceCss.indexOf("/* V14");
+  assert.ok(v14Start > v13Start, "the taxonomy and track action overrides should follow the functional player block");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
-  const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start);
+  const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
+  const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -1553,7 +1585,6 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /@media \(min-width:\s*1600px\)\s*\{[^}]*\.music-discovery-grid\s*\{\s*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV13, /@media \(min-width:\s*2200px\)\s*\{[^}]*\.music-playlists-view \.music-secondary-playlists\s*\{\s*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV13, /\.workspace-playlist:focus-visible,[\s\S]{0,180}outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
-  assert.match(musicWorkspaceV13, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(220px, \.8fr\) minmax\(360px, 1\.7fr\) minmax\(130px, \.55fr\) 176px;[^}]*gap:\s*20px/s);
   assert.match(musicWorkspaceV13, /article\.music-track-row\[role="listitem"\]\s*\{[^}]*min-height:\s*82px;[^}]*padding-block:\s*9px/s);
   assert.match(musicWorkspaceV13, /\.music-track-identity > img\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;[^}]*object-fit:\s*cover/s);
   assert.match(musicWorkspaceV13, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 32px minmax\(160px, 1fr\) 32px;[^}]*gap:\s*8px/s);
@@ -1623,6 +1654,35 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13PhoneCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*30px/);
   assert.match(v13PhoneCss, /\.workspace-player-volume\s*\{[^}]*grid-template-columns:\s*32px minmax\(42px, 1fr\);[^}]*gap:\s*5px/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-wave \.music-wave\s*\{[^}]*(?:animation|transition)\s*:/s, "canvas redraws should not introduce CSS motion");
+
+  const v14TabletStart = musicWorkspaceV14.indexOf("@media (max-width: 1280px)");
+  const v14CompactStart = musicWorkspaceV14.indexOf("@media (max-width: 760px)");
+  const v14PhoneStart = musicWorkspaceV14.indexOf("@media (max-width: 480px)");
+  const v14ForcedColoursStart = musicWorkspaceV14.indexOf("@media (forced-colors: active)");
+  assert.ok(v14TabletStart > 0 && v14CompactStart > v14TabletStart && v14PhoneStart > v14CompactStart && v14ForcedColoursStart > v14PhoneStart);
+  const v14BaseCss = musicWorkspaceV14.slice(0, v14TabletStart);
+  const v14TabletCss = musicWorkspaceV14.slice(v14TabletStart, v14CompactStart);
+  const v14CompactCss = musicWorkspaceV14.slice(v14CompactStart, v14PhoneStart);
+  const v14PhoneCss = musicWorkspaceV14.slice(v14PhoneStart, v14ForcedColoursStart);
+  const v14ForcedColoursCss = musicWorkspaceV14.slice(v14ForcedColoursStart);
+  assert.match(v14BaseCss, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(210px, \.78fr\) minmax\(300px, 1\.45fr\) minmax\(88px, \.36fr\) minmax\(118px, \.48fr\) 140px;[^}]*gap:\s*16px/s);
+  assert.match(v14BaseCss, /\.music-track-taxonomy-label\s*\{\s*display:\s*none;/);
+  assert.match(v14BaseCss, /\.music-action-icon\s*\{[^}]*width:\s*18px;[^}]*height:\s*18px/s);
+  for (const iconSelector of ["music-action-like::before", "music-action-playlist::before", "music-action-download::before"]) {
+    assert.match(v14BaseCss, new RegExp(`\\.${iconSelector.replace("::", "::")}\\s*\\{`), `${iconSelector} should stay CSS-drawn`);
+  }
+  assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
+  assert.match(v14BaseCss, /\.music-track-context-options > button\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(v14BaseCss, /\.music-track-context-options > button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--wm-clay\);[^}]*outline-offset:\s*1px/s);
+  assert.match(v14BaseCss, /\.music-personal-playlists > div:last-child\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/s);
+  assert.match(v14TabletCss, /grid-template-columns:\s*minmax\(190px, 1fr\) minmax\(90px, \.44fr\) minmax\(110px, \.5fr\) 140px;[\s\S]{0,180}"identity genre mood actions"[\s\S]{0,100}"player player player player"/);
+  assert.match(v14TabletCss, /\.music-track-taxonomy-label\s*\{\s*display:\s*block;/);
+  assert.match(v14CompactCss, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\) auto;[\s\S]{0,180}"identity identity actions"[\s\S]{0,100}"genre mood mood"/);
+  assert.match(v14CompactCss, /\.music-track-actions button,\s*\.music-track-actions button:not\(:first-child\)\s*\{\s*display:\s*grid;/);
+  assert.match(v14CompactCss, /\.music-personal-playlists > div:last-child\s*\{\s*grid-template-columns:\s*1fr;/);
+  assert.match(v14PhoneCss, /grid-template-columns:\s*minmax\(0, 1fr\) auto;[\s\S]{0,180}"identity actions"[\s\S]{0,100}"genre genre"[\s\S]{0,80}"mood mood"/);
+  assert.match(v14PhoneCss, /\.music-track-context-menu\s*\{\s*width:\s*calc\(100vw - 24px\);/);
+  assert.match(v14ForcedColoursCss, /\.music-track-context-menu,[\s\S]{0,100}\.music-track-new-playlist input\s*\{\s*border:\s*1px solid ButtonText;/);
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
