@@ -185,6 +185,18 @@ class ManifestTests(unittest.TestCase):
 
 
 class StateTests(unittest.TestCase):
+    def test_promotion_success_accepts_the_backend_response_contract(self):
+        self.assertTrue(
+            process.promotion_succeeded(
+                {
+                    "trackStatus": "published",
+                    "releaseStatus": "published",
+                    "ingestStatus": "imported",
+                }
+            )
+        )
+        self.assertFalse(process.promotion_succeeded({"trackStatus": "ready"}))
+
     def test_default_batch_key_stays_stable_as_manifest_grows(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "exact.jsonl"

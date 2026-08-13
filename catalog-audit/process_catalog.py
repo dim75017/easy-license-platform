@@ -1143,7 +1143,11 @@ def metadata_item(
 
 
 def promotion_succeeded(payload: Mapping[str, Any]) -> bool:
-    if payload.get("published") is True or payload.get("status") == "published":
+    if (
+        payload.get("published") is True
+        or payload.get("status") == "published"
+        or payload.get("trackStatus") == "published"
+    ):
         return True
     track = payload.get("track")
     return isinstance(track, dict) and track.get("status") == "published"
