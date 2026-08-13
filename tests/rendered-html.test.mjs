@@ -1535,7 +1535,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(mobileNavCss, /grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(mobileNavCss, /button\[data-mobile-secondary="true"\]\s*\{\s*display:\s*none/);
 
-  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*min\(calc\(100% - 64px\), 1440px\);[^}]*margin:\s*0 auto;[^}]*padding:\s*40px 0 58px/s);
+  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*calc\(100% - 32px\);[^}]*max-width:\s*none;[^}]*margin:\s*0 auto;[^}]*padding:\s*40px 0 58px/s);
+  assert.doesNotMatch(musicWorkspaceV13, /width:\s*min\(calc\(100% - 64px\), 1440px\)/, "the Music library should not regain its old wide desktop gutters or width cap");
   assert.match(musicWorkspaceV13, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(220px, \.8fr\) minmax\(360px, 1\.7fr\) minmax\(130px, \.55fr\) 176px;[^}]*gap:\s*20px/s);
   assert.match(musicWorkspaceV13, /article\.music-track-row\[role="listitem"\]\s*\{[^}]*min-height:\s*82px;[^}]*padding-block:\s*9px/s);
   assert.match(musicWorkspaceV13, /\.music-track-identity > img\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;[^}]*object-fit:\s*cover/s);
@@ -1579,7 +1580,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13TabletCss, /\.workspace-player-volume\s*\{[^}]*grid-template-columns:\s*30px minmax\(35px, 1fr\);[^}]*gap:\s*4px/s);
   assert.match(v13PlayerStackCss, /\.workspace-audio-player\s*\{[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/s);
   assert.match(v13PlayerStackCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);
-  assert.match(v13MediumCss, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*calc\(100% - 40px\);[^}]*padding-top:\s*32px/s);
+  assert.match(v13MediumCss, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*calc\(100% - 24px\);[^}]*padding-top:\s*32px/s);
   assert.match(v13CompactCss, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 30px minmax\(80px, 1fr\) 30px/s);
   assert.match(v13CompactCss, /\.workspace-audio-player\s*\{[^}]*min-height:\s*112px;[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 40px auto;[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/);
   assert.match(v13CompactCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);

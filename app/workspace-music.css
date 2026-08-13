@@ -1016,7 +1016,8 @@ article.music-track-row[role="listitem"] > .music-wave i.is-played {
 
 /* V13: compact, functional playback rails and stable Music gutters. */
 .music-app-main > .music-track-browser {
-  width: min(calc(100% - 64px), 1440px);
+  width: calc(100% - 32px);
+  max-width: none;
   margin: 0 auto;
   padding: 40px 0 58px;
 }
@@ -1382,7 +1383,7 @@ article.music-track-row[role="listitem"] {
 
 @media (max-width: 860px) {
   .music-app-main > .music-track-browser {
-    width: calc(100% - 40px);
+    width: calc(100% - 24px);
     padding-top: 32px;
   }
 }
