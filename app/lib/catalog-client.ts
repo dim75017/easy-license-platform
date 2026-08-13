@@ -47,7 +47,7 @@ export function parseCatalogPage(payload: unknown): CatalogPage | null {
       id: `CATALOG-${numericId}`,
       spotifyId: null,
       previewUrl: playbackUrl,
-      previewDownloadUrl: null,
+      previewDownloadUrl: playbackUrl,
       spotifyUrl: null,
       title,
       artist,

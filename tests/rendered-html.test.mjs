@@ -1576,7 +1576,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 4, "the context menu should expose Like, Add, Download and Share");
   assert.match(contextActions[1], /role="menuitemcheckbox" aria-checked=\{liked\}/);
   assert.match(contextActions[1], /<TrackActionIcon kind="playlist" \/>[\s\S]{0,80}Add to playlist/);
-  assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,120}Download unavailable/);
+  assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,140}Download listening copy[\s\S]{0,80}Download unavailable/);
   assert.match(contextActions[1], /<TrackActionIcon kind="share" \/>[\s\S]{0,80}Copy track link/);
   assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,200}window\.location\.pathname\.replace\(\/\\\/app\\\/\?\$\/u, "\/app"\)[\s\S]{0,120}new URL\(appPath, window\.location\.origin\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
   assert.match(musicWorkspace, /navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,180}window\.prompt\("Copy this track link", shareUrl\)/);
@@ -1614,11 +1614,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
-  assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\} \(preview\)\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
+  assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
-  assert.match(musicWorkspace, /Preview downloads are listed here\. Licensed masters will replace them when checkout and rights verification are connected\./);
+  assert.match(musicWorkspace, /Full-length compressed listening copies are listed here\. WAV masters stay reserved for licensed downloads\./);
   assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/);
   assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);

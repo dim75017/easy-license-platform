@@ -20,7 +20,7 @@ test("catalog response mapper exposes only safe playback and cover routes", asyn
 
   assert.match(client, /playbackPath = \/\^\\\/api\\\/catalog\\\/tracks\\\/\\d\+\\\/stream\$\/u/);
   assert.match(client, /coverPath = \/\^\\\/api\\\/catalog\\\/releases\\\/\\d\+\\\/cover\$\/u/);
-  assert.match(client, /previewDownloadUrl:\s*null/);
+  assert.match(client, /previewDownloadUrl:\s*playbackUrl/);
   assert.match(client, /spotifyId:\s*null/);
   assert.doesNotMatch(client, /storageKey|sourceKey|driveFileId|googleDriveId/);
 });

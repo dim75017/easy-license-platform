@@ -255,7 +255,7 @@ function TrackActionPopover({
         <div className="music-track-context-options">
           <button role="menuitemcheckbox" aria-checked={liked} type="button" onClick={() => { onToggleLike(); onClose(true); }}><TrackActionIcon kind="like" active={liked} /><span>{liked ? "Remove from liked tracks" : "Like track"}</span></button>
           <button role="menuitem" type="button" onClick={onShowPlaylists}><TrackActionIcon kind="playlist" /><span>Add to playlist</span></button>
-          <button role="menuitem" type="button" disabled={!canDownload} title={canDownload ? undefined : "Licensed download unavailable"} onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>{canDownload ? "Download preview" : "Download unavailable"}</span></button>
+          <button role="menuitem" type="button" disabled={!canDownload} title={canDownload ? undefined : "Listening copy unavailable"} onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>{canDownload ? "Download listening copy" : "Download unavailable"}</span></button>
           <button role="menuitem" type="button" onClick={() => { onShare(); onClose(true); }}><TrackActionIcon kind="share" /><span>Copy track link</span></button>
         </div>
       ) : (
@@ -632,7 +632,7 @@ export function CreatorWorkspace() {
       setActionStatus(`A licensed download is not available for ${track.title} yet.`);
       return;
     }
-    setActionStatus(`Preparing the preview of ${track.title}.`);
+    setActionStatus(`Preparing ${track.title}.`);
     try {
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error("Preview download failed");
@@ -642,15 +642,15 @@ export function CreatorWorkspace() {
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = objectUrl;
-      anchor.download = `${track.artist} - ${track.title} (preview).mp3`.replace(/[\\/:*?"<>|]/g, "-");
+      anchor.download = `${track.artist} - ${track.title}.mp3`.replace(/[\\/:*?"<>|]/g, "-");
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
       setDownloadedTrackIds((current) => new Set(current).add(track.id));
-      setActionStatus(`${track.title} preview downloaded. The licensed master becomes available after checkout.`);
+      setActionStatus(`${track.title} downloaded. The WAV master remains reserved for licensed downloads.`);
     } catch {
-      setActionStatus(`The preview of ${track.title} could not be downloaded. The licensed master is not connected yet.`);
+      setActionStatus(`${track.title} could not be downloaded right now.`);
     }
   }
 
@@ -973,7 +973,7 @@ function PlaylistLibrary({ onOpen, personalPlaylists }: { onOpen: (playlist: Lof
 }
 
 function DownloadsLibrary({ tracks }: { tracks: readonly WorkspaceTrack[] }) {
-  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Preview downloads are listed here. Licensed masters will replace them when checkout and rights verification are connected.</p></header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Preview</strong></article>)}</div> : <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a preview from Music and it will appear here.</p></div>}</div>;
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Full-length compressed listening copies are listed here. WAV masters stay reserved for licensed downloads.</p></header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a track from Music and it will appear here.</p></div>}</div>;
 }
 
 function ChannelsView() {
