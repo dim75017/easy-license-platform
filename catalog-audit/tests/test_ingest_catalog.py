@@ -1,7 +1,11 @@
 import io
+import json
+import sqlite3
 import struct
 import unittest
 import wave
+
+from types import SimpleNamespace
 
 from catalog_audit_loader import ingest
 
@@ -20,6 +24,13 @@ class DriveParsingTests(unittest.TestCase):
         entries = ingest.parse_audio_entries(value)
         self.assertEqual([entry.name for entry in entries], ["Artist - One.wav", "Two.wav"])
         self.assertEqual(len({entry.file_id for entry in entries}), 2)
+
+    def test_reads_hyperlink_formula_display_text(self):
+        cell = SimpleNamespace(
+            value='=HYPERLINK("https://drive.google.com/drive/folders/private", "Growing Older")',
+            hyperlink=None,
+        )
+        self.assertEqual(ingest.cell_display_text(cell), "Growing Older")
 
 
 class WavInspectionTests(unittest.TestCase):
@@ -63,6 +74,46 @@ class MatchingTests(unittest.TestCase):
     def test_version_mismatch_is_detected(self):
         self.assertTrue(ingest.incompatible_version("Voyage - Time (Instrumental).wav", "Time"))
         self.assertFalse(ingest.incompatible_version("Voyage - Time.wav", "Time"))
+
+
+class SpotifyMetadataMergeTests(unittest.TestCase):
+    def test_verified_duration_reclassifies_a_fully_inspected_candidate(self):
+        connection = sqlite3.connect(":memory:")
+        connection.row_factory = sqlite3.Row
+        connection.execute(
+            """CREATE TABLE candidates (
+            candidate_id TEXT PRIMARY KEY, payload_json TEXT, status TEXT,
+            reasons_json TEXT, wav_json TEXT, sha256 TEXT, error TEXT,
+            updated_at TEXT
+            )"""
+        )
+        payload = {
+            "spotify_id": "1" * 22,
+            "spotify_duration_seconds": None,
+            "track": {"duration_seconds": 120},
+        }
+        wav = {
+            "container": "RIFF", "codec": "PCM", "channels": 2,
+            "sample_rate": 48000, "bits_per_sample": 24,
+            "byte_rate": 288000, "data_size": 34560000,
+            "duration_seconds": 120,
+        }
+        connection.execute(
+            "INSERT INTO candidates VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "candidate", json.dumps(payload), "review",
+                json.dumps(["spotify_duration_missing"]), json.dumps(wav),
+                "a" * 64, "", "now",
+            ),
+        )
+        result = ingest.apply_spotify_metadata(
+            connection,
+            {"1" * 22: {"duration_ms": 120000}},
+        )
+        row = connection.execute("SELECT status, reasons_json FROM candidates").fetchone()
+        self.assertEqual(result["updated"], 1)
+        self.assertEqual(row["status"], "exact")
+        self.assertEqual(json.loads(row["reasons_json"]), [])
 
 
 if __name__ == "__main__":

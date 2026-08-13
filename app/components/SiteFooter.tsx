@@ -31,8 +31,8 @@ export function SiteFooter() {
           <div>
             <p className="footer-label">Help</p>
             <Link href="/help">Help Center</Link>
-            <Link href="/app">Log in</Link>
-            <Link href="/pricing#creator-pricing-title">Create account</Link>
+            <Link href="/create-account?mode=login">Log in</Link>
+            <Link href="/create-account">Create account</Link>
           </div>
           <div>
             <p className="footer-label">About</p>

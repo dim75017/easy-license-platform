@@ -7,6 +7,7 @@ interface Env {
   DB: D1Database;
   AUDIO: R2Bucket;
   CATALOG_ADMIN_EMAILS?: string;
+  CATALOG_PIPELINE_TOKEN?: string;
   GOOGLE_DRIVE_ACCESS_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {

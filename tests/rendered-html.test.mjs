@@ -917,6 +917,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biome<\/span>/);
   assert.equal((header.match(/>Log in<\/Link>/g) ?? []).length, 1);
   assert.equal((header.match(/>Create account<\/Link>/g) ?? []).length, 1);
+  assert.match(header, /href="\/create-account\?mode=login"[^\n]*>Log in<\/Link>/);
+  assert.match(header, /href="\/create-account"[^\n]*>Create account<\/Link>/);
   assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
   assert.match(header, /if \(href === "\/"\) return pathname === "\/";/);
   assert.match(header, /For Creators/);
@@ -1147,6 +1149,56 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(supportCss, /--support-ink:\s*#292832[\s\S]*--support-paper:\s*#f7ebdd[\s\S]*--support-warm:\s*#fff9f1/i);
   assert.match(supportCss, /\.support-hero::before\s*\{[^}]*rgba\(224, 99, 67, \.26\)/s);
   assert.doesNotMatch(supportCss, /rgba\(150, 180, 255|rgba\(164, 178, 206/i);
+});
+
+test("account creation is a secure, persistent and static-demo-safe onboarding", async () => {
+  const [page, setup, css, footer, pricing, schema, runtime, route, layout] = await Promise.all([
+    source("app/create-account/page.tsx"),
+    source("app/components/AccountSetup.tsx"),
+    source("app/account-page.css"),
+    source("app/components/SiteFooter.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("db/schema.ts"),
+    source("db/account-runtime.ts"),
+    source("app/api/account/profile/route.ts"),
+    source("app/layout.tsx"),
+  ]);
+
+  assert.match(page, /<PublicShell>[\s\S]*<AccountSetup \/>[\s\S]*<\/PublicShell>/);
+  assert.match(page, /title:\s*"Create your account"/);
+  assert.match(page, /robots:\s*\{ index: false, follow: false \}/);
+  assert.match(setup, /<h1 id="account-title">Music ready for/);
+  assert.match(setup, /Continue with ChatGPT/);
+  assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
+  assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
+  assert.match(setup, /https:\/\/easy-license\.dsomoguy\.chatgpt\.site\/create-account/);
+  assert.match(setup, /fetch\("\/api\/account\/profile"/);
+  assert.match(setup, /method:\s*"POST"/);
+  assert.match(setup, /type="radio"[\s\S]*value="creator"/);
+  assert.match(setup, /type="radio"[\s\S]*value="pro"/);
+  assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
+  assert.match(setup, /No payment is taken today/);
+  assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
+  assert.match(footer, /href="\/create-account\?mode=login">Log in/);
+  assert.match(footer, /href="\/create-account">Create account/);
+  assert.equal((pricing.match(/href="\/create-account\?plan=(?:creator|pro)"/g) ?? []).length, 2);
+  assert.match(layout, /import "\.\/account-page\.css"/);
+
+  assert.match(schema, /export const userProfiles = sqliteTable\(\s*"user_profiles"/s);
+  assert.match(schema, /uniqueIndex\("idx_user_profiles_external_user_id"\)/);
+  assert.match(runtime, /CREATE TABLE IF NOT EXISTS user_profiles/);
+  assert.match(runtime, /CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_external_user_id/);
+  assert.match(route, /request\.headers\.get\("oai-authenticated-user-id"\)/);
+  assert.match(route, /ON CONFLICT\(external_user_id\) DO UPDATE SET/);
+  assert.match(route, /if \(!isSameOrigin\(request\)\)/);
+  assert.match(route, /policies_acknowledgement_required/);
+  assert.doesNotMatch(route, /source\.userId|source\.email|source\.plan === "admin"/);
+
+  assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
+  assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /@media \(forced-colors: active\)/);
 });
 
 test("uses one calm plan-card hover across Home and Pricing", async () => {

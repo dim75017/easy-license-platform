@@ -12,6 +12,8 @@ const PRIVATE_DIR = path.join(AUDIT_DIR, "private");
 const DEFAULT_OUTPUT_DIR = path.join(PRIVATE_DIR, "spotify-enrichment");
 const DEFAULT_PUBLIC_REPORT = path.join(AUDIT_DIR, "spotify-enrichment-summary.json");
 const SPOTIFY_ID_PATTERN = /^[A-Za-z0-9]{22}$/;
+const SPOTIFY_IMAGE_HOST_SUFFIXES = [".scdn.co", ".spotifycdn.com"];
+const SPOTIFY_CACHE_SCHEMA_VERSION = 2;
 
 function parseArgs(argv) {
   const args = {};
@@ -182,15 +184,59 @@ function parseBoolean(value) {
   return null;
 }
 
+function spotifyEntityId(uri, entityType) {
+  const match = String(uri ?? "").trim().match(new RegExp(`^spotify:${entityType}:([A-Za-z0-9]{22})$`));
+  return match ? match[1] : null;
+}
+
+function sanitizeSpotifyImageUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    const allowedHost = SPOTIFY_IMAGE_HOST_SUFFIXES.some(
+      (suffix) => hostname === suffix.slice(1) || hostname.endsWith(suffix),
+    );
+    if (url.protocol !== "https:" || !allowedHost) return null;
+    url.username = "";
+    url.password = "";
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function normalizedReleaseDate(value) {
+  const text = String(value ?? "").trim();
+  const match = text.match(/^(\d{4}-\d{2}-\d{2})(?:T.*)?$/);
+  if (!match || Number.isNaN(Date.parse(`${match[1]}T00:00:00Z`))) return null;
+  return match[1];
+}
+
+function hyperlinkDisplayText(value) {
+  const text = String(value ?? "").trim();
+  const match = text.match(/^=HYPERLINK\("(?:[^"]|"")*"\s*[,;]\s*"((?:[^"]|"")*)"\)$/i);
+  return match ? match[1].replace(/""/g, '"').trim() : text;
+}
+
 function toLocalTrack(record, inputIndex) {
   const index = indexedRecord(record);
+  const nestedTrack = record?.track && typeof record.track === "object" ? record.track : {};
+  const nestedInspection = record?.inspection && typeof record.inspection === "object" ? record.inspection : {};
+  const nestedWav = nestedInspection?.wav && typeof nestedInspection.wav === "object" ? nestedInspection.wav : {};
+  const nestedCover = record?.cover && typeof record.cover === "object" ? record.cover : {};
+  const ingestionManifest = Boolean(record?.track && record?.candidate_id);
   const spotifyId = extractSpotifyId(
     readValue(index, "spotifyId", "spotify_id", "Spotify ID", "Spotify URI", "spotifyUri", "spotifyUrl", "URL"),
   );
-  const title = String(readValue(index, "title", "trackTitle", "Track Title", "Track Name", "name") ?? "").trim();
+  const title = String(
+    readValue(index, "title", "trackTitle", "Track Title", "Track Name", "name") || nestedTrack.title || "",
+  ).trim();
 
   const rawArtists = readValue(index, "artists");
-  const artists = Array.isArray(rawArtists)
+  let artists = Array.isArray(rawArtists)
     ? rawArtists.map(String).map((value) => value.trim()).filter(Boolean)
     : [
         readValue(index, "artist", "artistName", "Artist Name", "Artist 1"),
@@ -198,15 +244,34 @@ function toLocalTrack(record, inputIndex) {
         readValue(index, "Artist 3"),
         readValue(index, "Artist 4"),
       ].map(String).map((value) => value.trim()).filter(Boolean);
+  if (!artists.length && Array.isArray(nestedTrack.artists)) {
+    artists = nestedTrack.artists.map(String).map((value) => value.trim()).filter(Boolean);
+  }
 
   const explicitDurationMs = readValue(index, "durationMs", "duration_ms");
   const explicitDurationSeconds = readValue(index, "durationSeconds", "duration_seconds");
   const genericDuration = readValue(index, "duration", "trackTime", "Track Time", "length");
-  const durationMs = explicitDurationMs !== ""
+  const measuredDurationMs = nestedInspection.status === "complete"
+    ? parseDurationMs(nestedWav.duration_seconds, "seconds")
+    : null;
+  const declaredDurationMs = parseDurationMs(nestedTrack.duration_seconds, "seconds");
+  const recordDurationMs = explicitDurationMs !== ""
     ? parseDurationMs(explicitDurationMs, "milliseconds")
     : explicitDurationSeconds !== ""
       ? parseDurationMs(explicitDurationSeconds, "seconds")
       : parseDurationMs(genericDuration);
+  const durationMs = measuredDurationMs ?? recordDurationMs ?? declaredDurationMs;
+  const durationSource = measuredDurationMs !== null
+    ? "measured_wav"
+    : recordDurationMs !== null
+      ? "record"
+      : declaredDurationMs !== null
+        ? "declared_catalogue"
+        : "missing";
+  const sourceSha256 = nestedInspection.status === "complete"
+    && /^[a-f0-9]{64}$/i.test(String(nestedInspection.sha256 ?? ""))
+    ? String(nestedInspection.sha256).toLowerCase()
+    : null;
 
   const explicitOwnedArtwork = parseBoolean(readValue(
     index,
@@ -224,9 +289,12 @@ function toLocalTrack(record, inputIndex) {
     "coverAlbum",
     "coverUrl",
   );
-  const ownedArtworkPresent = explicitOwnedArtwork ?? Boolean(String(ownedArtworkReference ?? "").trim());
+  const ownedArtworkPresent = explicitOwnedArtwork
+    ?? (Boolean(String(ownedArtworkReference ?? "").trim()) || Boolean(String(nestedCover.file_id ?? "").trim()));
 
-  const suppliedKey = String(readValue(index, "recordKey", "catalogId", "trackId", "id", "ISRC", "isrc") ?? "").trim();
+  const suppliedKey = String(
+    readValue(index, "recordKey", "candidate_id", "candidateId", "catalogId", "trackId", "id", "ISRC", "isrc") ?? "",
+  ).trim();
   const fallbackKey = crypto
     .createHash("sha256")
     .update(`${inputIndex}|${spotifyId}|${title}|${artists.join("|")}|${durationMs ?? ""}`)
@@ -240,7 +308,15 @@ function toLocalTrack(record, inputIndex) {
     title,
     artists,
     durationMs,
+    declaredDurationMs,
+    durationSource,
+    ingestionManifest,
+    audioInspectionComplete: measuredDurationMs !== null && sourceSha256 !== null,
+    sourceSha256,
     ownedArtworkPresent,
+    isrc: String(nestedTrack.isrc ?? readValue(index, "ISRC", "isrc") ?? "").trim() || null,
+    upc: String(nestedTrack.upc ?? readValue(index, "UPC", "upc") ?? "").trim() || null,
+    releaseTitle: hyperlinkDisplayText(nestedTrack.release ?? readValue(index, "release", "releaseTitle", "album")) || null,
   };
 }
 
@@ -250,7 +326,7 @@ function selectOEmbedMetadata(payload) {
   }
   return {
     title: String(payload.title ?? "").trim(),
-    thumbnailUrl: typeof payload.thumbnail_url === "string" ? payload.thumbnail_url : null,
+    thumbnailUrl: sanitizeSpotifyImageUrl(payload.thumbnail_url),
     thumbnailWidth: Number.isFinite(payload.thumbnail_width) ? payload.thumbnail_width : null,
     thumbnailHeight: Number.isFinite(payload.thumbnail_height) ? payload.thumbnail_height : null,
   };
@@ -272,18 +348,58 @@ function parseEmbedMetadata(html, expectedSpotifyId) {
     throw new Error("Spotify Embed returned an unexpected entity.");
   }
 
+  const spotifyUri = String(entity.uri ?? "").trim();
+  if (spotifyEntityId(spotifyUri, "track") !== expectedSpotifyId) {
+    throw new Error("Spotify Embed returned an unexpected track URI.");
+  }
+
+  const artistEntities = Array.isArray(entity.artists)
+    ? entity.artists
+      .map((artist) => {
+        const name = String(artist?.name ?? "").trim();
+        const uri = String(artist?.uri ?? "").trim();
+        const id = spotifyEntityId(uri, "artist");
+        return name ? { name, id, uri: id ? uri : null } : null;
+      })
+      .filter(Boolean)
+    : [];
+  const images = Array.isArray(entity.visualIdentity?.image)
+    ? entity.visualIdentity.image
+      .map((image) => {
+        const url = sanitizeSpotifyImageUrl(image?.url);
+        if (!url) return null;
+        const width = Number.isFinite(image?.maxWidth) && image.maxWidth > 0 ? Math.round(image.maxWidth) : null;
+        const height = Number.isFinite(image?.maxHeight) && image.maxHeight > 0 ? Math.round(image.maxHeight) : null;
+        return { url, width, height };
+      })
+      .filter(Boolean)
+      .sort((left, right) => ((right.width ?? 0) * (right.height ?? 0)) - ((left.width ?? 0) * (left.height ?? 0)))
+    : [];
+
   // Deliberately select only non-session metadata. The source document also
   // contains anonymous access tokens and preview URLs; neither leaves memory.
   return {
+    spotifyId: expectedSpotifyId,
+    spotifyUri,
     title: String(entity.title ?? entity.name ?? "").trim(),
-    artists: Array.isArray(entity.artists)
-      ? entity.artists.map((artist) => String(artist?.name ?? "").trim()).filter(Boolean)
-      : [],
+    artists: artistEntities.map((artist) => artist.name),
+    artistEntities,
     durationMs: Number.isFinite(entity.duration) && entity.duration >= 0 ? Math.round(entity.duration) : null,
     playable: typeof entity.isPlayable === "boolean" ? entity.isPlayable : null,
-    thumbnailUrl: Array.isArray(entity.visualIdentity?.image)
-      ? entity.visualIdentity.image.find((image) => typeof image?.url === "string")?.url ?? null
-      : null,
+    explicit: typeof entity.isExplicit === "boolean" ? entity.isExplicit : null,
+    hasVideo: typeof entity.hasVideo === "boolean" ? entity.hasVideo : null,
+    releaseDate: normalizedReleaseDate(entity.releaseDate?.isoString),
+    contentRatingLabels: Array.isArray(entity.contentRatings?.labels)
+      ? entity.contentRatings.labels.map(String).map((label) => label.trim()).filter(Boolean)
+      : [],
+    thumbnailUrl: images[0]?.url ?? null,
+    images,
+    // The official unauthenticated oEmbed/Embed payload does not expose album
+    // identity. Keep this explicit so no caller mistakes a guessed release for
+    // verified Spotify album metadata.
+    albumId: null,
+    albumTitle: null,
+    albumUri: null,
   };
 }
 
@@ -394,6 +510,7 @@ async function fetchSpotifyMetadata(spotifyId, localTrack, policy) {
   }
 
   const metadata = {
+    schemaVersion: SPOTIFY_CACHE_SCHEMA_VERSION,
     cachedAt: new Date().toISOString(),
     sources: {
       oembed: oembed ? "ok" : "unavailable",
@@ -401,11 +518,22 @@ async function fetchSpotifyMetadata(spotifyId, localTrack, policy) {
     },
     title: embed?.title || oembed?.title || "",
     artists: embed?.artists ?? [],
+    artistEntities: embed?.artistEntities ?? [],
     durationMs: embed?.durationMs ?? null,
     playable: embed?.playable ?? null,
+    explicit: embed?.explicit ?? null,
+    hasVideo: embed?.hasVideo ?? null,
+    releaseDate: embed?.releaseDate ?? null,
+    contentRatingLabels: embed?.contentRatingLabels ?? [],
+    spotifyUri: embed?.spotifyUri ?? `spotify:track:${spotifyId}`,
+    albumId: null,
+    albumTitle: null,
+    albumUri: null,
     thumbnailUrl: oembed?.thumbnailUrl || embed?.thumbnailUrl || null,
     thumbnailWidth: oembed?.thumbnailWidth ?? null,
     thumbnailHeight: oembed?.thumbnailHeight ?? null,
+    images: embed?.images ?? [],
+    metadataLimitations: ["album_identity_not_exposed_by_official_oembed_or_embed"],
     failures,
   };
   return metadata;
@@ -471,8 +599,9 @@ function validateTrack(localTrack, spotifyMetadata) {
   if (checks.title.status !== "exact") reasons.push(`title_${checks.title.status}`);
   if (checks.artists.status !== "exact") reasons.push(`artists_${checks.artists.status}`);
   if (checks.duration.status !== "match") reasons.push(`duration_${checks.duration.status}`);
+  if (localTrack.ingestionManifest && !localTrack.audioInspectionComplete) reasons.push("audio_full_inspection_missing");
   if (spotifyMetadata.playable === false) reasons.push("spotify_not_playable");
-  if (spotifyMetadata.failures.length) reasons.push("partial_spotify_metadata");
+  if ((spotifyMetadata.failures ?? []).length) reasons.push("partial_spotify_metadata");
 
   return {
     disposition: reasons.length ? "review" : "accepted",
@@ -512,6 +641,7 @@ function loadCache(cachePath) {
 }
 
 function cacheEntryIsFresh(entry, maximumAgeMs) {
+  if (entry?.schemaVersion !== SPOTIFY_CACHE_SCHEMA_VERSION) return false;
   const timestamp = Date.parse(entry?.cachedAt ?? "");
   const effectiveMaximumAgeMs = entry?.failures?.length
     ? Math.min(maximumAgeMs, 6 * 60 * 60 * 1000)
@@ -529,16 +659,34 @@ function buildPrivateResult(localTrack, spotifyMetadata, fromCache) {
       title: localTrack.title,
       artists: localTrack.artists,
       durationMs: localTrack.durationMs,
+      declaredDurationMs: localTrack.declaredDurationMs ?? null,
+      durationSource: localTrack.durationSource ?? null,
+      audioInspectionComplete: localTrack.audioInspectionComplete ?? null,
+      sourceSha256: localTrack.sourceSha256 ?? null,
       ownedArtworkPresent: localTrack.ownedArtworkPresent,
+      isrc: localTrack.isrc ?? null,
+      upc: localTrack.upc ?? null,
+      releaseTitle: localTrack.releaseTitle ?? null,
     },
     spotify: spotifyMetadata ? {
       title: spotifyMetadata.title,
       artists: spotifyMetadata.artists,
+      artistEntities: spotifyMetadata.artistEntities ?? [],
       durationMs: spotifyMetadata.durationMs,
       playable: spotifyMetadata.playable,
+      explicit: spotifyMetadata.explicit ?? null,
+      hasVideo: spotifyMetadata.hasVideo ?? null,
+      releaseDate: spotifyMetadata.releaseDate ?? null,
+      contentRatingLabels: spotifyMetadata.contentRatingLabels ?? [],
+      spotifyUri: spotifyMetadata.spotifyUri ?? (localTrack.spotifyId ? `spotify:track:${localTrack.spotifyId}` : null),
+      albumId: spotifyMetadata.albumId ?? null,
+      albumTitle: spotifyMetadata.albumTitle ?? null,
+      albumUri: spotifyMetadata.albumUri ?? null,
       thumbnailUrl: spotifyMetadata.thumbnailUrl,
+      images: spotifyMetadata.images ?? [],
       openUrl: localTrack.spotifyId ? `https://open.spotify.com/track/${localTrack.spotifyId}` : null,
       sources: spotifyMetadata.sources,
+      metadataLimitations: spotifyMetadata.metadataLimitations ?? [],
     } : null,
     cache: fromCache ? "hit" : "miss",
     ...validation,
@@ -572,6 +720,13 @@ function buildPublicSummary(results, runStats, generatedAt = new Date().toISOStr
       spotifyThumbnailReferenceFallback: 0,
       missing: 0,
     },
+    spotifyFields: {
+      durationAvailable: 0,
+      artistsAvailable: 0,
+      releaseDateAvailable: 0,
+      albumIdentityAvailable: 0,
+      coverReferenceAvailable: 0,
+    },
   };
 
   for (const result of results) {
@@ -579,6 +734,11 @@ function buildPublicSummary(results, runStats, generatedAt = new Date().toISOStr
     else summary.records.missingOrInvalidSpotifyId += 1;
     if (result.spotify) summary.retrieval.metadataAvailable += 1;
     else summary.retrieval.metadataUnavailable += 1;
+    if (result.spotify?.durationMs !== null && result.spotify?.durationMs !== undefined) summary.spotifyFields.durationAvailable += 1;
+    if (result.spotify?.artists?.length) summary.spotifyFields.artistsAvailable += 1;
+    if (result.spotify?.releaseDate) summary.spotifyFields.releaseDateAvailable += 1;
+    if (result.spotify?.albumId && result.spotify?.albumTitle) summary.spotifyFields.albumIdentityAvailable += 1;
+    if (result.spotify?.thumbnailUrl) summary.spotifyFields.coverReferenceAvailable += 1;
     incrementCounter(summary.validation, result.disposition);
     for (const reason of result.reasons) incrementCounter(summary.reviewReasons, reason);
     if (result.artworkRecommendation === "owned_drive_artwork") summary.artwork.ownedDriveArtworkPreferred += 1;
@@ -657,15 +817,27 @@ async function run(options) {
       if (!metadata.title && !metadata.artists.length && metadata.durationMs === null && !metadata.thumbnailUrl) metadata = null;
     } catch (error) {
       metadata = {
+        schemaVersion: SPOTIFY_CACHE_SCHEMA_VERSION,
         cachedAt: new Date().toISOString(),
         sources: { oembed: "unavailable", embed: "unavailable" },
         title: "",
         artists: [],
+        artistEntities: [],
         durationMs: null,
         playable: null,
+        explicit: null,
+        hasVideo: null,
+        releaseDate: null,
+        contentRatingLabels: [],
+        spotifyUri: `spotify:track:${spotifyId}`,
+        albumId: null,
+        albumTitle: null,
+        albumUri: null,
         thumbnailUrl: null,
         thumbnailWidth: null,
         thumbnailHeight: null,
+        images: [],
+        metadataLimitations: ["album_identity_not_exposed_by_official_oembed_or_embed"],
         failures: [{ source: "request", ...safeFailure(error) }],
       };
     }

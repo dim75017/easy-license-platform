@@ -127,7 +127,9 @@ async function ingestMetadataItem(
     await upsertSpotifyMatch(database, trackId, item);
 
     const ingestStatus =
-      item.catalogStatus === "needs_review" ? "needs_review" : "ready";
+      item.catalogStatus === "needs_review" || item.aiReviewStatus !== "cleared"
+        ? "needs_review"
+        : "ready";
     await database
       .prepare(
         `UPDATE ingest_items
@@ -384,10 +386,15 @@ async function findOrCreateTrack(
         mood,
         theme,
         rights_status,
+        ai_review_status,
         status,
         published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        CASE
+          WHEN ? = 'published' AND ? = 'cleared' AND ? = 'cleared'
+            THEN CURRENT_TIMESTAMP
+          ELSE NULL
+        END
       )`,
     )
     .bind(
@@ -405,8 +412,11 @@ async function findOrCreateTrack(
       item.mood,
       item.theme,
       item.rightsStatus,
+      item.aiReviewStatus,
+      effectiveTrackStatus(item),
       item.catalogStatus,
-      item.catalogStatus,
+      item.rightsStatus,
+      item.aiReviewStatus,
     )
     .run();
   return insertedId(inserted, "track");
@@ -432,6 +442,22 @@ async function updateTrack(
       .bind(item.rightsStatus, item.isrc)
       .run();
   }
+  if (item.isrc && item.aiReviewStatus !== "cleared") {
+    await database
+      .prepare(
+        `UPDATE tracks
+         SET ai_review_status = ?,
+             status = CASE
+               WHEN status = 'archived' THEN status
+               ELSE 'needs_review'
+             END,
+             published_at = NULL,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE isrc = ?`,
+      )
+      .bind(item.aiReviewStatus, item.isrc)
+      .run();
+  }
 
   await database
     .prepare(
@@ -450,15 +476,17 @@ async function updateTrack(
            mood = COALESCE(?, mood),
            theme = COALESCE(?, theme),
            rights_status = ?,
+           ai_review_status = ?,
            status = CASE
              WHEN status = 'archived' THEN status
              WHEN ? != 'cleared' THEN 'hidden'
+             WHEN ? != 'cleared' THEN 'needs_review'
              ELSE ?
            END,
            published_at = CASE
-             WHEN ? = 'published' AND ? = 'cleared'
+             WHEN ? = 'published' AND ? = 'cleared' AND ? = 'cleared'
                THEN COALESCE(published_at, CURRENT_TIMESTAMP)
-             WHEN ? != 'cleared' THEN NULL
+             WHEN ? != 'cleared' OR ? != 'cleared' THEN NULL
              ELSE published_at
            END,
            updated_at = CURRENT_TIMESTAMP
@@ -479,13 +507,26 @@ async function updateTrack(
       item.mood,
       item.theme,
       item.rightsStatus,
+      item.aiReviewStatus,
       item.rightsStatus,
-      item.catalogStatus,
+      item.aiReviewStatus,
+      effectiveTrackStatus(item),
       item.catalogStatus,
       item.rightsStatus,
+      item.aiReviewStatus,
+      item.rightsStatus,
+      item.aiReviewStatus,
       trackId,
     )
     .run();
+}
+
+function effectiveTrackStatus(
+  item: CatalogMetadataItem,
+): CatalogMetadataItem["catalogStatus"] | "hidden" | "needs_review" {
+  if (item.rightsStatus !== "cleared") return "hidden";
+  if (item.aiReviewStatus !== "cleared") return "needs_review";
+  return item.catalogStatus;
 }
 
 async function upsertSpotifyMatch(

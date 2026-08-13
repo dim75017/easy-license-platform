@@ -15,6 +15,34 @@
       "when": 1786627109197,
       "tag": "0001_tearful_caretaker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786632617129,
+      "tag": "0002_graceful_blue_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786634000000,
+      "tag": "0003_orchard_evidence_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786635796028,
+      "tag": "0004_bouncy_bastion",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786635998757,
+      "tag": "0005_volatile_bulldozer",
+      "breakpoints": true
     }
   ]
 }

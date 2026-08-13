@@ -8,6 +8,7 @@ import {
   extractSpotifyId,
   parseEmbedMetadata,
   selectOEmbedMetadata,
+  toLocalTrack,
   validateTrack,
 } from "./enrich-spotify-metadata.mjs";
 
@@ -24,14 +25,14 @@ test("oEmbed selection drops iframe HTML and keeps public metadata only", () => 
     provider_name: "Spotify",
     type: "rich",
     title: "Fixture track",
-    thumbnail_url: "https://image.example/cover.jpg",
+    thumbnail_url: "https://i.scdn.co/image/cover.jpg?token=discarded",
     thumbnail_width: 300,
     thumbnail_height: 300,
     html: '<iframe data-secret="must-not-survive"></iframe>',
   });
   assert.deepEqual(selected, {
     title: "Fixture track",
-    thumbnailUrl: "https://image.example/cover.jpg",
+    thumbnailUrl: "https://i.scdn.co/image/cover.jpg",
     thumbnailWidth: 300,
     thumbnailHeight: 300,
   });
@@ -48,11 +49,22 @@ test("Embed parser never returns session tokens or preview audio URLs", () => {
               type: "track",
               id: GENERIC_SPOTIFY_ID,
               title: "Fixture track",
-              artists: [{ name: "Fixture artist", uri: "spotify:artist:fixture" }],
+              uri: `spotify:track:${GENERIC_SPOTIFY_ID}`,
+              artists: [{ name: "Fixture artist", uri: `spotify:artist:${"B".repeat(22)}` }],
               duration: 180_123,
               isPlayable: true,
+              isExplicit: false,
+              hasVideo: false,
+              releaseDate: { isoString: "2026-05-13T00:00:00Z" },
+              contentRatings: { labels: ["none"] },
               audioPreview: { url: "https://audio.example/secret-preview.mp3" },
-              visualIdentity: { image: [{ url: "https://image.example/cover.jpg" }] },
+              visualIdentity: {
+                image: [
+                  { url: "https://i.scdn.co/image/small", maxWidth: 64, maxHeight: 64 },
+                  { url: "https://i.scdn.co/image/large?secret=discarded", maxWidth: 640, maxHeight: 640 },
+                  { url: "https://attacker.example/image.jpg", maxWidth: 1200, maxHeight: 1200 },
+                ],
+              },
             },
           },
           settings: { session: { accessToken: "must-not-survive" } },
@@ -64,7 +76,79 @@ test("Embed parser never returns session tokens or preview audio URLs", () => {
   const selected = parseEmbedMetadata(html, GENERIC_SPOTIFY_ID);
   assert.equal(selected.durationMs, 180_123);
   assert.deepEqual(selected.artists, ["Fixture artist"]);
+  assert.deepEqual(selected.artistEntities, [{
+    name: "Fixture artist",
+    id: "B".repeat(22),
+    uri: `spotify:artist:${"B".repeat(22)}`,
+  }]);
+  assert.equal(selected.releaseDate, "2026-05-13");
+  assert.equal(selected.thumbnailUrl, "https://i.scdn.co/image/large");
+  assert.equal(selected.albumId, null);
+  assert.equal(selected.albumTitle, null);
   assert.doesNotMatch(JSON.stringify(selected), /must-not-survive|secret-preview/);
+  assert.doesNotMatch(JSON.stringify(selected), /attacker\.example|discarded/);
+});
+
+test("nested ingestion manifests use measured WAV duration and owned cover evidence", () => {
+  const local = toLocalTrack({
+    candidate_id: "candidate-123",
+    spotify_id: GENERIC_SPOTIFY_ID,
+    track: {
+      title: "Nested fixture",
+      artists: ["Nested artist"],
+      duration_seconds: 180,
+      isrc: "FRABC2600001",
+      upc: "1234567890123",
+      release: '=HYPERLINK("https://drive.google.com/example", "Nested release")',
+    },
+    inspection: {
+      status: "complete",
+      sha256: "c".repeat(64),
+      wav: { duration_seconds: 181.2344 },
+    },
+    cover: { file_id: "owned-drive-cover" },
+  }, 7);
+
+  assert.equal(local.recordKey, "candidate-123");
+  assert.equal(local.spotifyId, GENERIC_SPOTIFY_ID);
+  assert.equal(local.title, "Nested fixture");
+  assert.deepEqual(local.artists, ["Nested artist"]);
+  assert.equal(local.durationMs, 181_234);
+  assert.equal(local.declaredDurationMs, 180_000);
+  assert.equal(local.durationSource, "measured_wav");
+  assert.equal(local.audioInspectionComplete, true);
+  assert.equal(local.sourceSha256, "c".repeat(64));
+  assert.equal(local.ownedArtworkPresent, true);
+  assert.equal(local.releaseTitle, "Nested release");
+  assert.equal(local.isrc, "FRABC2600001");
+  assert.equal(local.upc, "1234567890123");
+});
+
+test("nested ingestion records cannot be accepted before full WAV inspection", () => {
+  const local = toLocalTrack({
+    candidate_id: "candidate-pending",
+    spotify_id: GENERIC_SPOTIFY_ID,
+    track: {
+      title: "Pending fixture",
+      artists: ["Pending artist"],
+      duration_seconds: 180,
+    },
+    inspection: { status: "pending", wav: null, sha256: null },
+    cover: { file_id: "owned-drive-cover" },
+  }, 8);
+  const validation = validateTrack(local, {
+    title: "Pending fixture",
+    artists: ["Pending artist"],
+    durationMs: 180_000,
+    playable: true,
+    thumbnailUrl: "https://i.scdn.co/image/fixture",
+    failures: [],
+  });
+
+  assert.equal(local.durationSource, "declared_catalogue");
+  assert.equal(local.audioInspectionComplete, false);
+  assert.equal(validation.disposition, "review");
+  assert.deepEqual(validation.reasons, ["audio_full_inspection_missing"]);
 });
 
 test("duration thresholds quarantine suspicious variants", () => {

@@ -279,6 +279,23 @@ def cell_link_or_value(cell: Any) -> str:
     return clean(cell.value)
 
 
+def cell_display_text(cell: Any) -> str:
+    """Return the human label from an exported hyperlink formula.
+
+    Google Sheets XLSX exports sometimes keep ``HYPERLINK(url, label)`` as a
+    formula without a cached display value.  Catalogue joins must compare the
+    release label, never the formula or Drive URL.
+    """
+
+    value = clean(cell.value)
+    match = re.fullmatch(
+        r'=HYPERLINK\(\s*"(?:[^"]|"")*"\s*[,;]\s*"((?:[^"]|"")*)"\s*\)',
+        value,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1).replace('""', '"') if match else value
+
+
 def load_workbook_sources(workbook_path: Path) -> tuple[list[Track], list[ReleaseAudio], dict[str, Cover]]:
     try:
         import openpyxl  # type: ignore[import-not-found]
@@ -299,7 +316,8 @@ def load_workbook_sources(workbook_path: Path) -> tuple[list[Track], list[Releas
     tracks: list[Track] = []
     for row in range(2, publishing.max_row + 1):
         title = clean(cell_value(publishing, row, headers, "Track Title"))
-        release = clean(cell_value(publishing, row, headers, "Album Name (Drive Link)"))
+        release_column = headers.get("Album Name (Drive Link)")
+        release = cell_display_text(publishing.cell(row, release_column)) if release_column else ""
         if not title and not release:
             continue
         artists = tuple(
@@ -1077,6 +1095,68 @@ def classify_after_inspection(
     if any(reason.startswith(review_prefixes) for reason in revised):
         return "review", sorted(revised)
     return "exact", sorted(revised)
+
+
+def apply_spotify_metadata(
+    connection: sqlite3.Connection,
+    spotify_metadata: Mapping[str, Mapping[str, Any]],
+) -> dict[str, int]:
+    """Attach verified Spotify metadata to staged candidates.
+
+    The Orchard URI alone is never enough to publish.  This step records the
+    Spotify duration and re-runs the same fail-closed classifier used after WAV
+    inspection so duration evidence cannot be bolted on without revalidation.
+    """
+
+    counts = {"matched": 0, "updated": 0, "missing": 0}
+    rows = connection.execute(
+        "SELECT * FROM candidates WHERE json_extract(payload_json, '$.spotify_id') != ''"
+    ).fetchall()
+    for row in rows:
+        payload = json.loads(row["payload_json"])
+        spotify_id = clean(payload.get("spotify_id"))
+        metadata = spotify_metadata.get(spotify_id)
+        if not metadata:
+            counts["missing"] += 1
+            continue
+        duration_ms = metadata.get("duration_ms")
+        if not isinstance(duration_ms, (int, float)) or duration_ms <= 0:
+            counts["missing"] += 1
+            continue
+
+        counts["matched"] += 1
+        payload["spotify_duration_seconds"] = float(duration_ms) / 1000
+        reasons = [
+            reason
+            for reason in json.loads(row["reasons_json"])
+            if reason != "spotify_duration_missing"
+        ]
+        wav_payload = json.loads(row["wav_json"]) if row["wav_json"] else None
+        wav = WavInfo(**wav_payload) if wav_payload else None
+        status, revised = classify_after_inspection(
+            payload,
+            reasons,
+            wav,
+            clean(row["sha256"]),
+            clean(row["error"]),
+        )
+        connection.execute(
+            """
+            UPDATE candidates
+            SET payload_json=?, status=?, reasons_json=?, updated_at=?
+            WHERE candidate_id=?
+            """,
+            (
+                json.dumps(payload, ensure_ascii=False, sort_keys=True),
+                status,
+                json.dumps(revised, ensure_ascii=False),
+                dt.datetime.now(dt.timezone.utc).isoformat(),
+                row["candidate_id"],
+            ),
+        )
+        counts["updated"] += 1
+    connection.commit()
+    return counts
 
 
 def inspect_pending(

@@ -29,6 +29,7 @@ const ITEM_KEYS = new Set([
   "mood",
   "theme",
   "rightsStatus",
+  "aiReviewStatus",
   "catalogStatus",
   "spotify",
 ]);
@@ -61,6 +62,7 @@ const CATALOG_STATUSES = new Set([
   "published",
 ]);
 const RIGHTS_STATUSES = new Set(["pending", "cleared", "restricted"]);
+const AI_REVIEW_STATUSES = new Set(["pending", "cleared", "rejected"]);
 const SPOTIFY_METHODS = new Set([
   "distributor_uri",
   "orchard_uri",
@@ -121,6 +123,7 @@ export type CatalogMetadataItem = {
   mood: string | null;
   theme: string | null;
   rightsStatus: "pending" | "cleared" | "restricted";
+  aiReviewStatus: "pending" | "cleared" | "rejected";
   catalogStatus: "draft" | "needs_review" | "ready" | "published";
   spotify: CatalogSpotifyMatchInput | null;
 };
@@ -191,6 +194,13 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     `${prefix}.rightsStatus`,
     RIGHTS_STATUSES,
   ) as CatalogMetadataItem["rightsStatus"];
+  const aiReviewStatus = enumValue(
+    value.aiReviewStatus ?? "pending",
+    `${prefix}.aiReviewStatus`,
+    AI_REVIEW_STATUSES,
+  ) as CatalogMetadataItem["aiReviewStatus"];
+  const upc = optionalUpc(value.upc, `${prefix}.upc`);
+  const isrc = optionalIsrc(value.isrc, `${prefix}.isrc`);
   const catalogStatus = enumValue(
     value.catalogStatus ?? "needs_review",
     `${prefix}.catalogStatus`,
@@ -213,6 +223,34 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     86_400_000,
   );
   const spotify = parseSpotifyMatch(value.spotify, prefix, durationMs);
+  if (spotify?.status === "verified" && spotify.method === "orchard_uri") {
+    if (!upc) {
+      throw new CatalogApiError(
+        `${prefix}.upc is required for verified Orchard evidence.`,
+      );
+    }
+    if (
+      normalizeCatalogText(spotify.title as string) !==
+        normalizeCatalogText(title) ||
+      normalizeCatalogText(spotify.artistCredit as string) !==
+        normalizeCatalogText(artistCredit) ||
+      normalizeCatalogText(spotify.albumTitle as string) !==
+        normalizeCatalogText(releaseTitle)
+    ) {
+      throw new CatalogApiError(
+        `${prefix}.spotify verified Orchard metadata must match the local track, artist and release.`,
+        409,
+        "spotify_orchard_metadata_mismatch",
+      );
+    }
+    if (!isrc || spotify.isrc !== isrc) {
+      throw new CatalogApiError(
+        `${prefix}.spotify verified Orchard evidence requires the matching ISRC.`,
+        409,
+        "spotify_orchard_isrc_mismatch",
+      );
+    }
+  }
 
   return {
     sourceKey,
@@ -232,14 +270,14 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     releaseTitle,
     normalizedReleaseTitle: normalizeCatalogText(releaseTitle),
     releaseType,
-    upc: optionalUpc(value.upc, `${prefix}.upc`),
+    upc,
     releaseDate: optionalReleaseDate(value.releaseDate, `${prefix}.releaseDate`),
     versionLabel: optionalString(
       value.versionLabel,
       `${prefix}.versionLabel`,
       300,
     ),
-    isrc: optionalIsrc(value.isrc, `${prefix}.isrc`),
+    isrc,
     discNumber:
       optionalInteger(value.discNumber, `${prefix}.discNumber`, 1, 999) ?? 1,
     trackNumber: optionalInteger(
@@ -253,6 +291,7 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     mood: optionalString(value.mood, `${prefix}.mood`, 120),
     theme: optionalString(value.theme, `${prefix}.theme`, 120),
     rightsStatus,
+    aiReviewStatus,
     catalogStatus,
     spotify,
   };
@@ -305,10 +344,14 @@ function parseSpotifyMatch(
 
   if (
     status === "verified" &&
-    (!albumId || !title || !artistCredit || !albumTitle || durationMs === null)
+    ((method !== "orchard_uri" && !albumId) ||
+      !title ||
+      !artistCredit ||
+      !albumTitle ||
+      durationMs === null)
   ) {
     throw new CatalogApiError(
-      `${prefix} needs albumId, title, artistCredit, albumTitle and durationMs before it can be verified.`,
+      `${prefix} needs title, artistCredit, albumTitle, durationMs and, except for Orchard URI evidence, albumId before it can be verified.`,
     );
   }
 

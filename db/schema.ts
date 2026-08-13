@@ -85,6 +85,69 @@ export const leads = sqliteTable(
   ],
 );
 
+export const accountPlans = ["creator", "pro"] as const;
+export type AccountPlan = (typeof accountPlans)[number];
+
+export const accountPlatforms = [
+  "youtube",
+  "twitch",
+  "podcast",
+  "instagram",
+  "tiktok",
+  "other",
+] as const;
+export type AccountPlatform = (typeof accountPlatforms)[number];
+
+export const userProfiles = sqliteTable(
+  "user_profiles",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    externalUserId: text("external_user_id").notNull(),
+    email: text("email").notNull(),
+    displayName: text("display_name").notNull(),
+    company: text("company"),
+    planPreference: text("plan_preference", { enum: accountPlans }).notNull(),
+    primaryPlatform: text("primary_platform", {
+      enum: accountPlatforms,
+    }).notNull(),
+    marketingOptIn: integer("marketing_opt_in", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    policiesAcknowledgedAt: text("policies_acknowledged_at").notNull(),
+    onboardingCompletedAt: text("onboarding_completed_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_user_profiles_external_user_id").on(table.externalUserId),
+    index("idx_user_profiles_email").on(table.email),
+    check(
+      "user_profiles_external_user_id_length_check",
+      sql`length(${table.externalUserId}) BETWEEN 1 AND 256`,
+    ),
+    check(
+      "user_profiles_email_length_check",
+      sql`length(${table.email}) BETWEEN 3 AND 254`,
+    ),
+    check(
+      "user_profiles_display_name_length_check",
+      sql`length(${table.displayName}) BETWEEN 1 AND 120`,
+    ),
+    check(
+      "user_profiles_company_length_check",
+      sql`${table.company} IS NULL OR length(${table.company}) BETWEEN 1 AND 160`,
+    ),
+    check(
+      "user_profiles_plan_check",
+      sql`${table.planPreference} IN ('creator', 'pro')`,
+    ),
+    check(
+      "user_profiles_platform_check",
+      sql`${table.primaryPlatform} IN ('youtube', 'twitch', 'podcast', 'instagram', 'tiktok', 'other')`,
+    ),
+  ],
+);
+
 export const artistStatuses = ["active", "hidden", "archived"] as const;
 export type ArtistStatus = (typeof artistStatuses)[number];
 
@@ -109,6 +172,9 @@ export type CatalogStatus = (typeof catalogStatuses)[number];
 
 export const rightsStatuses = ["pending", "cleared", "restricted"] as const;
 export type RightsStatus = (typeof rightsStatuses)[number];
+
+export const aiReviewStatuses = ["pending", "cleared", "rejected"] as const;
+export type AiReviewStatus = (typeof aiReviewStatuses)[number];
 
 export const assetKinds = [
   "source_master",
@@ -293,6 +359,9 @@ export const tracks = sqliteTable(
     rightsStatus: text("rights_status", { enum: rightsStatuses })
       .notNull()
       .default("pending"),
+    aiReviewStatus: text("ai_review_status", { enum: aiReviewStatuses })
+      .notNull()
+      .default("pending"),
     status: text("status", { enum: catalogStatuses }).notNull().default("draft"),
     publishedAt: text("published_at"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -308,8 +377,16 @@ export const tracks = sqliteTable(
       sql`${table.rightsStatus} IN ('pending', 'cleared', 'restricted')`,
     ),
     check(
+      "tracks_ai_review_status_check",
+      sql`${table.aiReviewStatus} IN ('pending', 'cleared', 'rejected')`,
+    ),
+    check(
       "tracks_publish_rights_check",
       sql`${table.status} != 'published' OR ${table.rightsStatus} = 'cleared'`,
+    ),
+    check(
+      "tracks_publish_ai_review_check",
+      sql`${table.status} != 'published' OR ${table.aiReviewStatus} = 'cleared'`,
     ),
     check(
       "tracks_title_length_check",
@@ -384,6 +461,7 @@ export const trackAssets = sqliteTable(
     byteSize: integer("byte_size"),
     durationMs: integer("duration_ms"),
     sha256: text("sha256"),
+    derivedFromSha256: text("derived_from_sha256"),
     status: text("status", { enum: assetStatuses }).notNull().default("pending"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -416,6 +494,10 @@ export const trackAssets = sqliteTable(
     check(
       "track_assets_sha256_check",
       sql`${table.sha256} IS NULL OR length(${table.sha256}) = 64`,
+    ),
+    check(
+      "track_assets_derived_from_sha256_check",
+      sql`${table.derivedFromSha256} IS NULL OR length(${table.derivedFromSha256}) = 64`,
     ),
     uniqueIndex("uq_track_assets_storage_key").on(table.storageKey),
     index("idx_track_assets_track_kind_status").on(
@@ -559,7 +641,7 @@ export const spotifyMatches = sqliteTable(
     check(
       "spotify_matches_verified_shape_check",
       sql`${table.status} != 'verified' OR (
-        ${table.spotifyAlbumId} IS NOT NULL
+        (${table.spotifyAlbumId} IS NOT NULL OR ${table.method} = 'orchard_uri')
         AND ${table.spotifyTitle} IS NOT NULL
         AND ${table.spotifyArtistCredit} IS NOT NULL
         AND ${table.spotifyAlbumTitle} IS NOT NULL

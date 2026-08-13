@@ -4,6 +4,7 @@ type CatalogRuntimeEnv = {
   DB?: D1Database;
   AUDIO?: R2Bucket;
   CATALOG_ADMIN_EMAILS?: string;
+  CATALOG_PIPELINE_TOKEN?: string;
   GOOGLE_DRIVE_ACCESS_TOKEN?: string;
 };
 
@@ -35,6 +36,11 @@ export function catalogAdminEmails(): ReadonlySet<string> {
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean),
   );
+}
+
+export function catalogPipelineToken(): string | null {
+  const token = runtimeEnv().CATALOG_PIPELINE_TOKEN?.trim();
+  return token || null;
 }
 
 export function googleDriveAccessToken(): string | null {

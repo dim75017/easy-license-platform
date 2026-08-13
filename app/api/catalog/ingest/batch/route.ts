@@ -1,5 +1,5 @@
 import { ingestMetadataBatch } from "@/db/catalog-ingest";
-import { requireCatalogAdmin } from "../../_lib/auth";
+import { requireCatalogWrite } from "../../_lib/auth";
 import {
   catalogErrorResponse,
   noStoreJson,
@@ -11,7 +11,7 @@ const MAX_METADATA_BODY_BYTES = 512 * 1024;
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    requireCatalogAdmin(request);
+    await requireCatalogWrite(request);
     const payload = await parseJsonObject(request, MAX_METADATA_BODY_BYTES);
     const batch = parseMetadataBatch(payload);
     const items = await ingestMetadataBatch(batch);

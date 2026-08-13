@@ -65,6 +65,7 @@ interface R2Bucket {
     options?: {
       httpMetadata?: R2HTTPMetadata;
       customMetadata?: Record<string, string>;
+      sha256?: string | ArrayBuffer;
     },
   ): Promise<R2Object>;
   delete(key: string): Promise<void>;
@@ -75,6 +76,7 @@ declare module "cloudflare:workers" {
     DB: D1Database;
     AUDIO?: R2Bucket;
     CATALOG_ADMIN_EMAILS?: string;
+    CATALOG_PIPELINE_TOKEN?: string;
     GOOGLE_DRIVE_ACCESS_TOKEN?: string;
     [key: string]: unknown;
   };

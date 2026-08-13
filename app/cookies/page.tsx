@@ -59,7 +59,7 @@ export default function CookiesPage() {
             <>
               <p>Browser settings can remove local storage, block or clear cookies and restrict third-party content. Blocking a Spotify player may prevent track previews from loading, but the rest of the catalogue can still be browsed.</p>
               <p>For the wider treatment of request information and third-party services, read the <Link href="/privacy">Privacy page</Link>.</p>
-              <p className="support-notice">Last updated: 11 August 2026. This page should be reviewed whenever analytics, authentication, payments or new embedded services are introduced.</p>
+              <p className="support-notice">Last updated: 13 August 2026. Secure account identity is handled by the hosting sign-in service; this page should be reviewed whenever analytics, payments or new embedded services are introduced.</p>
             </>
           ),
         },

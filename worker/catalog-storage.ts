@@ -18,11 +18,13 @@ type DriveIngestOptions = {
   storageKey: string;
   expectedByteSize: number | null;
   expectedContentType: string | null;
+  expectedSha256: string | null;
 };
 
 export type StoredDriveAsset = {
   byteSize: number;
   contentType: string;
+  sha256: string | null;
 };
 
 const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
@@ -113,6 +115,7 @@ export async function streamDriveFileToR2(
 
   const bucket = requireCatalogAudioBucket();
   const stored = await bucket.put(options.storageKey, sourceResponse.body, {
+    sha256: options.expectedSha256 ?? undefined,
     httpMetadata: {
       contentType,
       contentDisposition:
@@ -121,13 +124,13 @@ export async function streamDriveFileToR2(
     customMetadata: {
       assetKind: options.assetKind,
       ingestedAt: new Date().toISOString(),
+      ...(options.expectedSha256 ? { sha256: options.expectedSha256 } : {}),
     },
   });
 
   // R2 reports the persisted object's size, so this verifies the streamed copy
   // without ever materialising the audio master in Worker memory.
   if (stored.size !== contentLength) {
-    await bucket.delete(options.storageKey);
     throw new CatalogApiError(
       "The stored asset failed its byte-size verification.",
       502,
@@ -135,7 +138,11 @@ export async function streamDriveFileToR2(
     );
   }
 
-  return { byteSize: stored.size, contentType };
+  return {
+    byteSize: stored.size,
+    contentType,
+    sha256: options.expectedSha256,
+  };
 }
 
 async function fetchDriveFile(driveFileId: string): Promise<Response> {

@@ -7,7 +7,7 @@ import {
   streamDriveFileToR2,
   type IngestableAssetKind,
 } from "@/worker/catalog-storage";
-import { requireCatalogAdmin } from "../../_lib/auth";
+import { requireCatalogWrite } from "../../_lib/auth";
 import {
   assertAllowedKeys,
   catalogErrorResponse,
@@ -31,6 +31,7 @@ const ALLOWED_KEYS = new Set([
   "assetKind",
   "expectedByteSize",
   "expectedContentType",
+  "expectedSha256",
   "durationMs",
 ]);
 const ASSET_KINDS = new Set<IngestableAssetKind>([
@@ -46,11 +47,13 @@ type ExistingTrackAsset = {
   status: string;
   byte_size: number | null;
   mime_type: string;
+  duration_ms: number | null;
+  sha256: string | null;
 };
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    requireCatalogAdmin(request);
+    const writer = await requireCatalogWrite(request);
     const payload = await parseJsonObject(request, MAX_ASSET_REQUEST_BYTES);
     assertAllowedKeys(payload, ALLOWED_KEYS);
 
@@ -81,6 +84,13 @@ export async function POST(request: Request): Promise<Response> {
         `assetKind must be one of: ${Array.from(ASSET_KINDS).join(", ")}.`,
       );
     }
+    if (writer.kind === "pipeline" && assetKindValue !== "source_master") {
+      throw new CatalogApiError(
+        "The pipeline Drive route is restricted to private source masters.",
+        403,
+        "pipeline_drive_asset_forbidden",
+      );
+    }
     const expectedByteSize = optionalInteger(
       payload.expectedByteSize,
       "expectedByteSize",
@@ -92,12 +102,27 @@ export async function POST(request: Request): Promise<Response> {
       "expectedContentType",
       120,
     );
+    const expectedSha256 = optionalSha256(
+      payload.expectedSha256,
+      "expectedSha256",
+    );
     const durationMs = optionalInteger(
       payload.durationMs,
       "durationMs",
       1,
       86_400_000,
     );
+    if (
+      writer.kind === "pipeline" &&
+      assetKindValue === "source_master" &&
+      (!expectedSha256 || durationMs === null)
+    ) {
+      throw new CatalogApiError(
+        "Pipeline source masters require expectedSha256 and durationMs.",
+        400,
+        "source_master_evidence_required",
+      );
+    }
 
     const database = requireCatalogDatabase();
     if (assetKindValue === "cover_artwork") {
@@ -107,7 +132,7 @@ export async function POST(request: Request): Promise<Response> {
         );
       }
       const releaseId = requiredPositiveId(releaseIdValue, "releaseId");
-      await assertReleaseExists(database, releaseId);
+      await assertReleaseWritable(database, releaseId);
       return await ingestCover({
         database,
         releaseId,
@@ -115,6 +140,7 @@ export async function POST(request: Request): Promise<Response> {
         sourceFileName,
         expectedByteSize,
         expectedContentType,
+        expectedSha256,
       });
     }
 
@@ -126,13 +152,23 @@ export async function POST(request: Request): Promise<Response> {
     const trackId = requiredPositiveId(trackIdValue, "trackId");
     const ingestItem = await database
       .prepare(
-        `SELECT id, track_id
-         FROM ingest_items
-         WHERE batch_key = ? AND source_key = ?
+        `SELECT ii.id, ii.track_id, ii.status AS ingest_status,
+                t.status AS track_status,
+                r.status AS release_status
+         FROM ingest_items AS ii
+         JOIN tracks AS t ON t.id = ii.track_id
+         JOIN releases AS r ON r.id = t.release_id
+         WHERE ii.batch_key = ? AND ii.source_key = ?
          LIMIT 1`,
       )
       .bind(batchKey, sourceKey)
-      .first<{ id: number; track_id: number | null }>();
+      .first<{
+        id: number;
+        track_id: number | null;
+        ingest_status: string;
+        track_status: string;
+        release_status: string;
+      }>();
     if (!ingestItem || ingestItem.track_id !== trackId) {
       throw new CatalogApiError(
         "The source reference is not associated with this track.",
@@ -140,17 +176,28 @@ export async function POST(request: Request): Promise<Response> {
         "source_track_mismatch",
       );
     }
+    if (
+      !["ready", "needs_review"].includes(ingestItem.ingest_status) ||
+      ["published", "archived"].includes(ingestItem.track_status) ||
+      ["archived"].includes(ingestItem.release_status)
+    ) {
+      throw new CatalogApiError(
+        "Published tracks and archived releases have immutable assets.",
+        409,
+        "catalog_assets_locked",
+      );
+    }
 
     const storageKey = await stableStorageKey(
       "tracks",
       trackId,
       assetKindValue,
-      `${batchKey}\u0000${sourceKey}\u0000${driveFileId}`,
+      `${batchKey}\u0000${sourceKey}\u0000${expectedSha256 ?? driveFileId}`,
       sourceFileName,
     );
     const existing = await database
       .prepare(
-        `SELECT id, status, byte_size, mime_type
+        `SELECT id, status, byte_size, mime_type, duration_ms, sha256
          FROM track_assets
          WHERE storage_key = ?
          LIMIT 1`,
@@ -158,6 +205,52 @@ export async function POST(request: Request): Promise<Response> {
       .bind(storageKey)
       .first<ExistingTrackAsset>();
     if (existing?.status === "available") {
+      if (
+        (expectedSha256 !== null && existing.sha256 !== expectedSha256) ||
+        (expectedByteSize !== null && existing.byte_size !== expectedByteSize) ||
+        (durationMs !== null && existing.duration_ms !== durationMs)
+      ) {
+        throw new CatalogApiError(
+          "The available asset does not match the supplied checksum, size or duration.",
+          409,
+          "asset_metadata_conflict",
+        );
+      }
+      const storedObject = await requireCatalogAudioBucket().head(storageKey);
+      if (
+        !storedObject ||
+        storedObject.size !== existing.byte_size ||
+        (expectedSha256 !== null &&
+          storedObject.customMetadata?.sha256 !== expectedSha256)
+      ) {
+        throw new CatalogApiError(
+          "The available asset failed private-storage verification.",
+          409,
+          "asset_storage_mismatch",
+        );
+      }
+      if (assetKindValue === "source_master") {
+        await database
+          .prepare(
+            `UPDATE ingest_items
+             SET asset_id = ?,
+                 measured_duration_ms = COALESCE(?, measured_duration_ms),
+                 failure_code = NULL,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?
+               AND status IN ('ready', 'needs_review')
+               AND EXISTS (
+                 SELECT 1
+                 FROM tracks AS t
+                 JOIN releases AS r ON r.id = t.release_id
+                 WHERE t.id = ingest_items.track_id
+                   AND t.status NOT IN ('published', 'archived')
+                   AND r.status != 'archived'
+               )`,
+          )
+          .bind(existing.id, durationMs, ingestItem.id)
+          .run();
+      }
       return noStoreJson({
         asset: {
           id: existing.id,
@@ -176,8 +269,8 @@ export async function POST(request: Request): Promise<Response> {
       const inserted = await database
         .prepare(
           `INSERT INTO track_assets (
-            track_id, kind, storage_key, mime_type, duration_ms, status
-          ) VALUES (?, ?, ?, ?, ?, 'pending')`,
+            track_id, kind, storage_key, mime_type, duration_ms, sha256, status
+          ) VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
         )
         .bind(
           trackId,
@@ -185,6 +278,7 @@ export async function POST(request: Request): Promise<Response> {
           storageKey,
           expectedContentType ?? "application/octet-stream",
           durationMs,
+          expectedSha256,
         )
         .run();
       assetId = Number(inserted.meta.last_row_id);
@@ -207,33 +301,78 @@ export async function POST(request: Request): Promise<Response> {
         storageKey,
         expectedByteSize,
         expectedContentType,
+        expectedSha256,
       });
-      await database
+      const assetFinalised = await database
         .prepare(
           `UPDATE track_assets
            SET mime_type = ?,
                byte_size = ?,
                duration_ms = COALESCE(?, duration_ms),
+               sha256 = COALESCE(?, sha256),
                status = 'available',
                updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`,
+           WHERE id = ?
+             AND status = 'pending'
+             AND EXISTS (
+               SELECT 1
+               FROM tracks AS t
+               WHERE t.id = track_assets.track_id
+                 AND t.status NOT IN ('published', 'archived')
+             )`,
         )
-        .bind(stored.contentType, stored.byteSize, durationMs, assetId)
+        .bind(
+          stored.contentType,
+          stored.byteSize,
+          durationMs,
+          stored.sha256,
+          assetId,
+        )
         .run();
-      await database
+      if ((assetFinalised.meta.changes ?? 0) !== 1) {
+        throw new CatalogApiError(
+          "The track was promoted while the master was uploading.",
+          409,
+          "source_master_asset_finalize_race",
+        );
+      }
+      const ingestFinalised = await database
         .prepare(
           `UPDATE ingest_items
-           SET asset_id = ?,
-               status = CASE
-                 WHEN ? = 'streaming_copy' THEN 'imported'
-                 ELSE status
+           SET asset_id = CASE
+                 WHEN ? = 'source_master' THEN ?
+                 ELSE asset_id
+               END,
+               measured_duration_ms = CASE
+                 WHEN ? = 'source_master' THEN COALESCE(?, measured_duration_ms)
+                 ELSE measured_duration_ms
                END,
                failure_code = NULL,
                updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`,
+           WHERE id = ?
+             AND status IN ('ready', 'needs_review')
+             AND EXISTS (
+               SELECT 1
+               FROM tracks AS t
+               WHERE t.id = ingest_items.track_id
+                 AND t.status NOT IN ('published', 'archived')
+             )`,
         )
-        .bind(assetId, assetKindValue, ingestItem.id)
+        .bind(
+          assetKindValue,
+          assetId,
+          assetKindValue,
+          durationMs,
+          ingestItem.id,
+        )
         .run();
+      if ((ingestFinalised.meta.changes ?? 0) !== 1) {
+        throw new CatalogApiError(
+          "The ingest item was promoted while the master was uploading.",
+          409,
+          "source_master_finalize_race",
+        );
+      }
 
       return noStoreJson(
         {
@@ -250,22 +389,41 @@ export async function POST(request: Request): Promise<Response> {
         { status: 201 },
       );
     } catch (error) {
-      await requireCatalogAudioBucket().delete(storageKey).catch(() => undefined);
       await database
         .prepare(
           `UPDATE track_assets
            SET status = 'failed', updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`,
+           WHERE id = ?
+             AND status = 'pending'
+             AND EXISTS (
+               SELECT 1
+               FROM ingest_items AS ii
+               JOIN tracks AS t ON t.id = ii.track_id
+               JOIN releases AS r ON r.id = t.release_id
+               WHERE ii.id = ?
+                 AND ii.track_id = track_assets.track_id
+                 AND ii.status IN ('ready', 'needs_review')
+                 AND t.status NOT IN ('published', 'archived')
+                 AND r.status != 'archived'
+             )`,
         )
-        .bind(assetId)
+        .bind(assetId, ingestItem.id)
         .run();
       await database
         .prepare(
           `UPDATE ingest_items
-           SET status = 'failed',
-               failure_code = 'asset_ingest_failed',
+           SET failure_code = 'asset_ingest_failed',
                updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`,
+           WHERE id = ?
+             AND status IN ('ready', 'needs_review')
+             AND EXISTS (
+               SELECT 1
+               FROM tracks AS t
+               JOIN releases AS r ON r.id = t.release_id
+               WHERE t.id = ingest_items.track_id
+                 AND t.status NOT IN ('published', 'archived')
+                 AND r.status != 'archived'
+             )`,
         )
         .bind(ingestItem.id)
         .run();
@@ -276,16 +434,23 @@ export async function POST(request: Request): Promise<Response> {
   }
 }
 
-async function assertReleaseExists(
+async function assertReleaseWritable(
   database: D1Database,
   releaseId: number,
 ): Promise<void> {
   const release = await database
-    .prepare("SELECT id FROM releases WHERE id = ? LIMIT 1")
+    .prepare("SELECT id, status FROM releases WHERE id = ? LIMIT 1")
     .bind(releaseId)
-    .first<{ id: number }>();
+    .first<{ id: number; status: string }>();
   if (!release) {
     throw new CatalogApiError("Release not found.", 404, "release_not_found");
+  }
+  if (["published", "archived"].includes(release.status)) {
+    throw new CatalogApiError(
+      "Published or archived releases have immutable covers.",
+      409,
+      "release_cover_locked",
+    );
   }
 }
 
@@ -296,12 +461,13 @@ async function ingestCover(options: {
   sourceFileName: string;
   expectedByteSize: number | null;
   expectedContentType: string | null;
+  expectedSha256: string | null;
 }): Promise<Response> {
   const storageKey = await stableStorageKey(
     "releases",
     options.releaseId,
     "cover_artwork",
-    options.driveFileId,
+    options.expectedSha256 ?? options.driveFileId,
     options.sourceFileName,
   );
   const current = await options.database
@@ -331,15 +497,24 @@ async function ingestCover(options: {
     storageKey,
     expectedByteSize: options.expectedByteSize,
     expectedContentType: options.expectedContentType,
+    expectedSha256: options.expectedSha256,
   });
-  await options.database
+  const updated = await options.database
     .prepare(
       `UPDATE releases
        SET cover_storage_key = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       WHERE id = ?
+         AND status NOT IN ('published', 'archived')`,
     )
     .bind(storageKey, options.releaseId)
     .run();
+  if ((updated.meta.changes ?? 0) !== 1) {
+    throw new CatalogApiError(
+      "The release was promoted while its cover was uploading.",
+      409,
+      "cover_finalize_race",
+    );
+  }
 
   return noStoreJson(
     {
@@ -354,4 +529,12 @@ async function ingestCover(options: {
     },
     { status: 201 },
   );
+}
+
+function optionalSha256(value: unknown, label: string): string | null {
+  const sha256 = optionalString(value, label, 64)?.toLowerCase() ?? null;
+  if (sha256 && !/^[a-f0-9]{64}$/u.test(sha256)) {
+    throw new CatalogApiError(`${label} must be a hexadecimal SHA-256 digest.`);
+  }
+  return sha256;
 }

@@ -1,10 +1,17 @@
-import { catalogAdminEmails } from "@/db/catalog-runtime";
+import {
+  catalogAdminEmails,
+  catalogPipelineToken,
+} from "@/db/catalog-runtime";
 import { CatalogApiError } from "./http";
 
 export type CatalogIdentity = {
   userId: string;
   email: string;
 };
+
+export type CatalogWriteIdentity =
+  | { kind: "admin"; identity: CatalogIdentity }
+  | { kind: "pipeline" };
 
 export function requireCatalogIdentity(request: Request): CatalogIdentity {
   // These headers are injected by the private Sites access layer. Catalogue
@@ -51,4 +58,56 @@ export function requireCatalogAdmin(request: Request): CatalogIdentity {
   }
 
   return identity;
+}
+
+export async function requireCatalogPipeline(request: Request): Promise<void> {
+  const configuredToken = catalogPipelineToken();
+  if (!configuredToken || configuredToken.length < 32) {
+    throw new CatalogApiError(
+      "Catalogue pipeline authentication is not configured.",
+      503,
+      "pipeline_auth_unconfigured",
+    );
+  }
+
+  const authorization = request.headers.get("authorization") ?? "";
+  const match = /^Bearer ([^\s]+)$/u.exec(authorization);
+  const suppliedToken = match?.[1] ?? "";
+  if (!suppliedToken || !(await constantTimeTokenMatch(configuredToken, suppliedToken))) {
+    throw new CatalogApiError(
+      "Catalogue pipeline authentication is required.",
+      401,
+      "pipeline_authentication_required",
+    );
+  }
+}
+
+export async function requireCatalogWrite(
+  request: Request,
+): Promise<CatalogWriteIdentity> {
+  if (request.headers.has("authorization")) {
+    await requireCatalogPipeline(request);
+    return { kind: "pipeline" };
+  }
+
+  return { kind: "admin", identity: requireCatalogAdmin(request) };
+}
+
+async function constantTimeTokenMatch(
+  expected: string,
+  supplied: string,
+): Promise<boolean> {
+  // Hashing normalises both inputs to a fixed length. The XOR loop always
+  // visits every byte and avoids an early-exit string comparison.
+  const [expectedHash, suppliedHash] = await Promise.all([
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(expected)),
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(supplied)),
+  ]);
+  const expectedBytes = new Uint8Array(expectedHash);
+  const suppliedBytes = new Uint8Array(suppliedHash);
+  let difference = 0;
+  for (let index = 0; index < expectedBytes.length; index += 1) {
+    difference |= expectedBytes[index] ^ suppliedBytes[index];
+  }
+  return difference === 0;
 }
