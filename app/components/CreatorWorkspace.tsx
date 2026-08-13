@@ -357,6 +357,8 @@ export function CreatorWorkspace() {
     );
   }
 
+  const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked";
+
   return (
     <div className="creator-music-app">
       <aside className="music-app-sidebar">
@@ -393,7 +395,7 @@ export function CreatorWorkspace() {
       </aside>
 
       <main className="music-app-main">
-        <header className="music-app-topbar">
+        <header className={`music-app-topbar${usesWideCanvas ? " is-wide" : ""}`}>
           <div><span>Symbiome</span><h1>{viewLabels[view]}</h1></div>
           <label className="music-global-search">
             <span aria-hidden="true">⌕</span>
@@ -412,7 +414,7 @@ export function CreatorWorkspace() {
         </header>
 
         {view === "discover" && (
-          <div className="music-library-view">
+          <div className="music-library-view music-workspace-view">
             <section className="music-discovery-intro">
               <div><p>HUMAN-MADE MUSIC</p><h2>Start with a direction.<br />Find the right track.</h2><span>Browse the catalogue through real genres, moods, themes and artists.</span></div>
               <div className="music-catalogue-proof"><strong>10,000+</strong><span>tracks in the full catalogue</span><i>0 AI-generated</i></div>
@@ -435,7 +437,7 @@ export function CreatorWorkspace() {
         )}
 
         {view === "music" && (
-          <section className="music-track-browser" aria-labelledby="tracks-title">
+          <section className="music-track-browser music-workspace-view" aria-labelledby="tracks-title">
             <div className="music-track-browser-head">
               <div>
                 <span>MUSIC SEARCH</span>
@@ -454,7 +456,7 @@ export function CreatorWorkspace() {
         )}
 
         {view === "liked" && (
-          <section className="music-track-browser music-liked-view" aria-labelledby="liked-tracks-title">
+          <section className="music-track-browser music-liked-view music-workspace-view" aria-labelledby="liked-tracks-title">
             <div className="music-track-browser-head"><div><span>YOUR LIBRARY</span><h2 id="liked-tracks-title">Liked tracks</h2><p className="music-track-results-status" role="status">{likedTracks.length} saved {likedTracks.length === 1 ? "track" : "tracks"}</p></div></div>
             {renderTrackTable(likedTracks, "Liked tracks")}
           </section>
@@ -526,7 +528,7 @@ export function CreatorWorkspace() {
 }
 
 function PlaylistLibrary({ onOpen }: { onOpen: (playlist: LofiGirlPlaylist) => void }) {
-  return <div className="music-secondary-view"><header><span className="workspace-lofi-kicker"><LofiGirlWordmark /> LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
+  return <div className="music-secondary-view music-playlists-view music-workspace-view"><header><span className="workspace-lofi-kicker"><LofiGirlWordmark /> LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> profile, translated into a Symbiome starting point.</p></header><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
 function DownloadsLibrary() {

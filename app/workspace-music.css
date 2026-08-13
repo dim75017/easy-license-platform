@@ -1014,12 +1014,34 @@ article.music-track-row[role="listitem"] > .music-wave i.is-played {
   }
 }
 
-/* V13: compact, functional playback rails and stable Music gutters. */
-.music-app-main > .music-track-browser {
-  width: calc(100% - 32px);
+/* V13: compact playback rails and one full-width canvas for primary library views. */
+.music-app-main { --music-view-gutter: 28px; }
+
+.music-app-topbar.is-wide { padding-inline: var(--music-view-gutter); }
+
+.music-app-main > .music-workspace-view {
+  width: auto;
   max-width: none;
-  margin: 0 auto;
+  margin: 0 var(--music-view-gutter);
   padding: 40px 0 58px;
+}
+
+.music-app-main > .music-playlists-view > header { padding-top: 0; }
+
+.workspace-playlist:focus-visible,
+.music-shelf-head > button:focus-visible,
+.music-topbar-action:focus-visible,
+.music-global-search:focus-within {
+  outline: 3px solid var(--wm-clay);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1600px) {
+  .music-discovery-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 2200px) {
+  .music-playlists-view .music-secondary-playlists { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
 .music-track-table-head,
@@ -1324,7 +1346,11 @@ article.music-track-row[role="listitem"] {
   height: 44px;
 }
 
-@media (max-width: 1150px) {
+@media (max-width: 1280px) {
+  .music-app-main { --music-view-gutter: 24px; }
+
+  .music-track-table-head { display: none; }
+
   article.music-track-row[role="listitem"] {
     min-height: 108px;
     grid-template-columns: minmax(210px, 1fr) minmax(130px, .55fr) auto;
@@ -1369,6 +1395,16 @@ article.music-track-row[role="listitem"] {
   .music-player-volume-toggle { width: 30px; }
 }
 
+@media (max-width: 1100px) and (min-width: 861px) {
+  .music-app-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+
+  .music-app-topbar > div:first-child { display: none; }
+  .music-global-search { min-width: 0; }
+}
+
 @media (max-width: 960px) {
   .workspace-audio-player {
     min-height: 112px;
@@ -1386,10 +1422,8 @@ article.music-track-row[role="listitem"] {
 }
 
 @media (max-width: 860px) {
-  .music-app-main > .music-track-browser {
-    width: calc(100% - 24px);
-    padding-top: 32px;
-  }
+  .music-app-main { --music-view-gutter: 20px; }
+  .music-app-main > .music-workspace-view { padding-top: 32px; }
 }
 
 @media (max-width: 760px) {
@@ -1426,7 +1460,7 @@ article.music-track-row[role="listitem"] {
 }
 
 @media (max-width: 480px) {
-  .music-app-main > .music-track-browser { width: calc(100% - 24px); }
+  .music-app-main { --music-view-gutter: 16px; }
 
   article.music-track-row[role="listitem"] {
     grid-template-areas:

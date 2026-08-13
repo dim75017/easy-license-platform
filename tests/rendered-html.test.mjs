@@ -1412,6 +1412,16 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(navBlock[1], /label:\s*"YOUR LIBRARY"/);
   assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
   assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
+  assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 4, "Discover, Music, Playlists and Liked tracks should share one full-width canvas");
+  assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked";/);
+  assert.match(musicWorkspace, /<header className=\{`music-app-topbar\$\{usesWideCanvas \? " is-wide" : ""\}`\}>/);
+  assert.match(musicWorkspace, /view === "discover"[\s\S]{0,100}className="music-library-view music-workspace-view"/);
+  assert.match(musicWorkspace, /view === "music"[\s\S]{0,100}className="music-track-browser music-workspace-view"/);
+  assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
+  assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,180}className="music-secondary-view music-playlists-view music-workspace-view"/);
+  for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
+    assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
+  }
 
   assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
   assert.match(musicWorkspace, /type FacetKind = "genre" \| "mood" \| "theme" \| "artist"/);
@@ -1535,8 +1545,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(mobileNavCss, /grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(mobileNavCss, /button\[data-mobile-secondary="true"\]\s*\{\s*display:\s*none/);
 
-  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*calc\(100% - 32px\);[^}]*max-width:\s*none;[^}]*margin:\s*0 auto;[^}]*padding:\s*40px 0 58px/s);
-  assert.doesNotMatch(musicWorkspaceV13, /width:\s*min\(calc\(100% - 64px\), 1440px\)/, "the Music library should not regain its old wide desktop gutters or width cap");
+  assert.match(musicWorkspaceV13, /\.music-app-main\s*\{\s*--music-view-gutter:\s*28px;/);
+  assert.match(musicWorkspaceV13, /\.music-app-topbar\.is-wide\s*\{\s*padding-inline:\s*var\(--music-view-gutter\);/);
+  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-workspace-view\s*\{[^}]*width:\s*auto;[^}]*max-width:\s*none;[^}]*margin:\s*0 var\(--music-view-gutter\);[^}]*padding:\s*40px 0 58px/s);
+  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-playlists-view > header\s*\{\s*padding-top:\s*0;/);
+  assert.doesNotMatch(musicWorkspaceV13, /\.music-app-main > \.music-workspace-view\s*\{[^}]*(?:100vw|1310px|1440px)/s, "primary library views should fill the main canvas without a legacy width cap");
+  assert.match(musicWorkspaceV13, /@media \(min-width:\s*1600px\)\s*\{[^}]*\.music-discovery-grid\s*\{\s*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV13, /@media \(min-width:\s*2200px\)\s*\{[^}]*\.music-playlists-view \.music-secondary-playlists\s*\{\s*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV13, /\.workspace-playlist:focus-visible,[\s\S]{0,180}outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
   assert.match(musicWorkspaceV13, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(220px, \.8fr\) minmax\(360px, 1\.7fr\) minmax\(130px, \.55fr\) 176px;[^}]*gap:\s*20px/s);
   assert.match(musicWorkspaceV13, /article\.music-track-row\[role="listitem"\]\s*\{[^}]*min-height:\s*82px;[^}]*padding-block:\s*9px/s);
   assert.match(musicWorkspaceV13, /\.music-track-identity > img\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;[^}]*object-fit:\s*cover/s);
@@ -1564,25 +1580,32 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /\.music-player-volume-toggle:focus-visible,\s*\.music-player-volume-range:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-actions button,[\s\S]{0,100}\.workspace-player-actions button:nth-child\(2\)\s*\{[^}]*min-width:\s*44px;[^}]*height:\s*44px/s);
 
-  const v13TabletStart = musicWorkspaceV13.indexOf("@media (max-width: 1150px)");
+  const v13TabletStart = musicWorkspaceV13.indexOf("@media (max-width: 1280px)");
+  const v13TopbarStart = musicWorkspaceV13.indexOf("@media (max-width: 1100px) and (min-width: 861px)");
   const v13PlayerStackStart = musicWorkspaceV13.indexOf("@media (max-width: 960px)");
   const v13MediumStart = musicWorkspaceV13.indexOf("@media (max-width: 860px)");
   const v13CompactStart = musicWorkspaceV13.indexOf("@media (max-width: 760px)");
   const v13PhoneStart = musicWorkspaceV13.indexOf("@media (max-width: 480px)");
   const v13ForcedColoursStart = musicWorkspaceV13.indexOf("@media (forced-colors: active)");
-  assert.ok(v13TabletStart >= 0 && v13PlayerStackStart > v13TabletStart && v13MediumStart > v13PlayerStackStart && v13CompactStart > v13MediumStart && v13PhoneStart > v13CompactStart && v13ForcedColoursStart > v13PhoneStart);
-  const v13TabletCss = musicWorkspaceV13.slice(v13TabletStart, v13PlayerStackStart);
+  assert.ok(v13TabletStart >= 0 && v13TopbarStart > v13TabletStart && v13PlayerStackStart > v13TopbarStart && v13MediumStart > v13PlayerStackStart && v13CompactStart > v13MediumStart && v13PhoneStart > v13CompactStart && v13ForcedColoursStart > v13PhoneStart);
+  const v13TabletCss = musicWorkspaceV13.slice(v13TabletStart, v13TopbarStart);
+  const v13TopbarCss = musicWorkspaceV13.slice(v13TopbarStart, v13PlayerStackStart);
   const v13PlayerStackCss = musicWorkspaceV13.slice(v13PlayerStackStart, v13MediumStart);
   const v13MediumCss = musicWorkspaceV13.slice(v13MediumStart, v13CompactStart);
   const v13CompactCss = musicWorkspaceV13.slice(v13CompactStart, v13PhoneStart);
   const v13PhoneCss = musicWorkspaceV13.slice(v13PhoneStart, v13ForcedColoursStart);
   assert.match(v13TabletCss, /grid-template-areas:[\s\S]{0,180}"player player player"[\s\S]{0,100}"error error error"/);
+  assert.match(v13TabletCss, /\.music-app-main\s*\{\s*--music-view-gutter:\s*24px;/);
   assert.match(v13TabletCss, /\.music-track-actions button,[\s\S]{0,100}min-width:\s*44px;[^}]*height:\s*44px/s);
   assert.match(v13TabletCss, /\.workspace-player-timeline\s*\{[^}]*grid-template-columns:\s*28px minmax\(60px, 1fr\) 28px 80px/s);
   assert.match(v13TabletCss, /\.workspace-player-volume\s*\{[^}]*grid-template-columns:\s*30px minmax\(35px, 1fr\);[^}]*gap:\s*4px/s);
+  assert.match(v13TopbarCss, /\.music-app-topbar\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;[^}]*gap:\s*16px/s);
+  assert.match(v13TopbarCss, /\.music-app-topbar > div:first-child\s*\{\s*display:\s*none;/);
+  assert.match(v13TopbarCss, /\.music-global-search\s*\{\s*min-width:\s*0;/);
   assert.match(v13PlayerStackCss, /\.workspace-audio-player\s*\{[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/s);
   assert.match(v13PlayerStackCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);
-  assert.match(v13MediumCss, /\.music-app-main > \.music-track-browser\s*\{[^}]*width:\s*calc\(100% - 24px\);[^}]*padding-top:\s*32px/s);
+  assert.match(v13MediumCss, /\.music-app-main\s*\{\s*--music-view-gutter:\s*20px;/);
+  assert.match(v13MediumCss, /\.music-app-main > \.music-workspace-view\s*\{\s*padding-top:\s*32px;/);
   assert.match(v13CompactCss, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 30px minmax\(80px, 1fr\) 30px/s);
   assert.match(v13CompactCss, /\.workspace-audio-player\s*\{[^}]*min-height:\s*112px;[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 40px auto;[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/);
   assert.match(v13CompactCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);
@@ -1590,7 +1613,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13CompactCss, /\.workspace-player-timeline \.music-player-wave \.music-wave\s*\{\s*height:\s*32px/);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-(?:player-wave|wave)[^\{]*\{[^}]*display:\s*none/s, "the canvas waveform and its seek surface should remain visible at every V13 breakpoint");
   assert.doesNotMatch(musicWorkspaceV13, /\.workspace-player-volume[^\{]*\{[^}]*display:\s*none/s, "the fixed-player volume controls should remain visible at every V13 breakpoint");
-  assert.match(v13PhoneCss, /\.music-app-main > \.music-track-browser\s*\{\s*width:\s*calc\(100% - 24px\)/);
+  assert.match(v13PhoneCss, /\.music-app-main\s*\{\s*--music-view-gutter:\s*16px;/);
   assert.match(v13PhoneCss, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*42px 28px minmax\(64px, 1fr\) 28px/s);
   assert.match(v13PhoneCss, /\.music-player-transport\s*\{\s*grid-template-columns:\s*42px/);
   assert.match(v13PhoneCss, /\.music-player-play\s*\{[^}]*width:\s*42px;[^}]*height:\s*42px/s);
