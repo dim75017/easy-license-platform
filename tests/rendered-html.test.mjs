@@ -226,9 +226,18 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /@media \(min-width: 1800px\) and \(min-height: 760px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(min-width: 901px\) and \(max-width: 1179px\)[\s\S]{0,160}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*box-shadow:\s*none;[^}]*transform:\s*none;/);
-  assert.match(cataloguePage, /--playlist-accent":\s*playlistGenreAccents\[playlist\.genre\]/);
+  assert.match(cataloguePage, /const accent = getPlaylistAccent\(playlist\)/);
+  assert.match(cataloguePage, /--playlist-accent":\s*accent\.color,\s*"--playlist-accent-ink":\s*accent\.ink/);
+  assert.match(cataloguePage, /aria-label=\{`Open \$\{playlist\.title\} playlist on Spotify`\}/);
+  assert.doesNotMatch(cataloguePage, /<b>\s*Open on Spotify\s*<\/b>/);
   assert.match(catalogueCss, /\.music-playlist-card::before\s*\{[^}]*width:\s*14px;[^}]*background:\s*var\(--playlist-accent\)/s);
-  assert.match(catalogueCss, /\.music-playlist-number\s*\{[^}]*position:\s*absolute;[^}]*background:\s*var\(--playlist-accent\)/s);
+  assert.match(catalogueCss, /\.music-playlist-number\s*\{[^}]*position:\s*absolute;[^}]*background:\s*var\(--playlist-accent\);[^}]*color:\s*var\(--playlist-accent-ink, var\(--music-cream\)\)/s);
+  const publicPlaylistCard = catalogueCss.slice(catalogueCss.indexOf("/* V42:"), catalogueCss.indexOf(".catalogue-moods {"));
+  assert.match(publicPlaylistCard, /\.music-playlist-card\s*\{[^}]*border:\s*0;[^}]*grid-template-rows:\s*1fr auto/s);
+  assert.match(publicPlaylistCard, /\.music-playlist-card::before\s*\{[^}]*background:\s*var\(--playlist-accent\)/s);
+  assert.match(publicPlaylistCard, /\.music-playlist-number\s*\{[^}]*border:\s*0;/s);
+  assert.doesNotMatch(publicPlaylistCard, /\.music-playlist-card::before\s*\{[^}]*border-right/s);
+  assert.doesNotMatch(catalogueCss, /\.music-playlist-card\s*>\s*b|\.music-v26-page \.music-playlist-card\s*>\s*b/);
   assert.match(catalogueCss, /\.music-playlist-card::after\s*\{[^}]*z-index:\s*1;[^}]*linear-gradient/s);
   assert.match(catalogueCss, /\.music-playlist-card > img\s*\{[^}]*z-index:\s*0;[^}]*opacity:\s*1;/s);
   assert.match(catalogueCss, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]{0,160}\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*scale\(1\.055\)/);
@@ -510,6 +519,9 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(previewHook, /onEnded[\s\S]{0,180}setProgress\(0\)/);
   assert.match(previewHook, /requestIdRef\.current === requestId/);
   assert.match(previewHook, /activeTrackIdRef\.current/);
+  assert.equal((showcase.match(/>Open on Spotify<\/a>/g) ?? []).length, 1, "the Creator sampler should keep one track-preview fallback link");
+  assert.equal((cataloguePage.match(/>Open on Spotify<\/a>/g) ?? []).length, 0, "playlist cards should not restore a visible Spotify instruction");
+  assert.equal((await source("app/components/CatalogueExplorer.tsx")).match(/>Open on Spotify<\/a>/g)?.length ?? 0, 1, "the legacy track explorer may keep its preview fallback link");
 
   const featureBlock = catalogueData.match(/export const creatorPlaylistTracks = \[([\s\S]*?)\]\s+satisfies readonly CreatorPlaylistTrack\[\];/);
   assert.ok(featureBlock, "creatorPlaylistTracks should be exported as a typed list");
@@ -1042,35 +1054,47 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   const playlistGenres = [...playlistBlock[1].matchAll(/genre:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.equal(playlistGenres.length, 12, "the catalogue should present twelve playlist directions");
   assert.equal(new Set(playlistGenres).size, 10, "the twelve playlists should span ten real genre families");
-  const accentBlock = catalogueData.match(/export const playlistGenreAccents = \{([\s\S]*?)\}\s+as const;/);
+  const accentBlock = catalogueData.match(/export const playlistGenreAccents = \{([\s\S]*?)\}\s+as const satisfies Record<string, PlaylistAccent>;/);
   assert.ok(accentBlock, "playlist genre accents should have one canonical map");
-  const accentEntries = [...accentBlock[1].matchAll(/^\s*(?:"([^"]+)"|([A-Za-z]+)):\s*"(#[0-9a-f]{6})",?$/gim)].map((match) => [match[1] ?? match[2], match[3].toLowerCase()]);
+  const accentEntries = [...accentBlock[1].matchAll(/^\s*(?:"([^"]+)"|([A-Za-z]+)):\s*\{\s*color:\s*"(#[0-9a-f]{6})",\s*ink:\s*"(#[0-9a-f]{6})"\s*\},?$/gim)]
+    .map((match) => [match[1] ?? match[2], { color: match[3].toLowerCase(), ink: match[4].toLowerCase() }]);
   assert.equal(accentEntries.length, 10, "every real playlist genre should have one accent");
   assert.deepEqual(Object.fromEntries(accentEntries), {
-    Lofi: "#a84432",
-    Synthwave: "#5b4a91",
-    Piano: "#53647a",
-    Ambient: "#315d63",
-    "Jazz Lofi": "#75434f",
-    "Chill House": "#356785",
-    Acoustic: "#365442",
-    Classical: "#795a34",
-    "Bossa Lofi": "#5c652c",
-    "Seasonal Lofi": "#70405d",
+    Lofi: { color: "#a84432", ink: "#fff9f1" },
+    Synthwave: { color: "#5b4a91", ink: "#fff9f1" },
+    Piano: { color: "#4f735a", ink: "#fff9f1" },
+    Ambient: { color: "#315d63", ink: "#fff9f1" },
+    "Jazz Lofi": { color: "#8b4a2f", ink: "#fff9f1" },
+    "Chill House": { color: "#d8892b", ink: "#292832" },
+    Acoustic: { color: "#a75d36", ink: "#fff9f1" },
+    Classical: { color: "#795a34", ink: "#fff9f1" },
+    "Bossa Lofi": { color: "#c69a2c", ink: "#292832" },
+    "Seasonal Lofi": { color: "#a63336", ink: "#fff9f1" },
   }, "the approved playlist palette should stay tied to the right genres");
   assert.deepEqual(new Set(accentEntries.map(([genre]) => genre)), new Set(playlistGenres), "the accent map and playlist genres should stay aligned");
-  assert.equal(new Set(accentEntries.map(([, colour]) => colour)).size, 10, "each playlist genre should remain visually distinct");
-  const cream = [0xff, 0xf9, 0xf1];
+  assert.equal(new Set(accentEntries.map(([, accent]) => accent.color)).size, 10, "each playlist genre should remain visually distinct");
+  assert.match(catalogueData, /accent\?:\s*PlaylistAccent/);
+  assert.match(catalogueData, /id:\s*"christmas-music"[\s\S]{0,500}accent:\s*\{\s*color:\s*"#a63336",\s*ink:\s*"#fff9f1"\s*\}/);
+  assert.match(catalogueData, /id:\s*"halloween-music"[\s\S]{0,500}accent:\s*\{\s*color:\s*"#df7428",\s*ink:\s*"#292832"\s*\}/);
+  assert.match(catalogueData, /export function getPlaylistAccent\(playlist:[^)]*\): PlaylistAccent\s*\{\s*return playlist\.accent \?\? playlistGenreAccents\[playlist\.genre\];\s*\}/);
+  const seasonalOverrides = [...playlistBlock[1].matchAll(/accent:\s*\{\s*color:\s*"(#[0-9a-f]{6})",\s*ink:\s*"(#[0-9a-f]{6})"\s*\}/gi)]
+    .map((match) => ({ color: match[1].toLowerCase(), ink: match[2].toLowerCase() }));
+  assert.deepEqual(seasonalOverrides, [
+    { color: "#a63336", ink: "#fff9f1" },
+    { color: "#df7428", ink: "#292832" },
+  ], "Christmas and Halloween should keep their distinct accessible overrides");
+
   const linearChannel = (channel) => {
     const normalized = channel / 255;
     return normalized <= .04045 ? normalized / 12.92 : ((normalized + .055) / 1.055) ** 2.4;
   };
   const luminance = (rgb) => .2126 * linearChannel(rgb[0]) + .7152 * linearChannel(rgb[1]) + .0722 * linearChannel(rgb[2]);
-  const creamLuminance = luminance(cream);
-  for (const [genre, colour] of accentEntries) {
-    const rgb = [colour.slice(1, 3), colour.slice(3, 5), colour.slice(5, 7)].map((channel) => Number.parseInt(channel, 16));
-    const contrast = (creamLuminance + .05) / (luminance(rgb) + .05);
-    assert.ok(contrast >= 4.5, `${genre} accent should keep its small cream badge text readable`);
+  const hexToRgb = (colour) => [colour.slice(1, 3), colour.slice(3, 5), colour.slice(5, 7)].map((channel) => Number.parseInt(channel, 16));
+  for (const [label, accent] of [...accentEntries, ["Christmas override", seasonalOverrides[0]], ["Halloween override", seasonalOverrides[1]]]) {
+    const accentLuminance = luminance(hexToRgb(accent.color));
+    const inkLuminance = luminance(hexToRgb(accent.ink));
+    const contrast = (Math.max(accentLuminance, inkLuminance) + .05) / (Math.min(accentLuminance, inkLuminance) + .05);
+    assert.ok(contrast >= 4.5, `${label} accent should keep its selected badge ink readable`);
   }
   assert.doesNotMatch(playlistBlock[1], /borderColor:/, "playlist entries should derive colour from their genre");
   assert.match(catalogueData, /genre:\s*PlaylistGenre/);
@@ -1465,8 +1489,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
-  assert.match(musicWorkspace, /--playlist-accent":\s*playlistGenreAccents\[playlist\.genre\]/);
-  assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-accent/);
+  assert.match(musicWorkspace, /const accent = getPlaylistAccent\(playlist\)/);
+  assert.match(musicWorkspace, /--playlist-accent":\s*accent\.color,[\s\S]{0,80}"--playlist-accent-ink":\s*accent\.ink/);
+  assert.match(musicWorkspaceCss, /\.workspace-playlist\s*\{[^}]*border:\s*0;/s);
+  assert.match(musicWorkspaceCss, /\.workspace-playlist::before\s*\{[^}]*width:\s*10px;[^}]*background:\s*var\(--playlist-accent/s);
   assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
   assert.match(cataloguePage, /width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
   assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"/);

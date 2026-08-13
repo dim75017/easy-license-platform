@@ -60,18 +60,23 @@ export const playlists = [
   { title: "Slow rituals", subtitle: "Gentle music for wellness and rest", use: "wellness" as MusicUseSlug, accent: "sage", tracks: "211 tracks" },
 ] as const;
 
+export type PlaylistAccent = Readonly<{
+  color: `#${string}`;
+  ink: `#${string}`;
+}>;
+
 export const playlistGenreAccents = {
-  Lofi: "#a84432",
-  Synthwave: "#5b4a91",
-  Piano: "#53647a",
-  Ambient: "#315d63",
-  "Jazz Lofi": "#75434f",
-  "Chill House": "#356785",
-  Acoustic: "#365442",
-  Classical: "#795a34",
-  "Bossa Lofi": "#5c652c",
-  "Seasonal Lofi": "#70405d",
-} as const;
+  Lofi: { color: "#a84432", ink: "#fff9f1" },
+  Synthwave: { color: "#5b4a91", ink: "#fff9f1" },
+  Piano: { color: "#4f735a", ink: "#fff9f1" },
+  Ambient: { color: "#315d63", ink: "#fff9f1" },
+  "Jazz Lofi": { color: "#8b4a2f", ink: "#fff9f1" },
+  "Chill House": { color: "#d8892b", ink: "#292832" },
+  Acoustic: { color: "#a75d36", ink: "#fff9f1" },
+  Classical: { color: "#795a34", ink: "#fff9f1" },
+  "Bossa Lofi": { color: "#c69a2c", ink: "#292832" },
+  "Seasonal Lofi": { color: "#a63336", ink: "#fff9f1" },
+} as const satisfies Record<string, PlaylistAccent>;
 
 export type PlaylistGenre = keyof typeof playlistGenreAccents;
 
@@ -83,6 +88,7 @@ export type LofiGirlPlaylist = {
   spotifyId: string;
   use: MusicUseSlug;
   genre: PlaylistGenre;
+  accent?: PlaylistAccent;
   moods: readonly string[];
   image: `/images/unsplash/playlists/${string}.jpg`;
   imagePosition?: string;
@@ -221,6 +227,7 @@ export const lofiGirlPlaylists = [
     spotifyId: "74UM9i1Dkr7dClq7u4PGYF",
     use: "lifestyle-vlogs",
     genre: "Seasonal Lofi",
+    accent: { color: "#a63336", ink: "#fff9f1" },
     moods: ["Festive", "Cozy", "Warm"],
     image: "/images/unsplash/playlists/christmas-tree-Kf8ko_oGN20.jpg",
     imagePosition: "center",
@@ -233,11 +240,16 @@ export const lofiGirlPlaylists = [
     spotifyId: "6FEzJ6EWEHpUz0nz7gIVvJ",
     use: "gaming-streaming",
     genre: "Seasonal Lofi",
+    accent: { color: "#df7428", ink: "#292832" },
     moods: ["Spooky", "Dark", "Playful"],
     image: "/images/unsplash/playlists/halloween-pumpkin-MYRG0ptGh50.jpg",
     imagePosition: "center",
   },
 ] satisfies readonly LofiGirlPlaylist[];
+
+export function getPlaylistAccent(playlist: Pick<LofiGirlPlaylist, "genre" | "accent">): PlaylistAccent {
+  return playlist.accent ?? playlistGenreAccents[playlist.genre];
+}
 
 export type CreatorPlaylistTrack = {
   playlistId: string;

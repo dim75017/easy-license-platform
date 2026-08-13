@@ -10,7 +10,7 @@ import {
   lofiGirlPlaylists,
   moods,
   musicSearchTaxonomy,
-  playlistGenreAccents,
+  getPlaylistAccent,
   type LofiGirlPlaylist,
   type MusicUseSlug,
   type WorkspaceTrack,
@@ -69,8 +69,10 @@ function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boo
 }
 
 function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen: (playlist: LofiGirlPlaylist) => void }) {
+  const accent = getPlaylistAccent(playlist);
   const style = {
-    "--playlist-accent": playlistGenreAccents[playlist.genre],
+    "--playlist-accent": accent.color,
+    "--playlist-accent-ink": accent.ink,
     "--playlist-position": playlist.imagePosition ?? "center",
   } as CSSProperties;
 

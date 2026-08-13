@@ -5,7 +5,7 @@ import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
 import { FilteredCreatorTrackShowcase } from "../components/FilteredCreatorTrackShowcase";
 import { PublicShell } from "../components/PublicShell";
-import { lofiGirlPlaylists, moods, playlistGenreAccents } from "../data/catalog";
+import { getPlaylistAccent, lofiGirlPlaylists, moods } from "../data/catalog";
 
 export const metadata: Metadata = {
   title: "Music library",
@@ -34,12 +34,14 @@ export default function CataloguePage() {
             <p>Explore the catalogue&apos;s main directions, from lofi and ambient to jazz, classical, bossa and seasonal music.</p>
           </div>
           <div className="music-playlist-grid" data-reveal="group">
-            {lofiGirlPlaylists.map((playlist, index) => (
-              <a
+            {lofiGirlPlaylists.map((playlist, index) => {
+              const accent = getPlaylistAccent(playlist);
+              return <a
+                aria-label={`Open ${playlist.title} playlist on Spotify`}
                 className="music-playlist-card"
                 href={`https://open.spotify.com/playlist/${playlist.spotifyId}`}
                 key={playlist.id}
-                style={{ "--playlist-accent": playlistGenreAccents[playlist.genre] } as CSSProperties}
+                style={{ "--playlist-accent": accent.color, "--playlist-accent-ink": accent.ink } as CSSProperties}
               >
                 <span className="music-playlist-number">{String(index + 1).padStart(2, "0")}</span>
                 <img
@@ -52,9 +54,8 @@ export default function CataloguePage() {
                   style={{ objectPosition: playlist.imagePosition ?? "center" }}
                 />
                 <span className="music-playlist-copy"><small>{playlist.genre} · {playlist.moods.slice(0, 2).join(" · ")}</small><strong>{playlist.title}</strong><em>{playlist.description}</em></span>
-                <b>Open on Spotify</b>
-              </a>
-            ))}
+              </a>;
+            })}
           </div>
           <a className="music-playlists-all cta-swipe" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists</a>
         </section>
