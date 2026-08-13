@@ -1550,7 +1550,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /\.music-player-icon\[data-state="pause"\]::before\s*\{\s*left:\s*2px;\s*\}[\s\S]{0,100}\.music-player-icon\[data-state="pause"\]::after\s*\{\s*right:\s*2px;/);
   assert.match(musicWorkspaceV13, /\.music-player-wave \.music-wave\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*height:\s*30px;[^}]*color:\s*var\(--wm-ink\)/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-wave \.music-wave i\b/, "V13 should style the canvas itself rather than legacy DOM bars");
-  assert.match(musicWorkspaceV13, /\.music-player-seek\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*opacity:\s*0/s);
+  assert.match(musicWorkspaceV13, /\.music-player-seek\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*appearance:\s*none;[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*-webkit-appearance:\s*none;[^}]*background:\s*transparent;[^}]*opacity:\s*0/s);
+  assert.match(musicWorkspaceV13, /\.music-player-seek:disabled\s*\{[^}]*cursor:\s*default;[^}]*opacity:\s*0;[^}]*pointer-events:\s*none/s, "disabled seek ranges must remain fully invisible behind idle waveforms");
+  assert.doesNotMatch(musicWorkspaceV13, /\.music-player-seek:disabled\s*\{[^}]*opacity:\s*(?!0(?:[;}]))(?:\.\d+|1)/s, "disabled seek ranges must never reveal their native horizontal track");
   assert.match(musicWorkspaceV13, /\.music-player-wave:focus-within\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
   assert.match(musicWorkspaceV13, /\.workspace-audio-player\s*\{[^}]*min-height:\s*76px;[^}]*grid-template-columns:\s*minmax\(190px, 240px\) 40px minmax\(300px, 1fr\) auto;[^}]*padding:\s*8px 24px/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-main\s*\{[^}]*grid-template-columns:\s*48px minmax\(110px, 1fr\)/s);

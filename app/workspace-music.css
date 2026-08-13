@@ -1114,7 +1114,8 @@ article.music-track-row[role="listitem"] {
 
 .music-player-seek:disabled {
   cursor: default;
-  opacity: .34;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .music-player-time {
@@ -1147,9 +1148,12 @@ article.music-track-row[role="listitem"] {
 .music-player-seek {
   position: absolute;
   inset: 0;
+  appearance: none;
   width: 100%;
   height: 100%;
   margin: 0;
+  -webkit-appearance: none;
+  background: transparent;
   cursor: pointer;
   opacity: 0;
 }
