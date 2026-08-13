@@ -1136,30 +1136,11 @@ article.music-track-row[role="listitem"] {
 }
 
 .music-player-wave .music-wave {
-  display: flex;
+  display: block;
   width: 100%;
   min-width: 0;
   height: 18px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0;
   color: var(--wm-ink);
-}
-
-.music-player-wave .music-wave i {
-  width: 1.5px;
-  min-width: 1px;
-  max-width: 1.5px;
-  flex: 0 0 1.5px;
-  border-radius: 1px;
-  background: currentColor;
-  opacity: .18;
-  transition: background-color .18s ease, opacity .18s ease;
-}
-
-.music-player-wave .music-wave i.is-played {
-  background: var(--wm-clay);
-  opacity: 1;
 }
 
 .music-player-seek {
@@ -1350,10 +1331,6 @@ article.music-track-row[role="listitem"] {
     height: 40px;
   }
   .music-app-main { padding-bottom: 236px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .music-player-wave .music-wave i { transition: none; }
 }
 
 @media (forced-colors: active) {

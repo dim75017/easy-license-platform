@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { useTrackPreview } from "../hooks/useTrackPreview";
@@ -49,24 +49,81 @@ const navGroups: ReadonlyArray<{
 
 const viewLabels = Object.fromEntries(navGroups.flatMap((group) => group.items.map((item) => [item.id, item.label]))) as Record<LibraryView, string>;
 
-function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
-  const heights = [34, 68, 43, 82, 56, 92, 47, 73, 39, 88, 51, 64, 31, 77, 46, 95, 58, 70, 37, 84, 49, 62, 42, 78];
-  const offset = seed.charCodeAt(seed.length - 1) % heights.length;
-  const count = dense ? 96 : 24;
-  const playedBars = Math.round(Math.max(0, Math.min(1, progress)) * count);
+const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+  const progressRef = useRef(clampedProgress);
+  progressRef.current = clampedProgress;
 
-  return (
-    <span className="music-wave" aria-hidden="true">
-      {Array.from({ length: count }, (_, index) => (
-        <i
-          className={index < playedBars ? "is-played" : undefined}
-          key={index}
-          style={{ height: `${heights[(index + offset) % heights.length]}%` }}
-        />
-      ))}
-    </span>
-  );
-}
+  const drawWave = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (width <= 0 || height <= 0) return;
+
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const targetWidth = Math.max(1, Math.round(width * pixelRatio));
+    const targetHeight = Math.max(1, Math.round(height * pixelRatio));
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    context.clearRect(0, 0, width, height);
+
+    const styles = getComputedStyle(canvas);
+    const baseColor = styles.color;
+    const playedColor = styles.getPropertyValue("--wm-clay").trim() || "#e06343";
+    const seedValue = Array.from(seed).reduce((hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0, 7);
+    const pitch = dense ? 2.45 : 4;
+    const barWidth = 1;
+    const snappedBarWidth = Math.max(1, Math.round(barWidth * pixelRatio)) / pixelRatio;
+    const count = Math.max(1, Math.floor(width / pitch));
+    const playedBars = Math.round(progressRef.current * count);
+
+    for (let index = 0; index < count; index += 1) {
+      const position = count > 1 ? index / (count - 1) : 0;
+      const fastDetail = Math.abs(Math.sin((index + seedValue) * .613));
+      const midDetail = Math.abs(Math.sin((index + seedValue) * .173 + 1.4));
+      const slowEnvelope = .58 + Math.abs(Math.sin((index + seedValue) * .041 + .8)) * .42;
+      const tail = position > .86 ? Math.max(.16, (1 - position) / .14) : 1;
+      const amplitude = Math.max(.16, Math.min(.96, (.2 + fastDetail * .38 + midDetail * .27) * slowEnvelope * tail));
+      const barHeight = Math.max(2, Math.round(height * amplitude));
+      const x = Math.round(index * pitch * pixelRatio) / pixelRatio;
+      const y = Math.round(((height - barHeight) / 2) * pixelRatio) / pixelRatio;
+
+      context.globalAlpha = index < playedBars ? 1 : .18;
+      context.fillStyle = index < playedBars ? playedColor : baseColor;
+      context.fillRect(x, y, snappedBarWidth, barHeight);
+    }
+
+    context.globalAlpha = 1;
+  }, [dense, seed]);
+
+  useEffect(() => {
+    drawWave();
+  }, [clampedProgress, drawWave]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", drawWave);
+      return () => window.removeEventListener("resize", drawWave);
+    }
+    const observer = new ResizeObserver(drawWave);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [drawWave]);
+
+  return <canvas className="music-wave" ref={canvasRef} aria-hidden="true" data-density={dense ? "dense" : "compact"} />;
+});
 
 function PlaybackGlyph({ playing }: { playing: boolean }) {
   return <span className="music-player-icon" data-state={playing ? "pause" : "play"} aria-hidden="true" />;
