@@ -98,12 +98,6 @@ export function useTrackPreview() {
     setProgress(nextTime / audio.duration);
   }, []);
 
-  const seekBy = useCallback((seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    seekTo(audio.currentTime + seconds);
-  }, [seekTo]);
-
   const onTimeUpdate = syncTimeline;
 
   const onEnded = useCallback(() => {
@@ -141,7 +135,6 @@ export function useTrackPreview() {
     onPlay: () => setIsPlaying(true),
     onTimeUpdate,
     progress,
-    seekBy,
     seekTo,
     stop,
     toggle,

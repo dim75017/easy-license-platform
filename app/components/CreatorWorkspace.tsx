@@ -52,7 +52,7 @@ const viewLabels = Object.fromEntries(navGroups.flatMap((group) => group.items.m
 function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
   const heights = [34, 68, 43, 82, 56, 92, 47, 73, 39, 88, 51, 64, 31, 77, 46, 95, 58, 70, 37, 84, 49, 62, 42, 78];
   const offset = seed.charCodeAt(seed.length - 1) % heights.length;
-  const count = dense ? 48 : 18;
+  const count = dense ? 96 : 24;
   const playedBars = Math.round(Math.max(0, Math.min(1, progress)) * count);
 
   return (
@@ -66,6 +66,10 @@ function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boo
       ))}
     </span>
   );
+}
+
+function PlaybackGlyph({ playing }: { playing: boolean }) {
+  return <span className="music-player-icon" data-state={playing ? "pause" : "play"} aria-hidden="true" />;
 }
 
 function formatPlaybackTime(seconds: number) {
@@ -260,9 +264,7 @@ export function CreatorWorkspace() {
               </div>
               <div className="music-track-inline-player" role="group" aria-label={`Preview player for ${track.title}`}>
                 <div className="music-player-transport">
-                  <button className="music-player-skip" type="button" onClick={() => preview.seekBy(-10)} disabled={!isActive || !preview.canSeek} aria-label={`Go back 10 seconds in ${track.title}`}><span aria-hidden="true">−10</span></button>
-                  <button className="music-player-play" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`} aria-pressed={isPlaying}><span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span></button>
-                  <button className="music-player-skip" type="button" onClick={() => preview.seekBy(10)} disabled={!isActive || !preview.canSeek} aria-label={`Go forward 10 seconds in ${track.title}`}><span aria-hidden="true">+10</span></button>
+                  <button className="music-player-play" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`} aria-pressed={isPlaying}><PlaybackGlyph playing={isPlaying} /></button>
                 </div>
                 <time className="music-player-time" dateTime={`PT${Math.floor(isActive ? preview.currentTime : 0)}S`}>{formatPlaybackTime(isActive ? preview.currentTime : 0)}</time>
                 <span className="music-player-wave">
@@ -422,9 +424,7 @@ export function CreatorWorkspace() {
             <span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist}</small></span>
           </div>
           <div className="music-player-transport" aria-label="Playback controls">
-            <button className="music-player-skip" type="button" onClick={() => preview.seekBy(-10)} disabled={!preview.canSeek} aria-label="Go back 10 seconds"><span aria-hidden="true">−10</span></button>
-            <button className="music-player-play" type="button" onClick={() => togglePreview(selectedTrack)} aria-label={`${preview.isPlaying ? "Pause" : "Play"} preview of ${selectedTrack.title}`} aria-pressed={preview.isPlaying}><span aria-hidden="true">{preview.isPlaying ? "Ⅱ" : "▶"}</span></button>
-            <button className="music-player-skip" type="button" onClick={() => preview.seekBy(10)} disabled={!preview.canSeek} aria-label="Go forward 10 seconds"><span aria-hidden="true">+10</span></button>
+            <button className="music-player-play" type="button" onClick={() => togglePreview(selectedTrack)} aria-label={`${preview.isPlaying ? "Pause" : "Play"} preview of ${selectedTrack.title}`} aria-pressed={preview.isPlaying}><PlaybackGlyph playing={preview.isPlaying} /></button>
           </div>
           <div className="workspace-player-timeline">
             <time className="music-player-time" dateTime={`PT${Math.floor(preview.currentTime)}S`}>{formatPlaybackTime(preview.currentTime)}</time>
