@@ -226,7 +226,12 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /@media \(min-width: 1800px\) and \(min-height: 760px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);[\s\S]{0,100}grid-template-rows:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /@media \(min-width: 901px\) and \(max-width: 1179px\)[\s\S]{0,160}grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*box-shadow:\s*none;[^}]*transform:\s*none;/);
-  assert.match(catalogueCss, /\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*scale\(1\.06\)/);
+  assert.match(cataloguePage, /--playlist-accent":\s*playlistGenreAccents\[playlist\.genre\]/);
+  assert.match(catalogueCss, /\.music-playlist-card::before\s*\{[^}]*width:\s*14px;[^}]*background:\s*var\(--playlist-accent\)/s);
+  assert.match(catalogueCss, /\.music-playlist-number\s*\{[^}]*position:\s*absolute;[^}]*background:\s*var\(--playlist-accent\)/s);
+  assert.match(catalogueCss, /\.music-playlist-card::after\s*\{[^}]*z-index:\s*1;[^}]*linear-gradient/s);
+  assert.match(catalogueCss, /\.music-playlist-card > img\s*\{[^}]*z-index:\s*0;[^}]*opacity:\s*1;/s);
+  assert.match(catalogueCss, /@media \(hover: hover\) and \(pointer: fine\)[\s\S]{0,160}\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*scale\(1\.055\)/);
   assert.doesNotMatch(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*translateY/);
   assert.match(catalogueCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,420}\.music-playlist-card:hover > img\s*\{[^}]*transform:\s*none/);
   assert.doesNotMatch(cataloguePage, /Lofi Girl worlds/);
@@ -1037,7 +1042,28 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   const playlistGenres = [...playlistBlock[1].matchAll(/genre:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.equal(playlistGenres.length, 12, "the catalogue should present twelve playlist directions");
   assert.equal(new Set(playlistGenres).size, 10, "the twelve playlists should span ten real genre families");
-  assert.equal([...catalogueData.matchAll(/borderColor:\s*"#e06343"/gi)].length, 12, "every playlist accent should use Symbiome orange");
+  const accentBlock = catalogueData.match(/export const playlistGenreAccents = \{([\s\S]*?)\}\s+as const;/);
+  assert.ok(accentBlock, "playlist genre accents should have one canonical map");
+  const accentEntries = [...accentBlock[1].matchAll(/^\s*(?:"([^"]+)"|([A-Za-z]+)):\s*"(#[0-9a-f]{6})",?$/gim)].map((match) => [match[1] ?? match[2], match[3].toLowerCase()]);
+  assert.equal(accentEntries.length, 10, "every real playlist genre should have one accent");
+  assert.deepEqual(new Set(accentEntries.map(([genre]) => genre)), new Set(playlistGenres), "the accent map and playlist genres should stay aligned");
+  assert.equal(new Set(accentEntries.map(([, colour]) => colour)).size, 10, "each playlist genre should remain visually distinct");
+  const cream = [0xff, 0xf9, 0xf1];
+  const linearChannel = (channel) => {
+    const normalized = channel / 255;
+    return normalized <= .04045 ? normalized / 12.92 : ((normalized + .055) / 1.055) ** 2.4;
+  };
+  const luminance = (rgb) => .2126 * linearChannel(rgb[0]) + .7152 * linearChannel(rgb[1]) + .0722 * linearChannel(rgb[2]);
+  const creamLuminance = luminance(cream);
+  for (const [genre, colour] of accentEntries) {
+    const rgb = [colour.slice(1, 3), colour.slice(3, 5), colour.slice(5, 7)].map((channel) => Number.parseInt(channel, 16));
+    const contrast = (creamLuminance + .05) / (luminance(rgb) + .05);
+    assert.ok(contrast >= 4.5, `${genre} accent should keep its small cream badge text readable`);
+  }
+  assert.doesNotMatch(playlistBlock[1], /borderColor:/, "playlist entries should derive colour from their genre");
+  assert.match(catalogueData, /genre:\s*PlaylistGenre/);
+  assert.equal(playlistGenres.filter((genre) => genre === "Ambient").length, 2);
+  assert.equal(playlistGenres.filter((genre) => genre === "Seasonal Lofi").length, 2);
   assert.match(workspaceCss, /--wm-side:#292832; --wm-side-soft:#292832;[^\n]*--wm-clay:#e06343; --wm-clay-deep:#e06343; --wm-clay-soft:#e06343; --wm-sage:#e06343/i);
   assert.match(brandCss, /--symbiose-night:\s*#292832/i);
   assert.match(brandCss, /--symbiose-warm:\s*#e06343/i);
@@ -1326,7 +1352,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.music-track-identity strong\s*\{[^}]*font-size:\s*15px/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
-  assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-border/);
+  assert.match(musicWorkspace, /--playlist-accent":\s*playlistGenreAccents\[playlist\.genre\]/);
+  assert.match(musicWorkspaceCss, /border:3px solid var\(--playlist-accent/);
   assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
   assert.match(cataloguePage, /width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
   assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"/);

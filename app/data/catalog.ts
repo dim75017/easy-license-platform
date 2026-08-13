@@ -60,6 +60,21 @@ export const playlists = [
   { title: "Slow rituals", subtitle: "Gentle music for wellness and rest", use: "wellness" as MusicUseSlug, accent: "sage", tracks: "211 tracks" },
 ] as const;
 
+export const playlistGenreAccents = {
+  Lofi: "#a84432",
+  Synthwave: "#5b4a91",
+  Piano: "#53647a",
+  Ambient: "#315d63",
+  "Jazz Lofi": "#75434f",
+  "Chill House": "#356785",
+  Acoustic: "#365442",
+  Classical: "#795a34",
+  "Bossa Lofi": "#5c652c",
+  "Seasonal Lofi": "#70405d",
+} as const;
+
+export type PlaylistGenre = keyof typeof playlistGenreAccents;
+
 export type LofiGirlPlaylist = {
   id: string;
   title: string;
@@ -67,11 +82,10 @@ export type LofiGirlPlaylist = {
   description: string;
   spotifyId: string;
   use: MusicUseSlug;
-  genre: string;
+  genre: PlaylistGenre;
   moods: readonly string[];
   image: `/images/unsplash/playlists/${string}.jpg`;
   imagePosition?: string;
-  borderColor: `#${string}`;
 };
 
 /**
@@ -90,7 +104,6 @@ export const lofiGirlPlaylists = [
     moods: ["Warm", "Calm", "Focused"],
     image: "/images/unsplash/playlists/lofi-study-laptop-dwZlYC-6-9c.jpg",
     imagePosition: "66% 44%",
-    borderColor: "#e06343",
   },
   {
     id: "synthwave-night",
@@ -103,7 +116,6 @@ export const lofiGirlPlaylists = [
     moods: ["Neon", "Driving", "Focused"],
     image: "/images/unsplash/playlists/synthwave-console-p0j-mE6mGo4.jpg",
     imagePosition: "50% 50%",
-    borderColor: "#e06343",
   },
   {
     id: "peaceful-piano",
@@ -116,7 +128,6 @@ export const lofiGirlPlaylists = [
     moods: ["Peaceful", "Reflective", "Soft"],
     image: "/images/unsplash/playlists/peaceful-piano-hands-5P1-Bemnb0c.jpg",
     imagePosition: "52% 50%",
-    borderColor: "#e06343",
   },
   {
     id: "dark-ambient",
@@ -129,7 +140,6 @@ export const lofiGirlPlaylists = [
     moods: ["Dark", "Dreamy", "Cinematic"],
     image: "/images/unsplash/playlists/dark-ambient-fog.jpg",
     imagePosition: "60% center",
-    borderColor: "#e06343",
   },
   {
     id: "jazz-lofi",
@@ -142,7 +152,6 @@ export const lofiGirlPlaylists = [
     moods: ["Cozy", "Late night", "Easygoing"],
     image: "/images/unsplash/playlists/jazz-lofi-saxophone.jpg",
     imagePosition: "58% center",
-    borderColor: "#e06343",
   },
   {
     id: "chill-house",
@@ -155,7 +164,6 @@ export const lofiGirlPlaylists = [
     moods: ["Bright", "Sunny", "Free"],
     image: "/images/unsplash/playlists/chill-house.jpg",
     imagePosition: "center 58%",
-    borderColor: "#e06343",
   },
   {
     id: "sleep-ambient",
@@ -168,7 +176,6 @@ export const lofiGirlPlaylists = [
     moods: ["Restful", "Gentle", "Weightless"],
     image: "/images/unsplash/playlists/sleep-ambient-bedside.jpg",
     imagePosition: "64% center",
-    borderColor: "#e06343",
   },
   {
     id: "chill-guitar",
@@ -181,7 +188,6 @@ export const lofiGirlPlaylists = [
     moods: ["Organic", "Intimate", "Easygoing"],
     image: "/images/unsplash/playlists/chill-guitar-couch-KEtvAfDlpWI.jpg",
     imagePosition: "46% 47%",
-    borderColor: "#e06343",
   },
   {
     id: "relaxing-classical",
@@ -194,7 +200,6 @@ export const lofiGirlPlaylists = [
     moods: ["Elegant", "Peaceful", "Reflective"],
     image: "/images/unsplash/playlists/classical-quartet-__2fmv-P4eA.jpg",
     imagePosition: "center",
-    borderColor: "#e06343",
   },
   {
     id: "bossa-lofi",
@@ -207,7 +212,6 @@ export const lofiGirlPlaylists = [
     moods: ["Sunny", "Easygoing", "Warm"],
     image: "/images/unsplash/playlists/bossa-trees-KttgjNw5Iqo.jpg",
     imagePosition: "center",
-    borderColor: "#e06343",
   },
   {
     id: "christmas-music",
@@ -220,7 +224,6 @@ export const lofiGirlPlaylists = [
     moods: ["Festive", "Cozy", "Warm"],
     image: "/images/unsplash/playlists/christmas-tree-Kf8ko_oGN20.jpg",
     imagePosition: "center",
-    borderColor: "#e06343",
   },
   {
     id: "halloween-music",
@@ -233,7 +236,6 @@ export const lofiGirlPlaylists = [
     moods: ["Spooky", "Dark", "Playful"],
     image: "/images/unsplash/playlists/halloween-pumpkin-MYRG0ptGh50.jpg",
     imagePosition: "center",
-    borderColor: "#e06343",
   },
 ] satisfies readonly LofiGirlPlaylist[];
 

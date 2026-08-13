@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
 import { FilteredCreatorTrackShowcase } from "../components/FilteredCreatorTrackShowcase";
 import { PublicShell } from "../components/PublicShell";
-import { lofiGirlPlaylists, moods } from "../data/catalog";
+import { lofiGirlPlaylists, moods, playlistGenreAccents } from "../data/catalog";
 
 export const metadata: Metadata = {
   title: "Music library",
@@ -35,7 +35,12 @@ export default function CataloguePage() {
           </div>
           <div className="music-playlist-grid" data-reveal="group">
             {lofiGirlPlaylists.map((playlist, index) => (
-              <a className="music-playlist-card" href={`https://open.spotify.com/playlist/${playlist.spotifyId}`} key={playlist.id}>
+              <a
+                className="music-playlist-card"
+                href={`https://open.spotify.com/playlist/${playlist.spotifyId}`}
+                key={playlist.id}
+                style={{ "--playlist-accent": playlistGenreAccents[playlist.genre] } as CSSProperties}
+              >
                 <span className="music-playlist-number">{String(index + 1).padStart(2, "0")}</span>
                 <img
                   src={playlist.image}

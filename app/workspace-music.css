@@ -14,18 +14,18 @@
 /* Lofi Girl playlist directions: photographic, distinct and colour-coded. */
 .music-playlist-shelf,.music-secondary-playlists { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .music-shelf-head > div > p { max-width:780px; margin:8px 0 0; color:rgba(41,40,50,.62); font-size:14px; line-height:1.5; }
-.workspace-playlist { position:relative; display:block; min-height:305px; overflow:hidden; isolation:isolate; border:3px solid var(--playlist-border,#b97864); border-radius:18px; padding:0; background:#20222a; color:#fff; text-align:left; transition:border-radius .65s cubic-bezier(.2,.8,.2,1),box-shadow .65s cubic-bezier(.2,.8,.2,1),transform .65s cubic-bezier(.2,.8,.2,1); }
+.workspace-playlist { position:relative; display:block; min-height:305px; overflow:hidden; isolation:isolate; border:3px solid var(--playlist-accent,#e06343); border-radius:18px; padding:0; background:#20222a; color:#fff; text-align:left; transition:border-radius .65s cubic-bezier(.2,.8,.2,1),box-shadow .65s cubic-bezier(.2,.8,.2,1),transform .65s cubic-bezier(.2,.8,.2,1); }
 .workspace-playlist:hover { border-radius:25px; box-shadow:0 24px 48px rgba(41,40,50,.24); transform:translateY(-6px); }
 .workspace-playlist-photo { position:absolute; z-index:-3; inset:0; width:100%; height:100%; object-fit:cover; object-position:var(--playlist-position,center); filter:none; transform:scale(1.01); transition:transform 1.1s cubic-bezier(.2,.8,.2,1); }
 .workspace-playlist:hover .workspace-playlist-photo { transform:scale(1.075); }
 .workspace-playlist-shade { position:absolute; z-index:-2; inset:0; background:linear-gradient(180deg,rgba(16,18,24,.04) 6%,rgba(18,19,25,.28) 43%,rgba(18,19,25,.94) 100%); }
-.workspace-playlist-shade::after { position:absolute; inset:0; background:linear-gradient(120deg,color-mix(in srgb,var(--playlist-border) 28%,transparent),transparent 48%); content:""; }
+.workspace-playlist-shade::after { position:absolute; inset:0; background:linear-gradient(120deg,color-mix(in srgb,var(--playlist-accent) 28%,transparent),transparent 48%); content:""; }
 .workspace-playlist-copy { position:absolute; z-index:2; right:22px; bottom:20px; left:20px; display:flex; min-width:0; flex-direction:column; padding-right:38px; }
 .workspace-playlist-copy small { color:#fff; font-size:11px; font-weight:850; letter-spacing:.09em; line-height:1.3; text-transform:uppercase; }
 .workspace-playlist-copy strong { display:-webkit-box; overflow:hidden; margin-top:5px; -webkit-box-orient:vertical; -webkit-line-clamp:2; color:#fff; font-family:var(--font-display); font-size:clamp(27px,2.5vw,35px); font-weight:570; letter-spacing:-.055em; line-height:.92; }
 .workspace-playlist-copy em { display:-webkit-box; overflow:hidden; margin-top:9px; -webkit-box-orient:vertical; -webkit-line-clamp:2; color:rgba(255,255,255,.82); font-size:13px; font-style:normal; font-weight:480; letter-spacing:0; line-height:1.35; text-transform:none; }
 .workspace-playlist-copy b { margin-top:12px; color:rgba(255,255,255,.62); font-size:9px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
-.workspace-playlist > i { position:absolute; z-index:3; top:17px; right:17px; bottom:auto; display:grid; width:42px; height:42px; place-items:center; border:1px solid rgba(255,255,255,.5); border-radius:50%; background:var(--playlist-border,#b97864); box-shadow:0 9px 24px rgba(0,0,0,.2); color:#fff; font-size:17px; font-style:normal; transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+.workspace-playlist > i { position:absolute; z-index:3; top:17px; right:17px; bottom:auto; display:grid; width:42px; height:42px; place-items:center; border:1px solid rgba(255,255,255,.5); border-radius:50%; background:var(--playlist-accent,#e06343); box-shadow:0 9px 24px rgba(0,0,0,.2); color:#fff; font-size:17px; font-style:normal; transition:transform .5s cubic-bezier(.2,.8,.2,1); }
 .workspace-playlist:hover > i { transform:translateX(3px); }
 .music-mood-shelf button > span { display:flex; min-width:0; flex-direction:column; gap:4px; color:inherit; }
 .music-mood-shelf button strong { color:inherit; font-family:var(--font-display); font-size:18px; font-weight:600; letter-spacing:-.03em; }
@@ -58,8 +58,8 @@
 .music-setup-form section > span { color: var(--wm-clay-deep); }
 .music-role-grid button.is-selected,
 .music-destination-grid button.is-selected { background: rgba(224, 99, 67, .1); }
-.workspace-playlist { border-color: var(--playlist-border, #e06343); }
-.workspace-playlist > i { background: var(--playlist-border, #e06343); }
+.workspace-playlist { border-color: var(--playlist-accent, #e06343); }
+.workspace-playlist > i { background: var(--playlist-accent, #e06343); }
 
 /* V11 — connected product surfaces use only the Symbiome palette. */
 .music-app-sidebar,

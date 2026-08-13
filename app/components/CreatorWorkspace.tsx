@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
-import { genres, lofiGirlPlaylists, moods, tracks, type LofiGirlPlaylist, type MusicUseSlug, type Track } from "../data/catalog";
+import { genres, lofiGirlPlaylists, moods, playlistGenreAccents, tracks, type LofiGirlPlaylist, type MusicUseSlug, type Track } from "../data/catalog";
 import "../workspace-music.css";
 
 type LibraryView = "music" | "playlists" | "downloads" | "channels" | "licences";
@@ -41,7 +41,7 @@ function Wave({ seed, dense = false }: { seed: string; dense?: boolean }) {
 
 function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen: (playlist: LofiGirlPlaylist) => void }) {
   const style = {
-    "--playlist-border": playlist.borderColor,
+    "--playlist-accent": playlistGenreAccents[playlist.genre],
     "--playlist-position": playlist.imagePosition ?? "center",
   } as CSSProperties;
 
