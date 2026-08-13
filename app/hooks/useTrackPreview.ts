@@ -17,6 +17,9 @@ export function useTrackPreview() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [volume, setVolumeState] = useState(.8);
+  const [isMuted, setIsMuted] = useState(false);
+  const lastAudibleVolumeRef = useRef(.8);
 
   const syncTimeline = useCallback(() => {
     const audio = audioRef.current;
@@ -98,6 +101,36 @@ export function useTrackPreview() {
     setProgress(nextTime / audio.duration);
   }, []);
 
+  const setVolume = useCallback((nextValue: number) => {
+    const nextVolume = Number.isFinite(nextValue) ? Math.min(1, Math.max(0, nextValue)) : .8;
+    if (nextVolume > 0) lastAudibleVolumeRef.current = nextVolume;
+    setVolumeState(nextVolume);
+    setIsMuted(nextVolume === 0);
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = nextVolume;
+      audio.muted = nextVolume === 0;
+    }
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    const audio = audioRef.current;
+    if (isMuted || volume === 0) {
+      const restoredVolume = Math.max(.05, lastAudibleVolumeRef.current || .8);
+      setVolumeState(restoredVolume);
+      setIsMuted(false);
+      if (audio) {
+        audio.volume = restoredVolume;
+        audio.muted = false;
+      }
+      return;
+    }
+
+    lastAudibleVolumeRef.current = volume;
+    setIsMuted(true);
+    if (audio) audio.muted = true;
+  }, [isMuted, volume]);
+
   const onTimeUpdate = syncTimeline;
 
   const onEnded = useCallback(() => {
@@ -120,6 +153,13 @@ export function useTrackPreview() {
     audioRef.current?.pause();
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    audio.muted = isMuted;
+  }, [isMuted, volume]);
+
   return {
     activeTrackId,
     audioRef,
@@ -127,6 +167,7 @@ export function useTrackPreview() {
     currentTime,
     duration,
     errorTrackId,
+    isMuted,
     isPlaying,
     onEnded,
     onError,
@@ -136,7 +177,10 @@ export function useTrackPreview() {
     onTimeUpdate,
     progress,
     seekTo,
+    setVolume,
     stop,
     toggle,
+    toggleMute,
+    volume,
   };
 }

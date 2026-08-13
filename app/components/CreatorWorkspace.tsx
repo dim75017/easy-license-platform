@@ -91,10 +91,11 @@ const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: s
       const position = count > 1 ? index / (count - 1) : 0;
       const fastDetail = Math.abs(Math.sin((index + seedValue) * .613));
       const midDetail = Math.abs(Math.sin((index + seedValue) * .173 + 1.4));
-      const slowEnvelope = .58 + Math.abs(Math.sin((index + seedValue) * .041 + .8)) * .42;
-      const tail = position > .86 ? Math.max(.16, (1 - position) / .14) : 1;
-      const amplitude = Math.max(.16, Math.min(.96, (.2 + fastDetail * .38 + midDetail * .27) * slowEnvelope * tail));
-      const barHeight = Math.max(2, Math.round(height * amplitude));
+      const slowEnvelope = .66 + Math.abs(Math.sin((index + seedValue) * .041 + .8)) * .34;
+      const tailFloor = width < 180 ? .22 : .12;
+      const tail = position > .86 ? Math.max(tailFloor, (1 - position) / .14) : 1;
+      const amplitude = Math.max(.22, Math.min(1, (.3 + fastDetail * .42 + midDetail * .31) * slowEnvelope * tail));
+      const barHeight = Math.max(2, Math.round(height * amplitude * pixelRatio) / pixelRatio);
       const x = Math.round(index * pitch * pixelRatio) / pixelRatio;
       const y = Math.round(((height - barHeight) / 2) * pixelRatio) / pixelRatio;
 
@@ -127,6 +128,10 @@ const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: s
 
 function PlaybackGlyph({ playing }: { playing: boolean }) {
   return <span className="music-player-icon" data-state={playing ? "pause" : "play"} aria-hidden="true" />;
+}
+
+function VolumeGlyph({ muted }: { muted: boolean }) {
+  return <span className="music-volume-icon" data-muted={muted ? "true" : "false"} aria-hidden="true" />;
 }
 
 function formatPlaybackTime(seconds: number) {
@@ -490,6 +495,10 @@ export function CreatorWorkspace() {
               <input className="music-player-seek" type="range" min="0" max={preview.canSeek ? preview.duration : 1} step="0.1" value={preview.currentTime} onChange={(event) => preview.seekTo(Number(event.currentTarget.value))} disabled={!preview.canSeek} aria-label={`Seek in preview of ${selectedTrack.title}`} aria-valuetext={`${formatPlaybackTime(preview.currentTime)} of ${preview.canSeek ? formatPlaybackTime(preview.duration) : "not loaded"}`} />
             </span>
             <time className="music-player-time" dateTime={preview.canSeek ? `PT${Math.floor(preview.duration)}S` : undefined}>{preview.canSeek ? formatPlaybackTime(preview.duration) : "--:--"}</time>
+            <div className="workspace-player-volume" role="group" aria-label="Volume">
+              <button className="music-player-volume-toggle" type="button" onClick={preview.toggleMute} aria-label={preview.isMuted ? "Unmute preview" : "Mute preview"} aria-pressed={preview.isMuted}><VolumeGlyph muted={preview.isMuted} /></button>
+              <input className="music-player-volume-range" type="range" min="0" max="1" step="0.01" value={preview.isMuted ? 0 : preview.volume} onChange={(event) => preview.setVolume(Number(event.currentTarget.value))} aria-label="Preview volume" aria-valuetext={`${Math.round((preview.isMuted ? 0 : preview.volume) * 100)} percent`} />
+            </div>
           </div>
           <div className="workspace-player-actions">
             <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}>{liked.has(selectedTrack.id) ? "♥" : "♡"}</button>
