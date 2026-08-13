@@ -68,6 +68,13 @@ function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boo
   );
 }
 
+function formatPlaybackTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "--:--";
+  const wholeSeconds = Math.floor(seconds);
+  const minutes = Math.floor(wholeSeconds / 60);
+  return `${minutes}:${String(wholeSeconds % 60).padStart(2, "0")}`;
+}
+
 function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen: (playlist: LofiGirlPlaylist) => void }) {
   const accent = getPlaylistAccent(playlist);
   const style = {
@@ -239,7 +246,7 @@ export function CreatorWorkspace() {
     return (
       <div className="music-track-table" role="list" aria-label={label}>
         <div className="music-track-table-head" aria-hidden="true">
-          <span>Track</span><span>Waveform</span><span>Length / BPM</span><span>Genre / mood</span><span>Actions</span>
+          <span>Track</span><span>Player</span><span>Genre / mood</span><span>Actions</span>
         </div>
         {source.map((track) => {
           const isActive = preview.activeTrackId === track.id;
@@ -248,16 +255,21 @@ export function CreatorWorkspace() {
           return (
             <article className={`music-track-row${isActive ? " is-selected" : ""}${hasError ? " has-preview-error" : ""}`} role="listitem" key={track.id}>
               <div className="music-track-identity">
-                <button className="music-track-cover-play" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`}>
-                  <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" />
-                  <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
-                </button>
+                <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" />
                 <span><strong>{track.title}</strong><small>{track.artist}</small></span>
               </div>
-              <Wave seed={track.id} dense progress={isActive ? preview.progress : 0} />
-              <div className="music-track-meta">
-                {track.duration && track.durationIso ? <time dateTime={track.durationIso}>{track.duration}</time> : <span>Preview</span>}
-                <small>{track.bpm ? `${track.bpm} BPM` : "BPM —"}</small>
+              <div className="music-track-inline-player" role="group" aria-label={`Preview player for ${track.title}`}>
+                <div className="music-player-transport">
+                  <button className="music-player-skip" type="button" onClick={() => preview.seekBy(-10)} disabled={!isActive || !preview.canSeek} aria-label={`Go back 10 seconds in ${track.title}`}><span aria-hidden="true">−10</span></button>
+                  <button className="music-player-play" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} preview of ${track.title} by ${track.artist}`} aria-pressed={isPlaying}><span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span></button>
+                  <button className="music-player-skip" type="button" onClick={() => preview.seekBy(10)} disabled={!isActive || !preview.canSeek} aria-label={`Go forward 10 seconds in ${track.title}`}><span aria-hidden="true">+10</span></button>
+                </div>
+                <time className="music-player-time" dateTime={`PT${Math.floor(isActive ? preview.currentTime : 0)}S`}>{formatPlaybackTime(isActive ? preview.currentTime : 0)}</time>
+                <span className="music-player-wave">
+                  <Wave seed={track.id} dense progress={isActive ? preview.progress : 0} />
+                  <input className="music-player-seek" type="range" min="0" max={isActive && preview.canSeek ? preview.duration : 1} step="0.1" value={isActive ? preview.currentTime : 0} onChange={(event) => preview.seekTo(Number(event.currentTarget.value))} disabled={!isActive || !preview.canSeek} aria-label={`Seek in preview of ${track.title}`} aria-valuetext={`${formatPlaybackTime(isActive ? preview.currentTime : 0)} of ${isActive && preview.canSeek ? formatPlaybackTime(preview.duration) : "not loaded"}`} />
+                </span>
+                <time className="music-player-time" dateTime={isActive && preview.canSeek ? `PT${Math.floor(preview.duration)}S` : track.durationIso ?? undefined}>{isActive && preview.canSeek ? formatPlaybackTime(preview.duration) : track.duration ?? "--:--"}</time>
               </div>
               <div className="music-track-tags"><span>{track.genre}</span><small>{track.moods.slice(0, 2).join(" · ")}</small></div>
               <div className="music-track-actions">
@@ -397,6 +409,8 @@ export function CreatorWorkspace() {
         onPlay={preview.onPlay}
         onPause={preview.onPause}
         onTimeUpdate={preview.onTimeUpdate}
+        onLoadedMetadata={preview.onLoadedMetadata}
+        onDurationChange={preview.onLoadedMetadata}
         onEnded={preview.onEnded}
         onError={preview.onError}
       />
@@ -404,12 +418,22 @@ export function CreatorWorkspace() {
       {selectedTrack && (
         <section className="workspace-audio-player is-open" aria-label="Track preview player">
           <div className="workspace-player-main">
-            <button className="workspace-player-toggle" type="button" onClick={() => togglePreview(selectedTrack)} aria-label={`${preview.isPlaying ? "Pause" : "Play"} preview of ${selectedTrack.title}`}><span aria-hidden="true">{preview.isPlaying ? "Ⅱ" : "▶"}</span></button>
             <img src={selectedTrack.cover} alt="" width={52} height={52} />
             <span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist}</small></span>
           </div>
-          <Wave seed={selectedTrack.id} dense progress={preview.progress} />
-          <div className="workspace-player-meta"><span>{selectedTrack.duration ?? "Preview"}</span><small>{selectedTrack.bpm ? `${selectedTrack.bpm} BPM` : selectedTrack.genre}</small></div>
+          <div className="music-player-transport" aria-label="Playback controls">
+            <button className="music-player-skip" type="button" onClick={() => preview.seekBy(-10)} disabled={!preview.canSeek} aria-label="Go back 10 seconds"><span aria-hidden="true">−10</span></button>
+            <button className="music-player-play" type="button" onClick={() => togglePreview(selectedTrack)} aria-label={`${preview.isPlaying ? "Pause" : "Play"} preview of ${selectedTrack.title}`} aria-pressed={preview.isPlaying}><span aria-hidden="true">{preview.isPlaying ? "Ⅱ" : "▶"}</span></button>
+            <button className="music-player-skip" type="button" onClick={() => preview.seekBy(10)} disabled={!preview.canSeek} aria-label="Go forward 10 seconds"><span aria-hidden="true">+10</span></button>
+          </div>
+          <div className="workspace-player-timeline">
+            <time className="music-player-time" dateTime={`PT${Math.floor(preview.currentTime)}S`}>{formatPlaybackTime(preview.currentTime)}</time>
+            <span className="music-player-wave">
+              <Wave seed={selectedTrack.id} dense progress={preview.progress} />
+              <input className="music-player-seek" type="range" min="0" max={preview.canSeek ? preview.duration : 1} step="0.1" value={preview.currentTime} onChange={(event) => preview.seekTo(Number(event.currentTarget.value))} disabled={!preview.canSeek} aria-label={`Seek in preview of ${selectedTrack.title}`} aria-valuetext={`${formatPlaybackTime(preview.currentTime)} of ${preview.canSeek ? formatPlaybackTime(preview.duration) : "not loaded"}`} />
+            </span>
+            <time className="music-player-time" dateTime={preview.canSeek ? `PT${Math.floor(preview.duration)}S` : undefined}>{preview.canSeek ? formatPlaybackTime(preview.duration) : "--:--"}</time>
+          </div>
           <div className="workspace-player-actions">
             <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}>{liked.has(selectedTrack.id) ? "♥" : "♡"}</button>
             <button type="button" aria-label={`Add ${selectedTrack.title} to a playlist`}>＋</button>
