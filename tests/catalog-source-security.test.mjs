@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import { sitesIdentityFromHeaders } from "../app/_lib/sites-identity.ts";
 
 const files = {
   auth: "app/api/catalog/_lib/auth.ts",
@@ -19,6 +20,7 @@ const files = {
   schema: "db/schema.ts",
   worker: "worker/index.ts",
   cloudflareTypes: "cloudflare-env.d.ts",
+  sitesIdentity: "app/_lib/sites-identity.ts",
   orchardMigration: "drizzle/0003_orchard_evidence_gate.sql",
   aiReviewMigration: "drizzle/0004_bouncy_bastion.sql",
   lineageMigration: "drizzle/0005_volatile_bulldozer.sql",
@@ -55,6 +57,50 @@ test("catalogue routes enforce Sites identity or the scoped pipeline token", asy
   assert.match(await source("auth"), /crypto\.subtle\.digest\("SHA-256"/u);
   assert.match(await source("auth"), /difference \|=/u);
   assert.doesNotMatch(await source("auth"), /configuredToken\s*===\s*suppliedToken/u);
+});
+
+test("Sites identity falls back to a stable opaque email key and still fails closed", async () => {
+  const emailOnlyHeaders = new Headers({
+    "oai-authenticated-user-email": "  OWNER@Example.com ",
+  });
+  const first = await sitesIdentityFromHeaders(emailOnlyHeaders);
+  const second = await sitesIdentityFromHeaders(emailOnlyHeaders);
+  assert.deepEqual(first, second);
+  assert.equal(first?.email, "owner@example.com");
+  assert.match(first?.userId ?? "", /^sites-email-sha256:[a-f0-9]{64}$/u);
+
+  const platformIdentity = await sitesIdentityFromHeaders(
+    new Headers({
+      "oai-authenticated-user-id": " site-user-123 ",
+      "oai-authenticated-user-email": "owner@example.com",
+    }),
+  );
+  assert.deepEqual(platformIdentity, {
+    userId: "site-user-123",
+    email: "owner@example.com",
+  });
+
+  assert.equal(await sitesIdentityFromHeaders(new Headers()), null);
+  assert.equal(
+    await sitesIdentityFromHeaders(
+      new Headers({ "oai-authenticated-user-id": "site-user-123" }),
+    ),
+    null,
+  );
+  assert.equal(
+    await sitesIdentityFromHeaders(
+      new Headers({
+        "oai-authenticated-user-id": "x".repeat(257),
+        "oai-authenticated-user-email": "owner@example.com",
+      }),
+    ),
+    null,
+  );
+
+  const helper = await source("sitesIdentity");
+  assert.match(helper, /EMAIL_ID_NAMESPACE = "symbiome-sites-email-v1"/u);
+  assert.match(helper, /crypto\.subtle\.digest\("SHA-256"/u);
+  assert.match(helper, /if \(!email \|\| !validEmail\(email\)\) return null/u);
 });
 
 test("write routes do not echo private source identifiers", async () => {

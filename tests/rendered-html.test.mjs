@@ -1188,7 +1188,7 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(schema, /uniqueIndex\("idx_user_profiles_external_user_id"\)/);
   assert.match(runtime, /CREATE TABLE IF NOT EXISTS user_profiles/);
   assert.match(runtime, /CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_external_user_id/);
-  assert.match(route, /request\.headers\.get\("oai-authenticated-user-id"\)/);
+  assert.match(route, /await sitesIdentityFromHeaders\(request\.headers\)/);
   assert.match(route, /ON CONFLICT\(external_user_id\) DO UPDATE SET/);
   assert.match(route, /if \(!isSameOrigin\(request\)\)/);
   assert.match(route, /policies_acknowledgement_required/);

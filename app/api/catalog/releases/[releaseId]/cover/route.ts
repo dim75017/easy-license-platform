@@ -16,7 +16,7 @@ export async function GET(
   context: RouteContext,
 ): Promise<Response> {
   try {
-    requireCatalogIdentity(request);
+    await requireCatalogIdentity(request);
     const { releaseId: rawReleaseId } = await context.params;
     const releaseId = requiredPositiveId(rawReleaseId, "releaseId");
     const database = requireCatalogDatabase();

@@ -2,6 +2,7 @@ import {
   catalogAdminEmails,
   catalogPipelineToken,
 } from "@/db/catalog-runtime";
+import { sitesIdentityFromHeaders } from "@/app/_lib/sites-identity";
 import { CatalogApiError } from "./http";
 
 export type CatalogIdentity = {
@@ -13,17 +14,15 @@ export type CatalogWriteIdentity =
   | { kind: "admin"; identity: CatalogIdentity }
   | { kind: "pipeline" };
 
-export function requireCatalogIdentity(request: Request): CatalogIdentity {
+export async function requireCatalogIdentity(
+  request: Request,
+): Promise<CatalogIdentity> {
   // These headers are injected by the private Sites access layer. Catalogue
   // APIs must not be exposed through a second origin that forwards client
   // supplied copies of them unchanged.
-  const userId = request.headers.get("oai-authenticated-user-id")?.trim();
-  const email = request.headers
-    .get("oai-authenticated-user-email")
-    ?.trim()
-    .toLowerCase();
+  const identity = await sitesIdentityFromHeaders(request.headers);
 
-  if (!userId || !email) {
+  if (!identity) {
     throw new CatalogApiError(
       "Sign in with ChatGPT to access the catalogue.",
       401,
@@ -31,11 +30,13 @@ export function requireCatalogIdentity(request: Request): CatalogIdentity {
     );
   }
 
-  return { userId, email };
+  return identity;
 }
 
-export function requireCatalogAdmin(request: Request): CatalogIdentity {
-  const identity = requireCatalogIdentity(request);
+export async function requireCatalogAdmin(
+  request: Request,
+): Promise<CatalogIdentity> {
+  const identity = await requireCatalogIdentity(request);
   const allowedEmails = catalogAdminEmails();
 
   // The write surface fails closed if the deployment has not explicitly
@@ -90,7 +91,7 @@ export async function requireCatalogWrite(
     return { kind: "pipeline" };
   }
 
-  return { kind: "admin", identity: requireCatalogAdmin(request) };
+  return { kind: "admin", identity: await requireCatalogAdmin(request) };
 }
 
 async function constantTimeTokenMatch(

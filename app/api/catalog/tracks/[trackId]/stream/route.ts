@@ -22,7 +22,7 @@ export async function GET(
   context: RouteContext,
 ): Promise<Response> {
   try {
-    requireCatalogIdentity(request);
+    await requireCatalogIdentity(request);
     const { trackId: rawTrackId } = await context.params;
     const trackId = requiredPositiveId(rawTrackId, "trackId");
     const asset = await requireCatalogDatabase()

@@ -30,7 +30,7 @@ type CatalogTrackRow = {
 
 export async function GET(request: Request): Promise<Response> {
   try {
-    requireCatalogIdentity(request);
+    await requireCatalogIdentity(request);
     const url = new URL(request.url);
     const page = queryInteger(url, "page", 1, 1, 1_000_000);
     const pageSize = queryInteger(

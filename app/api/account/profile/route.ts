@@ -1,4 +1,5 @@
 import { accountDatabase } from "../../../../db/account-runtime";
+import { sitesIdentityFromHeaders } from "../../../_lib/sites-identity";
 
 const plans = new Set(["creator", "pro"]);
 const platforms = new Set([
@@ -26,7 +27,7 @@ type ProfileRow = {
 };
 
 export async function GET(request: Request) {
-  const identity = accountIdentity(request);
+  const identity = await accountIdentity(request);
   if (!identity) return json({ error: "authentication_required" }, 401);
 
   const database = await accountDatabase();
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const identity = accountIdentity(request);
+  const identity = await accountIdentity(request);
   if (!identity) return json({ error: "authentication_required" }, 401);
   if (!isSameOrigin(request)) return json({ error: "invalid_origin" }, 403);
 
@@ -111,13 +112,11 @@ export async function POST(request: Request) {
   });
 }
 
-function accountIdentity(request: Request): AccountIdentity | null {
-  const userId = request.headers.get("oai-authenticated-user-id")?.trim();
-  const email = request.headers
-    .get("oai-authenticated-user-email")
-    ?.trim()
-    .toLowerCase();
-  if (!userId || userId.length > 256 || !email || !validEmail(email)) return null;
+async function accountIdentity(
+  request: Request,
+): Promise<AccountIdentity | null> {
+  const identity = await sitesIdentityFromHeaders(request.headers);
+  if (!identity) return null;
 
   const encodedName = request.headers.get("oai-authenticated-user-full-name");
   const encoding = request.headers.get(
@@ -127,8 +126,9 @@ function accountIdentity(request: Request): AccountIdentity | null {
     encodedName && encoding === "percent-encoded-utf-8"
       ? safeDecode(encodedName)
       : null;
-  const displayName = cleanText(decodedName, 120) ?? email.split("@")[0];
-  return { userId, email, displayName };
+  const displayName =
+    cleanText(decodedName, 120) ?? identity.email.split("@")[0];
+  return { ...identity, displayName };
 }
 
 function profileInput(payload: unknown):
@@ -177,10 +177,6 @@ function isSameOrigin(request: Request): boolean {
   } catch {
     return false;
   }
-}
-
-function validEmail(value: string): boolean {
-  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
 }
 
 function cleanText(value: unknown, max: number): string | null {
