@@ -123,6 +123,19 @@ export async function PUT(request: Request): Promise<Response> {
     }
 
     const database = requireCatalogDatabase();
+    if (kind === "cover_artwork") {
+      const reusableCover = await reuseAttachedReleaseCover({
+        database,
+        trackId,
+        contentType,
+        contentLength,
+        expectedSha256,
+      });
+      if (reusableCover) {
+        return reusableCover;
+      }
+    }
+
     const ingest = await database
       .prepare(
         `SELECT ii.id, ii.status, ii.source_sha256,
@@ -607,16 +620,11 @@ async function storeReleaseCover(options: {
   body: ArrayBuffer;
 }): Promise<Response> {
   const bucket = requireCatalogAudioBucket();
-  const expectedPrefix =
-    `catalog/releases/${options.ingest.release_id}/cover_artwork/`;
-  const extension =
-    options.contentType === "image/png"
-      ? "png"
-      : options.contentType === "image/webp"
-        ? "webp"
-        : "jpg";
-  const storageKey =
-    `${expectedPrefix}${options.expectedSha256}.${extension}`;
+  const storageKey = coverStorageKey(
+    options.ingest.release_id,
+    options.expectedSha256,
+    options.contentType,
+  );
   if (options.ingest.cover_storage_key) {
     const currentCover = await bucket.head(options.ingest.cover_storage_key);
     if (
@@ -721,4 +729,73 @@ async function storeReleaseCover(options: {
     },
     { status: 201 },
   );
+}
+
+async function reuseAttachedReleaseCover(options: {
+  database: D1Database;
+  trackId: number;
+  contentType: string;
+  contentLength: number;
+  expectedSha256: string;
+}): Promise<Response | null> {
+  const release = await options.database
+    .prepare(
+      `SELECT r.id AS release_id, r.cover_storage_key
+       FROM tracks AS t
+       JOIN releases AS r ON r.id = t.release_id
+       WHERE t.id = ?
+       LIMIT 1`,
+    )
+    .bind(options.trackId)
+    .first<{ release_id: number; cover_storage_key: string | null }>();
+  if (!release?.cover_storage_key) {
+    return null;
+  }
+
+  const storageKey = coverStorageKey(
+    release.release_id,
+    options.expectedSha256,
+    options.contentType,
+  );
+  if (release.cover_storage_key !== storageKey) {
+    return null;
+  }
+
+  const currentCover = await requireCatalogAudioBucket().head(storageKey);
+  if (
+    !currentCover ||
+    currentCover.size !== options.contentLength ||
+    currentCover.httpMetadata?.contentType !== options.contentType ||
+    currentCover.customMetadata?.sha256 !== options.expectedSha256
+  ) {
+    return null;
+  }
+
+  return noStoreJson({
+    asset: {
+      trackId: options.trackId,
+      releaseId: release.release_id,
+      kind: "cover_artwork",
+      status: "available",
+      byteSize: currentCover.size,
+      contentType: currentCover.httpMetadata.contentType,
+      sha256: options.expectedSha256,
+    },
+    idempotent: true,
+    existingCoverPreserved: true,
+  });
+}
+
+function coverStorageKey(
+  releaseId: number,
+  sha256: string,
+  contentType: string,
+): string {
+  const extension =
+    contentType === "image/png"
+      ? "png"
+      : contentType === "image/webp"
+        ? "webp"
+        : "jpg";
+  return `catalog/releases/${releaseId}/cover_artwork/${sha256}.${extension}`;
 }

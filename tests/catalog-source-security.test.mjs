@@ -121,8 +121,31 @@ test("the pipeline can upload an owned release cover without an audio duration",
   assert.match(text, /image\/jpeg/u);
   assert.match(text, /image\/png/u);
   assert.match(text, /image\/webp/u);
-  assert.match(text, /catalog\/releases\/\$\{options\.ingest\.release_id\}\/cover_artwork\//u);
+  assert.match(text, /catalog\/releases\/\$\{releaseId\}\/cover_artwork\/\$\{sha256\}/u);
   assert.match(text, /SET cover_storage_key = \?/u);
+  const releaseReuseCall = text.indexOf(
+    "const reusableCover = await reuseAttachedReleaseCover",
+  );
+  const sourceScopedLookup = text.indexOf("const ingest = await database");
+  assert.ok(releaseReuseCall >= 0, "release cover reuse must be attempted");
+  assert.ok(
+    releaseReuseCall < sourceScopedLookup,
+    "release cover reuse must precede the source-scoped ingest lookup",
+  );
+  assert.match(
+    text,
+    /SELECT r\.id AS release_id, r\.cover_storage_key[\s\S]*?WHERE t\.id = \?/u,
+  );
+  assert.match(text, /release\.cover_storage_key !== storageKey/u);
+  assert.match(text, /currentCover\.size !== options\.contentLength/u);
+  assert.match(text, /currentCover\.httpMetadata\?\.contentType !== options\.contentType/u);
+  assert.match(text, /currentCover\.customMetadata\?\.sha256 !== options\.expectedSha256/u);
+  const reuseHelper = text.slice(
+    text.indexOf("async function reuseAttachedReleaseCover"),
+    text.indexOf("function coverStorageKey"),
+  );
+  assert.doesNotMatch(reuseHelper, /source_key|batch_key|ingest_items/u);
+  assert.doesNotMatch(reuseHelper, /INSERT|UPDATE|DELETE/u);
   const exactReplayCheck = text.indexOf(
     "options.ingest.cover_storage_key === storageKey",
   );
