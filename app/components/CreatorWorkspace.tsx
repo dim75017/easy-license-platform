@@ -4,10 +4,9 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProper
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { useTrackPreview } from "../hooks/useTrackPreview";
+import { parseCatalogPage } from "../lib/catalog-client";
 import {
-  genres,
   lofiGirlPlaylists,
-  moods,
   musicSearchTaxonomy,
   getPlaylistAccent,
   type LofiGirlPlaylist,
@@ -20,6 +19,7 @@ import "../workspace-music.css";
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences";
 type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
+type CatalogLoadState = "loading" | "live" | "fallback";
 
 type PersonalPlaylist = {
   id: string;
@@ -166,6 +166,7 @@ function TrackActionPopover({
   onAddToPlaylist,
   onCreatePlaylist,
   onDownload,
+  canDownload,
 }: {
   state: TrackMenuState;
   track: WorkspaceTrack;
@@ -177,6 +178,7 @@ function TrackActionPopover({
   onAddToPlaylist: (playlistId: string) => void;
   onCreatePlaylist: (name: string) => void;
   onDownload: () => void;
+  canDownload: boolean;
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: state.x, y: state.y });
@@ -246,7 +248,7 @@ function TrackActionPopover({
         <div className="music-track-context-options">
           <button role="menuitemcheckbox" aria-checked={liked} type="button" onClick={() => { onToggleLike(); onClose(true); }}><TrackActionIcon kind="like" active={liked} /><span>{liked ? "Remove from liked tracks" : "Like track"}</span></button>
           <button role="menuitem" type="button" onClick={onShowPlaylists}><TrackActionIcon kind="playlist" /><span>Add to playlist</span></button>
-          <button role="menuitem" type="button" onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>Download preview</span></button>
+          <button role="menuitem" type="button" disabled={!canDownload} title={canDownload ? undefined : "Licensed download unavailable"} onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>{canDownload ? "Download preview" : "Download unavailable"}</span></button>
         </div>
       ) : (
         <>
@@ -343,14 +345,55 @@ export function CreatorWorkspace() {
   const [libraryActionsReady, setLibraryActionsReady] = useState(false);
   const [trackMenu, setTrackMenu] = useState<TrackMenuState | null>(null);
   const [actionStatus, setActionStatus] = useState("");
+  const [catalogTracks, setCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
   const trackMenuOpenerRef = useRef<HTMLButtonElement | null>(null);
   const [setupOpen, setSetupOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState("Creator");
   const [selectedDestinations, setSelectedDestinations] = useState<Set<string>>(() => new Set(["YouTube"]));
   const preview = useTrackPreview();
+  const libraryTracks = catalogTracks?.length ? catalogTracks : workspaceTracks;
+  const availableGenres = useMemo(() => ["All genres", ...new Set(libraryTracks.map((track) => track.genre))], [libraryTracks]);
+  const availableMoods = useMemo(() => ["All moods", ...new Set(libraryTracks.flatMap((track) => track.moods))], [libraryTracks]);
 
   useEffect(() => {
-    const knownTrackIds = new Set(workspaceTracks.map((track) => track.id));
+    const controller = new AbortController();
+
+    async function loadCatalog() {
+      try {
+        const response = await fetch("/api/catalog/tracks?page=1&pageSize=30", {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          setCatalogLoadState("fallback");
+          return;
+        }
+
+        const page = parseCatalogPage(await response.json());
+        if (!page || page.tracks.length === 0) {
+          setCatalogLoadState("fallback");
+          return;
+        }
+
+        setCatalogTracks(page.tracks);
+        setCatalogTotal(page.total);
+        setCatalogLoadState("live");
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCatalogLoadState("fallback");
+      }
+    }
+
+    void loadCatalog();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const knownTrackIds = new Set(libraryTracks.map((track) => track.id));
     try { if (!window.localStorage.getItem("easy-license-library-tuned")) setSetupOpen(true); } catch { setSetupOpen(true); }
     try {
       const storedLiked = JSON.parse(window.localStorage.getItem("symbiome-liked-tracks") ?? "[]") as unknown;
@@ -374,7 +417,7 @@ export function CreatorWorkspace() {
     } catch { /* Ignore only the malformed downloads key. */ }
     setLikedReady(true);
     setLibraryActionsReady(true);
-  }, []);
+  }, [libraryTracks]);
 
   useEffect(() => {
     if (!likedReady) return;
@@ -406,7 +449,7 @@ export function CreatorWorkspace() {
 
   const visibleTracks = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return workspaceTracks.filter((track) => {
+    return libraryTracks.filter((track) => {
       const themeLabels = track.themes.map((slug) => musicSearchTaxonomy.themes.find((theme) => theme.slug === slug)?.label ?? slug);
       const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${themeLabels.join(" ")}`.toLowerCase();
       return (!needle || haystack.includes(needle))
@@ -414,14 +457,18 @@ export function CreatorWorkspace() {
         && (mood === "All moods" || track.moods.includes(mood))
         && (!activeUse || track.themes.includes(activeUse));
     });
-  }, [activeUse, genre, mood, query]);
+  }, [activeUse, genre, libraryTracks, mood, query]);
 
-  const likedTracks = useMemo(() => workspaceTracks.filter((track) => liked.has(track.id)), [liked]);
-  const downloadedTracks = useMemo(() => workspaceTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds]);
-  const selectedTrack = workspaceTracks.find((track) => track.id === preview.activeTrackId);
-  const menuTrack = trackMenu ? workspaceTracks.find((track) => track.id === trackMenu.trackId) : undefined;
+  const likedTracks = useMemo(() => libraryTracks.filter((track) => liked.has(track.id)), [libraryTracks, liked]);
+  const downloadedTracks = useMemo(() => libraryTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, libraryTracks]);
+  const selectedTrack = libraryTracks.find((track) => track.id === preview.activeTrackId);
+  const menuTrack = trackMenu ? libraryTracks.find((track) => track.id === trackMenu.trackId) : undefined;
   const activePlaylist = lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId);
   const activeTheme = musicSearchTaxonomy.themes.find((theme) => theme.slug === activeUse);
+
+  useEffect(() => {
+    if (preview.activeTrackId && !libraryTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
+  }, [libraryTracks, preview.activeTrackId, preview.stop]);
 
   function resetFilters() {
     setGenre("All genres");
@@ -496,9 +543,14 @@ export function CreatorWorkspace() {
   }
 
   async function downloadTrackPreview(track: WorkspaceTrack) {
+    const downloadUrl = track.previewDownloadUrl === undefined ? track.previewUrl : track.previewDownloadUrl;
+    if (!downloadUrl) {
+      setActionStatus(`A licensed download is not available for ${track.title} yet.`);
+      return;
+    }
     setActionStatus(`Preparing the preview of ${track.title}.`);
     try {
-      const response = await fetch(track.previewUrl);
+      const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error("Preview download failed");
       const contentType = response.headers.get("content-type") ?? "";
       if (!contentType.startsWith("audio/") && contentType !== "application/octet-stream") throw new Error("Unexpected preview format");
@@ -554,7 +606,7 @@ export function CreatorWorkspace() {
               key={track.id}
             >
               <div className="music-track-identity">
-                <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" />
+                {track.cover ? <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}
                 <span><strong>{track.title}</strong><small>{track.artist}</small></span>
               </div>
               <div className="music-track-inline-player" role="group" aria-label={`Preview player for ${track.title}`}>
@@ -573,9 +625,9 @@ export function CreatorWorkspace() {
               <div className="music-track-actions">
                 <button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`${liked.has(track.id) ? "Unlike" : "Like"} ${track.title}`} aria-pressed={liked.has(track.id)}><TrackActionIcon kind="like" active={liked.has(track.id)} /></button>
                 <button type="button" onClick={(event) => openPlaylistChooser(track, event.currentTarget)} aria-label={`Add ${track.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === track.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
-                <button className={downloadedTrackIds.has(track.id) ? "is-downloaded" : ""} type="button" onClick={() => void downloadTrackPreview(track)} aria-label={`Download preview of ${track.title}${downloadedTrackIds.has(track.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
+                <button className={downloadedTrackIds.has(track.id) ? "is-downloaded" : ""} type="button" disabled={track.previewDownloadUrl === null} title={track.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(track)} aria-label={track.previewDownloadUrl === null ? `Licensed download unavailable for ${track.title}` : `Download preview of ${track.title}${downloadedTrackIds.has(track.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
               </div>
-              {hasError && <p className="music-track-preview-error" role="status">Preview unavailable. <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></p>}
+              {hasError && <p className="music-track-preview-error" role="status">Playback unavailable.{track.spotifyUrl && <> <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></>}</p>}
             </article>
           );
         })}
@@ -674,11 +726,17 @@ export function CreatorWorkspace() {
               <div>
                 <span>MUSIC SEARCH</span>
                 <h2 id="tracks-title">{activePlaylist?.title ?? activeTheme?.label ?? (query ? `Results for “${query}”` : "All music")}</h2>
-                <p className="music-track-results-status" role="status">{visibleTracks.length} matching preview {visibleTracks.length === 1 ? "track" : "tracks"}</p>
+                <p className="music-track-results-status" role="status" aria-live="polite">
+                  {catalogLoadState === "loading"
+                    ? "Loading your private catalogue..."
+                    : catalogLoadState === "live"
+                      ? `${visibleTracks.length} shown from ${catalogTotal} available ${catalogTotal === 1 ? "track" : "tracks"}`
+                      : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue`}
+                </p>
               </div>
               <div className="music-filter-row">
-                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{genres.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{moods.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
                 {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
               </div>
@@ -716,7 +774,7 @@ export function CreatorWorkspace() {
       {selectedTrack && (
         <section className="workspace-audio-player is-open" aria-label="Track preview player">
           <div className="workspace-player-main">
-            <img src={selectedTrack.cover} alt="" width={52} height={52} />
+            {selectedTrack.cover ? <img src={selectedTrack.cover} alt="" width={52} height={52} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}
             <span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist}</small></span>
           </div>
           <div className="music-player-transport" aria-label="Playback controls">
@@ -737,9 +795,9 @@ export function CreatorWorkspace() {
           <div className="workspace-player-actions">
             <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}><TrackActionIcon kind="like" active={liked.has(selectedTrack.id)} /></button>
             <button type="button" onClick={(event) => openPlaylistChooser(selectedTrack, event.currentTarget)} aria-label={`Add ${selectedTrack.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === selectedTrack.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
-            <button className={downloadedTrackIds.has(selectedTrack.id) ? "is-downloaded" : ""} type="button" onClick={() => void downloadTrackPreview(selectedTrack)} aria-label={`Download preview of ${selectedTrack.title}${downloadedTrackIds.has(selectedTrack.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
+            <button className={downloadedTrackIds.has(selectedTrack.id) ? "is-downloaded" : ""} type="button" disabled={selectedTrack.previewDownloadUrl === null} title={selectedTrack.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(selectedTrack)} aria-label={selectedTrack.previewDownloadUrl === null ? `Licensed download unavailable for ${selectedTrack.title}` : `Download preview of ${selectedTrack.title}${downloadedTrackIds.has(selectedTrack.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
           </div>
-          {preview.errorTrackId === selectedTrack.id && <p className="workspace-player-error" role="status">Preview unavailable. <a href={selectedTrack.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></p>}
+          {preview.errorTrackId === selectedTrack.id && <p className="workspace-player-error" role="status">Playback unavailable.{selectedTrack.spotifyUrl && <> <a href={selectedTrack.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></>}</p>}
         </section>
       )}
 
@@ -755,6 +813,7 @@ export function CreatorWorkspace() {
           onAddToPlaylist={(playlistId) => addTrackToPlaylist(menuTrack, playlistId)}
           onCreatePlaylist={(name) => createPlaylistWithTrack(menuTrack, name)}
           onDownload={() => void downloadTrackPreview(menuTrack)}
+          canDownload={menuTrack.previewDownloadUrl !== null}
         />
       )}
 
@@ -781,7 +840,7 @@ function PlaylistLibrary({ onOpen, personalPlaylists }: { onOpen: (playlist: Lof
 }
 
 function DownloadsLibrary({ tracks }: { tracks: readonly WorkspaceTrack[] }) {
-  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Preview downloads are listed here. Licensed masters will replace them when checkout and rights verification are connected.</p></header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" /><img src={track.cover} alt="" width={45} height={45} /><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Preview</strong></article>)}</div> : <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a preview from Music and it will appear here.</p></div>}</div>;
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Preview downloads are listed here. Licensed masters will replace them when checkout and rights verification are connected.</p></header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Preview</strong></article>)}</div> : <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a preview from Music and it will appear here.</p></div>}</div>;
 }
 
 function ChannelsView() {

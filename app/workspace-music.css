@@ -1567,6 +1567,29 @@ article.music-track-row[role="listitem"]:focus-within { z-index: 2; }
 .music-track-actions button.is-downloaded,
 .workspace-player-actions button.is-downloaded { border-color: var(--wm-clay); color: var(--wm-clay-deep); }
 
+.music-track-actions button:disabled,
+.workspace-player-actions button:disabled,
+.music-track-context-options button:disabled {
+  cursor: not-allowed;
+  opacity: .38;
+}
+
+.music-track-cover-placeholder {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 7px;
+  background: rgba(41, 40, 50, .1);
+  color: rgba(41, 40, 50, .58);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.workspace-player-main > .music-track-cover-placeholder { width: 52px; height: 52px; }
+.music-download-list .music-track-cover-placeholder { width: 45px; height: 45px; }
+
 .music-action-icon {
   position: relative;
   display: block;

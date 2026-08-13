@@ -41,3 +41,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+/catalog-audit/private/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]

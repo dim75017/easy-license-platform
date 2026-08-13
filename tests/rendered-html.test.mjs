@@ -1477,7 +1477,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 3, "track rows should expose Like, Add and Download only");
   assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
   assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
-  assert.match(rowActions[1], /onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,260}aria-label=\{`Download preview of \$\{track\.title\}[\s\S]{0,100}<TrackActionIcon kind="download"/);
+  assert.match(rowActions[1], /disabled=\{track\.previewDownloadUrl === null\}[\s\S]{0,260}onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,420}Licensed download unavailable for \$\{track\.title\}[\s\S]{0,260}<TrackActionIcon kind="download"/);
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
   const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
   assert.ok(fixedPlayerActions, "the fixed player should mirror the three primary actions");
@@ -1517,12 +1517,12 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
   assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
-  assert.match(musicWorkspace, /const knownTrackIds = new Set\(workspaceTracks\.map\(\(track\) => track\.id\)\)/);
+  assert.match(musicWorkspace, /const knownTrackIds = new Set\(libraryTracks\.map\(\(track\) => track\.id\)\)/);
   assert.match(musicWorkspace, /record\.trackIds\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
   assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
-  assert.match(musicWorkspace, /fetch\(track\.previewUrl\)[\s\S]{0,500}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\} \(preview\)\.mp3`[\s\S]{0,320}setDownloadedTrackIds/);
+  assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\} \(preview\)\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
@@ -1771,9 +1771,10 @@ test("ships a constrained D1 lead schema and current worker compatibility", asyn
   assert.match(migration, /PRAGMA optimize/);
   assert.match(hosting, /"d1": "DB"/);
   assert.match(vite, /compatibility_date: "2026-08-03"/);
-  assert.doesNotMatch(vite, /nodejs_compat/);
+  assert.match(vite, /compatibility_flags: \["nodejs_compat"\]/);
+  assert.match(vite, /migrations_dir: "drizzle"/);
   assert.match(wrangler, /"compatibility_date": "2026-08-03"/);
-  assert.match(wrangler, /"binding": "DB"/);
+  assert.doesNotMatch(wrangler, /"binding": "DB"/);
   assert.doesNotMatch(wrangler, /nodejs_compat/);
 });
 
