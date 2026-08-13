@@ -1377,6 +1377,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(ogScript, /Expected two Symbiome paths/);
   assert.match(dashboardShell, /<Brand compact \/>/);
   assert.match(musicWorkspace, /<Brand compact \/>/);
+  assert.doesNotMatch(musicWorkspace, /Back to website|import Link from "next\/link"/, "the connected sidebar should not show a return-to-website link");
   assert.match(symbioseBrandCss, /--symbiose-warm:\s*#e06343/i);
   assert.match(symbioseBrandCss, /--symbiose-night:\s*#292832/i);
   assert.match(symbioseBrandCss, /--symbiose-brand-warm:\s*var\(--symbiose-warm\)/i);

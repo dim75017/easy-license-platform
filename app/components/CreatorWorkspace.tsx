@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
@@ -624,7 +623,6 @@ export function CreatorWorkspace() {
         <div className="music-app-sidebar-bottom">
           <button className="tune-library-button" type="button" onClick={() => setSetupOpen(true)}><span>✦</span><strong>Tune my library</strong><small>Improve recommendations</small></button>
           <div className="music-app-account"><span>DM</span><div><strong>Demo creator</strong><small>Creator plan</small></div><i>•••</i></div>
-          <Link href="/">Back to website</Link>
         </div>
       </aside>
 
