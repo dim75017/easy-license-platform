@@ -1046,6 +1046,18 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.ok(accentBlock, "playlist genre accents should have one canonical map");
   const accentEntries = [...accentBlock[1].matchAll(/^\s*(?:"([^"]+)"|([A-Za-z]+)):\s*"(#[0-9a-f]{6})",?$/gim)].map((match) => [match[1] ?? match[2], match[3].toLowerCase()]);
   assert.equal(accentEntries.length, 10, "every real playlist genre should have one accent");
+  assert.deepEqual(Object.fromEntries(accentEntries), {
+    Lofi: "#a84432",
+    Synthwave: "#5b4a91",
+    Piano: "#53647a",
+    Ambient: "#315d63",
+    "Jazz Lofi": "#75434f",
+    "Chill House": "#356785",
+    Acoustic: "#365442",
+    Classical: "#795a34",
+    "Bossa Lofi": "#5c652c",
+    "Seasonal Lofi": "#70405d",
+  }, "the approved playlist palette should stay tied to the right genres");
   assert.deepEqual(new Set(accentEntries.map(([genre]) => genre)), new Set(playlistGenres), "the accent map and playlist genres should stay aligned");
   assert.equal(new Set(accentEntries.map(([, colour]) => colour)).size, 10, "each playlist genre should remain visually distinct");
   const cream = [0xff, 0xf9, 0xf1];
