@@ -187,14 +187,15 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /Browse by mood/);
   assert.match(cataloguePage, /className="catalogue-moods"/);
   assert.match(cataloguePage, /className="catalogue-moods-grid"[\s\S]{0,1000}className="catalogue-mood-card"/);
-  assert.match(cataloguePage, /featuredMoods = moods\.filter\([\s\S]{0,120}\.slice\(0, 10\)/);
+  assert.match(cataloguePage, /import \{ catalogueMoodFilters \} from "\.\.\/lib\/catalog-moods"/);
+  assert.match(cataloguePage, /featuredMoods = catalogueMoodFilters\.slice\(0, 10\)/);
   assert.match(cataloguePage, /featuredMoods\.map\(\(mood, index\)/);
   assert.match(cataloguePage, /import \{ CreatorTrackShowcase \} from "\.\.\/components\/CreatorTrackShowcase"/);
   assert.match(cataloguePage, /className="music-v26-library music-library-editorial music-library-showcase"/);
   assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search by mood,<br \/>style or use\./);
   assert.match(cataloguePage, /<Suspense fallback=\{<CreatorTrackShowcase \/>\}>[\s\S]{0,120}<FilteredCreatorTrackShowcase \/>/);
   assert.doesNotMatch(cataloguePage, /CatalogueExplorer|catalogue-v26-search-row|Search the catalogue/i);
-  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?q=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
+  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?mood=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
   assert.match(page, /href=\{`\/catalog\?use=\$\{collection\.slug\}#music-library`\}/);
   assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
   assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
@@ -525,6 +526,7 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link cta-swipe" href="\/app"[\s\S]{0,100}Listen to the full library/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
   assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
+  assert.match(filteredShowcase, /trackMatchesMood\(track\.moods, mood\)/);
   assert.match(filteredShowcase, /track\.suggestedUses\.includes\(use\)/);
   assert.match(filteredShowcase, /<CreatorTrackShowcase tracks=\{tracks\} filterLabel=\{filterLabel \|\| undefined\} \/>/);
   assert.match(previewHook, /audio\.src = previewUrl/);
@@ -590,7 +592,11 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.equal(suggestedUseGroups.length, 8);
   assert.equal(moodGroups.length, 8);
   assert.deepEqual(new Set(suggestedUseGroups.flat()), new Set(["travel", "cinematic", "lifestyle-vlogs", "study-focus", "gaming-streaming", "podcasts", "wellness", "food-hospitality"]));
-  assert.deepEqual(new Set(moodGroups.flat()), new Set(["Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy"]));
+  assert.deepEqual(new Set(moodGroups.flat()), new Set([
+    "Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy",
+    "Laid Back", "Relaxing", "Peaceful", "Hopeful", "Happy", "Floating", "Sad", "Sentimental", "Dark",
+    "Mysterious", "Smooth", "Romantic",
+  ]));
 
   const covers = [...featureSource.matchAll(/cover:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.equal(covers.length, 8);
@@ -1519,8 +1525,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(musicWorkspace, /className="music-recent-releases" aria-labelledby="recent-releases-title"/);
   assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
-  assert.match(musicWorkspace, /catalogLoadState === "live"[\s\S]{0,240}catalogLoadState === "loading"[\s\S]{0,180}Recent releases from the local catalogue/);
-  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,160}recentTracks\.map\(\(track\)/);
+  assert.match(musicWorkspace, /recentCatalogTracks !== null[\s\S]{0,260}recentCatalogRequestFailed[\s\S]{0,220}Loading the latest releases from the live catalogue\./);
+  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track\)/);
   assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,520}<PlaybackGlyph playing=\{isPlaying\} \/>/);
   assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
 
@@ -1537,7 +1543,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   }
 
   assert.match(musicWorkspace, /className="music-track-table" role="list" aria-label=\{label\}/);
-  assert.match(musicWorkspace, /role="listitem"[\s\S]{0,360}key=\{track\.id\}/);
+  assert.match(musicWorkspace, /className=\{`music-track-row[\s\S]*?role="listitem"[\s\S]*?data-track-id=\{track\.id\}[\s\S]*?key=\{track\.id\}/);
   assert.match(musicWorkspace, /<span>Track<\/span><span>Player<\/span><span>Genre<\/span><span>Mood<\/span><span>Actions<\/span>/);
   assert.match(musicWorkspace, /className="music-track-taxonomy music-track-genre"[\s\S]{0,120}>Genre<\/small><span>\{track\.genre\}<\/span>/);
   assert.match(musicWorkspace, /className="music-track-taxonomy music-track-mood"[\s\S]{0,120}>Mood<\/small><span>\{track\.moods\.slice\(0, 2\)\.join\(/);
@@ -1637,14 +1643,15 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
   assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
-  assert.match(musicWorkspace, /const knownTrackIds = new Set\(libraryTracks\.map\(\(track\) => track\.id\)\)/);
-  assert.match(musicWorkspace, /record\.trackIds\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
-  assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
+  assert.doesNotMatch(musicWorkspace, /knownTrackIds\.has\(id\)/, "saved actions must not be purged by a partial catalogue page");
+  assert.match(musicWorkspace, /storedLiked\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /record\.trackIds\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /storedDownloads\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
-  assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
+  assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
   assert.match(musicWorkspace, /Full-length compressed listening copies are listed here\. WAV masters stay reserved for licensed downloads\./);
   assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);
@@ -1672,9 +1679,24 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const searchTaxonomy = catalogueData.match(/export const musicSearchTaxonomy = \{([\s\S]*?)\}\s+as const;/);
   assert.ok(searchTaxonomy, "the connected search taxonomy should have one canonical export");
   assert.match(searchTaxonomy[1], /genres:\s*genres\.slice\(1\)/);
-  assert.match(searchTaxonomy[1], /moods:\s*moods\.slice\(1\)/);
+  assert.match(searchTaxonomy[1], /moods:\s*catalogueMoodFilters/);
   assert.match(searchTaxonomy[1], /themes:\s*useCategories\.map\(\(\{ label, slug \}\) => \(\{ label, slug \}\)\)/);
   assert.match(searchTaxonomy[1], /artists:\s*Array\.from\(new Set\(workspaceTracks\.map\(\(track\) => track\.artist\)\)\)/);
+
+  const catalogueMoodData = await source("app/lib/catalog-moods.ts");
+  const curatedMoodSource = catalogueMoodData.match(/export const catalogueMoodFilters = \[([\s\S]*?)\]\s+as const;/);
+  assert.ok(curatedMoodSource, "the public and connected libraries should share one curated mood vocabulary");
+  const curatedMoods = [...curatedMoodSource[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(curatedMoods, [
+    "Dreamy", "Laid Back", "Relaxing", "Peaceful", "Smooth", "Hopeful", "Dark", "Mysterious",
+    "Romantic", "Sad", "Sentimental", "Warm", "Cozy", "Reflective", "Happy", "Floating",
+  ]);
+  for (const noisyMood of ["Angry", "Busy & Frantic", "Changing Tempo", "Marching", "Running", "Sneaking"]) {
+    assert.ok(!curatedMoods.includes(noisyMood), `${noisyMood} should stay outside the concise lofi discovery vocabulary`);
+  }
+  assert.match(catalogueMoodData, /"Laid Back": \["Laid Back", "Easygoing", "Calm"\]/);
+  assert.match(catalogueMoodData, /Sentimental: \["Sentimental", "Reflective", "Intimate"\]/);
+  assert.match(musicWorkspace, /trackMatchesMood\(track\.moods, mood\)/);
 
   const v12Start = musicWorkspaceCss.indexOf("/* V12");
   assert.ok(v12Start >= 0, "the connected music layout should be isolated in the V12 CSS block");
@@ -1918,6 +1940,8 @@ test("ships a public GitHub Pages mockup without collecting form data", async ()
   assert.match(packageJson, /"build:pages": "node scripts\/build-pages\.mjs"/);
   assert.match(pagesBuild, /NEXT_PUBLIC_STATIC_DEMO: "true"/);
   assert.match(pagesBuild, /projectPath !== join\("app", "api"\)/);
+  assert.match(pagesBuild, /privateCatalogPath = join\("catalog-audit", "private"\)/);
+  assert.match(pagesBuild, /!projectPath\.startsWith\(`\$\{privateCatalogPath\}\$\{sep\}`\)/);
   assert.match(pagesBuild, /\.nojekyll/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /pages: write/);

@@ -229,7 +229,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA journal_mode=DELETE")
     connection.execute("PRAGMA foreign_keys=ON")
     connection.executescript(
         """
@@ -637,6 +637,12 @@ def transcode_mp3(executable: Path, source: Path, destination: Path) -> None:
         "-nostdin",
         "-loglevel",
         "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
         "-y",
         "-i",
         str(source),
@@ -651,6 +657,8 @@ def transcode_mp3(executable: Path, source: Path, destination: Path) -> None:
         "-1",
         "-codec:a",
         "libmp3lame",
+        "-threads",
+        "1",
         "-b:a",
         MP3_BITRATE,
         "-write_xing",
@@ -681,6 +689,12 @@ def probe_audio_duration(executable: Path, source: Path) -> int:
         "-nostdin",
         "-loglevel",
         "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
         "-i",
         str(source),
         "-map",
@@ -688,6 +702,8 @@ def probe_audio_duration(executable: Path, source: Path) -> int:
         "-progress",
         "pipe:1",
         "-nostats",
+        "-threads",
+        "1",
         "-f",
         "null",
         os.devnull,
@@ -760,6 +776,12 @@ def generate_peaks(
         "-nostdin",
         "-loglevel",
         "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
         "-i",
         str(source),
         "-map",
@@ -770,6 +792,8 @@ def generate_peaks(
         str(sample_rate),
         "-acodec",
         "pcm_s16le",
+        "-threads",
+        "1",
         "-f",
         "s16le",
         "pipe:1",

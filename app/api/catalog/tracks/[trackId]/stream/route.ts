@@ -2,12 +2,15 @@ import {
   requireCatalogAudioBucket,
   requireCatalogDatabase,
 } from "@/db/catalog-runtime";
-import { requireCatalogIdentity } from "../../../_lib/auth";
 import {
   catalogErrorResponse,
   CatalogApiError,
   requiredPositiveId,
 } from "../../../_lib/http";
+import {
+  publicCatalogOptionsResponse,
+  publicCatalogResponse,
+} from "../../../_lib/public-read";
 
 type RouteContext = { params: Promise<{ trackId: string }> };
 
@@ -22,7 +25,6 @@ export async function GET(
   context: RouteContext,
 ): Promise<Response> {
   try {
-    await requireCatalogIdentity(request);
     const { trackId: rawTrackId } = await context.params;
     const trackId = requiredPositiveId(rawTrackId, "trackId");
     const asset = await requireCatalogDatabase()
@@ -64,14 +66,14 @@ export async function GET(
       }
       const range = parseSingleByteRange(rangeHeader, head.size);
       if (!range) {
-        return new Response(null, {
+        return publicCatalogResponse(new Response(null, {
           status: 416,
           headers: {
             "Accept-Ranges": "bytes",
             "Content-Range": `bytes */${head.size}`,
             "Cache-Control": "no-store",
           },
-        });
+        }));
       }
 
       const object = await bucket.get(asset.storage_key, {
@@ -91,7 +93,7 @@ export async function GET(
         "Content-Range",
         `bytes ${range.start}-${range.end}/${head.size}`,
       );
-      return new Response(object.body, { status: 206, headers });
+      return publicCatalogResponse(new Response(object.body, { status: 206, headers }));
     }
 
     const object = await bucket.get(asset.storage_key);
@@ -104,10 +106,14 @@ export async function GET(
     }
     const headers = streamHeaders(object, asset.mime_type);
     headers.set("Content-Length", String(object.size));
-    return new Response(object.body, { status: 200, headers });
+    return publicCatalogResponse(new Response(object.body, { status: 200, headers }));
   } catch (error) {
-    return catalogErrorResponse(error);
+    return publicCatalogResponse(catalogErrorResponse(error));
   }
+}
+
+export function OPTIONS(): Response {
+  return publicCatalogOptionsResponse();
 }
 
 function streamHeaders(object: R2ObjectBody, fallbackMimeType: string): Headers {
@@ -117,7 +123,7 @@ function streamHeaders(object: R2ObjectBody, fallbackMimeType: string): Headers 
     headers.set("Content-Type", fallbackMimeType);
   }
   headers.set("Accept-Ranges", "bytes");
-  headers.set("Cache-Control", "private, no-store");
+  headers.set("Cache-Control", "no-store");
   headers.set("ETag", object.httpEtag);
   headers.set("X-Content-Type-Options", "nosniff");
   return headers;

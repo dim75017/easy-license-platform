@@ -232,7 +232,10 @@ def extract_drive_id(value: Any, *, folder: bool | None = None) -> str:
 
 def extract_spotify_id(*values: Any) -> str:
     for value in values:
-        match = SPOTIFY_ID_PATTERN.search(clean(value))
+        candidate = clean(value)
+        if re.fullmatch(r"[A-Za-z0-9]{22}", candidate):
+            return candidate
+        match = SPOTIFY_ID_PATTERN.search(candidate)
         if match:
             return match.group(1)
     return ""
@@ -463,6 +466,69 @@ def load_orchard(path: Path | None) -> list[OrchardTrack]:
     return result
 
 
+def load_identity_info(workbook_path: Path) -> list[OrchardTrack]:
+    """Load the workbook's refreshed distributor identity fallback.
+
+    `track Id` is accepted as Spotify evidence only when it is an actual
+    22-character Spotify ID/URI/URL. Numeric distributor IDs remain empty and
+    therefore keep publication closed until a verified Spotify mapping exists.
+    """
+
+    try:
+        import openpyxl  # type: ignore[import-not-found]
+    except ImportError as error:
+        raise RuntimeError("openpyxl is required for Identity Info.") from error
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        workbook = openpyxl.load_workbook(workbook_path, read_only=True, data_only=True)
+    if "Identity Info" not in workbook.sheetnames:
+        workbook.close()
+        return []
+    sheet = workbook["Identity Info"]
+    rows = sheet.iter_rows(values_only=True)
+    try:
+        headers = [clean(value) for value in next(rows)]
+    except StopIteration:
+        workbook.close()
+        return []
+    result: list[OrchardTrack] = []
+    for values in rows:
+        row = dict(zip(headers, values))
+        upc = normalize_upc(row_value(row, "AlbumUPC"))
+        release = clean(row_value(row, "AlbumTitle"))
+        title = clean(row_value(row, "TrackTitle"))
+        artist = clean(row_value(row, "TrackArtist"))
+        if not upc or not release or not title or not artist:
+            continue
+        result.append(
+            OrchardTrack(
+                upc=upc,
+                release=release,
+                title=title,
+                artist=artist,
+                spotify_id=extract_spotify_id(row_value(row, "track Id", "Spotify URI", "Spotify URL")),
+                spotify_duration_seconds=parse_expected_duration(row_value(row, "Duration")),
+                active=normalize_text(row_value(row, "Check")) not in {"3", "inactive", "no", "false"},
+            )
+        )
+    workbook.close()
+    return result
+
+
+def merge_orchard_rows(primary: Sequence[OrchardTrack], fallback: Sequence[OrchardTrack]) -> list[OrchardTrack]:
+    """Prefer curated Orchard/Spotify rows and fill only absent strict keys."""
+
+    result: list[OrchardTrack] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for row in (*primary, *fallback):
+        key = (row.upc, normalize_text(row.release), normalize_text(row.title), normalize_text(row.artist))
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(row)
+    return result
+
+
 def load_drive_inventory(path: Path | None) -> tuple[dict[str, list[DriveAudio]], dict[str, list[dict[str, Any]]]]:
     """Return files grouped by release folder and raw children grouped by parent.
 
@@ -477,6 +543,15 @@ def load_drive_inventory(path: Path | None) -> tuple[dict[str, list[DriveAudio]]
     by_release: dict[str, list[DriveAudio]] = defaultdict(list)
     by_parent: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
+        marker = normalize_text(row_value(row, "inventoryMarker", "inventory_marker"))
+        if marker in {"1", "true", "yes"}:
+            parent = clean(row_value(row, "parent_id", "parentId"))
+            if parent:
+                # An explicit empty-folder marker prevents live discovery from
+                # falling back to OAuth when a complete public snapshot says
+                # the folder simply has no relevant children.
+                by_parent.setdefault(parent, [])
+            continue
         file_id = extract_drive_id(row_value(row, "id", "file_id", "webViewLink"), folder=False)
         if not file_id:
             continue
@@ -498,6 +573,16 @@ def load_drive_inventory(path: Path | None) -> tuple[dict[str, list[DriveAudio]]
         if release_folder_id and is_wav:
             by_release[release_folder_id].append(drive_audio_from_row(normalized))
     return dict(by_release), dict(by_parent)
+
+
+def drive_inventory_is_complete(path: Path | None) -> bool:
+    if path is None or path.suffix.casefold() != ".json" or not path.is_file():
+        return False
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return isinstance(payload, dict) and payload.get("complete") is True
 
 
 def drive_audio_from_row(row: Mapping[str, Any], *, folder_id: str = "", folder_path: str = "") -> DriveAudio:
@@ -943,7 +1028,7 @@ def open_state(path: Path) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA journal_mode=DELETE")
     connection.execute("PRAGMA foreign_keys=ON")
     connection.executescript(
         """
@@ -986,10 +1071,28 @@ def upsert_candidates(connection: sqlite3.Connection, candidates: Sequence[Candi
     now = dt.datetime.now(dt.timezone.utc).isoformat()
     for candidate in candidates:
         existing = connection.execute(
-            "SELECT fingerprint, inspection_status, inspection_mode, content_type, content_length, wav_json, sha256, error FROM candidates WHERE candidate_id = ?",
+            "SELECT fingerprint, payload_json, inspection_status, inspection_mode, content_type, content_length, wav_json, sha256, error, updated_at FROM candidates WHERE candidate_id = ?",
             (candidate.candidate_id,),
         ).fetchone()
         preserve_inspection = bool(existing and existing["fingerprint"] == candidate.fingerprint and not force)
+        payload = candidate_payload(candidate)
+        status = candidate.status
+        reasons = list(candidate.reasons)
+        if preserve_inspection:
+            existing_payload = json.loads(existing["payload_json"])
+            verified_spotify_duration = existing_payload.get("spotify_duration_seconds")
+            if payload.get("spotify_duration_seconds") is None and isinstance(verified_spotify_duration, (int, float)):
+                payload["spotify_duration_seconds"] = verified_spotify_duration
+                reasons = [reason for reason in reasons if reason != "spotify_duration_missing"]
+            wav_payload = json.loads(existing["wav_json"]) if existing["wav_json"] else None
+            wav = WavInfo(**wav_payload) if wav_payload else None
+            status, reasons = classify_after_inspection(
+                payload,
+                reasons,
+                wav,
+                clean(existing["sha256"]),
+                clean(existing["error"]),
+            )
         values = {
             "inspection_status": existing["inspection_status"] if preserve_inspection else "pending",
             "inspection_mode": existing["inspection_mode"] if preserve_inspection else None,
@@ -998,6 +1101,7 @@ def upsert_candidates(connection: sqlite3.Connection, candidates: Sequence[Candi
             "wav_json": existing["wav_json"] if preserve_inspection else None,
             "sha256": existing["sha256"] if preserve_inspection else None,
             "error": existing["error"] if preserve_inspection else None,
+            "updated_at": existing["updated_at"] if preserve_inspection else now,
         }
         connection.execute(
             """
@@ -1023,9 +1127,9 @@ def upsert_candidates(connection: sqlite3.Connection, candidates: Sequence[Candi
             (
                 candidate.candidate_id,
                 candidate.fingerprint,
-                json.dumps(candidate_payload(candidate), ensure_ascii=False, sort_keys=True),
-                candidate.status,
-                json.dumps(candidate.reasons, ensure_ascii=False),
+                json.dumps(payload, ensure_ascii=False, sort_keys=True),
+                status,
+                json.dumps(reasons, ensure_ascii=False),
                 values["inspection_status"],
                 values["inspection_mode"],
                 values["content_type"],
@@ -1033,10 +1137,33 @@ def upsert_candidates(connection: sqlite3.Connection, candidates: Sequence[Candi
                 values["wav_json"],
                 values["sha256"],
                 values["error"],
-                now,
+                values["updated_at"],
             ),
         )
     connection.commit()
+
+
+def quarantine_stale_candidates(connection: sqlite3.Connection, current_candidate_ids: set[str]) -> int:
+    """Hide rows absent from a complete refreshed workbook + Drive snapshot."""
+
+    stale = 0
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    for row in connection.execute("SELECT candidate_id, status, reasons_json FROM candidates").fetchall():
+        candidate_id = str(row["candidate_id"])
+        if candidate_id in current_candidate_ids:
+            continue
+        reasons = set(json.loads(row["reasons_json"]))
+        if row["status"] == "quarantine" and "source_snapshot_missing" in reasons:
+            continue
+        reasons.add("source_snapshot_missing")
+        connection.execute(
+            """UPDATE candidates SET status='quarantine', reasons_json=?, updated_at=?
+            WHERE candidate_id=?""",
+            (json.dumps(sorted(reasons), ensure_ascii=False), now, candidate_id),
+        )
+        stale += 1
+    connection.commit()
+    return stale
 
 
 def content_length_from_headers(headers: Mapping[str, str], fallback: int) -> int:
@@ -1166,20 +1293,69 @@ def inspect_pending(
     mode: str,
     batch_size: int,
     force: bool,
+    release_batch_size: int | None = None,
+    maximum_seconds: int | None = None,
 ) -> dict[str, int]:
     if mode == "none":
-        return {"selected": 0, "complete": 0, "failed": 0}
+        return {
+            "selected": 0,
+            "complete": 0,
+            "failed": 0,
+            "releases": 0,
+            "remaining": 0,
+            "remainingReleases": 0,
+            "timeLimitReached": 0,
+        }
     where = "json_extract(payload_json, '$.audio.file_id') IS NOT NULL"
     parameters: list[Any] = []
     if not force:
         where += " AND (inspection_status != 'complete' OR (? = 'full' AND COALESCE(sha256, '') = ''))"
         parameters.append(mode)
-    rows = connection.execute(
-        f"SELECT * FROM candidates WHERE {where} ORDER BY candidate_id LIMIT ?",  # noqa: S608 - static clause
-        (*parameters, batch_size),
+    pending_rows = connection.execute(
+        f"""SELECT * FROM candidates WHERE {where}
+        ORDER BY CASE inspection_status
+          WHEN 'pending' THEN 0
+          WHEN 'complete' THEN 1
+          WHEN 'failed' THEN 2
+          ELSE 1
+        END,
+        CASE WHEN inspection_status = 'failed' THEN updated_at ELSE '' END,
+        candidate_id""",  # noqa: S608 - static clause
+        parameters,
     ).fetchall()
-    counts = {"selected": len(rows), "complete": 0, "failed": 0}
+    rows: list[sqlite3.Row] = []
+    release_keys: set[str] = set()
+    for row in pending_rows:
+        payload = json.loads(row["payload_json"])
+        track = payload.get("track") if isinstance(payload.get("track"), dict) else {}
+        audio = payload.get("audio") if isinstance(payload.get("audio"), dict) else {}
+        release_key = (
+            normalize_upc(track.get("upc"))
+            or clean(audio.get("folder_id"))
+            or normalize_text(track.get("release"))
+            or row["candidate_id"]
+        )
+        if release_key not in release_keys and release_batch_size is not None and len(release_keys) >= release_batch_size:
+            continue
+        release_keys.add(release_key)
+        rows.append(row)
+        if len(rows) >= batch_size:
+            break
+    counts = {
+        "selected": 0,
+        "complete": 0,
+        "failed": 0,
+        "releases": len(release_keys),
+        "remaining": 0,
+        "remainingReleases": 0,
+        "timeLimitReached": 0,
+    }
+    started = time.monotonic()
     for row in rows:
+        if maximum_seconds is not None and time.monotonic() - started >= maximum_seconds:
+            counts["timeLimitReached"] = 1
+            break
+        counts["selected"] += 1
         payload = json.loads(row["payload_json"])
         file_id = payload["audio"]["file_id"]
         error = ""
@@ -1219,6 +1395,23 @@ def inspect_pending(
         )
         connection.commit()  # resume safely after every file
         counts["failed" if error else "complete"] += 1
+    remaining_rows = connection.execute(
+        f"SELECT payload_json, candidate_id FROM candidates WHERE {where}",  # noqa: S608 - static clause
+        parameters,
+    ).fetchall()
+    remaining_releases: set[str] = set()
+    for row in remaining_rows:
+        payload = json.loads(row["payload_json"])
+        track = payload.get("track") if isinstance(payload.get("track"), dict) else {}
+        audio = payload.get("audio") if isinstance(payload.get("audio"), dict) else {}
+        remaining_releases.add(
+            normalize_upc(track.get("upc"))
+            or clean(audio.get("folder_id"))
+            or normalize_text(track.get("release"))
+            or row["candidate_id"]
+        )
+    counts["remaining"] = len(remaining_rows)
+    counts["remainingReleases"] = len(remaining_releases)
     return counts
 
 
@@ -1268,15 +1461,35 @@ def merge_drive_discovery(
     drive: GoogleDriveClient,
     *,
     discover: bool,
+    inventory_complete: bool = False,
 ) -> list[ReleaseAudio]:
+    """Merge the workbook references with the newest Drive snapshot.
+
+    Drive inventory rows are authoritative for a matching file ID.  In
+    particular, ``size`` and ``modifiedTime`` must replace the older workbook
+    values because they are part of the candidate fingerprint that decides
+    whether a completed checksum can be reused.
+
+    A partial inventory is additive and can never imply a deletion.  Only an
+    explicitly complete inventory replaces the workbook's file list for a
+    release folder; this makes removals fail closed without treating an
+    interrupted crawl as a catalogue deletion.
+    """
+
     merged: list[ReleaseAudio] = []
     for release in release_audio:
-        files = {audio.file_id: audio for audio in release.files}
-        for audio in inventory_by_release.get(release.folder_id, []):
-            files.setdefault(audio.file_id, audio)
-        if discover and release.folder_id:
+        inventory_files = inventory_by_release.get(release.folder_id, [])
+        if inventory_complete and release.folder_id:
+            files: dict[str, DriveAudio] = {}
+        else:
+            files = {audio.file_id: audio for audio in release.files}
+        for audio in inventory_files:
+            # Assignment is deliberate: the crawler is fresher than workbook
+            # hyperlinks, even when Google keeps the same immutable file ID.
+            files[audio.file_id] = audio
+        if discover and release.folder_id and not inventory_complete:
             for audio in drive.discover_wavs(release.folder_id, inventory_children=inventory_children):
-                files.setdefault(audio.file_id, audio)
+                files[audio.file_id] = audio
         merged.append(dataclasses.replace(release, files=tuple(files.values())))
     return merged
 
@@ -1328,6 +1541,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--discover-drive", action="store_true", help="Recursively list Drive folders missing from workbook audio links.")
     parser.add_argument("--inspect", choices=("none", "range", "full"), default="none", help="WAV verification depth.")
     parser.add_argument("--batch-size", type=int, default=25, help="Maximum audio files inspected in this invocation.")
+    parser.add_argument(
+        "--release-batch-size",
+        type=int,
+        help="Maximum distinct releases inspected in this invocation; omitted means no release cap.",
+    )
+    parser.add_argument(
+        "--max-inspection-seconds",
+        type=int,
+        help="Soft wall-clock budget checked between files; a current Drive read is allowed to finish.",
+    )
     parser.add_argument("--allow-network", action="store_true", help="Explicitly allow Drive reads for inspection/discovery.")
     parser.add_argument("--force", action="store_true", help="Reinspect candidates even when the fingerprint is unchanged.")
     mode = parser.add_mutually_exclusive_group()
@@ -1341,6 +1564,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     apply = bool(arguments.apply)
     if arguments.batch_size < 1:
         raise ValueError("--batch-size must be at least 1")
+    if arguments.release_batch_size is not None and arguments.release_batch_size < 1:
+        raise ValueError("--release-batch-size must be at least 1")
+    if arguments.max_inspection_seconds is not None and arguments.max_inspection_seconds < 60:
+        raise ValueError("--max-inspection-seconds must be at least 60")
     if (arguments.inspect != "none" or arguments.discover_drive) and not arguments.allow_network:
         raise ValueError("Network operations require the explicit --allow-network flag.")
     if not apply and arguments.inspect != "none":
@@ -1352,7 +1579,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_dir = arguments.output_dir
     assert_private_output(output_dir)
     tracks, release_audio, covers = load_workbook_sources(arguments.workbook)
-    orchard = load_orchard(arguments.orchard)
+    orchard = merge_orchard_rows(load_orchard(arguments.orchard), load_identity_info(arguments.workbook))
     inventory_by_release, inventory_children = load_drive_inventory(arguments.drive_inventory)
     drive = GoogleDriveClient(clean(os.environ.get("GOOGLE_DRIVE_ACCESS_TOKEN")))
     release_audio = merge_drive_discovery(
@@ -1361,6 +1588,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         inventory_children,
         drive,
         discover=bool(arguments.discover_drive),
+        inventory_complete=drive_inventory_is_complete(arguments.drive_inventory),
     )
     tracks, release_audio = filter_release_scope(tracks, release_audio, arguments.release)
     candidates = build_candidates(tracks, release_audio, covers, orchard)
@@ -1389,13 +1617,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     connection = open_state(output_dir / "ingestion-state.sqlite3")
     try:
         upsert_candidates(connection, candidates, force=bool(arguments.force))
+        stale_quarantined = 0
+        if (
+            drive_inventory_is_complete(arguments.drive_inventory)
+            and not arguments.release
+            and not arguments.smoke
+        ):
+            stale_quarantined = quarantine_stale_candidates(
+                connection, {candidate.candidate_id for candidate in candidates}
+            )
         inspected = inspect_pending(
             connection,
             drive,
             mode=arguments.inspect,
             batch_size=arguments.batch_size,
             force=bool(arguments.force),
+            release_batch_size=arguments.release_batch_size,
+            maximum_seconds=arguments.max_inspection_seconds,
         )
+        inspected["staleQuarantined"] = stale_quarantined
         final_counts = export_private_manifests(connection, output_dir)
     finally:
         connection.close()

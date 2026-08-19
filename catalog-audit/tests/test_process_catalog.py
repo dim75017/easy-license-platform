@@ -7,6 +7,7 @@ from pathlib import Path
 import struct
 import tempfile
 import unittest
+from unittest import mock
 import urllib.parse
 import wave
 
@@ -185,6 +186,14 @@ class ManifestTests(unittest.TestCase):
 
 
 class StateTests(unittest.TestCase):
+    def test_state_uses_single_process_delete_journal(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                self.assertEqual(connection.execute("PRAGMA journal_mode").fetchone()[0], "delete")
+            finally:
+                connection.close()
+
     def test_promotion_success_accepts_the_backend_response_contract(self):
         self.assertTrue(
             process.promotion_succeeded(
@@ -237,9 +246,56 @@ class StateTests(unittest.TestCase):
 
 
 class AudioTests(unittest.TestCase):
+    def assert_ffmpeg_command_is_single_threaded(self, command):
+        self.assertEqual(command.count("-filter_threads"), 1)
+        self.assertEqual(command[command.index("-filter_threads") + 1], "1")
+        self.assertEqual(command.count("-filter_complex_threads"), 1)
+        self.assertEqual(command[command.index("-filter_complex_threads") + 1], "1")
+        thread_options = [
+            index for index, argument in enumerate(command) if argument == "-threads"
+        ]
+        self.assertEqual(len(thread_options), 2)
+        self.assertTrue(all(command[index + 1] == "1" for index in thread_options))
+        input_index = command.index("-i")
+        self.assertLess(thread_options[0], input_index)
+        self.assertGreater(thread_options[1], input_index)
+
     def test_pcm_peak_handles_signed_16_bit_samples(self):
         fragment = struct.pack("<hhhh", 0, -32768, 12, 30_000)
         self.assertEqual(process.pcm_peak(fragment), 32768)
+
+    def test_all_audio_ffmpeg_commands_force_single_thread_processing(self):
+        completed = process.subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=b"out_time_us=1000000\n", stderr=b""
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "source.wav"
+            destination = directory / "stream.mp3"
+            source.write_bytes(b"fixture")
+            destination.write_bytes(b"fixture")
+
+            with mock.patch.object(process.subprocess, "run", return_value=completed) as runner:
+                process.transcode_mp3(Path("ffmpeg"), source, destination)
+                transcode_command = runner.call_args.args[0]
+            self.assert_ffmpeg_command_is_single_threaded(transcode_command)
+
+            with mock.patch.object(process.subprocess, "run", return_value=completed) as runner:
+                self.assertEqual(process.probe_audio_duration(Path("ffmpeg"), destination), 1_000)
+                probe_command = runner.call_args.args[0]
+            self.assert_ffmpeg_command_is_single_threaded(probe_command)
+
+            pcm = b"\x00\x00" * process.PEAK_SAMPLE_RATE
+            fake_process = mock.Mock()
+            fake_process.stdout = io.BytesIO(pcm)
+            fake_process.stderr = io.BytesIO()
+            fake_process.wait.return_value = 0
+            with mock.patch.object(process.subprocess, "Popen", return_value=fake_process) as popen:
+                peaks = process.generate_peaks(Path("ffmpeg"), source, duration_ms=1_000)
+                peaks_command = popen.call_args.args[0]
+            self.assertEqual(len(peaks), process.PEAK_BIN_COUNT)
+            self.assert_ffmpeg_command_is_single_threaded(peaks_command)
 
     def test_imageio_ffmpeg_builds_full_mp3_and_512_peaks(self):
         try:

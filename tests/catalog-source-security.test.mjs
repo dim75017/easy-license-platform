@@ -12,6 +12,7 @@ const files = {
   promote: "app/api/catalog/pipeline/promote/route.ts",
   list: "app/api/catalog/tracks/route.ts",
   stream: "app/api/catalog/tracks/[trackId]/stream/route.ts",
+  cover: "app/api/catalog/releases/[releaseId]/cover/route.ts",
   download: "app/api/catalog/tracks/[trackId]/download/route.ts",
   storage: "worker/catalog-storage.ts",
   metadata: "app/api/catalog/_lib/metadata.ts",
@@ -41,10 +42,11 @@ function applyMigration(database, sql) {
   }
 }
 
-test("catalogue routes enforce Sites identity or the scoped pipeline token", async () => {
-  for (const name of ["list", "stream", "download"]) {
-    assert.match(await source(name), /requireCatalogIdentity\(request\)/u);
+test("catalogue listening is public while downloads and writes remain protected", async () => {
+  for (const name of ["list", "stream", "cover"]) {
+    assert.doesNotMatch(await source(name), /requireCatalogIdentity\(request\)/u);
   }
+  assert.match(await source("download"), /requireCatalogIdentity\(request\)/u);
   for (const name of ["batch", "asset"]) {
     assert.match(await source(name), /await requireCatalogWrite\(request\)/u);
   }
