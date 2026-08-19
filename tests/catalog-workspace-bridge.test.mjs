@@ -5,20 +5,18 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const source = (path) => readFile(new URL(path, root), "utf8");
 
-test("CreatorWorkspace pages and filters the live catalogue without contacting the API from Pages", async () => {
+test("CreatorWorkspace pages and filters the live catalogue on Sites and GitHub Pages", async () => {
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
-  assert.match(workspace, /const isStaticDemo = process\.env\.NEXT_PUBLIC_STATIC_DEMO === "true"/u);
+  assert.doesNotMatch(workspace, /if \(isStaticDemo\) return/u);
   assert.match(workspace, /const CATALOG_PAGE_SIZE = 40/u);
   assert.match(workspace, /params\.set\("q", filters\.query\.trim\(\)\)/u);
   assert.match(workspace, /params\.set\("genre", filters\.genre\)/u);
   assert.match(workspace, /params\.set\("mood", filters\.mood\)/u);
   assert.match(workspace, /params\.set\("theme", filters\.theme\)/u);
-  assert.ok(
-    workspace.indexOf("if (isStaticDemo) return;") < workspace.indexOf("fetch(catalogRequestUrl({ page: 1, filters: catalogFilters })"),
-    "the static Pages demo must stop before the live catalogue request",
-  );
-  assert.match(workspace, /credentials:\s*"same-origin"/u);
+  assert.match(workspace, /catalogFetchCredentials: RequestCredentials = catalogApiOrigin \? "omit" : "same-origin"/u);
+  assert.match(workspace, /return `\$\{catalogApiOrigin\}\/api\/catalog\/tracks\?\$\{params\.toString\(\)\}`/u);
+  assert.match(workspace, /credentials:\s*catalogFetchCredentials/u);
   assert.match(workspace, /page\.view !== "tracks"/u);
   assert.doesNotMatch(workspace, /page\.tracks\.length === 0[\s\S]{0,160}setCatalogLoadState\("fallback"\)/u);
   assert.match(workspace, /catalogFilterSignature\(catalogFilters\)/u);
@@ -33,14 +31,38 @@ test("CreatorWorkspace pages and filters the live catalogue without contacting t
   assert.match(workspace, /catalogPagination\?\.hasNextPage/u);
 });
 
+test("GitHub Pages reads the canonical live catalogue without exposing arbitrary origins", async () => {
+  const [client, pagesBuild, cors] = await Promise.all([
+    source("app/lib/catalog-client.ts"),
+    source("scripts/build-pages.mjs"),
+    source("app/api/catalog/_lib/public-read.ts"),
+  ]);
+
+  assert.match(pagesBuild, /NEXT_PUBLIC_CATALOG_API_ORIGIN: "https:\/\/easy-license\.dsomoguy\.chatgpt\.site"/u);
+  assert.match(client, /process\.env\.NEXT_PUBLIC_CATALOG_API_ORIGIN === canonicalCatalogApiOrigin/u);
+  assert.match(client, /new URL\(pathname, catalogApiOrigin\)\.toString\(\)/u);
+  assert.match(cors, /allowedOrigin = "https:\/\/dim75017\.github\.io"/u);
+  assert.match(cors, /Access-Control-Allow-Origin/u);
+  assert.match(cors, /Cross-Origin-Resource-Policy/u);
+});
+
 test("a failed refresh preserves the last live page and offers an explicit retry", async () => {
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
   assert.match(workspace, /const catalogHasLoadedRef = useRef\(false\)/u);
   assert.match(workspace, /catalogHasLoadedRef\.current = true/u);
-  assert.match(workspace, /if \(!catalogHasLoadedRef\.current\)[\s\S]{0,220}setCatalogLoadState\("fallback"\)[\s\S]{0,180}else \{[\s\S]{0,120}setCatalogLoadState\("live"\)/u);
+  assert.match(workspace, /if \(!catalogHasLoadedRef\.current\)[\s\S]{0,220}setCatalogTracks\(\[\]\)[\s\S]{0,120}setCatalogLoadState\("fallback"\)[\s\S]{0,180}else \{[\s\S]{0,120}setCatalogLoadState\("live"\)/u);
   assert.match(workspace, /Update failed, previous results kept/u);
   assert.match(workspace, /Retry live catalogue/u);
+});
+
+test("a live catalogue failure never masquerades as the twelve-track demo", async () => {
+  const workspace = await source("app/components/CreatorWorkspace.tsx");
+
+  assert.match(workspace, /catalogTracks \?\? \[\]/u);
+  assert.match(workspace, /catalogLoadState === "live" \? catalogKnownTracks : \[\]/u);
+  assert.match(workspace, /The live catalogue is temporarily unavailable\. Retry to load it\./u);
+  assert.doesNotMatch(workspace, /Live catalogue unavailable[\s\S]{0,100}Demo catalogue only/u);
 });
 
 test("saved actions are never purged just because a track is outside the visible page", async () => {
@@ -58,6 +80,10 @@ test("Discover requests distinct releases and deep links can resolve a track out
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
   assert.match(workspace, /onePerRelease:\s*true/u);
+  assert.match(workspace, /setRecentCatalogRequestFailed\(true\)/u);
+  assert.match(workspace, /\}, \[catalogRetryNonce\]\);/u);
+  assert.match(workspace, /recentCatalogTracks !== null[\s\S]{0,260}recentCatalogRequestFailed[\s\S]{0,220}Loading the latest releases from the live catalogue\./u);
+  assert.match(workspace, /recentCatalogRequestFailed \? "Retry live catalogue" : "Browse all music"/u);
   assert.match(workspace, /page\.view !== "releases"/u);
   assert.match(workspace, /key=\{track\.release\?\.id \?\? track\.id\}/u);
   assert.match(workspace, /track\.release\?\.title \?\? track\.title/u);
@@ -80,6 +106,8 @@ test("catalog response mapper exposes only safe routes plus release and paginati
   const client = await source("app/lib/catalog-client.ts");
 
   assert.match(client, /playbackPath = \/\^\\\/api\\\/catalog\\\/tracks\\\/\(\\d\+\)\\\/stream\$\/u/u);
+  assert.match(client, /cleanText\(value\.title, 500\)/u);
+  assert.match(client, /cleanText\(value\.artist, 1000\)/u);
   assert.match(client, /coverPath = \/\^\\\/api\\\/catalog\\\/releases\\\/\(\\d\+\)\\\/cover\$\/u/u);
   assert.match(client, /previewDownloadUrl:\s*playbackUrl/u);
   assert.match(client, /spotifyId:\s*null/u);

@@ -24,6 +24,11 @@ export type CatalogPage = {
 };
 
 const knownThemes = new Set<string>(useCategories.map(({ slug }) => slug));
+const canonicalCatalogApiOrigin = "https://easy-license.dsomoguy.chatgpt.site";
+export const catalogApiOrigin =
+  process.env.NEXT_PUBLIC_CATALOG_API_ORIGIN === canonicalCatalogApiOrigin
+    ? canonicalCatalogApiOrigin
+    : "";
 const coverPath = /^\/api\/catalog\/releases\/(\d+)\/cover$/u;
 const playbackPath = /^\/api\/catalog\/tracks\/(\d+)\/stream$/u;
 const releaseDatePattern = /^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/u;
@@ -44,16 +49,18 @@ export function parseCatalogPage(payload: unknown): CatalogPage | null {
     if (!isRecord(value)) return [];
 
     const numericId = value.id;
-    const title = cleanText(value.title, 240);
-    const artist = cleanText(value.artist, 240);
-    const playbackUrl = cleanPath(value.playbackUrl, playbackPath);
-    if (!Number.isSafeInteger(numericId) || (numericId as number) <= 0 || !title || !artist || !playbackUrl) return [];
-    if (Number(playbackUrl.match(playbackPath)?.[1]) !== numericId) return [];
+    const title = cleanText(value.title, 500);
+    const artist = cleanText(value.artist, 1000);
+    const playbackPathname = cleanPath(value.playbackUrl, playbackPath);
+    if (!Number.isSafeInteger(numericId) || (numericId as number) <= 0 || !title || !artist || !playbackPathname) return [];
+    if (Number(playbackPathname.match(playbackPath)?.[1]) !== numericId) return [];
 
     const release = parseRelease(value.release);
     if (!release) return [];
-    const cover = cleanPath(value.release && isRecord(value.release) ? value.release.coverUrl : null, coverPath);
-    if (cover && `CATALOG-RELEASE-${cover.match(coverPath)?.[1]}` !== release.id) return [];
+    const coverPathname = cleanPath(value.release && isRecord(value.release) ? value.release.coverUrl : null, coverPath);
+    if (coverPathname && `CATALOG-RELEASE-${coverPathname.match(coverPath)?.[1]}` !== release.id) return [];
+    const playbackUrl = catalogAssetUrl(playbackPathname);
+    const cover = coverPathname ? catalogAssetUrl(coverPathname) : null;
 
     const durationMs = Number.isSafeInteger(value.durationMs) && (value.durationMs as number) > 0
       ? value.durationMs as number
@@ -154,6 +161,10 @@ function cleanText(value: unknown, maxLength: number): string | null {
 
 function cleanPath(value: unknown, pattern: RegExp): string | null {
   return typeof value === "string" && pattern.test(value) ? value : null;
+}
+
+function catalogAssetUrl(pathname: string): string {
+  return catalogApiOrigin ? new URL(pathname, catalogApiOrigin).toString() : pathname;
 }
 
 function safeInteger(value: unknown, minimum: number): number | null {

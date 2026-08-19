@@ -1,11 +1,14 @@
 import { requireCatalogDatabase } from "@/db/catalog-runtime";
-import { requireCatalogIdentity } from "../_lib/auth";
 import {
   catalogErrorResponse,
   CatalogApiError,
   noStoreJson,
 } from "../_lib/http";
 import { normalizeCatalogText } from "../_lib/metadata";
+import {
+  publicCatalogOptionsResponse,
+  publicCatalogResponse,
+} from "../_lib/public-read";
 import { moodFilterAliases } from "../../../lib/catalog-moods";
 
 const DEFAULT_PAGE_SIZE = 30;
@@ -37,7 +40,6 @@ type CatalogTrackRow = {
 
 export async function GET(request: Request): Promise<Response> {
   try {
-    await requireCatalogIdentity(request);
     const url = new URL(request.url);
     const page = queryInteger(url, "page", 1, 1, 1_000_000);
     const pageSize = queryInteger(
@@ -173,7 +175,7 @@ export async function GET(request: Request): Promise<Response> {
     const hasPreviousPage = page > 1 && total > 0;
     const hasNextPage = page < totalPages;
 
-    return noStoreJson({
+    return publicCatalogResponse(noStoreJson({
       tracks: rows.results.map((row) => ({
         id: row.id,
         title: row.title,
@@ -214,10 +216,14 @@ export async function GET(request: Request): Promise<Response> {
       },
       view: onePerRelease ? "releases" : "tracks",
       filters: { q: search, genre, mood, theme, trackId },
-    });
+    }));
   } catch (error) {
-    return catalogErrorResponse(error);
+    return publicCatalogResponse(catalogErrorResponse(error));
   }
+}
+
+export function OPTIONS(): Response {
+  return publicCatalogOptionsResponse();
 }
 
 function bindIfNeeded(

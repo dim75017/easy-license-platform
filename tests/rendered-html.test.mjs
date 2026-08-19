@@ -1525,7 +1525,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(musicWorkspace, /className="music-recent-releases" aria-labelledby="recent-releases-title"/);
   assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
-  assert.match(musicWorkspace, /catalogLoadState === "live" && recentCatalogTracks !== null[\s\S]{0,320}catalogLoadState === "loading"[\s\S]{0,240}Demo catalogue · curated local releases, not the full live discography/);
+  assert.match(musicWorkspace, /recentCatalogTracks !== null[\s\S]{0,260}recentCatalogRequestFailed[\s\S]{0,220}Loading the latest releases from the live catalogue\./);
   assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track\)/);
   assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,520}<PlaybackGlyph playing=\{isPlaying\} \/>/);
   assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
@@ -1940,6 +1940,8 @@ test("ships a public GitHub Pages mockup without collecting form data", async ()
   assert.match(packageJson, /"build:pages": "node scripts\/build-pages\.mjs"/);
   assert.match(pagesBuild, /NEXT_PUBLIC_STATIC_DEMO: "true"/);
   assert.match(pagesBuild, /projectPath !== join\("app", "api"\)/);
+  assert.match(pagesBuild, /privateCatalogPath = join\("catalog-audit", "private"\)/);
+  assert.match(pagesBuild, /!projectPath\.startsWith\(`\$\{privateCatalogPath\}\$\{sep\}`\)/);
   assert.match(pagesBuild, /\.nojekyll/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /pages: write/);

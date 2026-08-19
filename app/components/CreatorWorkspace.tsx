@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProper
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { useTrackPreview } from "../hooks/useTrackPreview";
-import { parseCatalogPage, type CatalogPagination } from "../lib/catalog-client";
+import { catalogApiOrigin, parseCatalogPage, type CatalogPagination } from "../lib/catalog-client";
 import {
   lofiGirlPlaylists,
   musicSearchTaxonomy,
@@ -12,7 +12,6 @@ import {
   type LofiGirlPlaylist,
   type MusicUseSlug,
   type WorkspaceTrack,
-  workspaceTracks,
 } from "../data/catalog";
 import { trackMatchesMood } from "../lib/catalog-moods";
 import "../workspace-music.css";
@@ -66,7 +65,7 @@ type TrackMenuState = {
 
 const defaultPersonalPlaylist: PersonalPlaylist = { id: "my-playlist", name: "My playlist", trackIds: [] };
 const trackControlSelector = "button, a, input, select, textarea, [role='menu'], [role='dialog']";
-const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
+const catalogFetchCredentials: RequestCredentials = catalogApiOrigin ? "omit" : "same-origin";
 const CATALOG_PAGE_SIZE = 40;
 const RECENT_RELEASE_LIMIT = 8;
 
@@ -106,7 +105,7 @@ function catalogRequestUrl({
   if (filters?.theme) params.set("theme", filters.theme);
   if (onePerRelease) params.set("onePerRelease", "true");
   if (trackId !== null) params.set("trackId", String(trackId));
-  return `/api/catalog/tracks?${params.toString()}`;
+  return `${catalogApiOrigin}/api/catalog/tracks?${params.toString()}`;
 }
 
 function mergeTrackPages(
@@ -116,19 +115,6 @@ function mergeTrackPages(
   const merged = new Map(current.map((track) => [track.id, track]));
   for (const track of incoming) merged.set(track.id, track);
   return [...merged.values()];
-}
-
-function distinctReleaseTracks(tracks: readonly WorkspaceTrack[], limit: number): WorkspaceTrack[] {
-  const seen = new Set<string>();
-  const releases: WorkspaceTrack[] = [];
-  for (const track of tracks) {
-    const releaseId = track.release?.id ?? track.id;
-    if (seen.has(releaseId)) continue;
-    seen.add(releaseId);
-    releases.push(track);
-    if (releases.length === limit) break;
-  }
-  return releases;
 }
 
 function catalogNumericTrackId(trackId: string): number | null {
@@ -507,8 +493,9 @@ export function CreatorWorkspace() {
   const [catalogResolvedSignature, setCatalogResolvedSignature] = useState<string | null>(null);
   const [recentCatalogTracks, setRecentCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
   const [recentCatalogTotal, setRecentCatalogTotal] = useState(0);
-  const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>(isStaticDemo ? "fallback" : "loading");
-  const [catalogBusy, setCatalogBusy] = useState(!isStaticDemo);
+  const [recentCatalogRequestFailed, setRecentCatalogRequestFailed] = useState(false);
+  const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
+  const [catalogBusy, setCatalogBusy] = useState(true);
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
   const [catalogRequestFailed, setCatalogRequestFailed] = useState(false);
   const [catalogRetryNonce, setCatalogRetryNonce] = useState(0);
@@ -526,17 +513,11 @@ export function CreatorWorkspace() {
   const catalogQuerySignatureRef = useRef(catalogQuerySignature);
   catalogQuerySignatureRef.current = catalogQuerySignature;
   const catalogViewIsCurrent = catalogResolvedSignature === catalogQuerySignature;
-  const libraryTracks = catalogTracks ?? workspaceTracks;
-  const knownTracks = catalogLoadState === "live" ? catalogKnownTracks : workspaceTracks;
+  const libraryTracks = catalogTracks ?? [];
+  const knownTracks = catalogLoadState === "live" ? catalogKnownTracks : [];
   const knownTracksRef = useRef(knownTracks);
   knownTracksRef.current = knownTracks;
-  const recentTracks = useMemo(
-    () =>
-      catalogLoadState === "live" && recentCatalogTracks !== null
-        ? recentCatalogTracks
-        : distinctReleaseTracks(workspaceTracks, RECENT_RELEASE_LIMIT),
-    [catalogLoadState, recentCatalogTracks],
-  );
+  const recentTracks = recentCatalogTracks ?? [];
   const availableGenres = useMemo(
     () => ["All genres", ...new Set([...musicSearchTaxonomy.genres, ...knownTracks.map((track) => track.genre)])],
     [knownTracks],
@@ -563,7 +544,6 @@ export function CreatorWorkspace() {
   useEffect(() => () => loadMoreControllerRef.current?.abort(), []);
 
   useEffect(() => {
-    if (isStaticDemo) return;
     const requestGeneration = ++catalogRequestGenerationRef.current;
     const requestSignature = catalogQuerySignature;
     const preservesCurrentPage = catalogResolvedSignatureRef.current === requestSignature;
@@ -585,7 +565,7 @@ export function CreatorWorkspace() {
       try {
         const response = await fetch(catalogRequestUrl({ page: 1, filters: catalogFilters }), {
           cache: "no-store",
-          credentials: "same-origin",
+          credentials: catalogFetchCredentials,
           headers: { accept: "application/json" },
           signal: controller.signal,
         });
@@ -611,7 +591,7 @@ export function CreatorWorkspace() {
         ) return;
         setCatalogRequestFailed(true);
         if (!catalogHasLoadedRef.current) {
-          setCatalogTracks(null);
+          setCatalogTracks([]);
           setCatalogPagination(null);
           setCatalogLoadState("fallback");
         } else {
@@ -634,8 +614,8 @@ export function CreatorWorkspace() {
   }, [catalogFilters, catalogQuerySignature, catalogRetryNonce, query]);
 
   useEffect(() => {
-    if (isStaticDemo) return;
     const controller = new AbortController();
+    setRecentCatalogRequestFailed(false);
 
     async function loadRecentReleases() {
       try {
@@ -645,26 +625,28 @@ export function CreatorWorkspace() {
           onePerRelease: true,
         }), {
           cache: "no-store",
-          credentials: "same-origin",
+          credentials: catalogFetchCredentials,
           headers: { accept: "application/json" },
           signal: controller.signal,
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error("Recent catalogue request failed");
         const page = parseCatalogPage(await response.json());
-        if (!page || page.view !== "releases") return;
+        if (!page || page.view !== "releases") throw new Error("Recent catalogue response was invalid");
         setRecentCatalogTracks(page.tracks);
         setRecentCatalogTotal(page.pagination.total);
+        setRecentCatalogRequestFailed(false);
         setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           setRecentCatalogTracks(null);
+          setRecentCatalogRequestFailed(true);
         }
       }
     }
 
     void loadRecentReleases();
     return () => controller.abort();
-  }, []);
+  }, [catalogRetryNonce]);
 
   useEffect(() => {
     if (catalogLoadState === "loading") return;
@@ -692,7 +674,7 @@ export function CreatorWorkspace() {
     }
 
     const numericTrackId = catalogNumericTrackId(trackId);
-    if (isStaticDemo || numericTrackId === null) {
+    if (numericTrackId === null) {
       sharedTrackHandledRef.current = trackId;
       setActionStatus("This shared track is not available in the active catalogue.");
       return () => controller.abort();
@@ -706,7 +688,7 @@ export function CreatorWorkspace() {
       try {
         const response = await fetch(catalogRequestUrl({ page: 1, pageSize: 1, trackId: numericTrackId }), {
           cache: "no-store",
-          credentials: "same-origin",
+          credentials: catalogFetchCredentials,
           headers: { accept: "application/json" },
           signal: controller.signal,
         });
@@ -830,8 +812,7 @@ export function CreatorWorkspace() {
   async function loadMoreCatalog() {
     const nextPage = catalogPagination?.nextPage;
     if (
-      isStaticDemo
-      || catalogLoadState !== "live"
+      catalogLoadState !== "live"
       || !catalogViewIsCurrent
       || catalogBusy
       || typeof nextPage !== "number"
@@ -847,7 +828,7 @@ export function CreatorWorkspace() {
     try {
       const response = await fetch(catalogRequestUrl({ page: nextPage, filters: catalogFilters }), {
         cache: "no-store",
-        credentials: "same-origin",
+        credentials: catalogFetchCredentials,
         headers: { accept: "application/json" },
         signal: controller.signal,
       });
@@ -1146,14 +1127,21 @@ export function CreatorWorkspace() {
                   <span>NEW IN THE CATALOGUE</span>
                   <h3 id="recent-releases-title">Recent releases</h3>
                   <p role="status" aria-live="polite">
-                    {catalogLoadState === "live" && recentCatalogTracks !== null
+                    {recentCatalogTracks !== null
                       ? `${recentTracks.length} latest ${recentTracks.length === 1 ? "release" : "releases"} from ${recentCatalogTotal} published ${recentCatalogTotal === 1 ? "release" : "releases"}.`
-                      : catalogLoadState === "loading"
-                        ? "Loading the latest releases from the private catalogue."
-                        : "Demo catalogue · curated local releases, not the full live discography."}
+                      : recentCatalogRequestFailed
+                        ? "The live catalogue is temporarily unavailable. Retry to load it."
+                        : "Loading the latest releases from the live catalogue."}
                   </p>
                 </div>
-                <button type="button" onClick={() => navigateToView("music")}>Browse all music</button>
+                <button
+                  type="button"
+                  onClick={() => recentCatalogRequestFailed
+                    ? setCatalogRetryNonce((value) => value + 1)
+                    : navigateToView("music")}
+                >
+                  {recentCatalogRequestFailed ? "Retry live catalogue" : "Browse all music"}
+                </button>
               </div>
               <div className="music-recent-grid" role="list" aria-label="Recent catalogue releases">
                 {recentTracks.map((track) => {
@@ -1194,7 +1182,7 @@ export function CreatorWorkspace() {
             <div className="music-track-browser-head music-track-browser-controls">
               <p className="music-track-results-status" role="status" aria-live="polite">
                 {catalogLoadState === "loading"
-                  ? "Loading your private catalogue..."
+                  ? "Loading the live catalogue..."
                   : catalogLoadState === "live"
                     ? !catalogViewIsCurrent
                       ? catalogBusy
@@ -1203,14 +1191,14 @@ export function CreatorWorkspace() {
                           ? "The current catalogue filters could not be loaded. Retry when you are ready."
                           : "Preparing the current catalogue filters..."
                       : `${visibleTracks.length} loaded from ${catalogPagination?.total ?? visibleTracks.length} matching ${(catalogPagination?.total ?? visibleTracks.length) === 1 ? "track" : "tracks"}${catalogBusy ? " · Updating..." : catalogRequestFailed ? " · Update failed, previous results kept" : ""}`
-                    : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue only${catalogRequestFailed && !isStaticDemo ? " · Live catalogue unavailable" : ""}`}
+                    : "The live catalogue is temporarily unavailable. Retry to load it."}
               </p>
               <div className="music-filter-row">
                 <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
                 {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
-                {catalogRequestFailed && !isStaticDemo && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
+                {catalogRequestFailed && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
               </div>
             </div>
             {renderTrackTable(visibleTracks, "Matching music tracks")}
