@@ -1028,7 +1028,7 @@ def open_state(path: Path) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA journal_mode=DELETE")
     connection.execute("PRAGMA foreign_keys=ON")
     connection.executescript(
         """

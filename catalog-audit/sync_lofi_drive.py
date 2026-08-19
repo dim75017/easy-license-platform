@@ -338,7 +338,7 @@ def open_state(path: Path) -> sqlite3.Connection:
     connection.row_factory = sqlite3.Row
     connection.executescript(
         """
-        PRAGMA journal_mode=WAL;
+        PRAGMA journal_mode=DELETE;
         CREATE TABLE IF NOT EXISTS releases (
           folder_id TEXT PRIMARY KEY,
           title TEXT NOT NULL,

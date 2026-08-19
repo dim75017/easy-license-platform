@@ -293,6 +293,16 @@ class SpotifyMetadataMergeTests(unittest.TestCase):
         self.assertIsNone(row["sha256"])
 
 
+class StateTests(unittest.TestCase):
+    def test_state_uses_single_process_delete_journal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            connection = ingest.open_state(Path(directory) / "state.sqlite3")
+            try:
+                self.assertEqual(connection.execute("PRAGMA journal_mode").fetchone()[0], "delete")
+            finally:
+                connection.close()
+
+
 class InspectionBatchTests(unittest.TestCase):
     def test_full_inspection_is_bounded_by_release_and_reports_backlog(self):
         stream = io.BytesIO()

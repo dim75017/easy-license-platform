@@ -31,6 +31,14 @@ class DriveListingParserTests(unittest.TestCase):
 
 
 class SyncStateTests(unittest.TestCase):
+    def test_state_uses_single_process_delete_journal(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = sync.open_state(Path(temporary) / "state.sqlite3")
+            try:
+                self.assertEqual(connection.execute("PRAGMA journal_mode").fetchone()[0], "delete")
+            finally:
+                connection.close()
+
     def test_initial_seed_becomes_a_real_pending_backlog(self):
         with tempfile.TemporaryDirectory() as temporary:
             connection = sync.open_state(Path(temporary) / "state.sqlite3")

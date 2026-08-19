@@ -1,11 +1,16 @@
+import contextlib
 import datetime as dt
 import hashlib
 import io
 import json
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 import tempfile
+import time
 import unittest
+from unittest import mock
 
 from continue_catalog_sync_loader import sync
 
@@ -99,6 +104,34 @@ def spotify_evidence_record(
     }
 
 
+def owner_attestation_payload(
+    drive_root="ABCDEFGHIJKLMNO",
+    workbook_id="S" * 20,
+    **overrides,
+):
+    payload = {
+        "schemaVersion": 1,
+        "kind": "catalog_owner_attestation",
+        "approved": True,
+        "claims": {
+            "catalogueAlreadyReleased": True,
+            "rightsToPublishFullLengthListeningCopies": True,
+            "rightsToOfferLicensedDownloads": True,
+            "humanMadeNoGenerativeAI": True,
+        },
+        "scope": {
+            "catalogueSourceUrl": "https://lofi-records.netlify.app/#/catalog",
+            "workbookSourceUrl": f"https://docs.google.com/spreadsheets/d/{workbook_id}/edit",
+            "driveSourceFolderId": drive_root,
+        },
+        "reviewer": "Catalogue owner",
+        "reviewerRole": "catalogue_owner",
+        "reviewedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+    payload.update(overrides)
+    return payload
+
+
 class InventoryTests(unittest.TestCase):
     def test_public_inventory_summary_never_returns_rows_or_ids(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -124,7 +157,6 @@ class InventoryTests(unittest.TestCase):
             serialized_summary = json.dumps(summary)
             self.assertNotIn(private_id, serialized_summary)
             self.assertNotIn("Private track", serialized_summary)
-
     def test_drive_sync_command_uses_private_seed_and_resumable_public_scraper(self):
         with tempfile.TemporaryDirectory() as directory:
             temporary = Path(directory)
@@ -266,6 +298,328 @@ class InventoryTests(unittest.TestCase):
             self.assertTrue(destination.is_file())
 
 
+class SingletonLockTests(unittest.TestCase):
+    def test_concurrent_run_fails_fast_without_overwriting_state_and_crash_releases_lock(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work_directory = root / "private-work"
+            ready = root / "ready"
+            config_path = root / "config.json"
+            last_run = work_directory / "last-run.json"
+            work_directory.mkdir()
+            sentinel = '{"status":"previous"}\n'
+            last_run.write_text(sentinel, encoding="utf-8")
+
+            child_code = (
+                "import sys,time\n"
+                "from pathlib import Path\n"
+                "sys.path.insert(0, sys.argv[1])\n"
+                "import continue_catalog_sync as sync\n"
+                "with sync.exclusive_sync_lock(Path(sys.argv[2])):\n"
+                " Path(sys.argv[3]).write_text('ready', encoding='utf-8')\n"
+                " time.sleep(60)\n"
+            )
+            child = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    child_code,
+                    str(sync.AUDIT_DIRECTORY),
+                    str(work_directory),
+                    str(ready),
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while not ready.is_file() and child.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                self.assertTrue(ready.is_file(), f"lock holder exited with {child.poll()}")
+
+                output = io.StringIO()
+                config = {"work_directory": work_directory}
+                with mock.patch.object(sync, "apply_low_resource_priority") as priority:
+                    with mock.patch.object(sync, "load_config", return_value=config):
+                        with mock.patch.object(sync, "execute") as execute:
+                            with contextlib.redirect_stdout(output):
+                                status = sync.main(
+                                    ["--config", str(config_path), "--mode", "continue", "--allow-network"]
+                                )
+
+                self.assertEqual(status, 1)
+                priority.assert_called_once_with()
+                self.assertFalse(execute.called)
+                self.assertEqual(json.loads(output.getvalue())["error"], "sync_already_running")
+                self.assertEqual(last_run.read_text(encoding="utf-8"), sentinel)
+
+                child.kill()
+                child.wait(timeout=10)
+                with sync.exclusive_sync_lock(work_directory):
+                    pass
+                self.assertEqual((work_directory / sync.SYNC_LOCK_FILENAME).read_bytes(), b"\0")
+            finally:
+                if child.poll() is None:
+                    child.kill()
+                    child.wait(timeout=10)
+
+
+class LowResourceTests(unittest.TestCase):
+    def test_priority_is_lowered_on_windows_and_posix_without_propagating_failures(self):
+        process = object()
+        kernel32 = mock.Mock()
+        kernel32.GetCurrentProcess.return_value = process
+        kernel32.SetPriorityClass.return_value = 1
+        factory = mock.Mock(return_value=kernel32)
+
+        self.assertTrue(
+            sync.apply_low_resource_priority(
+                platform_name="nt",
+                windows_api_factory=factory,
+            )
+        )
+        factory.assert_called_once_with("kernel32", use_last_error=True)
+        kernel32.SetPriorityClass.assert_called_once_with(
+            process,
+            sync.BELOW_NORMAL_PRIORITY_CLASS,
+        )
+
+        nice = mock.Mock()
+        self.assertTrue(
+            sync.apply_low_resource_priority(
+                platform_name="posix",
+                nice_function=nice,
+            )
+        )
+        nice.assert_called_once_with(sync.LOW_RESOURCE_NICE_INCREMENT)
+
+        failing_nice = mock.Mock(side_effect=OSError("fixture"))
+        self.assertFalse(
+            sync.apply_low_resource_priority(
+                platform_name="posix",
+                nice_function=failing_nice,
+            )
+        )
+
+    def test_thread_caps_preserve_one_and_replace_larger_or_invalid_values(self):
+        source = {
+            "PATH": "fixture-path",
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "8",
+            "OPENBLAS_NUM_THREADS": "invalid",
+            "NUMEXPR_NUM_THREADS": "4",
+            "VECLIB_MAXIMUM_THREADS": "2",
+        }
+        limited = sync.low_resource_child_environment(source)
+
+        self.assertEqual(limited["PATH"], "fixture-path")
+        for key in sync.LOW_RESOURCE_THREAD_ENVIRONMENT_KEYS:
+            self.assertEqual(limited[key], "1")
+        self.assertEqual(source["MKL_NUM_THREADS"], "8")
+
+    def test_python_node_and_ffmpeg_children_inherit_single_thread_caps(self):
+        completed = sync.subprocess.CompletedProcess(
+            args=["fixture"], returncode=0, stdout="{}", stderr=""
+        )
+        commands = (
+            [sys.executable, "child.py"],
+            ["node", "child.mjs"],
+            ["ffmpeg", "-version"],
+        )
+        for command in commands:
+            with self.subTest(command=command[0]):
+                with mock.patch.object(sync.subprocess, "run", return_value=completed) as runner:
+                    sync.run_step(
+                        "fixture",
+                        command,
+                        environment={"PATH": "fixture-path", "OMP_NUM_THREADS": "16"},
+                    )
+                child_environment = runner.call_args.kwargs["env"]
+                for key in sync.LOW_RESOURCE_THREAD_ENVIRONMENT_KEYS:
+                    self.assertEqual(child_environment[key], "1")
+
+
+class PublicationCredentialTests(unittest.TestCase):
+    def test_secrets_are_removed_from_every_default_child_environment(self):
+        completed = sync.subprocess.CompletedProcess(
+            args=["fixture"], returncode=0, stdout="{}", stderr=""
+        )
+        parent_environment = {
+            "PATH": "fixture-path",
+            "CATALOG_PIPELINE_TOKEN": "pipeline-secret-fixture-123456",
+            "OAI_SITES_AUTHORIZATION": "sites-secret-fixture-123456",
+        }
+        with mock.patch.dict(sync.os.environ, parent_environment, clear=True):
+            with mock.patch.object(sync.subprocess, "run", return_value=completed) as runner:
+                sync.run_step("fixture", ["fixture-command"])
+        child_environment = runner.call_args.kwargs["env"]
+        self.assertEqual(child_environment["PATH"], "fixture-path")
+        self.assertNotIn("CATALOG_PIPELINE_TOKEN", child_environment)
+        self.assertNotIn("OAI_SITES_AUTHORIZATION", child_environment)
+
+    def test_publication_credentials_are_injected_only_via_apply_environment(self):
+        pipeline_token = "pipeline-secret-fixture-123456"
+        sites_authorization = "sites-secret-fixture-123456"
+        environment = sync.publication_apply_environment(
+            {
+                "pipeline_token": pipeline_token,
+                "sites_authorization": sites_authorization,
+            },
+            environment={"PATH": "fixture-path"},
+        )
+        command = ["process_catalog.py", "--apply"]
+        completed = sync.subprocess.CompletedProcess(
+            args=command, returncode=0, stdout="{}", stderr=""
+        )
+        with mock.patch.object(sync.subprocess, "run", return_value=completed) as runner:
+            sync.run_step("publication_apply", command, environment=environment)
+        child_environment = runner.call_args.kwargs["env"]
+        self.assertEqual(child_environment["CATALOG_PIPELINE_TOKEN"], pipeline_token)
+        self.assertEqual(child_environment["OAI_SITES_AUTHORIZATION"], sites_authorization)
+        self.assertNotIn(pipeline_token, " ".join(command))
+        self.assertNotIn(sites_authorization, " ".join(command))
+
+    def test_publication_credentials_never_escape_through_child_output(self):
+        pipeline_token = "pipeline-secret-fixture-123456"
+        sites_authorization = "sites-secret-fixture-123456"
+        environment = sync.publication_apply_environment(
+            {
+                "pipeline_token": pipeline_token,
+                "sites_authorization": sites_authorization,
+            },
+            environment={},
+        )
+        completed = sync.subprocess.CompletedProcess(
+            args=["fixture"],
+            returncode=0,
+            stdout=json.dumps({"accidental": pipeline_token}),
+            stderr="",
+        )
+        with mock.patch.object(sync.subprocess, "run", return_value=completed):
+            with self.assertRaisesRegex(sync.SyncError, "publication_apply_sensitive_output_blocked") as caught:
+                sync.run_step("publication_apply", ["fixture"], environment=environment)
+        self.assertNotIn(pipeline_token, str(caught.exception))
+        self.assertNotIn(sites_authorization, str(caught.exception))
+
+    def test_publication_credentials_fail_closed_when_incomplete(self):
+        with self.assertRaisesRegex(sync.SyncError, "publication_credentials_missing"):
+            sync.publication_apply_environment(
+                {"pipeline_token": "pipeline-secret-fixture-123456", "sites_authorization": None},
+                environment={},
+            )
+
+
+class PublicationPartialTests(unittest.TestCase):
+    @staticmethod
+    def partial_document():
+        return {
+            "mode": "apply",
+            "step": "process",
+            "counts": {
+                "selected": 5,
+                "published": 2,
+                "already_published": 1,
+                "promotion_blocked": 1,
+                "failed": 1,
+            },
+            "pipelineState": {"published": 3, "failed": 1, "promotion_blocked": 1},
+        }
+
+    def test_return_code_two_is_accepted_only_for_publication_apply(self):
+        completed = sync.subprocess.CompletedProcess(
+            args=["fixture"],
+            returncode=2,
+            stdout=json.dumps(self.partial_document()),
+            stderr="",
+        )
+        with mock.patch.object(sync.subprocess, "run", return_value=completed):
+            with self.assertRaisesRegex(sync.SyncError, "publication_apply_failed"):
+                sync.run_step("publication_apply", ["fixture"])
+        with mock.patch.object(sync.subprocess, "run", return_value=completed):
+            documents, return_code = sync.run_step_result(
+                "publication_apply",
+                ["fixture"],
+                accepted_return_codes=(0, 2),
+            )
+        self.assertEqual(return_code, 2)
+        self.assertEqual(documents[-1]["counts"]["failed"], 1)
+        with self.assertRaisesRegex(sync.SyncError, "subprocess_return_code_policy_invalid"):
+            sync.run_step_result("spotify", ["fixture"], accepted_return_codes=(0, 2))
+
+    def test_partial_summary_preserves_aggregate_counts_and_is_resumable_success(self):
+        summary, partial = sync.publication_apply_summary([self.partial_document()], 2)
+        self.assertTrue(partial)
+        self.assertEqual(summary["counts"]["published"], 2)
+        self.assertEqual(summary["counts"]["promotion_blocked"], 1)
+        self.assertEqual(summary["counts"]["failed"], 1)
+        self.assertEqual(summary["pipelineState"]["published"], 3)
+
+        work_directory = sync.AUDIT_DIRECTORY / "private" / "partial-status-fixture"
+        config_path = work_directory / "config.json"
+        config = {"work_directory": work_directory}
+        output = io.StringIO()
+        with mock.patch.object(sync, "load_config", return_value=config):
+            with mock.patch.object(sync, "exclusive_sync_lock", return_value=contextlib.nullcontext()):
+                with mock.patch.object(sync, "atomic_write_json"):
+                    with mock.patch.object(
+                        sync,
+                        "execute",
+                        return_value={"schemaVersion": 1, "status": "partial", "resumable": True},
+                    ):
+                        with contextlib.redirect_stdout(output):
+                            exit_code = sync.main(["--config", str(config_path), "--mode", "publish"])
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(json.loads(output.getvalue())["status"], "partial")
+
+    def test_return_code_and_summary_must_agree(self):
+        complete = self.partial_document()
+        complete["counts"] = {
+            "selected": 2,
+            "published": 2,
+            "already_published": 0,
+            "promotion_blocked": 0,
+            "failed": 0,
+        }
+        with self.assertRaisesRegex(sync.SyncError, "publication_apply_summary_invalid"):
+            sync.publication_apply_summary([complete], 2)
+        with self.assertRaisesRegex(sync.SyncError, "publication_apply_summary_invalid"):
+            sync.publication_apply_summary([self.partial_document()], 0)
+
+
+class ThroughputBoundsTests(unittest.TestCase):
+    def test_accelerated_hourly_bounds_accept_safe_targets_and_reject_larger_batches(self):
+        targets = (
+            ("driveInventoryReleasesPerRun", 50, sync.MAX_INVENTORY_RELEASE_BATCH),
+            ("inspectionBatchSize", 50, sync.MAX_INSPECTION_BATCH),
+            ("spotifyBatchSize", 50, sync.MAX_SPOTIFY_BATCH),
+            ("publicationBatchSize", 25, sync.MAX_PUBLICATION_BATCH),
+            ("maximumReleasesPerRun", 10, sync.MAX_RELEASE_BATCH),
+            ("maximumRunMinutes", 55, sync.MAX_RUN_MINUTES),
+        )
+        for key, target, maximum in targets:
+            with self.subTest(key=key):
+                self.assertEqual(sync.bounded_integer({key: target}, key, 1, maximum), target)
+                with self.assertRaisesRegex(sync.SyncError, f"{key.casefold()}_out_of_bounds"):
+                    sync.bounded_integer({key: maximum + 1}, key, 1, maximum)
+
+    def test_accelerated_inspection_remains_one_sequential_bounded_invocation(self):
+        config = {
+            "workbook": Path("private.xlsx"),
+            "orchard": None,
+            "work_directory": Path("private"),
+            "inspection_batch": 50,
+            "release_batch": 10,
+            "maximum_run_minutes": 55,
+        }
+        command = sync.build_ingest_command(
+            config, Path("inventory.json"), apply=True, inspect_full=True
+        )
+        self.assertEqual(command[command.index("--batch-size") + 1], "50")
+        self.assertEqual(command[command.index("--release-batch-size") + 1], "10")
+        self.assertEqual(command[command.index("--max-inspection-seconds") + 1], "3300")
+        self.assertEqual(command.count("--allow-network"), 1)
+
+
 class FfmpegTests(unittest.TestCase):
     def test_private_config_accepts_optional_existing_ffmpeg_and_rejects_missing_file(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -285,10 +639,20 @@ class FfmpegTests(unittest.TestCase):
                 "driveSeed": str(seed),
                 "driveInventoryDirectory": str(root / "inventory"),
                 "ffmpegExecutable": str(ffmpeg),
+                "pipelineToken": "pipeline-token-fixture-123456",
+                "sitesAuthorization": "sites-authorization-fixture-123456",
             }
             config_path.write_text(json.dumps(payload), encoding="utf-8")
             config = sync.load_config(config_path)
             self.assertEqual(config["ffmpeg_executable"], ffmpeg.resolve())
+            self.assertEqual(config["pipeline_token"], payload["pipelineToken"])
+            self.assertEqual(config["sites_authorization"], payload["sitesAuthorization"])
+
+            payload["pipelineToken"] = "invalid\nsecret-value"
+            config_path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(sync.SyncError, "pipeline_token_invalid"):
+                sync.load_config(config_path)
+            payload["pipelineToken"] = "pipeline-token-fixture-123456"
 
             payload["ffmpegExecutable"] = str(root / "missing-ffmpeg.exe")
             config_path.write_text(json.dumps(payload), encoding="utf-8")
@@ -400,6 +764,127 @@ class SelectionTests(unittest.TestCase):
             changed = json.loads(json.dumps(record))
             changed["track"]["genre"] = "Ambient"
             self.assertEqual(len(sync.select_publication_batch([changed], state_path, 1)), 1)
+
+    def test_publication_prioritizes_fresh_exacts_then_rotates_failures(self):
+        failed_many = exact_record("b" * 28)
+        fresh_first = exact_record("c" * 28)
+        failed_newer = exact_record("d" * 28)
+        fresh_second = exact_record("e" * 28)
+        failed_older = exact_record("f" * 28)
+        records = [failed_many, fresh_first, failed_newer, fresh_second, failed_older]
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "pipeline.sqlite3"
+            connection = sync.process.open_pipeline_state(state_path)
+            rows = (
+                (failed_many, 4, "2026-01-01T00:00:00+00:00"),
+                (failed_newer, 1, "2026-03-01T00:00:00+00:00"),
+                (failed_older, 1, "2026-02-01T00:00:00+00:00"),
+            )
+            for record, attempts, updated_at in rows:
+                connection.execute(
+                    """INSERT INTO pipeline_items (
+                    candidate_id, manifest_fingerprint, batch_key, status,
+                    attempts, created_at, updated_at
+                    ) VALUES (?, ?, 'old-batch', 'failed', ?, ?, ?)""",
+                    (
+                        record["candidate_id"],
+                        sync.process.canonical_fingerprint(record),
+                        attempts,
+                        updated_at,
+                        updated_at,
+                    ),
+                )
+            connection.commit()
+            connection.close()
+
+            first_batch = sync.select_publication_batch(records, state_path, 2)
+            self.assertEqual(
+                [record["candidate_id"] for record in first_batch],
+                [fresh_first["candidate_id"], fresh_second["candidate_id"]],
+            )
+            full_order = sync.select_publication_batch(records, state_path, 5)
+            self.assertEqual(
+                [record["candidate_id"] for record in full_order],
+                [
+                    fresh_first["candidate_id"],
+                    fresh_second["candidate_id"],
+                    failed_older["candidate_id"],
+                    failed_newer["candidate_id"],
+                    failed_many["candidate_id"],
+                ],
+            )
+
+    def test_retry_classification_never_requires_evidence_for_published_or_fresh_rows(self):
+        failed = exact_record("b" * 28)
+        fresh = exact_record("c" * 28)
+        published = exact_record("d" * 28)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state_path = root / "pipeline.sqlite3"
+            evidence_path = root / "spotify.json"
+            evidence_path.write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            spotify_evidence_record(failed["candidate_id"]),
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            attached = json.loads(json.dumps([failed]))
+            sync.process.attach_verified_spotify_evidence(attached, evidence_path)
+            connection = sync.process.open_pipeline_state(state_path)
+            now = "2026-01-01T00:00:00+00:00"
+            connection.execute(
+                """INSERT INTO pipeline_items (
+                candidate_id, manifest_fingerprint, batch_key, status,
+                attempts, created_at, updated_at
+                ) VALUES (?, ?, 'old-batch', 'failed', 2, ?, ?)""",
+                (
+                    failed["candidate_id"],
+                    sync.process.canonical_fingerprint(attached[0]),
+                    now,
+                    now,
+                ),
+            )
+            connection.execute(
+                """INSERT INTO pipeline_items (
+                candidate_id, manifest_fingerprint, batch_key, status,
+                attempts, created_at, updated_at
+                ) VALUES (?, ?, 'published-batch', 'published', 1, ?, ?)""",
+                (published["candidate_id"], "f" * 64, now, now),
+            )
+            connection.execute(
+                """CREATE TABLE published_manifest_bases (
+                candidate_id TEXT PRIMARY KEY,
+                base_fingerprint TEXT NOT NULL,
+                source_manifest_fingerprint TEXT NOT NULL,
+                verified_at TEXT NOT NULL
+                )"""
+            )
+            connection.execute(
+                "INSERT INTO published_manifest_bases VALUES (?, ?, ?, ?)",
+                (
+                    published["candidate_id"],
+                    sync.process.canonical_fingerprint(published),
+                    "f" * 64,
+                    now,
+                ),
+            )
+            connection.commit()
+            connection.close()
+
+            selected = sync.select_publication_batch(
+                [failed, published, fresh],
+                state_path,
+                3,
+                spotify_enrichment=evidence_path,
+            )
+            self.assertEqual(
+                [record["candidate_id"] for record in selected],
+                [fresh["candidate_id"], failed["candidate_id"]],
+            )
 
     def test_bootstrap_merges_only_published_rows_with_current_fingerprint_and_acks(self):
         matching = exact_record("b" * 28)
@@ -657,6 +1142,166 @@ class EvidenceTests(unittest.TestCase):
             sync.validate_evidence(path, "rights_clearance", selection_hash, 3)
             with self.assertRaisesRegex(sync.SyncError, "rights_clearance_evidence_invalid"):
                 sync.validate_evidence(path, "rights_clearance", "0" * 64, 3)
+
+    def test_owner_attestation_derives_private_evidence_for_each_exact_selection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            drive_root = "ABCDEFGHIJKLMNO"
+            workbook_id = "S" * 20
+            seed = root / "seed.json"
+            owner = root / "catalog-owner-attestation.json"
+            rights = root / "rights.json"
+            human = root / "human.json"
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": drive_root,
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            owner.write_text(
+                json.dumps(owner_attestation_payload(drive_root, workbook_id)),
+                encoding="utf-8",
+            )
+            config = {
+                "catalogue_source_url": "https://lofi-records.netlify.app/#/catalog",
+                "workbook_source_url": f"https://docs.google.com/spreadsheets/d/{workbook_id}/edit?usp=sharing",
+                "drive_seed": seed,
+                "catalog_owner_attestation": owner,
+                "rights_evidence": rights,
+                "human_evidence": human,
+            }
+
+            first_hash = hashlib.sha256(b"first-selection").hexdigest()
+            result = sync.authorize_publication(config, first_hash, 3)
+            self.assertEqual(result["source"], "catalog_owner_attestation")
+            self.assertTrue(result["selectionEvidenceDerived"])
+            sync.validate_evidence(rights, "rights_clearance", first_hash, 3)
+            sync.validate_evidence(human, "human_made_editorial_review", first_hash, 3)
+
+            derived = rights.read_text(encoding="utf-8") + human.read_text(encoding="utf-8")
+            self.assertNotIn(drive_root, derived)
+            self.assertNotIn(workbook_id, derived)
+            self.assertNotIn("lofi-records.netlify.app", derived)
+
+            second_hash = hashlib.sha256(b"second-selection").hexdigest()
+            second = sync.authorize_publication(config, second_hash, 2)
+            self.assertTrue(second["selectionEvidenceDerived"])
+            sync.validate_evidence(rights, "rights_clearance", second_hash, 2)
+            sync.validate_evidence(human, "human_made_editorial_review", second_hash, 2)
+            self.assertNotEqual(
+                json.loads(rights.read_text(encoding="utf-8"))["selectionSha256"],
+                first_hash,
+            )
+
+    def test_owner_attestation_is_invalidated_by_any_source_scope_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seed = root / "seed.json"
+            owner = root / "catalog-owner-attestation.json"
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": "PQRSTUVWXYZabcd",
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            owner.write_text(json.dumps(owner_attestation_payload()), encoding="utf-8")
+            config = {
+                "catalogue_source_url": "https://lofi-records.netlify.app/#/catalog",
+                "workbook_source_url": "https://docs.google.com/spreadsheets/d/" + "S" * 20,
+                "drive_seed": seed,
+            }
+            with self.assertRaisesRegex(sync.SyncError, "catalog_owner_attestation_scope_invalid"):
+                sync.validate_catalog_owner_attestation(owner, config)
+
+    def test_derived_evidence_cannot_outlive_its_attested_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seed = root / "seed.json"
+            owner = root / "catalog-owner-attestation.json"
+            rights = root / "rights.json"
+            human = root / "human.json"
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": "ABCDEFGHIJKLMNO",
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            owner.write_text(json.dumps(owner_attestation_payload()), encoding="utf-8")
+            config = {
+                "catalogue_source_url": "https://lofi-records.netlify.app/#/catalog",
+                "workbook_source_url": "https://docs.google.com/spreadsheets/d/" + "S" * 20,
+                "drive_seed": seed,
+                "catalog_owner_attestation": owner,
+                "rights_evidence": rights,
+                "human_evidence": human,
+            }
+            selection_hash = hashlib.sha256(b"selection").hexdigest()
+            sync.authorize_publication(config, selection_hash, 1)
+
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": "PQRSTUVWXYZabcd",
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(sync.SyncError, "catalog_owner_attestation_scope_invalid"):
+                sync.authorize_publication(config, selection_hash, 1)
+
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": "ABCDEFGHIJKLMNO",
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config["workbook_source_url"] = "https://docs.google.com/spreadsheets/d/" + "T" * 20
+            with self.assertRaisesRegex(sync.SyncError, "catalog_owner_attestation_scope_invalid"):
+                sync.validate_catalog_owner_attestation(owner, config)
+
+    def test_owner_attestation_requires_all_rights_and_non_ai_claims(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seed = root / "seed.json"
+            owner = root / "catalog-owner-attestation.json"
+            seed.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "sourceFolderId": "ABCDEFGHIJKLMNO",
+                        "releaseFolders": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = owner_attestation_payload()
+            payload["claims"]["humanMadeNoGenerativeAI"] = False
+            owner.write_text(json.dumps(payload), encoding="utf-8")
+            config = {
+                "catalogue_source_url": "https://lofi-records.netlify.app/#/catalog",
+                "workbook_source_url": "https://docs.google.com/spreadsheets/d/" + "S" * 20,
+                "drive_seed": seed,
+            }
+            with self.assertRaisesRegex(sync.SyncError, "catalog_owner_attestation_invalid"):
+                sync.validate_catalog_owner_attestation(owner, config)
 
     def test_publish_command_never_gets_attestations_from_configuration(self):
         config = {

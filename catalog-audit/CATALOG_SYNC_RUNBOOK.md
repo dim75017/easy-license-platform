@@ -16,16 +16,20 @@ paste it into an issue, task or terminal transcript.
   "workDirectory": "catalog-audit/private/drive-sync",
   "workbook": "catalog-audit/private/drive-sync/all-data.xlsx",
   "workbookSourceUrl": "PUT_THE_PRIVATE_GOOGLE_SHEET_SHARE_URL_HERE",
+  "catalogueSourceUrl": "https://lofi-records.netlify.app/#/catalog",
   "orchard": "catalog-audit/private/orchard.json",
   "driveSeed": "catalog-audit/private/lofi-drive-release-seed.json",
   "driveInventoryDirectory": "catalog-audit/private/lofi-drive-sync",
   "ffmpegExecutable": "catalog-audit/private/python-packages/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe",
-  "driveInventoryReleasesPerRun": 25,
-  "inspectionBatchSize": 15,
+  "driveInventoryReleasesPerRun": 50,
+  "inspectionBatchSize": 50,
   "spotifyBatchSize": 50,
-  "publicationBatchSize": 3,
-  "maximumReleasesPerRun": 2,
-  "maximumRunMinutes": 45,
+  "publicationBatchSize": 25,
+  "maximumReleasesPerRun": 10,
+  "maximumRunMinutes": 55,
+  "pipelineToken": "PUT_THE_PRIVATE_CATALOGUE_PIPELINE_TOKEN_HERE",
+  "sitesAuthorization": "PUT_THE_PRIVATE_SITES_AUTHORIZATION_HERE",
+  "catalogOwnerAttestation": "catalog-audit/private/drive-sync/catalog-owner-attestation.json",
   "rightsEvidence": "catalog-audit/private/drive-sync/rights-evidence.json",
   "humanMadeEvidence": "catalog-audit/private/drive-sync/human-made-evidence.json"
 }
@@ -42,12 +46,17 @@ never fabricated into a Spotify ID, so that row remains in review until a real
 
 The public Drive crawler consumes the ignored 743-release seed through
 `sync_lofi_drive.py`; it does not require an API key, OAuth token or browser
-cookie. It checkpoints at most 25 releases per heartbeat until the initial
+cookie. It checkpoints at most 50 releases per heartbeat until the initial
 backlog is complete, then continues to detect additions and changes.
 
-Publication also needs the existing `CATALOG_PIPELINE_TOKEN` and
-`OAI_SITES_AUTHORIZATION` secrets in the environment. The script never stores
-or echoes them.
+Publication needs `pipelineToken` and `sitesAuthorization` in this ignored
+private config. Existing `CATALOG_PIPELINE_TOKEN` and
+`OAI_SITES_AUTHORIZATION` environment variables remain a compatibility
+fallback. Both values are type/length/control-character validated, removed
+from every ordinary child process and injected only into the environment of
+the final publication apply subprocess. They are never placed on a command
+line or in stdout, stderr summaries or `last-run.json`; detected child output
+containing either value is blocked behind an aggregate error code.
 
 `ffmpegExecutable` is optional. When present, it must resolve to an existing
 file (a repository-relative value is restricted to `catalog-audit/private/`).
@@ -69,21 +78,42 @@ python catalog-audit/continue_catalog_sync.py --mode plan
 The recurring continuation refreshes the complete Drive inventory on every
 run. The first runs consume the whole initial backlog (including the existing
 hundreds of releases); later runs pick up additions and changes. Each heartbeat
-fully inspects at most fifteen pending WAVs from at most two releases, with a
-45-minute soft budget checked between files, enriches at most fifty fully
+fully inspects at most 50 pending WAVs from at most 10 releases, with a
+55-minute soft budget checked between files, enriches at most 50 fully
 inspected rows, merges the verified Spotify duration, rebuilds `exact.jsonl`,
-and performs an aggregate publication dry-run for at most three unpublished
+and performs an aggregate publication dry-run for at most 25 unpublished
 exact rows:
 
 ```text
 python catalog-audit/continue_catalog_sync.py --mode continue --allow-network
 ```
 
+Every mode first takes a non-blocking operating-system lock at the ignored
+`workDirectory/.catalog-sync.lock`. If an automation and a manual run overlap,
+the second exits immediately with code `1` and the aggregate
+`sync_already_running` error; it does not start a child process, touch SQLite or
+R2, or overwrite `last-run.json`. The file intentionally contains no PID,
+title, URL or other metadata and may remain on disk. Its OS lock is released on
+normal exit, exception, interruption or process crash, so the file must not be
+deleted as a recovery step.
+
+The wrapper also lowers its own scheduling priority at startup (Windows
+`BELOW_NORMAL_PRIORITY_CLASS`, or a positive POSIX nice increment) on a
+best-effort basis. Every Python, Node and FFmpeg child receives single-thread
+caps for OpenMP, MKL, OpenBLAS, NumExpr and vecLib; an existing valid one-thread
+cap is preserved. Failure to change process priority never blocks or weakens a
+catalogue gate.
+
 Interrupted work is resumed from `ingestion-state.sqlite3`,
 `pipeline-state.sqlite3`, the Spotify cache and `continuation-state.json`.
 Temporary WAVs are still handled one at a time by the existing pipeline and
 removed in `finally` blocks. The last aggregate result is kept in
 `last-run.json`; it contains no IDs, titles, filenames or URLs.
+Increasing the configured batch counts therefore increases only the number of
+sequential checkpoints attempted during a run, not the number of simultaneous
+downloads or the peak temporary-disk footprint. The hard configuration caps
+remain 50 Drive releases, 50 WAV inspections, 50 Spotify enrichments, 25
+publications, 10 inspected releases and 60 inspection minutes per invocation.
 The aggregate `remaining` and `remainingReleases` counters show the initial
 backlog draining across heartbeats. A single in-flight Drive read is allowed to
 finish so its checksum can be committed atomically; Drive itself is capped at
@@ -138,13 +168,71 @@ current exact selection, and only then passes the two explicit attestations to
 the existing publisher. Changed rows receive a new hash and therefore require
 new evidence.
 
+### Durable catalogue-owner attestation
+
+When the catalogue owner explicitly confirms that the whole configured,
+already-released catalogue is cleared for full-length public listening and
+licensed downloads, and that it contains no generative-AI music, that approval
+can be recorded once in the ignored private `catalogOwnerAttestation` file:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "catalog_owner_attestation",
+  "approved": true,
+  "claims": {
+    "catalogueAlreadyReleased": true,
+    "rightsToPublishFullLengthListeningCopies": true,
+    "rightsToOfferLicensedDownloads": true,
+    "humanMadeNoGenerativeAI": true
+  },
+  "scope": {
+    "catalogueSourceUrl": "https://lofi-records.netlify.app/#/catalog",
+    "workbookSourceUrl": "PUT_THE_PRIVATE_GOOGLE_SHEET_SHARE_URL_HERE",
+    "driveSourceFolderId": "PUT_THE_PRIVATE_DRIVE_ROOT_ID_HERE"
+  },
+  "reviewer": "Catalogue owner",
+  "reviewerRole": "catalogue_owner",
+  "reviewedAt": "2026-08-19T12:00:00+02:00"
+}
+```
+
+An optional future `expiresAt` is supported. The wrapper validates every claim
+and binds this attestation to three stable source identities: the exact Netlify
+catalogue route, the canonical Google Sheets document and the Drive root from
+the configured seed. Adding releases below the same roots stays in scope;
+changing any source closes the gate. The attestation is never inferred from
+folder membership and never appears in aggregate output.
+
+With a valid owner attestation, `continue` still performs the full exact-match
+and publication dry-run gates, then derives the two ignored selection evidence
+files for the current `selectionSha256` and count. It reports
+`publish_ready`; it does not publish. `publish` repeats the run, accepts exact
+manual evidence first, otherwise safely re-derives evidence for the current
+selection, validates both files, and only then applies the batch. Derived files
+contain source and attestation hashes, not catalogue IDs, titles or URLs. A new
+selection therefore gets new selection-bound evidence without weakening the
+exact/review/quarantine separation.
+
+A publication apply may finish with some exact rows published and a small
+number failed or promotion-blocked. The child process return code `2` is
+accepted only for this apply step and only when its aggregate counters confirm
+that partial outcome. The wrapper records `status: partial`, keeps the published
+checkpoints and exits successfully so the run remains resumable. Fresh exact
+rows that have no matching pipeline state are always selected before retries;
+older failures are then rotated by fewest attempts and oldest attempt time.
+Broken sources therefore cannot monopolize the publication batch. Rights,
+human-made, Spotify, review and quarantine gates remain unchanged.
+
 ## Recommended Codex heartbeat
 
 Frequency: hourly at minute `15` in `Europe/Paris` (`15 * * * *`). A run has a
-45-minute soft inspection budget, leaving recovery room before the next
-heartbeat. With 15 WAVs and 25 Drive releases per run, this drains the initial
-743-release backlog instead of limiting the schedule to future deltas.
+55-minute soft inspection budget checked between files. With 50 WAVs, 50 Drive
+releases and at most 25 exact publications per run, the initial backlog drains
+substantially faster while every file remains sequential and resumable. The
+60-minute hard inspection cap prevents a misconfigured heartbeat from removing
+the safety boundary.
 
 Exact prompt:
 
-> In the Symbiome repository, read `catalog-audit/CATALOG_SYNC_RUNBOOK.md`, load the bundled workspace Python runtime if `python` is not on PATH, then run `python catalog-audit/continue_catalog_sync.py --config catalog-audit/private/drive-sync/config.json --mode continue --allow-network`. Continue the initial backlog as well as later deltas. Keep all private files and credentials out of Git and report only the aggregate JSON. Do not weaken a gate, invent rights or human-made evidence, print IDs/titles/URLs, or publish from folder membership alone. If the run reports `review_required`, stop and report the selection count plus aggregate selection hash so a human can review the ignored selection and create both evidence files. Run `--mode publish` only when the two existing private evidence files match the current selection exactly; otherwise do not publish. On transient failure, leave resumable state intact and report only the stable aggregate error code.
+> In the Symbiome repository, read `catalog-audit/CATALOG_SYNC_RUNBOOK.md`, load the bundled workspace Python runtime if `python` is not on PATH, then run `python catalog-audit/continue_catalog_sync.py --config catalog-audit/private/drive-sync/config.json --mode continue --allow-network`. Continue the initial backlog as well as later deltas. Keep all private files and credentials out of Git and report only the aggregate JSON. Do not weaken a gate, invent rights or human-made evidence, print IDs/titles/URLs, or publish from folder membership alone. If the run reports `publish_ready`, immediately run the same wrapper with `--mode publish --allow-network`; the wrapper must validate the scoped owner attestation and the exact current selection before applying. If it reports `review_required`, stop and report only the aggregate selection count/hash for human review. Never publish review/quarantine rows. On transient failure, leave resumable state intact and report only the stable aggregate error code.
