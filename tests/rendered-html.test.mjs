@@ -592,7 +592,11 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.equal(suggestedUseGroups.length, 8);
   assert.equal(moodGroups.length, 8);
   assert.deepEqual(new Set(suggestedUseGroups.flat()), new Set(["travel", "cinematic", "lifestyle-vlogs", "study-focus", "gaming-streaming", "podcasts", "wellness", "food-hospitality"]));
-  assert.deepEqual(new Set(moodGroups.flat()), new Set(["Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy"]));
+  assert.deepEqual(new Set(moodGroups.flat()), new Set([
+    "Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy",
+    "Laid Back", "Relaxing", "Peaceful", "Hopeful", "Happy", "Floating", "Sad", "Sentimental", "Dark",
+    "Mysterious", "Smooth", "Romantic",
+  ]));
 
   const covers = [...featureSource.matchAll(/cover:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.equal(covers.length, 8);
