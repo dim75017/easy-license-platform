@@ -504,7 +504,19 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /<audio[\s\S]{0,180}preload="none"[\s\S]{0,300}onEnded=\{preview\.onEnded\}[\s\S]{0,160}onError=\{preview\.onError\}/);
   assert.match(showcase, /data-playing=\{isPlaying \|\| undefined\}/);
   assert.match(showcase, /preview\.toggle\(\{ id: track\.spotifyId, previewUrl: track\.previewUrl \}\)/);
-  assert.match(showcase, /Array\.from\(\{ length: 48 \}/);
+  const publicWave = showcase.match(/const TrackWave = memo\(function TrackWave\([\s\S]*?\n\}\);/);
+  assert.ok(publicWave, "the public catalogue and Creators sampler should share one memoized waveform");
+  assert.match(publicWave[0], /const canvasRef = useRef<HTMLCanvasElement>\(null\)/);
+  assert.match(publicWave[0], /const clampedProgress = Math\.max\(0, Math\.min\(1, progress\)\);[\s\S]{0,100}const progressRef = useRef\(clampedProgress\)/);
+  assert.match(publicWave[0], /progressRef\.current = clampedProgress/);
+  assert.match(publicWave[0], /const count = Math\.max\(1, Math\.floor\(width \/ pitch\)\)/);
+  assert.match(publicWave[0], /const playedBars = Math\.round\(progressRef\.current \* count\)/);
+  assert.match(publicWave[0], /context\.fillRect\(x, y, snappedBarWidth, barHeight\)/);
+  assert.match(publicWave[0], /const observer = new ResizeObserver\(drawWave\);\s*observer\.observe\(canvas\);\s*return \(\) => observer\.disconnect\(\)/);
+  assert.equal((publicWave[0].match(/<canvas\b/g) ?? []).length, 1, "the public waveform should render one responsive canvas");
+  assert.doesNotMatch(publicWave[0], /Array\.from\(\{\s*length:|<i\b/, "public waveform bars should be painted rather than mounted as DOM nodes");
+  assert.match(publicWave[0], /<input[\s\S]{0,80}type="range"[\s\S]{0,160}max=\{active && canSeek \? duration : 1\}[\s\S]{0,220}onChange=\{\(event\) => onSeek\(Number\(event\.currentTarget\.value\)\)\}[\s\S]{0,140}disabled=\{!active \|\| !canSeek\}/);
+  assert.match(showcase, /<TrackWave[\s\S]{0,260}progress=\{isActive \? preview\.progress : 0\}[\s\S]{0,180}onSeek=\{preview\.seekTo\}/);
   assert.match(showcase, /https:\/\/open\.spotify\.com\/track\/\$\{track\.spotifyId\}/);
   assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|open\.spotify\.com\/embed/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
@@ -597,6 +609,10 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(offerCss, /\.creator-editorial-cover\s*\{[\s\S]{0,180}aspect-ratio:\s*1/);
   assert.match(offerCss, /\.creator-editorial-cover img\s*\{[\s\S]{0,180}object-fit:\s*cover/);
   assert.match(offerCss, /V69: shared previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,100}\.creator-editorial-showcase \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
+  const publicPlayerCss = offerCss.slice(offerCss.indexOf("/* V70"));
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player\s*\{[^}]*grid-template-columns:\s*42px 34px minmax\(160px, 1fr\) 38px/);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player > time\s*\{[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
+  assert.match(publicPlayerCss, /@media \(min-width:\s*1081px\)\s*\{\s*\.public-shell \.creator-editorial-showcase \.creator-editorial-meta\s*\{\s*padding-left:\s*8px;/s);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -917,6 +933,8 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biome<\/span>/);
   assert.equal((header.match(/>Log in<\/Link>/g) ?? []).length, 1);
   assert.equal((header.match(/>Create account<\/Link>/g) ?? []).length, 1);
+  assert.match(header, /href="\/create-account\?mode=login"[^\n]*>Log in<\/Link>/);
+  assert.match(header, /href="\/create-account"[^\n]*>Create account<\/Link>/);
   assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
   assert.match(header, /if \(href === "\/"\) return pathname === "\/";/);
   assert.match(header, /For Creators/);
@@ -1147,6 +1165,56 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
   assert.match(supportCss, /--support-ink:\s*#292832[\s\S]*--support-paper:\s*#f7ebdd[\s\S]*--support-warm:\s*#fff9f1/i);
   assert.match(supportCss, /\.support-hero::before\s*\{[^}]*rgba\(224, 99, 67, \.26\)/s);
   assert.doesNotMatch(supportCss, /rgba\(150, 180, 255|rgba\(164, 178, 206/i);
+});
+
+test("account creation is a secure, persistent and static-demo-safe onboarding", async () => {
+  const [page, setup, css, footer, pricing, schema, runtime, route, layout] = await Promise.all([
+    source("app/create-account/page.tsx"),
+    source("app/components/AccountSetup.tsx"),
+    source("app/account-page.css"),
+    source("app/components/SiteFooter.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("db/schema.ts"),
+    source("db/account-runtime.ts"),
+    source("app/api/account/profile/route.ts"),
+    source("app/layout.tsx"),
+  ]);
+
+  assert.match(page, /<PublicShell>[\s\S]*<AccountSetup \/>[\s\S]*<\/PublicShell>/);
+  assert.match(page, /title:\s*"Create your account"/);
+  assert.match(page, /robots:\s*\{ index: false, follow: false \}/);
+  assert.match(setup, /<h1 id="account-title">Music ready for/);
+  assert.match(setup, /Continue with ChatGPT/);
+  assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
+  assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
+  assert.match(setup, /https:\/\/easy-license\.dsomoguy\.chatgpt\.site\/create-account/);
+  assert.match(setup, /fetch\("\/api\/account\/profile"/);
+  assert.match(setup, /method:\s*"POST"/);
+  assert.match(setup, /type="radio"[\s\S]*value="creator"/);
+  assert.match(setup, /type="radio"[\s\S]*value="pro"/);
+  assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
+  assert.match(setup, /No payment is taken today/);
+  assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
+  assert.match(footer, /href="\/create-account\?mode=login">Log in/);
+  assert.match(footer, /href="\/create-account">Create account/);
+  assert.equal((pricing.match(/href="\/create-account\?plan=(?:creator|pro)"/g) ?? []).length, 2);
+  assert.match(layout, /import "\.\/account-page\.css"/);
+
+  assert.match(schema, /export const userProfiles = sqliteTable\(\s*"user_profiles"/s);
+  assert.match(schema, /uniqueIndex\("idx_user_profiles_external_user_id"\)/);
+  assert.match(runtime, /CREATE TABLE IF NOT EXISTS user_profiles/);
+  assert.match(runtime, /CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_external_user_id/);
+  assert.match(route, /await sitesIdentityFromHeaders\(request\.headers\)/);
+  assert.match(route, /ON CONFLICT\(external_user_id\) DO UPDATE SET/);
+  assert.match(route, /if \(!isSameOrigin\(request\)\)/);
+  assert.match(route, /policies_acknowledgement_required/);
+  assert.doesNotMatch(route, /source\.userId|source\.email|source\.plan === "admin"/);
+
+  assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
+  assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /@media \(forced-colors: active\)/);
 });
 
 test("uses one calm plan-card hover across Home and Pricing", async () => {
@@ -1404,6 +1472,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
   assert.doesNotMatch(musicWorkspace, /ProductNavigation|music-product-nav/);
   assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
+  assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/, "Discover should open directly without the retired tuning setup");
 
   const navBlock = musicWorkspace.match(/const navGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const viewLabels/);
   assert.ok(navBlock, "the connected workspace should keep one canonical grouped navigation");
@@ -1423,6 +1492,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
   }
+
+  assert.match(musicWorkspace, /className="music-recent-releases" aria-labelledby="recent-releases-title"/);
+  assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
+  assert.match(musicWorkspace, /catalogLoadState === "live"[\s\S]{0,240}catalogLoadState === "loading"[\s\S]{0,180}Recent releases from the local catalogue/);
+  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,160}recentTracks\.map\(\(track\)/);
+  assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,520}<PlaybackGlyph playing=\{isPlaying\} \/>/);
+  assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
 
   assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
   assert.match(musicWorkspace, /type FacetKind = "genre" \| "mood" \| "theme" \| "artist"/);
@@ -1466,28 +1542,48 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /function formatPlaybackTime\(seconds: number\)[\s\S]{0,280}Math\.floor\(wholeSeconds \/ 60\)[\s\S]{0,160}padStart\(2, "0"\)/);
   assert.doesNotMatch(musicWorkspace, /music-player-skip|seekBy\(|Go (?:back|forward) 10 seconds|[−+]10/);
   assert.match(musicWorkspace, /function PlaybackGlyph\(\{ playing \}: \{ playing: boolean \}\)[\s\S]{0,120}className="music-player-icon" data-state=\{playing \? "pause" : "play"\} aria-hidden="true"/);
-  assert.equal((musicWorkspace.match(/<PlaybackGlyph playing=/g) ?? []).length, 2, "inline and fixed play buttons should share the CSS-drawn glyph");
+  assert.equal((musicWorkspace.match(/<PlaybackGlyph playing=/g) ?? []).length, 3, "recent, inline and fixed play buttons should share the playback glyph");
   assert.doesNotMatch(musicWorkspace, /isPlaying \? "Ⅱ"|preview\.isPlaying \? "Ⅱ"/);
   assert.match(musicWorkspace, /className="music-player-play"[\s\S]{0,220}aria-pressed=\{isPlaying\}>\s*<PlaybackGlyph playing=\{isPlaying\} \/>/);
   assert.equal((musicWorkspace.match(/className="music-player-seek"/g) ?? []).length, 2, "inline and fixed players should each expose one real seek range");
   assert.match(musicWorkspace, /className="music-player-seek" type="range" min="0" max=\{isActive && preview\.canSeek \? preview\.duration : 1\}[\s\S]{0,260}onChange=\{\(event\) => preview\.seekTo\(Number\(event\.currentTarget\.value\)\)\}[\s\S]{0,180}disabled=\{!isActive \|\| !preview\.canSeek\}/);
   assert.match(musicWorkspace, /className="music-player-time" dateTime=\{`PT\$\{Math\.floor\(isActive \? preview\.currentTime : 0\)\}S`\}>\{formatPlaybackTime\(isActive \? preview\.currentTime : 0\)\}<\/time>/);
+  assert.match(musicWorkspace, /role="listitem"\s*tabIndex=\{0\}[\s\S]{0,180}aria-label=\{`\$\{isPlaying \? "Pause" : "Play"\} \$\{track\.title\} by \$\{track\.artist\}`\}/);
+  assert.match(musicWorkspace, /onClick=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*togglePreview\(track\);\s*\}\}/);
+  assert.match(musicWorkspace, /onKeyDown=\{\(event\) => \{[\s\S]{0,160}event\.target !== event\.currentTarget[\s\S]{0,260}event\.key === "ContextMenu" \|\| \(event\.shiftKey && event\.key === "F10"\)[\s\S]{0,420}event\.key !== "Enter" && event\.key !== " "[\s\S]{0,120}togglePreview\(track\)/);
   const rowActions = musicWorkspace.match(/<div className="music-track-actions">([\s\S]*?)<\/div>/);
-  assert.ok(rowActions, "every music row should expose its three primary actions");
-  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 3, "track rows should expose Like, Add and Download only");
+  assert.ok(rowActions, "every music row should expose its four primary actions");
+  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 4, "track rows should expose Like, Add, Download and Share");
   assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
   assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
-  assert.match(rowActions[1], /onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,260}aria-label=\{`Download preview of \$\{track\.title\}[\s\S]{0,100}<TrackActionIcon kind="download"/);
+  assert.match(rowActions[1], /disabled=\{track\.previewDownloadUrl === null\}[\s\S]{0,260}onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,420}Licensed download unavailable for \$\{track\.title\}[\s\S]{0,260}<TrackActionIcon kind="download"/);
+  assert.match(rowActions[1], /onClick=\{\(\) => void shareTrack\(track\)\}[\s\S]{0,100}aria-label=\{`Copy link to \$\{track\.title\}`\}>\s*<TrackActionIcon kind="share" \/>/);
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
   const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
-  assert.ok(fixedPlayerActions, "the fixed player should mirror the three primary actions");
-  assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 3, "the fixed player should expose Like, Add and Download only");
+  assert.ok(fixedPlayerActions, "the fixed player should mirror the four primary actions");
+  assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 4, "the fixed player should expose Like, Add, Download and Share");
+  assert.match(fixedPlayerActions[1], /shareTrack\(selectedTrack\)[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
   assert.doesNotMatch(musicWorkspace, /More options for|music-track-more|>\s*(?:â€¢â€¢â€¢|•••)\s*<\/button>/, "the obsolete More action should not return");
-  assert.match(musicWorkspace, /function TrackActionIcon[\s\S]{0,520}music-action-like[\s\S]{0,180}music-action-playlist[\s\S]{0,180}music-action-download/);
+  const actionIcon = musicWorkspace.match(/function TrackActionIcon\([\s\S]*?\n\}/);
+  assert.ok(actionIcon, "the four actions should share one icon component");
+  assert.match(actionIcon[0], /kind: "like" \| "playlist" \| "download" \| "share"/);
+  assert.match(actionIcon[0], /<svg viewBox="0 0 24 24"[\s\S]{0,160}stroke="currentColor"/);
+  for (const kind of ["like", "playlist", "download", "share"]) {
+    assert.match(actionIcon[0], new RegExp(`kind === "${kind}"`), `${kind} should have an SVG glyph`);
+  }
 
-  assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(\(event\.target as HTMLElement\)\.closest\("button, a, input, select, textarea"\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions"\);/);
+  assert.match(musicWorkspace, /const trackControlSelector = "button, a, input, select, textarea, \[role='menu'\], \[role='dialog'\]"/);
+  assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions", event\.currentTarget\);/);
   assert.match(musicWorkspace, /id="music-track-context-menu"\s*className="music-track-context-menu"\s*role=\{state\.mode === "actions" \? "menu" : "dialog"\}\s*aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : `Add \$\{track\.title\} to a playlist`\}/);
-  assert.match(musicWorkspace, /role="menuitemcheckbox" aria-checked=\{liked\}[\s\S]{0,360}role="menuitem"[\s\S]{0,260}role="menuitem"/);
+  const contextActions = musicWorkspace.match(/state\.mode === "actions" \? \(\s*<div className="music-track-context-options">([\s\S]*?)<\/div>\s*\) : \(/);
+  assert.ok(contextActions, "the track context menu should expose one primary action group");
+  assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 4, "the context menu should expose Like, Add, Download and Share");
+  assert.match(contextActions[1], /role="menuitemcheckbox" aria-checked=\{liked\}/);
+  assert.match(contextActions[1], /<TrackActionIcon kind="playlist" \/>[\s\S]{0,80}Add to playlist/);
+  assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,140}Download listening copy[\s\S]{0,80}Download unavailable/);
+  assert.match(contextActions[1], /<TrackActionIcon kind="share" \/>[\s\S]{0,80}Copy track link/);
+  assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,200}window\.location\.pathname\.replace\(\/\\\/app\\\/\?\$\/u, "\/app"\)[\s\S]{0,120}new URL\(appPath, window\.location\.origin\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
+  assert.match(musicWorkspace, /navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,180}window\.prompt\("Copy this track link", shareUrl\)/);
   assert.match(musicWorkspace, /aria-pressed=\{containsTrack\}[\s\S]{0,260}Remove from playlist/);
   assert.match(musicWorkspace, /popover\.querySelector<HTMLButtonElement>\("button:not\(\[disabled\]\)"\)\?\.focus\(\)/);
   assert.match(musicWorkspace, /if \(event\.key === "Escape"\)[\s\S]{0,100}onClose\(true\)[\s\S]{0,180}\["ArrowDown", "ArrowUp", "Home", "End"\]/);
@@ -1517,19 +1613,18 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
   assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
-  assert.match(musicWorkspace, /const knownTrackIds = new Set\(workspaceTracks\.map\(\(track\) => track\.id\)\)/);
+  assert.match(musicWorkspace, /const knownTrackIds = new Set\(libraryTracks\.map\(\(track\) => track\.id\)\)/);
   assert.match(musicWorkspace, /record\.trackIds\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
   assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
-  assert.match(musicWorkspace, /fetch\(track\.previewUrl\)[\s\S]{0,500}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\} \(preview\)\.mp3`[\s\S]{0,320}setDownloadedTrackIds/);
+  assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
-  assert.match(musicWorkspace, /Preview downloads are listed here\. Licensed masters will replace them when checkout and rights verification are connected\./);
+  assert.match(musicWorkspace, /Full-length compressed listening copies are listed here\. WAV masters stay reserved for licensed downloads\./);
   assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);
-  assert.match(musicWorkspace, /Tune the library/);
-  assert.match(musicWorkspace, /easy-license-library-tuned/);
+  assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/);
   assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);
   assert.match(musicWorkspace, /workspace-playlist-photo/);
   assert.match(musicWorkspace, /lofiGirlPlaylists\.map/);
@@ -1563,9 +1658,12 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v13Start > v12Start, "the functional player overrides should follow the connected layout");
   const v14Start = musicWorkspaceCss.indexOf("/* V14");
   assert.ok(v14Start > v13Start, "the taxonomy and track action overrides should follow the functional player block");
+  const v15Start = musicWorkspaceCss.indexOf("/* V15");
+  assert.ok(v15Start > v14Start, "recent releases, clickable rows and share actions should follow the V14 taxonomy block");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
-  const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start);
+  const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
+  const musicWorkspaceV15 = musicWorkspaceCss.slice(v15Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -1589,6 +1687,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /article\.music-track-row\[role="listitem"\]\s*\{[^}]*min-height:\s*82px;[^}]*padding-block:\s*9px/s);
   assert.match(musicWorkspaceV13, /\.music-track-identity > img\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;[^}]*object-fit:\s*cover/s);
   assert.match(musicWorkspaceV13, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 32px minmax\(160px, 1fr\) 32px;[^}]*gap:\s*8px/s);
+  assert.match(musicWorkspaceV13, /\.music-player-time\s*\{[^}]*color:\s*rgba\(41, 40, 50, \.68\);[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
   assert.match(musicWorkspaceV13, /\.music-player-transport\s*\{[^}]*grid-template-columns:\s*40px;[^}]*place-items:\s*center/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-skip\b/);
   assert.match(musicWorkspaceV13, /\.music-player-play\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px/s);
@@ -1669,9 +1768,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v14BaseCss, /\.music-track-table-head,\s*article\.music-track-row\[role="listitem"\]\s*\{[^}]*grid-template-columns:\s*minmax\(210px, \.78fr\) minmax\(300px, 1\.45fr\) minmax\(88px, \.36fr\) minmax\(118px, \.48fr\) 140px;[^}]*gap:\s*16px/s);
   assert.match(v14BaseCss, /\.music-track-taxonomy-label\s*\{\s*display:\s*none;/);
   assert.match(v14BaseCss, /\.music-action-icon\s*\{[^}]*width:\s*18px;[^}]*height:\s*18px/s);
-  for (const iconSelector of ["music-action-like::before", "music-action-playlist::before", "music-action-download::before"]) {
-    assert.match(v14BaseCss, new RegExp(`\\.${iconSelector.replace("::", "::")}\\s*\\{`), `${iconSelector} should stay CSS-drawn`);
-  }
+  assert.match(musicWorkspaceV15, /\.music-action-icon svg\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*height:\s*100%/s);
+  assert.match(musicWorkspaceV15, /\.music-action-icon::before,[\s\S]{0,180}\.music-action-icon > b\s*\{[^}]*display:\s*none !important;[^}]*content:\s*none !important/s);
+  assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*14px;/s);
+  assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button\s*\{[^}]*min-height:\s*44px/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--wm-clay\);[^}]*outline-offset:\s*1px/s);
@@ -1771,9 +1872,10 @@ test("ships a constrained D1 lead schema and current worker compatibility", asyn
   assert.match(migration, /PRAGMA optimize/);
   assert.match(hosting, /"d1": "DB"/);
   assert.match(vite, /compatibility_date: "2026-08-03"/);
-  assert.doesNotMatch(vite, /nodejs_compat/);
+  assert.match(vite, /compatibility_flags: \["nodejs_compat"\]/);
+  assert.match(vite, /migrations_dir: "drizzle"/);
   assert.match(wrangler, /"compatibility_date": "2026-08-03"/);
-  assert.match(wrangler, /"binding": "DB"/);
+  assert.doesNotMatch(wrangler, /"binding": "DB"/);
   assert.doesNotMatch(wrangler, /nodejs_compat/);
 });
 

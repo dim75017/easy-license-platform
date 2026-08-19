@@ -1,0 +1,1404 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "b84bf156-6baa-42f9-a04c-84290cb972dd",
+  "prevId": "33efe07a-1093-465b-834a-ebc2225278a7",
+  "tables": {
+    "artists": {
+      "name": "artists",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_name": {
+          "name": "normalized_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "spotify_artist_id": {
+          "name": "spotify_artist_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "idx_artists_normalized_name": {
+          "name": "idx_artists_normalized_name",
+          "columns": [
+            "normalized_name"
+          ],
+          "isUnique": false
+        },
+        "idx_artists_status_name": {
+          "name": "idx_artists_status_name",
+          "columns": [
+            "status",
+            "normalized_name"
+          ],
+          "isUnique": false
+        },
+        "idx_artists_spotify_artist_id": {
+          "name": "idx_artists_spotify_artist_id",
+          "columns": [
+            "spotify_artist_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "artists_status_check": {
+          "name": "artists_status_check",
+          "value": "\"artists\".\"status\" IN ('active', 'hidden', 'archived')"
+        },
+        "artists_name_length_check": {
+          "name": "artists_name_length_check",
+          "value": "length(\"artists\".\"name\") BETWEEN 1 AND 300"
+        },
+        "artists_normalized_name_length_check": {
+          "name": "artists_normalized_name_length_check",
+          "value": "length(\"artists\".\"normalized_name\") BETWEEN 1 AND 300"
+        },
+        "artists_spotify_id_length_check": {
+          "name": "artists_spotify_id_length_check",
+          "value": "\"artists\".\"spotify_artist_id\" IS NULL OR length(\"artists\".\"spotify_artist_id\") BETWEEN 1 AND 64"
+        }
+      }
+    },
+    "ingest_items": {
+      "name": "ingest_items",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "batch_key": {
+          "name": "batch_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_key": {
+          "name": "source_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_row_number": {
+          "name": "source_row_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_file_name": {
+          "name": "source_file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_sha256": {
+          "name": "source_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "declared_title": {
+          "name": "declared_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "declared_artist": {
+          "name": "declared_artist",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "declared_duration_ms": {
+          "name": "declared_duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "measured_duration_ms": {
+          "name": "measured_duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "track_id": {
+          "name": "track_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "asset_id": {
+          "name": "asset_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'discovered'"
+        },
+        "failure_code": {
+          "name": "failure_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "review_note": {
+          "name": "review_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "uq_ingest_items_batch_source": {
+          "name": "uq_ingest_items_batch_source",
+          "columns": [
+            "batch_key",
+            "source_key"
+          ],
+          "isUnique": true
+        },
+        "idx_ingest_items_status_updated_at": {
+          "name": "idx_ingest_items_status_updated_at",
+          "columns": [
+            "status",
+            "updated_at"
+          ],
+          "isUnique": false
+        },
+        "idx_ingest_items_track_id": {
+          "name": "idx_ingest_items_track_id",
+          "columns": [
+            "track_id"
+          ],
+          "isUnique": false
+        },
+        "idx_ingest_items_source_sha256": {
+          "name": "idx_ingest_items_source_sha256",
+          "columns": [
+            "source_sha256"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "ingest_items_track_id_tracks_id_fk": {
+          "name": "ingest_items_track_id_tracks_id_fk",
+          "tableFrom": "ingest_items",
+          "tableTo": "tracks",
+          "columnsFrom": [
+            "track_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "ingest_items_asset_id_track_assets_id_fk": {
+          "name": "ingest_items_asset_id_track_assets_id_fk",
+          "tableFrom": "ingest_items",
+          "tableTo": "track_assets",
+          "columnsFrom": [
+            "asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ingest_items_status_check": {
+          "name": "ingest_items_status_check",
+          "value": "\"ingest_items\".\"status\" IN ('discovered', 'inspecting', 'matching', 'needs_review', 'ready', 'imported', 'quarantined', 'skipped', 'failed')"
+        },
+        "ingest_items_batch_key_length_check": {
+          "name": "ingest_items_batch_key_length_check",
+          "value": "length(\"ingest_items\".\"batch_key\") BETWEEN 1 AND 160"
+        },
+        "ingest_items_source_key_length_check": {
+          "name": "ingest_items_source_key_length_check",
+          "value": "length(\"ingest_items\".\"source_key\") BETWEEN 1 AND 160"
+        },
+        "ingest_items_source_row_number_check": {
+          "name": "ingest_items_source_row_number_check",
+          "value": "\"ingest_items\".\"source_row_number\" IS NULL OR \"ingest_items\".\"source_row_number\" >= 1"
+        },
+        "ingest_items_source_file_name_length_check": {
+          "name": "ingest_items_source_file_name_length_check",
+          "value": "length(\"ingest_items\".\"source_file_name\") BETWEEN 1 AND 1000"
+        },
+        "ingest_items_source_sha256_check": {
+          "name": "ingest_items_source_sha256_check",
+          "value": "\"ingest_items\".\"source_sha256\" IS NULL OR length(\"ingest_items\".\"source_sha256\") = 64"
+        },
+        "ingest_items_declared_title_length_check": {
+          "name": "ingest_items_declared_title_length_check",
+          "value": "\"ingest_items\".\"declared_title\" IS NULL OR length(\"ingest_items\".\"declared_title\") BETWEEN 1 AND 500"
+        },
+        "ingest_items_declared_artist_length_check": {
+          "name": "ingest_items_declared_artist_length_check",
+          "value": "\"ingest_items\".\"declared_artist\" IS NULL OR length(\"ingest_items\".\"declared_artist\") BETWEEN 1 AND 1000"
+        },
+        "ingest_items_declared_duration_ms_check": {
+          "name": "ingest_items_declared_duration_ms_check",
+          "value": "\"ingest_items\".\"declared_duration_ms\" IS NULL OR \"ingest_items\".\"declared_duration_ms\" BETWEEN 1 AND 86400000"
+        },
+        "ingest_items_measured_duration_ms_check": {
+          "name": "ingest_items_measured_duration_ms_check",
+          "value": "\"ingest_items\".\"measured_duration_ms\" IS NULL OR \"ingest_items\".\"measured_duration_ms\" BETWEEN 1 AND 86400000"
+        },
+        "ingest_items_failure_code_length_check": {
+          "name": "ingest_items_failure_code_length_check",
+          "value": "\"ingest_items\".\"failure_code\" IS NULL OR length(\"ingest_items\".\"failure_code\") BETWEEN 1 AND 120"
+        },
+        "ingest_items_review_note_length_check": {
+          "name": "ingest_items_review_note_length_check",
+          "value": "\"ingest_items\".\"review_note\" IS NULL OR length(\"ingest_items\".\"review_note\") BETWEEN 1 AND 4000"
+        }
+      }
+    },
+    "leads": {
+      "name": "leads",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "company": {
+          "name": "company",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "project": {
+          "name": "project",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "use_case": {
+          "name": "use_case",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "budget": {
+          "name": "budget",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timeline": {
+          "name": "timeline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'new'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "idx_leads_created_at_id": {
+          "name": "idx_leads_created_at_id",
+          "columns": [
+            "created_at",
+            "id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "leads_type_check": {
+          "name": "leads_type_check",
+          "value": "\"leads\".\"type\" IN ('sync', 'retail_waitlist')"
+        },
+        "leads_status_check": {
+          "name": "leads_status_check",
+          "value": "\"leads\".\"status\" IN ('new', 'contacted', 'qualified', 'closed', 'archived')"
+        },
+        "leads_email_length_check": {
+          "name": "leads_email_length_check",
+          "value": "length(\"leads\".\"email\") BETWEEN 3 AND 254"
+        },
+        "leads_name_length_check": {
+          "name": "leads_name_length_check",
+          "value": "length(\"leads\".\"name\") BETWEEN 1 AND 120"
+        },
+        "leads_company_length_check": {
+          "name": "leads_company_length_check",
+          "value": "length(\"leads\".\"company\") BETWEEN 1 AND 160"
+        },
+        "leads_project_length_check": {
+          "name": "leads_project_length_check",
+          "value": "\"leads\".\"project\" IS NULL OR length(\"leads\".\"project\") BETWEEN 1 AND 4000"
+        },
+        "leads_use_case_length_check": {
+          "name": "leads_use_case_length_check",
+          "value": "\"leads\".\"use_case\" IS NULL OR length(\"leads\".\"use_case\") BETWEEN 1 AND 4000"
+        },
+        "leads_budget_length_check": {
+          "name": "leads_budget_length_check",
+          "value": "\"leads\".\"budget\" IS NULL OR length(\"leads\".\"budget\") BETWEEN 1 AND 120"
+        },
+        "leads_timeline_length_check": {
+          "name": "leads_timeline_length_check",
+          "value": "\"leads\".\"timeline\" IS NULL OR length(\"leads\".\"timeline\") BETWEEN 1 AND 120"
+        },
+        "leads_request_shape_check": {
+          "name": "leads_request_shape_check",
+          "value": "(\n        (\"leads\".\"type\" = 'sync' AND \"leads\".\"project\" IS NOT NULL AND \"leads\".\"use_case\" IS NULL)\n        OR\n        (\"leads\".\"type\" = 'retail_waitlist' AND \"leads\".\"use_case\" IS NOT NULL AND \"leads\".\"project\" IS NULL)\n      )"
+        }
+      }
+    },
+    "releases": {
+      "name": "releases",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "primary_artist_id": {
+          "name": "primary_artist_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_title": {
+          "name": "normalized_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "artist_credit": {
+          "name": "artist_credit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'other'"
+        },
+        "upc": {
+          "name": "upc",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "release_date": {
+          "name": "release_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_album_id": {
+          "name": "spotify_album_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cover_source_url": {
+          "name": "cover_source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cover_storage_key": {
+          "name": "cover_storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "idx_releases_artist_status": {
+          "name": "idx_releases_artist_status",
+          "columns": [
+            "primary_artist_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_releases_normalized_title": {
+          "name": "idx_releases_normalized_title",
+          "columns": [
+            "normalized_title"
+          ],
+          "isUnique": false
+        },
+        "idx_releases_upc": {
+          "name": "idx_releases_upc",
+          "columns": [
+            "upc"
+          ],
+          "isUnique": false
+        },
+        "idx_releases_spotify_album_id": {
+          "name": "idx_releases_spotify_album_id",
+          "columns": [
+            "spotify_album_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "releases_primary_artist_id_artists_id_fk": {
+          "name": "releases_primary_artist_id_artists_id_fk",
+          "tableFrom": "releases",
+          "tableTo": "artists",
+          "columnsFrom": [
+            "primary_artist_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "releases_type_check": {
+          "name": "releases_type_check",
+          "value": "\"releases\".\"type\" IN ('single', 'ep', 'album', 'compilation', 'other')"
+        },
+        "releases_status_check": {
+          "name": "releases_status_check",
+          "value": "\"releases\".\"status\" IN ('draft', 'needs_review', 'ready', 'published', 'hidden', 'archived')"
+        },
+        "releases_title_length_check": {
+          "name": "releases_title_length_check",
+          "value": "length(\"releases\".\"title\") BETWEEN 1 AND 500"
+        },
+        "releases_normalized_title_length_check": {
+          "name": "releases_normalized_title_length_check",
+          "value": "length(\"releases\".\"normalized_title\") BETWEEN 1 AND 500"
+        },
+        "releases_artist_credit_length_check": {
+          "name": "releases_artist_credit_length_check",
+          "value": "length(\"releases\".\"artist_credit\") BETWEEN 1 AND 1000"
+        },
+        "releases_upc_length_check": {
+          "name": "releases_upc_length_check",
+          "value": "\"releases\".\"upc\" IS NULL OR length(\"releases\".\"upc\") BETWEEN 8 AND 14"
+        },
+        "releases_release_date_length_check": {
+          "name": "releases_release_date_length_check",
+          "value": "\"releases\".\"release_date\" IS NULL OR length(\"releases\".\"release_date\") IN (4, 7, 10)"
+        },
+        "releases_spotify_album_id_length_check": {
+          "name": "releases_spotify_album_id_length_check",
+          "value": "\"releases\".\"spotify_album_id\" IS NULL OR length(\"releases\".\"spotify_album_id\") BETWEEN 1 AND 64"
+        },
+        "releases_cover_source_url_length_check": {
+          "name": "releases_cover_source_url_length_check",
+          "value": "\"releases\".\"cover_source_url\" IS NULL OR length(\"releases\".\"cover_source_url\") BETWEEN 1 AND 2048"
+        },
+        "releases_cover_storage_key_length_check": {
+          "name": "releases_cover_storage_key_length_check",
+          "value": "\"releases\".\"cover_storage_key\" IS NULL OR length(\"releases\".\"cover_storage_key\") BETWEEN 1 AND 1000"
+        }
+      }
+    },
+    "spotify_matches": {
+      "name": "spotify_matches",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "track_id": {
+          "name": "track_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "spotify_track_id": {
+          "name": "spotify_track_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "spotify_album_id": {
+          "name": "spotify_album_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_title": {
+          "name": "spotify_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_artist_credit": {
+          "name": "spotify_artist_credit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_album_title": {
+          "name": "spotify_album_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_isrc": {
+          "name": "spotify_isrc",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "spotify_duration_ms": {
+          "name": "spotify_duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_delta_ms": {
+          "name": "duration_delta_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cover_source_url": {
+          "name": "cover_source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "method": {
+          "name": "method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'candidate'"
+        },
+        "checked_at": {
+          "name": "checked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "uq_spotify_matches_track_candidate": {
+          "name": "uq_spotify_matches_track_candidate",
+          "columns": [
+            "track_id",
+            "spotify_track_id"
+          ],
+          "isUnique": true
+        },
+        "uq_spotify_matches_verified_track": {
+          "name": "uq_spotify_matches_verified_track",
+          "columns": [
+            "track_id"
+          ],
+          "isUnique": true,
+          "where": "\"spotify_matches\".\"status\" = 'verified'"
+        },
+        "idx_spotify_matches_track_status_score": {
+          "name": "idx_spotify_matches_track_status_score",
+          "columns": [
+            "track_id",
+            "status",
+            "score"
+          ],
+          "isUnique": false
+        },
+        "idx_spotify_matches_spotify_track_id": {
+          "name": "idx_spotify_matches_spotify_track_id",
+          "columns": [
+            "spotify_track_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "spotify_matches_track_id_tracks_id_fk": {
+          "name": "spotify_matches_track_id_tracks_id_fk",
+          "tableFrom": "spotify_matches",
+          "tableTo": "tracks",
+          "columnsFrom": [
+            "track_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "spotify_matches_method_check": {
+          "name": "spotify_matches_method_check",
+          "value": "\"spotify_matches\".\"method\" IN ('distributor_uri', 'orchard_uri', 'isrc', 'exact_metadata', 'metadata_duration', 'manual')"
+        },
+        "spotify_matches_status_check": {
+          "name": "spotify_matches_status_check",
+          "value": "\"spotify_matches\".\"status\" IN ('candidate', 'verified', 'rejected', 'stale')"
+        },
+        "spotify_matches_verified_shape_check": {
+          "name": "spotify_matches_verified_shape_check",
+          "value": "\"spotify_matches\".\"status\" != 'verified' OR (\n        \"spotify_matches\".\"spotify_album_id\" IS NOT NULL\n        AND \"spotify_matches\".\"spotify_title\" IS NOT NULL\n        AND \"spotify_matches\".\"spotify_artist_credit\" IS NOT NULL\n        AND \"spotify_matches\".\"spotify_album_title\" IS NOT NULL\n        AND \"spotify_matches\".\"spotify_duration_ms\" IS NOT NULL\n        AND \"spotify_matches\".\"duration_delta_ms\" IS NOT NULL\n      )"
+        },
+        "spotify_matches_track_id_length_check": {
+          "name": "spotify_matches_track_id_length_check",
+          "value": "length(\"spotify_matches\".\"spotify_track_id\") BETWEEN 1 AND 64"
+        },
+        "spotify_matches_album_id_length_check": {
+          "name": "spotify_matches_album_id_length_check",
+          "value": "\"spotify_matches\".\"spotify_album_id\" IS NULL OR length(\"spotify_matches\".\"spotify_album_id\") BETWEEN 1 AND 64"
+        },
+        "spotify_matches_title_length_check": {
+          "name": "spotify_matches_title_length_check",
+          "value": "\"spotify_matches\".\"spotify_title\" IS NULL OR length(\"spotify_matches\".\"spotify_title\") BETWEEN 1 AND 500"
+        },
+        "spotify_matches_artist_credit_length_check": {
+          "name": "spotify_matches_artist_credit_length_check",
+          "value": "\"spotify_matches\".\"spotify_artist_credit\" IS NULL OR length(\"spotify_matches\".\"spotify_artist_credit\") BETWEEN 1 AND 1000"
+        },
+        "spotify_matches_album_title_length_check": {
+          "name": "spotify_matches_album_title_length_check",
+          "value": "\"spotify_matches\".\"spotify_album_title\" IS NULL OR length(\"spotify_matches\".\"spotify_album_title\") BETWEEN 1 AND 500"
+        },
+        "spotify_matches_isrc_length_check": {
+          "name": "spotify_matches_isrc_length_check",
+          "value": "\"spotify_matches\".\"spotify_isrc\" IS NULL OR length(\"spotify_matches\".\"spotify_isrc\") = 12"
+        },
+        "spotify_matches_duration_ms_check": {
+          "name": "spotify_matches_duration_ms_check",
+          "value": "\"spotify_matches\".\"spotify_duration_ms\" IS NULL OR \"spotify_matches\".\"spotify_duration_ms\" BETWEEN 1 AND 86400000"
+        },
+        "spotify_matches_duration_delta_ms_check": {
+          "name": "spotify_matches_duration_delta_ms_check",
+          "value": "\"spotify_matches\".\"duration_delta_ms\" IS NULL OR \"spotify_matches\".\"duration_delta_ms\" BETWEEN 0 AND 86400000"
+        },
+        "spotify_matches_cover_source_url_length_check": {
+          "name": "spotify_matches_cover_source_url_length_check",
+          "value": "\"spotify_matches\".\"cover_source_url\" IS NULL OR length(\"spotify_matches\".\"cover_source_url\") BETWEEN 1 AND 2048"
+        },
+        "spotify_matches_score_check": {
+          "name": "spotify_matches_score_check",
+          "value": "\"spotify_matches\".\"score\" BETWEEN 0 AND 10000"
+        }
+      }
+    },
+    "track_assets": {
+      "name": "track_assets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "track_id": {
+          "name": "track_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "storage_key": {
+          "name": "storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "byte_size": {
+          "name": "byte_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "uq_track_assets_storage_key": {
+          "name": "uq_track_assets_storage_key",
+          "columns": [
+            "storage_key"
+          ],
+          "isUnique": true
+        },
+        "idx_track_assets_track_kind_status": {
+          "name": "idx_track_assets_track_kind_status",
+          "columns": [
+            "track_id",
+            "kind",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_track_assets_sha256": {
+          "name": "idx_track_assets_sha256",
+          "columns": [
+            "sha256"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "track_assets_track_id_tracks_id_fk": {
+          "name": "track_assets_track_id_tracks_id_fk",
+          "tableFrom": "track_assets",
+          "tableTo": "tracks",
+          "columnsFrom": [
+            "track_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "track_assets_kind_check": {
+          "name": "track_assets_kind_check",
+          "value": "\"track_assets\".\"kind\" IN ('source_master', 'streaming_copy', 'download_copy', 'waveform_peaks')"
+        },
+        "track_assets_status_check": {
+          "name": "track_assets_status_check",
+          "value": "\"track_assets\".\"status\" IN ('pending', 'available', 'quarantined', 'failed', 'deleted')"
+        },
+        "track_assets_storage_key_length_check": {
+          "name": "track_assets_storage_key_length_check",
+          "value": "length(\"track_assets\".\"storage_key\") BETWEEN 1 AND 1000"
+        },
+        "track_assets_mime_type_length_check": {
+          "name": "track_assets_mime_type_length_check",
+          "value": "length(\"track_assets\".\"mime_type\") BETWEEN 1 AND 120"
+        },
+        "track_assets_byte_size_check": {
+          "name": "track_assets_byte_size_check",
+          "value": "\"track_assets\".\"byte_size\" IS NULL OR \"track_assets\".\"byte_size\" >= 1"
+        },
+        "track_assets_duration_ms_check": {
+          "name": "track_assets_duration_ms_check",
+          "value": "\"track_assets\".\"duration_ms\" IS NULL OR \"track_assets\".\"duration_ms\" BETWEEN 1 AND 86400000"
+        },
+        "track_assets_sha256_check": {
+          "name": "track_assets_sha256_check",
+          "value": "\"track_assets\".\"sha256\" IS NULL OR length(\"track_assets\".\"sha256\") = 64"
+        }
+      }
+    },
+    "tracks": {
+      "name": "tracks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "release_id": {
+          "name": "release_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "primary_artist_id": {
+          "name": "primary_artist_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_title": {
+          "name": "normalized_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "artist_credit": {
+          "name": "artist_credit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version_label": {
+          "name": "version_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isrc": {
+          "name": "isrc",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "disc_number": {
+          "name": "disc_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "track_number": {
+          "name": "track_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "genre": {
+          "name": "genre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mood": {
+          "name": "mood",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "theme": {
+          "name": "theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rights_status": {
+          "name": "rights_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "idx_tracks_release_position": {
+          "name": "idx_tracks_release_position",
+          "columns": [
+            "release_id",
+            "disc_number",
+            "track_number"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_release_status": {
+          "name": "idx_tracks_release_status",
+          "columns": [
+            "release_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_artist_status": {
+          "name": "idx_tracks_artist_status",
+          "columns": [
+            "primary_artist_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_rights_status": {
+          "name": "idx_tracks_rights_status",
+          "columns": [
+            "rights_status",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_isrc": {
+          "name": "idx_tracks_isrc",
+          "columns": [
+            "isrc"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_normalized_title": {
+          "name": "idx_tracks_normalized_title",
+          "columns": [
+            "normalized_title"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_status_genre": {
+          "name": "idx_tracks_status_genre",
+          "columns": [
+            "status",
+            "genre"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_status_mood": {
+          "name": "idx_tracks_status_mood",
+          "columns": [
+            "status",
+            "mood"
+          ],
+          "isUnique": false
+        },
+        "idx_tracks_status_theme": {
+          "name": "idx_tracks_status_theme",
+          "columns": [
+            "status",
+            "theme"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "tracks_release_id_releases_id_fk": {
+          "name": "tracks_release_id_releases_id_fk",
+          "tableFrom": "tracks",
+          "tableTo": "releases",
+          "columnsFrom": [
+            "release_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "tracks_primary_artist_id_artists_id_fk": {
+          "name": "tracks_primary_artist_id_artists_id_fk",
+          "tableFrom": "tracks",
+          "tableTo": "artists",
+          "columnsFrom": [
+            "primary_artist_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tracks_status_check": {
+          "name": "tracks_status_check",
+          "value": "\"tracks\".\"status\" IN ('draft', 'needs_review', 'ready', 'published', 'hidden', 'archived')"
+        },
+        "tracks_rights_status_check": {
+          "name": "tracks_rights_status_check",
+          "value": "\"tracks\".\"rights_status\" IN ('pending', 'cleared', 'restricted')"
+        },
+        "tracks_publish_rights_check": {
+          "name": "tracks_publish_rights_check",
+          "value": "\"tracks\".\"status\" != 'published' OR \"tracks\".\"rights_status\" = 'cleared'"
+        },
+        "tracks_title_length_check": {
+          "name": "tracks_title_length_check",
+          "value": "length(\"tracks\".\"title\") BETWEEN 1 AND 500"
+        },
+        "tracks_normalized_title_length_check": {
+          "name": "tracks_normalized_title_length_check",
+          "value": "length(\"tracks\".\"normalized_title\") BETWEEN 1 AND 500"
+        },
+        "tracks_artist_credit_length_check": {
+          "name": "tracks_artist_credit_length_check",
+          "value": "length(\"tracks\".\"artist_credit\") BETWEEN 1 AND 1000"
+        },
+        "tracks_version_label_length_check": {
+          "name": "tracks_version_label_length_check",
+          "value": "\"tracks\".\"version_label\" IS NULL OR length(\"tracks\".\"version_label\") BETWEEN 1 AND 300"
+        },
+        "tracks_isrc_length_check": {
+          "name": "tracks_isrc_length_check",
+          "value": "\"tracks\".\"isrc\" IS NULL OR length(\"tracks\".\"isrc\") = 12"
+        },
+        "tracks_disc_number_check": {
+          "name": "tracks_disc_number_check",
+          "value": "\"tracks\".\"disc_number\" >= 1"
+        },
+        "tracks_track_number_check": {
+          "name": "tracks_track_number_check",
+          "value": "\"tracks\".\"track_number\" IS NULL OR \"tracks\".\"track_number\" >= 1"
+        },
+        "tracks_duration_ms_check": {
+          "name": "tracks_duration_ms_check",
+          "value": "\"tracks\".\"duration_ms\" IS NULL OR \"tracks\".\"duration_ms\" BETWEEN 1 AND 86400000"
+        },
+        "tracks_genre_length_check": {
+          "name": "tracks_genre_length_check",
+          "value": "\"tracks\".\"genre\" IS NULL OR length(\"tracks\".\"genre\") BETWEEN 1 AND 120"
+        },
+        "tracks_mood_length_check": {
+          "name": "tracks_mood_length_check",
+          "value": "\"tracks\".\"mood\" IS NULL OR length(\"tracks\".\"mood\") BETWEEN 1 AND 120"
+        },
+        "tracks_theme_length_check": {
+          "name": "tracks_theme_length_check",
+          "value": "\"tracks\".\"theme\" IS NULL OR length(\"tracks\".\"theme\") BETWEEN 1 AND 120"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

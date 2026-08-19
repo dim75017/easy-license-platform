@@ -491,12 +491,13 @@ export const tracks: Track[] = [
 
 export type WorkspaceTrack = {
   id: string;
-  spotifyId: string;
-  previewUrl: `https://p.scdn.co/mp3-preview/${string}`;
-  spotifyUrl: string;
+  spotifyId: string | null;
+  previewUrl: string;
+  previewDownloadUrl?: string | null;
+  spotifyUrl: string | null;
   title: string;
   artist: string;
-  cover: string;
+  cover: string | null;
   genre: string;
   moods: readonly string[];
   themes: readonly MusicUseSlug[];

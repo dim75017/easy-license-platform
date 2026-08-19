@@ -57,8 +57,8 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="site-header-actions">
-            <Link className="header-login" href="/app" onClick={() => setOpen(false)}>Log in</Link>
-            <Link className="button button-small button-primary cta-swipe" href="/pricing" onClick={() => setOpen(false)}>Create account</Link>
+            <Link className="header-login" href="/create-account?mode=login" onClick={() => setOpen(false)}>Log in</Link>
+            <Link className="button button-small button-primary cta-swipe" href="/create-account" onClick={() => setOpen(false)}>Create account</Link>
           </div>
         </div>
       </div>

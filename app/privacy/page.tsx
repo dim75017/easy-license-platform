@@ -5,7 +5,7 @@ import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
 export const metadata: Metadata = {
   title: "Privacy",
-  description: "How the current Symbiome public site and its request forms handle personal information.",
+  description: "How Symbiome account setup, request forms and connected services handle personal information.",
 };
 
 export default function PrivacyPage() {
@@ -27,6 +27,17 @@ export default function PrivacyPage() {
             <>
               <p>The current public Symbiome site is a static GitHub Pages version. Its business and early-access forms display the interface, but the submitted information is not transmitted or stored by Symbiome in that public version.</p>
               <p>This behaviour is stated beside the form when the static version is running. A production version with live request handling will require a complete privacy notice before collection begins.</p>
+            </>
+          ),
+        },
+        {
+          id: "account-information",
+          eyebrow: "Account setup",
+          title: "Your workspace is tied to a secure identity.",
+          content: (
+            <>
+              <p>On the secure Symbiome app, account setup uses the identity supplied by the hosting sign-in service. Symbiome stores the resulting account identifier, email address, display name, optional company, chosen plan preference, primary publishing platform and consent choices.</p>
+              <p>Symbiome does not receive or store your sign-in password. Plan selection during setup records a preference only; it does not create a paid subscription or take payment.</p>
             </>
           ),
         },
@@ -64,8 +75,8 @@ export default function PrivacyPage() {
           content: (
             <>
               <p>Depending on applicable law, people may have rights to access, correct, delete, restrict or object to the processing of their personal information. A production privacy policy must identify the verified data controller, lawful bases, service providers, international transfers, retention periods and the route for exercising those rights.</p>
-              <p>Those Symbiome-specific details will be published before live data collection begins. For the separate <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website and its associated domains, consult the <a href="https://www.lofigirl.com/privacy" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</a>.</p>
-              <p className="support-notice">Last updated: 11 August 2026. This page should be updated before any production collection or material change in the service.</p>
+              <p>The verified data controller, service-provider details, international transfers, retention periods and a dedicated privacy-contact route must be completed before the service accepts payments or issues licences. For the separate <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website and its associated domains, consult the <a href="https://www.lofigirl.com/privacy" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</a>.</p>
+              <p className="support-notice">Last updated: 13 August 2026. This page should be reviewed before payments, licences or any material change in account processing.</p>
             </>
           ),
         },
