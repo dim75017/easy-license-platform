@@ -25,6 +25,7 @@ paste it into an issue, task or terminal transcript.
   "orchard": "catalog-audit/private/orchard.json",
   "driveSeed": "catalog-audit/private/lofi-drive-release-seed.json",
   "driveInventoryDirectory": "catalog-audit/private/lofi-drive-sync",
+  "centralDriveInventory": "catalog-audit/private/central-drive-connector/partial-inventory.json",
   "ffmpegExecutable": "catalog-audit/private/python-packages/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe",
   "driveInventoryReleasesPerRun": 50,
   "inspectionBatchSize": 50,
@@ -53,6 +54,16 @@ The public Drive crawler consumes the ignored 743-release seed through
 `sync_lofi_drive.py`; it does not require an API key, OAuth token or browser
 cookie. It checkpoints at most 50 releases per heartbeat until the initial
 backlog is complete, then continues to detect additions and changes.
+
+The optional `centralDriveInventory` is a private Google Drive connector/API
+snapshot of the flat `Fichiers` / `FICHIER` and `Artwork` /
+`Artwork les bon` folders below the same owner-approved Drive root. It is an
+additive recovery source for catalogue rows whose release folder is missing an
+audio or cover link. Connector page caps must be recorded as `complete: false`;
+a partial snapshot can add a positive deterministic match but can never remove
+or replace an existing release mapping. Refreshing that snapshot never writes
+to Drive and must keep all file IDs, names and links below
+`catalog-audit/private/`.
 
 Publication needs `pipelineToken` and `sitesAuthorization` in this ignored
 private config. Existing `CATALOG_PIPELINE_TOKEN` and
@@ -101,6 +112,16 @@ stale audio is excluded. Missing workbook artwork is filled only when a unique
 owned image, or a clearly ranked cover/front/artwork image, exists inside the
 same release folder; ambiguous or absent artwork is excluded.
 
+When `centralDriveInventory` exists, the drain also considers its flat central
+files after release-folder matching. Central WAVs are accepted only by a unique
+ISRC in the filename, a unique UPC+title association, or an exact normalized
+filename key that resolves to one workbook row. Rows already mapped from their
+release folder keep that mapping; a file matching several rows or several files
+matching one row is excluded. Central covers require one unique UPC filename or
+one release name that maps to a single UPC. `Artwork les bon` outranks the
+general `Artwork` folder only when exactly one image exists at that higher rank;
+ties stay excluded.
+
 The selected manifest is then processed to exhaustion in the same invocation,
 without the recurring lane's wall-clock cutoff, one track at a time and with
 one FFmpeg thread. Each selected WAV is downloaded
@@ -112,6 +133,23 @@ short but valid WAV do not block it. A corrupt, unreadable or undecodable file
 fails only its own checkpoint. Covers are kept when already bounded and square,
 otherwise normalized to a bounded square JPEG. Source masters stay in private
 storage; only listening copies, waveforms and cover delivery are public.
+
+The processor checkpoints each completed stage separately. A resumed item does
+not repeat metadata ingestion, private-master registration, MP3 transcoding or
+waveform generation when that exact manifest fingerprint already completed the
+stage. The measured source checksum, byte size and duration are retained in the
+ignored pipeline state; a retry still re-downloads and checksum-verifies the WAV
+whenever a missing derivative needs its bytes. This preserves the full-read and
+lineage gates while avoiding unrelated work after a late network failure.
+
+Release artwork is also release-aware. Before transferring a cover, the worker
+lets the promotion gate verify whether the release already owns an available
+cover from an earlier track. If so, that proof completes the cover checkpoint
+without another Drive read or upload. Otherwise the first use downloads and
+validates the owned cover normally; repeated uses during the same sealed run
+reuse its exact prepared bytes from a random process-local LRU cache capped at
+512 MiB. The cache contains no raw identifier in its filenames, is removed when
+the process exits, and never bypasses the backend cover-integrity gate.
 
 Every backend metadata row stores the owner-attestation hash, configured source
 scope hash, whole-selection hash, measured master hash and a completed full-read

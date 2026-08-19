@@ -333,6 +333,196 @@ class StateTests(unittest.TestCase):
         downloader.download.assert_not_called()
         api.ingest_metadata.assert_not_called()
 
+    def test_cover_only_resume_uses_release_gate_without_reprocessing_audio(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="assets_uploaded",
+                    ingest_id=11,
+                    track_id=12,
+                    source_sha256="a" * 64,
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    peaks_uploaded=1,
+                )
+                downloader = mock.Mock()
+                api = mock.Mock()
+                api.promote.return_value = {"trackStatus": "published"}
+                outcome = process.process_record(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    downloader,
+                    api,
+                    Path("ffmpeg"),
+                    rights_cleared=True,
+                    human_made_cleared=True,
+                    verification_mode="catalog_owner_direct",
+                    owner_evidence={
+                        "ownerAttestationSha256": "1" * 64,
+                        "catalogueScopeSha256": "2" * 64,
+                        "selectionSha256": "3" * 64,
+                    },
+                )
+                completed = connection.execute(
+                    "SELECT status, cover_uploaded FROM pipeline_items WHERE candidate_id = ?",
+                    (row["candidate_id"],),
+                ).fetchone()
+            finally:
+                connection.close()
+        self.assertEqual(outcome, "published")
+        self.assertEqual((completed["status"], completed["cover_uploaded"]), ("published", 1))
+        downloader.download.assert_not_called()
+        api.ingest_metadata.assert_not_called()
+        api.ingest_source_master.assert_not_called()
+        api.upload_asset.assert_not_called()
+
+    def test_partial_retry_generates_only_the_missing_derivative(self):
+        record = direct_record()
+        source_bytes = b"source-checkpoint-bytes"
+        source_sha256 = hashlib.sha256(source_bytes).hexdigest()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="streaming_uploaded",
+                    ingest_id=11,
+                    track_id=12,
+                    source_sha256=source_sha256,
+                    source_byte_size=len(source_bytes),
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    cover_uploaded=1,
+                )
+                downloader = mock.Mock()
+
+                def download(_file_id, destination, **_kwargs):
+                    destination.write_bytes(source_bytes)
+                    return source_sha256, len(source_bytes)
+
+                downloader.download.side_effect = download
+                api = mock.Mock()
+                api.promote.return_value = {"trackStatus": "published"}
+                with (
+                    mock.patch.object(process, "transcode_mp3") as transcode,
+                    mock.patch.object(process, "generate_peaks", return_value=[0.5] * process.PEAK_BIN_COUNT) as peaks,
+                ):
+                    outcome = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                    )
+            finally:
+                connection.close()
+        self.assertEqual(outcome, "published")
+        transcode.assert_not_called()
+        peaks.assert_called_once()
+        self.assertEqual(api.upload_asset.call_count, 1)
+        self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "waveform_peaks")
+
+    def test_missing_release_cover_falls_back_to_cover_only_transfer(self):
+        record = direct_record()
+        cover_bytes = (
+            b"\x89PNG\r\n\x1a\n"
+            + b"\x00\x00\x00\x0dIHDR"
+            + (3000).to_bytes(4, "big")
+            + (3000).to_bytes(4, "big")
+            + b"\x08\x02\x00\x00\x00"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="assets_uploaded",
+                    ingest_id=11,
+                    track_id=12,
+                    source_sha256="a" * 64,
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    peaks_uploaded=1,
+                )
+                downloader = mock.Mock()
+
+                def download(file_id, destination, **_kwargs):
+                    self.assertEqual(file_id, record["cover"]["file_id"])
+                    destination.write_bytes(cover_bytes)
+                    return hashlib.sha256(cover_bytes).hexdigest(), len(cover_bytes)
+
+                downloader.download.side_effect = download
+                api = mock.Mock()
+                api.promote.side_effect = [
+                    {"trackStatus": "ready"},
+                    {"trackStatus": "published"},
+                ]
+                outcome = process.process_record(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    downloader,
+                    api,
+                    Path("ffmpeg"),
+                    rights_cleared=True,
+                    human_made_cleared=True,
+                    verification_mode="catalog_owner_direct",
+                    owner_evidence={
+                        "ownerAttestationSha256": "1" * 64,
+                        "catalogueScopeSha256": "2" * 64,
+                        "selectionSha256": "3" * 64,
+                    },
+                )
+            finally:
+                connection.close()
+        self.assertEqual(outcome, "published")
+        downloader.download.assert_called_once()
+        api.upload_asset.assert_called_once()
+        self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "cover_artwork")
+
 
 class AudioTests(unittest.TestCase):
     def assert_ffmpeg_command_is_single_threaded(self, command):
@@ -480,6 +670,31 @@ class AudioTests(unittest.TestCase):
         self.assertEqual(command[command.index("-filter_threads") + 1], "1")
         self.assertEqual(command[command.index("-threads") + 1], "1")
         self.assertIn("crop=3000:3000", command[command.index("-vf") + 1])
+
+    def test_cover_cache_downloads_and_validates_a_shared_release_cover_once(self):
+        cover_bytes = (
+            b"\x89PNG\r\n\x1a\n"
+            + b"\x00\x00\x00\x0dIHDR"
+            + (3000).to_bytes(4, "big")
+            + (3000).to_bytes(4, "big")
+            + b"\x08\x02\x00\x00\x00"
+        )
+        downloader = mock.Mock()
+
+        def download(_file_id, destination, **_kwargs):
+            destination.write_bytes(cover_bytes)
+            return hashlib.sha256(cover_bytes).hexdigest(), len(cover_bytes)
+
+        downloader.download.side_effect = download
+        with tempfile.TemporaryDirectory() as temporary:
+            cache = process.CoverArtifactCache(Path(temporary))
+            first = cache.prepare("1" + "C" * 24, downloader, Path("ffmpeg"))
+            second = cache.prepare("1" + "C" * 24, downloader, Path("ffmpeg"))
+            self.assertTrue(first[0].is_file())
+            self.assertEqual(first, second)
+            self.assertEqual(first[1], "image/png")
+            self.assertEqual(first[2], hashlib.sha256(cover_bytes).hexdigest())
+        downloader.download.assert_called_once()
 
 
 class DriveDownloadTests(unittest.TestCase):
