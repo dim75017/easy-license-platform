@@ -104,4 +104,6 @@ test("catalog API uses deterministic release-first ordering and complete paginat
   assert.match(route, /releaseTrackCountIsComplete = !search && !genre && !mood && !theme && trackId === null/u);
   assert.match(route, /trackCount:\s*releaseTrackCountIsComplete[\s\S]{0,80}\? row\.release_track_count[\s\S]{0,40}: null/u);
   assert.match(route, /publishedAt:\s*row\.published_at/u);
+  assert.match(route, /const acceptedMoods = moodFilterAliases\(mood\)/u);
+  assert.match(route, /t\.mood IN \(\$\{acceptedMoods\.map\(\(\) => "\?"\)\.join\(", "\)\}\)/u);
 });

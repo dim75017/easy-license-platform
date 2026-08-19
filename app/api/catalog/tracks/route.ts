@@ -6,6 +6,7 @@ import {
   noStoreJson,
 } from "../_lib/http";
 import { normalizeCatalogText } from "../_lib/metadata";
+import { moodFilterAliases } from "../../../lib/catalog-moods";
 
 const DEFAULT_PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
@@ -86,8 +87,9 @@ export async function GET(request: Request): Promise<Response> {
       parameters.push(genre);
     }
     if (mood) {
-      filters.push("t.mood = ?");
-      parameters.push(mood);
+      const acceptedMoods = moodFilterAliases(mood);
+      filters.push(`t.mood IN (${acceptedMoods.map(() => "?").join(", ")})`);
+      parameters.push(...acceptedMoods);
     }
     if (theme) {
       filters.push("t.theme = ?");

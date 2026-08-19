@@ -1,3 +1,5 @@
+import { catalogueMoodFilters } from "../lib/catalog-moods";
+
 export const useCategories = [
   {
     slug: "travel",
@@ -553,13 +555,13 @@ export const workspaceTracks: readonly WorkspaceTrack[] = [
 
 export const featuredTracks = tracks;
 export const genres = ["All genres", ...Array.from(new Set(workspaceTracks.map((track) => track.genre)))];
-export const moods = ["All moods", ...Array.from(new Set(workspaceTracks.flatMap((track) => track.moods)))];
+export const moods = ["All moods", ...Array.from(new Set([...catalogueMoodFilters, ...workspaceTracks.flatMap((track) => track.moods)]))];
 export const uses = ["All themes", ...useCategories.map((category) => category.label)];
 
 /** Canonical search language for the connected music library. */
 export const musicSearchTaxonomy = {
   genres: genres.slice(1),
-  moods: moods.slice(1),
+  moods: catalogueMoodFilters,
   themes: useCategories.map(({ label, slug }) => ({ label, slug })),
   artists: Array.from(new Set(workspaceTracks.map((track) => track.artist))),
 } as const;

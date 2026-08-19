@@ -187,14 +187,15 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /Browse by mood/);
   assert.match(cataloguePage, /className="catalogue-moods"/);
   assert.match(cataloguePage, /className="catalogue-moods-grid"[\s\S]{0,1000}className="catalogue-mood-card"/);
-  assert.match(cataloguePage, /featuredMoods = moods\.filter\([\s\S]{0,120}\.slice\(0, 10\)/);
+  assert.match(cataloguePage, /import \{ catalogueMoodFilters \} from "\.\.\/lib\/catalog-moods"/);
+  assert.match(cataloguePage, /featuredMoods = catalogueMoodFilters\.slice\(0, 10\)/);
   assert.match(cataloguePage, /featuredMoods\.map\(\(mood, index\)/);
   assert.match(cataloguePage, /import \{ CreatorTrackShowcase \} from "\.\.\/components\/CreatorTrackShowcase"/);
   assert.match(cataloguePage, /className="music-v26-library music-library-editorial music-library-showcase"/);
   assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search by mood,<br \/>style or use\./);
   assert.match(cataloguePage, /<Suspense fallback=\{<CreatorTrackShowcase \/>\}>[\s\S]{0,120}<FilteredCreatorTrackShowcase \/>/);
   assert.doesNotMatch(cataloguePage, /CatalogueExplorer|catalogue-v26-search-row|Search the catalogue/i);
-  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?q=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
+  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?mood=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
   assert.match(page, /href=\{`\/catalog\?use=\$\{collection\.slug\}#music-library`\}/);
   assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
   assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
@@ -525,6 +526,7 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link cta-swipe" href="\/app"[\s\S]{0,100}Listen to the full library/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
   assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
+  assert.match(filteredShowcase, /trackMatchesMood\(track\.moods, mood\)/);
   assert.match(filteredShowcase, /track\.suggestedUses\.includes\(use\)/);
   assert.match(filteredShowcase, /<CreatorTrackShowcase tracks=\{tracks\} filterLabel=\{filterLabel \|\| undefined\} \/>/);
   assert.match(previewHook, /audio\.src = previewUrl/);
@@ -1673,9 +1675,24 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const searchTaxonomy = catalogueData.match(/export const musicSearchTaxonomy = \{([\s\S]*?)\}\s+as const;/);
   assert.ok(searchTaxonomy, "the connected search taxonomy should have one canonical export");
   assert.match(searchTaxonomy[1], /genres:\s*genres\.slice\(1\)/);
-  assert.match(searchTaxonomy[1], /moods:\s*moods\.slice\(1\)/);
+  assert.match(searchTaxonomy[1], /moods:\s*catalogueMoodFilters/);
   assert.match(searchTaxonomy[1], /themes:\s*useCategories\.map\(\(\{ label, slug \}\) => \(\{ label, slug \}\)\)/);
   assert.match(searchTaxonomy[1], /artists:\s*Array\.from\(new Set\(workspaceTracks\.map\(\(track\) => track\.artist\)\)\)/);
+
+  const catalogueMoodData = await source("app/lib/catalog-moods.ts");
+  const curatedMoodSource = catalogueMoodData.match(/export const catalogueMoodFilters = \[([\s\S]*?)\]\s+as const;/);
+  assert.ok(curatedMoodSource, "the public and connected libraries should share one curated mood vocabulary");
+  const curatedMoods = [...curatedMoodSource[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(curatedMoods, [
+    "Dreamy", "Laid Back", "Relaxing", "Peaceful", "Smooth", "Hopeful", "Dark", "Mysterious",
+    "Romantic", "Sad", "Sentimental", "Warm", "Cozy", "Reflective", "Happy", "Floating",
+  ]);
+  for (const noisyMood of ["Angry", "Busy & Frantic", "Changing Tempo", "Marching", "Running", "Sneaking"]) {
+    assert.ok(!curatedMoods.includes(noisyMood), `${noisyMood} should stay outside the concise lofi discovery vocabulary`);
+  }
+  assert.match(catalogueMoodData, /"Laid Back": \["Laid Back", "Easygoing", "Calm"\]/);
+  assert.match(catalogueMoodData, /Sentimental: \["Sentimental", "Reflective", "Intimate"\]/);
+  assert.match(musicWorkspace, /trackMatchesMood\(track\.moods, mood\)/);
 
   const v12Start = musicWorkspaceCss.indexOf("/* V12");
   assert.ok(v12Start >= 0, "the connected music layout should be isolated in the V12 CSS block");

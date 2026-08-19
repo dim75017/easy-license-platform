@@ -14,6 +14,7 @@ import {
   type WorkspaceTrack,
   workspaceTracks,
 } from "../data/catalog";
+import { trackMatchesMood } from "../lib/catalog-moods";
 import "../workspace-music.css";
 
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences";
@@ -813,7 +814,7 @@ export function CreatorWorkspace() {
       const haystack = `${track.title} ${track.artist} ${track.genre} ${track.moods.join(" ")} ${themeLabels.join(" ")}`.toLowerCase();
       return (!needle || haystack.includes(needle))
         && (genre === "All genres" || track.genre === genre)
-        && (mood === "All moods" || track.moods.includes(mood))
+        && (mood === "All moods" || trackMatchesMood(track.moods, mood))
         && (!activeUse || track.themes.includes(activeUse));
     });
   }, [activeUse, catalogLoadState, catalogTracks, catalogViewIsCurrent, genre, libraryTracks, mood, query]);
