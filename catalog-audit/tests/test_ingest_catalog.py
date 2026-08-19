@@ -85,6 +85,42 @@ class DriveParsingTests(unittest.TestCase):
         self.assertEqual(partial[0].files, (workbook_audio,))
         self.assertEqual(complete[0].files, ())
 
+    def test_missing_cover_uses_only_a_deterministic_owned_release_artwork(self):
+        root_id = "1" + "R" * 20
+        art_folder_id = "1" + "F" * 20
+        cover_id = "1" + "C" * 20
+        release = ingest.ReleaseAudio("12345678", "Release", root_id, ())
+        children = {
+            root_id: [
+                {
+                    "id": art_folder_id,
+                    "name": "Artwork",
+                    "mimeType": ingest.DRIVE_FOLDER_MIME,
+                }
+            ],
+            art_folder_id: [
+                {
+                    "id": cover_id,
+                    "name": "Release cover.png",
+                    "mimeType": "image/png",
+                }
+            ],
+        }
+        merged = ingest.merge_drive_cover_fallbacks({}, [release], children)
+        self.assertEqual(merged["12345678"].file_id, cover_id)
+        self.assertFalse(merged["12345678"].is_square)
+
+        ambiguous = {
+            root_id: [
+                {"id": "1" + "A" * 20, "name": "one.png", "mimeType": "image/png"},
+                {"id": "1" + "B" * 20, "name": "two.png", "mimeType": "image/png"},
+            ]
+        }
+        self.assertNotIn(
+            "12345678",
+            ingest.merge_drive_cover_fallbacks({}, [release], ambiguous),
+        )
+
 
 class WavInspectionTests(unittest.TestCase):
     def test_reads_pcm_duration_from_prefix(self):
@@ -127,6 +163,47 @@ class MatchingTests(unittest.TestCase):
     def test_version_mismatch_is_detected(self):
         self.assertTrue(ingest.incompatible_version("Voyage - Time (Instrumental).wav", "Time"))
         self.assertFalse(ingest.incompatible_version("Voyage - Time.wav", "Time"))
+
+    def test_owner_direct_eligibility_ignores_spotify_and_prescan_only(self):
+        record = {
+            "candidate_id": "b" * 28,
+            "status": "review",
+            "reasons": ["spotify_id_missing", "spotify_duration_missing", "audio_inspection_pending", "sha256_pending"],
+            "audio_match_score": 100,
+            "audio_match_kind": "exact_title",
+            "track": {
+                "source_row": 4,
+                "title": "Time",
+                "release": "Time",
+                "artists": ["Voyage"],
+            },
+            "audio": {"file_id": "1" + "A" * 20, "name": "Voyage - Time.wav"},
+            "cover": {"file_id": "1" + "C" * 20, "is_square": False},
+        }
+        self.assertTrue(ingest.direct_publication_eligible(record))
+        record["reasons"].append("audio_match_ambiguous")
+        self.assertFalse(ingest.direct_publication_eligible(record))
+
+    def test_owner_direct_treats_source_filename_and_sheet_duration_as_authoritative(self):
+        base = {
+            "candidate_id": "b" * 28,
+            "status": "quarantine",
+            "reasons": [],
+            "audio_match_score": 100,
+            "audio_match_kind": "exact_title",
+            "track": {"source_row": 4, "duration_seconds": 120},
+            "audio": {"file_id": "1" + "A" * 20, "name": "Voyage - Time.wav"},
+            "cover": {"file_id": "1" + "C" * 20},
+        }
+        for reason in (
+            "audio_version_mismatch",
+            "suspicious_audio_filename",
+            "expected_duration_missing",
+            "expected_duration_under_30s",
+        ):
+            with self.subTest(reason=reason):
+                record = {**base, "reasons": [reason]}
+                self.assertTrue(ingest.direct_publication_eligible(record))
 
 
 class SpotifyMetadataMergeTests(unittest.TestCase):

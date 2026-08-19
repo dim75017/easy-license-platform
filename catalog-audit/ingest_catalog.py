@@ -20,6 +20,7 @@ import datetime as dt
 import hashlib
 import io
 import json
+import math
 import os
 import re
 import sqlite3
@@ -62,6 +63,15 @@ VERSION_TOKENS = {
 PARASITE_TOKENS = {"preview", "snippet", "sample", "test", "bounce test", "copy of"}
 DRIVE_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{15,}")
 SPOTIFY_ID_PATTERN = re.compile(r"(?:spotify:track:|open\.spotify\.com/track/)([A-Za-z0-9]{22})")
+DIRECT_PUBLICATION_BLOCKERS = frozenset(
+    {
+        "audio_match_missing",
+        "audio_match_ambiguous",
+        "audio_file_claimed_by_multiple_tracks",
+        "unmatched_audio_file",
+        "source_snapshot_missing",
+    }
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -585,6 +595,94 @@ def drive_inventory_is_complete(path: Path | None) -> bool:
     return isinstance(payload, dict) and payload.get("complete") is True
 
 
+def merge_drive_cover_fallbacks(
+    covers: Mapping[str, Cover],
+    release_audio: Sequence[ReleaseAudio],
+    inventory_children: Mapping[str, list[dict[str, Any]]],
+) -> dict[str, Cover]:
+    """Fill a missing workbook cover from one deterministic owned release image.
+
+    The fallback never leaves the matched release folder. A unique image is
+    sufficient; with several images, a clearly better cover/front/artwork name
+    is required. Ambiguous artwork remains absent so the publication lane can
+    exclude it instead of inventing a choice.
+    """
+
+    merged = dict(covers)
+    groups_by_upc: dict[str, list[ReleaseAudio]] = defaultdict(list)
+    for group in release_audio:
+        if group.upc and group.folder_id:
+            groups_by_upc[group.upc].append(group)
+
+    def release_images(folder_id: str) -> list[dict[str, Any]]:
+        folders = [folder_id]
+        seen_folders: set[str] = set()
+        images: dict[str, dict[str, Any]] = {}
+        while folders:
+            parent = folders.pop()
+            if parent in seen_folders:
+                continue
+            seen_folders.add(parent)
+            for row in inventory_children.get(parent, []):
+                file_id = extract_drive_id(row_value(row, "id", "file_id", "webViewLink"), folder=False)
+                if not file_id:
+                    continue
+                mime_type = clean(row_value(row, "mimeType", "mime_type")).casefold()
+                name = clean(row_value(row, "name", "file_name"))
+                if mime_type == DRIVE_FOLDER_MIME:
+                    folders.append(file_id)
+                    continue
+                if mime_type.startswith("image/") or Path(name).suffix.casefold() in {
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".webp",
+                }:
+                    images.setdefault(file_id, {"id": file_id, "name": name})
+        return list(images.values())
+
+    def image_score(name: str, upc: str, release: str) -> int:
+        normalized = normalize_text(Path(name).stem)
+        tokens = set(normalized.split())
+        if tokens.intersection({"back", "booklet", "banner", "canvas", "youtube", "story"}):
+            return -1_000
+        score = 0
+        if normalized in {"cover", "artwork", "front", "folder"}:
+            score += 200
+        elif tokens.intersection({"cover", "artwork", "front"}):
+            score += 120
+        if upc and upc in re.sub(r"\D", "", name):
+            score += 60
+        normalized_release = normalize_text(release)
+        if normalized_release and normalized_release in normalized:
+            score += 40
+        return score
+
+    for upc, groups in groups_by_upc.items():
+        if upc in merged:
+            continue
+        ranked_by_id: dict[str, tuple[int, str]] = {}
+        for group in groups:
+            for row in release_images(group.folder_id):
+                score = image_score(str(row["name"]), upc, group.release)
+                if score < 0:
+                    continue
+                previous = ranked_by_id.get(str(row["id"]))
+                if previous is None or score > previous[0]:
+                    ranked_by_id[str(row["id"])] = (score, str(row["name"]))
+        ranked = sorted(
+            ((score, name, file_id) for file_id, (score, name) in ranked_by_id.items()),
+            key=lambda item: (-item[0], normalize_text(item[1]), item[2]),
+        )
+        if not ranked:
+            continue
+        if len(ranked) > 1 and (ranked[0][0] < 80 or ranked[0][0] < ranked[1][0] + 20):
+            continue
+        _score, name, file_id = ranked[0]
+        merged[upc] = Cover(upc=upc, file_id=file_id, quality=name, is_square=False)
+    return merged
+
+
 def drive_audio_from_row(row: Mapping[str, Any], *, folder_id: str = "", folder_path: str = "") -> DriveAudio:
     size_raw = row_value(row, "size", "size_bytes")
     try:
@@ -1067,6 +1165,44 @@ def candidate_payload(candidate: Candidate) -> dict[str, Any]:
     }
 
 
+def direct_publication_eligible(record: Mapping[str, Any]) -> bool:
+    """Return whether Sheet + Drive provide one deterministic publishable pair.
+
+    This owner-authoritative lane deliberately ignores Spotify and historical
+    inspection state.  It still refuses missing or multiply claimed audio,
+    missing artwork and any non-deterministic filename association.  The
+    publication worker performs the one full WAV download, checksum and decode
+    before it can stage or promote the row.
+    """
+
+    track = record.get("track")
+    audio = record.get("audio")
+    cover = record.get("cover")
+    reasons = record.get("reasons")
+    score = record.get("audio_match_score")
+    match_kind = clean(record.get("audio_match_kind"))
+    if not isinstance(track, Mapping) or not isinstance(audio, Mapping) or not isinstance(cover, Mapping):
+        return False
+    if not isinstance(reasons, list) or any(reason in DIRECT_PUBLICATION_BLOCKERS for reason in reasons):
+        return False
+    if (
+        isinstance(score, bool)
+        or not isinstance(score, (int, float))
+        or not math.isfinite(float(score))
+        or float(score) < 90
+        or match_kind in {"", "missing", "ambiguous", "orphan"}
+    ):
+        return False
+    source_row = track.get("source_row")
+    if isinstance(source_row, bool) or not isinstance(source_row, int) or source_row < 1:
+        return False
+    return bool(
+        DRIVE_ID_PATTERN.fullmatch(clean(audio.get("file_id")))
+        and clean(audio.get("name"))
+        and DRIVE_ID_PATTERN.fullmatch(clean(cover.get("file_id")))
+    )
+
+
 def upsert_candidates(connection: sqlite3.Connection, candidates: Sequence[Candidate], *, force: bool = False) -> None:
     now = dt.datetime.now(dt.timezone.utc).isoformat()
     for candidate in candidates:
@@ -1416,11 +1552,12 @@ def inspect_pending(
 
 
 def export_private_manifests(connection: sqlite3.Connection, output_dir: Path) -> dict[str, int]:
-    counts = {"exact": 0, "review": 0, "quarantine": 0}
+    counts = {"exact": 0, "review": 0, "quarantine": 0, "ownerDirect": 0}
     handles = {
         status: (output_dir / f"{status}.jsonl").open("w", encoding="utf-8", newline="\n")
-        for status in counts
+        for status in ("exact", "review", "quarantine")
     }
+    direct = (output_dir / "catalog-owner-direct.jsonl").open("w", encoding="utf-8", newline="\n")
     manifest = (output_dir / "manifest.jsonl").open("w", encoding="utf-8", newline="\n")
     try:
         for row in connection.execute("SELECT * FROM candidates ORDER BY candidate_id"):
@@ -1443,8 +1580,12 @@ def export_private_manifests(connection: sqlite3.Connection, output_dir: Path) -
             manifest.write(line)
             handles[row["status"]].write(line)
             counts[row["status"]] += 1
+            if direct_publication_eligible(record):
+                direct.write(line)
+                counts["ownerDirect"] += 1
     finally:
         manifest.close()
+        direct.close()
         for handle in handles.values():
             handle.close()
     (output_dir / "summary.json").write_text(
@@ -1590,6 +1731,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         discover=bool(arguments.discover_drive),
         inventory_complete=drive_inventory_is_complete(arguments.drive_inventory),
     )
+    covers = merge_drive_cover_fallbacks(covers, release_audio, inventory_children)
     tracks, release_audio = filter_release_scope(tracks, release_audio, arguments.release)
     candidates = build_candidates(tracks, release_audio, covers, orchard)
     if arguments.smoke:

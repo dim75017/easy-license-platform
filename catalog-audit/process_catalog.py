@@ -3,7 +3,8 @@
 
 The command is intentionally dry-run by default.  In apply mode it downloads
 one private/publicly-downloadable Drive WAV into a generic temporary directory,
-verifies its existing audit evidence, creates a full-length 192 kb/s MP3 and a
+verifies strict Spotify evidence or sealed catalogue-owner source evidence,
+creates a full-length 192 kb/s MP3 and a
 512-bin waveform JSON, copies the verified master, uploads the derivatives and
 owned cover, then asks the backend to promote the track.  Per-track checkpoints live in ignored SQLite state so a
 rerun never republishes a completed item and safely retries idempotent API
@@ -49,11 +50,15 @@ DEFAULT_PIPELINE_STATE = PRIVATE_DIRECTORY / "pipeline-state.sqlite3"
 DEFAULT_SPOTIFY_ENRICHMENT = PRIVATE_DIRECTORY / "spotify-enrichment" / "enriched-tracks.json"
 DEFAULT_API_BASE_URL = "https://easy-license.dsomoguy.chatgpt.site"
 DEFAULT_BATCH_KEY = "symbiome-catalog-v1"
+DIRECT_BATCH_KEY = "symbiome-catalog-owner-drain-v1"
+VERIFICATION_MODES = {"spotify", "catalog_owner_direct"}
 PEAK_BIN_COUNT = 512
 PEAK_SAMPLE_RATE = 8_000
 MP3_BITRATE = "192k"
 MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024
 MAX_DERIVED_ASSET_BYTES = 20 * 1024 * 1024
+MAX_COVER_SOURCE_BYTES = 100 * 1024 * 1024
+COVER_OUTPUT_SIZE = 3_000
 MIN_TEMP_FREE_BYTES = 3 * 1024 * 1024 * 1024
 MAX_EXACT_DURATION_DELTA_SECONDS = 2.0
 DRIVE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{8,200}$")
@@ -174,6 +179,65 @@ def load_exact_manifest(path: Path) -> list[dict[str, Any]]:
             seen.add(candidate_id)
             records.append(record)
     return sorted(records, key=lambda item: item["candidate_id"])
+
+
+def load_direct_manifest(path: Path) -> list[dict[str, Any]]:
+    """Load only deterministic Sheet-to-Drive rows for owner-authoritative processing."""
+
+    assert_private_artifact_path(path, "direct_manifest")
+    if not path.is_file():
+        raise PipelineError("direct_manifest_missing")
+
+    records: list[dict[str, Any]] = []
+    candidate_ids: set[str] = set()
+    audio_ids: set[str] = set()
+    with path.open("r", encoding="utf-8-sig") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as error:
+                raise PipelineError("direct_manifest_invalid_json") from error
+            validate_direct_record(record)
+            candidate_id = str(record["candidate_id"])
+            audio_id = str(record["audio"]["file_id"])
+            if candidate_id in candidate_ids:
+                raise PipelineError("direct_manifest_duplicate_candidate")
+            if audio_id in audio_ids:
+                raise PipelineError("direct_manifest_duplicate_audio")
+            candidate_ids.add(candidate_id)
+            audio_ids.add(audio_id)
+            records.append(record)
+    return sorted(records, key=lambda item: item["candidate_id"])
+
+
+def validate_direct_record(value: object) -> None:
+    if not isinstance(value, dict) or not ingest.direct_publication_eligible(value):
+        raise PipelineError("direct_record_not_deterministic")
+    candidate_id = require_text(value.get("candidate_id"), "candidate_id_invalid", 64)
+    if not CANDIDATE_ID_PATTERN.fullmatch(candidate_id):
+        raise PipelineError("candidate_id_invalid")
+
+    track = value["track"]
+    audio = value["audio"]
+    cover = value["cover"]
+    require_text(track.get("title"), "track_title_missing", 500)
+    require_text(track.get("release"), "release_title_missing", 500)
+    artists = track.get("artists")
+    if not isinstance(artists, list) or not artists or not all(
+        isinstance(item, str) and item.strip() for item in artists
+    ):
+        raise PipelineError("track_artist_missing")
+    if positive_integer(track.get("source_row")) is None:
+        raise PipelineError("source_row_missing")
+    drive_file_id = require_text(audio.get("file_id"), "drive_file_id_invalid", 200)
+    if not DRIVE_ID_PATTERN.fullmatch(drive_file_id):
+        raise PipelineError("drive_file_id_invalid")
+    require_text(audio.get("name"), "source_file_name_missing", 1000)
+    cover_file_id = require_text(cover.get("file_id"), "owned_cover_missing", 200)
+    if not DRIVE_ID_PATTERN.fullmatch(cover_file_id):
+        raise PipelineError("owned_cover_missing")
 
 
 def validate_exact_record(value: object) -> None:
@@ -571,7 +635,88 @@ def inspect_cover_artwork(path: Path) -> tuple[str, int, int]:
     return content_type, width, height
 
 
-def inspect_downloaded_wav(path: Path, record: Mapping[str, Any]) -> tuple[ingest.WavInfo, int]:
+def optimize_cover_artwork(executable: Path, source: Path, destination: Path) -> tuple[str, int, int]:
+    """Create one bounded square JPEG with the same one-thread budget."""
+
+    command = [
+        str(executable),
+        "-hide_banner",
+        "-nostdin",
+        "-loglevel",
+        "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
+        "-y",
+        "-i",
+        str(source),
+        "-vf",
+        f"scale={COVER_OUTPUT_SIZE}:{COVER_OUTPUT_SIZE}:force_original_aspect_ratio=increase,crop={COVER_OUTPUT_SIZE}:{COVER_OUTPUT_SIZE}",
+        "-frames:v",
+        "1",
+        "-an",
+        "-sn",
+        "-dn",
+        "-map_metadata",
+        "-1",
+        "-pix_fmt",
+        "yuvj420p",
+        "-q:v",
+        "3",
+        "-threads",
+        "1",
+        str(destination),
+    ]
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            timeout=900,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PipelineError("cover_artwork_optimization_failed") from error
+    if (
+        result.returncode != 0
+        or not destination.is_file()
+        or destination.stat().st_size < 1
+        or destination.stat().st_size > MAX_DERIVED_ASSET_BYTES
+    ):
+        raise PipelineError("cover_artwork_optimization_failed")
+    content_type, width, height = inspect_cover_artwork(destination)
+    if content_type != "image/jpeg":
+        raise PipelineError("cover_artwork_optimization_failed")
+    return content_type, width, height
+
+
+def prepare_cover_artwork(
+    executable: Path,
+    source: Path,
+    optimized: Path,
+) -> tuple[Path, str, int, int]:
+    """Keep an already bounded square web image, otherwise normalize it."""
+
+    if source.stat().st_size <= MAX_DERIVED_ASSET_BYTES:
+        try:
+            content_type, width, height = inspect_cover_artwork(source)
+            return source, content_type, width, height
+        except PipelineError as error:
+            if error.code not in {"cover_artwork_not_square", "cover_artwork_type_invalid"}:
+                raise
+    content_type, width, height = optimize_cover_artwork(executable, source, optimized)
+    return optimized, content_type, width, height
+
+
+def inspect_downloaded_wav(
+    path: Path,
+    record: Mapping[str, Any],
+    *,
+    verification_mode: str = "spotify",
+) -> tuple[ingest.WavInfo, int]:
     with path.open("rb") as handle:
         prefix = handle.read(8 * 1024 * 1024)
     try:
@@ -583,20 +728,23 @@ def inspect_downloaded_wav(path: Path, record: Mapping[str, Any]) -> tuple[inges
         raise PipelineError("source_wav_codec_unsupported")
     if wav.channels < 1 or wav.channels > 32 or wav.sample_rate < 8_000 or wav.sample_rate > 384_000:
         raise PipelineError("source_wav_shape_invalid")
-    if wav.duration_seconds < 30:
+    if wav.duration_seconds <= 0:
+        raise PipelineError("source_wav_duration_invalid")
+    if verification_mode == "spotify" and wav.duration_seconds < 30:
         raise PipelineError("source_wav_too_short")
 
-    inspection = record["inspection"]
-    references = [
-        positive_number((inspection.get("wav") or {}).get("duration_seconds")),
-        positive_number((record.get("track") or {}).get("duration_seconds")),
-        positive_number(record.get("spotify_duration_seconds")),
-    ]
-    if any(
-        reference is None or abs(wav.duration_seconds - reference) > MAX_EXACT_DURATION_DELTA_SECONDS
-        for reference in references
-    ):
-        raise PipelineError("source_duration_mismatch")
+    if verification_mode == "spotify":
+        inspection = record["inspection"]
+        references = [
+            positive_number((inspection.get("wav") or {}).get("duration_seconds")),
+            positive_number((record.get("track") or {}).get("duration_seconds")),
+            positive_number(record.get("spotify_duration_seconds")),
+        ]
+        if any(
+            reference is None or abs(wav.duration_seconds - reference) > MAX_EXACT_DURATION_DELTA_SECONDS
+            for reference in references
+        ):
+            raise PipelineError("source_duration_mismatch")
     duration_ms = max(1, round(wav.duration_seconds * 1000))
     return wav, duration_ms
 
@@ -961,6 +1109,9 @@ class CatalogApiClient:
         duration_ms: int,
         rights_cleared: bool,
         human_made_cleared: bool,
+        *,
+        verification_mode: str = "spotify",
+        owner_evidence: Mapping[str, Any] | None = None,
     ) -> tuple[int, int]:
         payload = {
             "batchKey": batch_key,
@@ -972,6 +1123,8 @@ class CatalogApiClient:
                     duration_ms,
                     rights_cleared,
                     human_made_cleared,
+                    verification_mode=verification_mode,
+                    owner_evidence=owner_evidence,
                 )
             ],
         }
@@ -1078,6 +1231,7 @@ class CatalogApiClient:
         source_key: str,
         source_sha256: str,
         measured_duration_ms: int,
+        verification_mode: str = "spotify",
     ) -> dict[str, Any]:
         return self.post_json(
             "/api/catalog/pipeline/promote",
@@ -1087,6 +1241,7 @@ class CatalogApiClient:
                 "sourceKey": source_key,
                 "sourceSha256": source_sha256,
                 "measuredDurationMs": measured_duration_ms,
+                "verificationMode": verification_mode,
             },
         )
 
@@ -1098,14 +1253,25 @@ def metadata_item(
     duration_ms: int,
     rights_cleared: bool,
     human_made_cleared: bool,
+    *,
+    verification_mode: str = "spotify",
+    owner_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     track = record["track"]
+    if verification_mode not in VERIFICATION_MODES:
+        raise PipelineError("verification_mode_invalid")
+    direct = verification_mode == "catalog_owner_direct"
     evidence = record.get("_spotify_evidence")
-    if not isinstance(evidence, dict):
-        raise PipelineError("accepted_spotify_enrichment_missing")
-    artists = [str(item).strip() for item in evidence.get("artists", []) if str(item).strip()]
+    if direct:
+        artists = [str(item).strip() for item in track.get("artists", []) if str(item).strip()]
+        title = require_text(track.get("title"), "track_title_missing", 500)
+    else:
+        if not isinstance(evidence, dict):
+            raise PipelineError("accepted_spotify_enrichment_missing")
+        artists = [str(item).strip() for item in evidence.get("artists", []) if str(item).strip()]
+        title = require_text(evidence.get("title"), "accepted_spotify_enrichment_invalid", 500)
     if not artists:
-        raise PipelineError("accepted_spotify_enrichment_invalid")
+        raise PipelineError("track_artist_missing" if direct else "accepted_spotify_enrichment_invalid")
     artist_credit = " & ".join(artists)
     release_type = str(track.get("release_type") or "other").strip().lower()
     if release_type not in {"single", "ep", "album", "compilation", "other"}:
@@ -1116,35 +1282,56 @@ def metadata_item(
     rights_status = "cleared" if rights_cleared else "pending"
     ai_review_status = "cleared" if human_made_cleared else "pending"
 
-    spotify_id = str(evidence.get("track_id") or "").strip()
-    spotify_duration_ms = positive_integer(evidence.get("duration_ms"))
-    spotify_title = require_text(evidence.get("title"), "accepted_spotify_enrichment_invalid", 500)
-    album_title = require_text(evidence.get("album_title"), "accepted_spotify_enrichment_invalid", 500)
-    if not SPOTIFY_ID_PATTERN.fullmatch(spotify_id) or spotify_duration_ms is None:
-        raise PipelineError("accepted_spotify_enrichment_invalid")
-    spotify = {
-        "trackId": spotify_id,
-        # Official oEmbed/Embed does not expose an album ID.  The backend's
-        # orchard_uri policy verifies the exact Orchard UPC/release join and
-        # deliberately permits null rather than accepting an invented ID.
-        "albumId": None,
-        "title": spotify_title,
-        "artistCredit": artist_credit,
-        "albumTitle": album_title,
-        "isrc": str(track.get("isrc") or "").strip() or None,
-        "durationMs": spotify_duration_ms,
-        "coverSourceUrl": evidence.get("cover_source_url"),
-        "method": "orchard_uri",
-        "score": 10_000,
-        "status": "verified",
-    }
+    spotify: dict[str, Any] | None = None
+    catalog_owner_evidence: dict[str, Any] | None = None
+    if direct:
+        if not isinstance(owner_evidence, Mapping):
+            raise PipelineError("catalog_owner_evidence_missing")
+        owner_sha256 = str(owner_evidence.get("ownerAttestationSha256") or "").strip().lower()
+        scope_sha256 = str(owner_evidence.get("catalogueScopeSha256") or "").strip().lower()
+        selection_sha256 = str(owner_evidence.get("selectionSha256") or "").strip().lower()
+        if any(
+            SHA256_PATTERN.fullmatch(value) is None
+            for value in (owner_sha256, scope_sha256, selection_sha256)
+        ):
+            raise PipelineError("catalog_owner_evidence_invalid")
+        catalog_owner_evidence = {
+            "ownerAttestationSha256": owner_sha256,
+            "catalogueScopeSha256": scope_sha256,
+            "selectionSha256": selection_sha256,
+            "masterInspectionSha256": source_sha256,
+            "masterReadComplete": True,
+        }
+    else:
+        assert isinstance(evidence, dict)
+        spotify_id = str(evidence.get("track_id") or "").strip()
+        spotify_duration_ms = positive_integer(evidence.get("duration_ms"))
+        album_title = require_text(evidence.get("album_title"), "accepted_spotify_enrichment_invalid", 500)
+        if not SPOTIFY_ID_PATTERN.fullmatch(spotify_id) or spotify_duration_ms is None:
+            raise PipelineError("accepted_spotify_enrichment_invalid")
+        spotify = {
+            "trackId": spotify_id,
+            # Official oEmbed/Embed does not expose an album ID.  The backend's
+            # orchard_uri policy verifies the exact Orchard UPC/release join and
+            # deliberately permits null rather than accepting an invented ID.
+            "albumId": None,
+            "title": title,
+            "artistCredit": artist_credit,
+            "albumTitle": album_title,
+            "isrc": str(track.get("isrc") or "").strip() or None,
+            "durationMs": spotify_duration_ms,
+            "coverSourceUrl": evidence.get("cover_source_url"),
+            "method": "orchard_uri",
+            "score": 10_000,
+            "status": "verified",
+        }
 
     return {
         "sourceKey": source_key,
         "sourceFileName": record["audio"]["name"],
         "sourceRowNumber": positive_integer(track.get("source_row")),
         "sourceSha256": source_sha256,
-        "title": spotify_title,
+        "title": title,
         "artist": artists[0],
         "artistCredit": artist_credit,
         "releaseTitle": track["release"],
@@ -1162,6 +1349,8 @@ def metadata_item(
         "rightsStatus": rights_status,
         "aiReviewStatus": ai_review_status,
         "catalogStatus": "ready",
+        "verificationMode": verification_mode if direct else None,
+        "catalogOwnerEvidence": catalog_owner_evidence,
         "spotify": spotify,
     }
 
@@ -1181,6 +1370,8 @@ def try_promote(
     connection: sqlite3.Connection,
     api: CatalogApiClient,
     row: sqlite3.Row,
+    *,
+    verification_mode: str = "spotify",
 ) -> str:
     try:
         response = api.promote(
@@ -1189,6 +1380,7 @@ def try_promote(
             source_key=str(row["candidate_id"]),
             source_sha256=str(row["source_sha256"]),
             measured_duration_ms=int(row["measured_duration_ms"]),
+            verification_mode=verification_mode,
         )
     except ApiHttpError as error:
         if error.status in {409, 422}:
@@ -1220,6 +1412,8 @@ def process_record(
     *,
     rights_cleared: bool,
     human_made_cleared: bool,
+    verification_mode: str = "spotify",
+    owner_evidence: Mapping[str, Any] | None = None,
     temporary_root: Path | None = None,
 ) -> str:
     row = ensure_state_row(
@@ -1239,7 +1433,7 @@ def process_record(
         and row["peaks_uploaded"]
         and row["cover_uploaded"]
     ):
-        return try_promote(connection, api, row)
+        return try_promote(connection, api, row, verification_mode=verification_mode)
 
     row = update_state(
         connection,
@@ -1248,8 +1442,15 @@ def process_record(
         attempts=int(row["attempts"]) + 1,
         last_error_code=None,
     )
-    expected_sha256 = str(record["inspection"]["sha256"]).lower()
-    expected_size = positive_integer(record["inspection"].get("content_length"))
+    inspection = record.get("inspection") if isinstance(record.get("inspection"), Mapping) else {}
+    inspected_sha256 = str(inspection.get("sha256") or "").strip().lower()
+    has_full_inspection = (
+        inspection.get("status") == "complete"
+        and inspection.get("mode") == "full"
+        and SHA256_PATTERN.fullmatch(inspected_sha256) is not None
+    )
+    expected_sha256 = inspected_sha256 if has_full_inspection else None
+    expected_size = positive_integer(inspection.get("content_length")) if has_full_inspection else None
 
     try:
         with tempfile.TemporaryDirectory(prefix="symbiome-catalog-", dir=temporary_root) as temporary:
@@ -1257,7 +1458,8 @@ def process_record(
             source_path = directory / "source.wav"
             streaming_path = directory / "stream.mp3"
             peaks_path = directory / "peaks.json"
-            cover_path = directory / "cover.bin"
+            cover_source_path = directory / "cover-source.bin"
+            optimized_cover_path = directory / "cover.jpg"
 
             source_sha256, source_size = downloader.download(
                 record["audio"]["file_id"],
@@ -1265,7 +1467,11 @@ def process_record(
                 expected_sha256=expected_sha256,
                 expected_size=expected_size,
             )
-            _wav, source_duration_ms = inspect_downloaded_wav(source_path, record)
+            _wav, source_duration_ms = inspect_downloaded_wav(
+                source_path,
+                record,
+                verification_mode=verification_mode,
+            )
             transcode_mp3(ffmpeg, source_path, streaming_path)
             streaming_duration_ms = probe_audio_duration(ffmpeg, streaming_path)
             if abs(streaming_duration_ms - source_duration_ms) > round(MAX_EXACT_DURATION_DELTA_SECONDS * 1000):
@@ -1275,14 +1481,19 @@ def process_record(
                 raise PipelineError("peaks_bin_count_invalid")
             write_peaks_json(peaks_path, peaks, source_duration_ms)
 
-            cover_sha256, cover_size = downloader.download(
+            downloader.download(
                 record["cover"]["file_id"],
-                cover_path,
+                cover_source_path,
                 expected_sha256=None,
                 expected_size=None,
-                maximum_bytes=MAX_DERIVED_ASSET_BYTES,
+                maximum_bytes=MAX_COVER_SOURCE_BYTES,
             )
-            cover_type, _cover_width, _cover_height = inspect_cover_artwork(cover_path)
+            cover_path, cover_type, _cover_width, _cover_height = prepare_cover_artwork(
+                ffmpeg,
+                cover_source_path,
+                optimized_cover_path,
+            )
+            cover_sha256, cover_size = sha256_file(cover_path)
 
             streaming_sha256, streaming_size = sha256_file(streaming_path)
             peaks_sha256, peaks_size = sha256_file(peaks_path)
@@ -1310,6 +1521,8 @@ def process_record(
                     source_duration_ms,
                     rights_cleared,
                     human_made_cleared,
+                    verification_mode=verification_mode,
+                    owner_evidence=owner_evidence,
                 )
                 row = update_state(
                     connection,
@@ -1410,7 +1623,7 @@ def process_record(
         )
         raise PipelineError("unexpected_processing_failure") from error
 
-    return try_promote(connection, api, row)
+    return try_promote(connection, api, row, verification_mode=verification_mode)
 
 
 def derive_batch_key(_exact_manifest: Path, requested: str | None) -> str:
@@ -1617,10 +1830,29 @@ def merge_spotify_metadata(arguments: argparse.Namespace) -> int:
 
 
 def process_exact_catalog(arguments: argparse.Namespace) -> int:
-    records = load_exact_manifest(arguments.exact_manifest)
+    verification_mode = arguments.verification_mode
+    direct = verification_mode == "catalog_owner_direct"
+    records = (
+        load_direct_manifest(arguments.exact_manifest)
+        if direct
+        else load_exact_manifest(arguments.exact_manifest)
+    )
     selected_records = records[: arguments.limit] if arguments.limit is not None else records
-    enrichment_counts = attach_verified_spotify_evidence(selected_records, arguments.spotify_enrichment)
+    enrichment_counts: dict[str, int] | None = None
+    owner_evidence: dict[str, str] | None = None
+    if direct:
+        owner_evidence = {
+            "ownerAttestationSha256": str(arguments.owner_attestation_sha256 or "").strip().lower(),
+            "catalogueScopeSha256": str(arguments.catalogue_scope_sha256 or "").strip().lower(),
+            "selectionSha256": str(arguments.selection_sha256 or "").strip().lower(),
+        }
+        if any(SHA256_PATTERN.fullmatch(value) is None for value in owner_evidence.values()):
+            raise PipelineError("catalog_owner_evidence_invalid")
+    else:
+        enrichment_counts = attach_verified_spotify_evidence(selected_records, arguments.spotify_enrichment)
     batch_key = derive_batch_key(arguments.exact_manifest, arguments.batch_key)
+    if direct and batch_key != DIRECT_BATCH_KEY:
+        raise PipelineError("catalog_owner_direct_batch_invalid")
     if not arguments.apply:
         existing_counts: dict[str, int] = {}
         if arguments.pipeline_state.is_file():
@@ -1633,18 +1865,21 @@ def process_exact_catalog(arguments: argparse.Namespace) -> int:
                 existing_counts = state_counts(connection)
             finally:
                 connection.close()
-        emit_aggregate(
-            {
-                "mode": "dry-run",
-                "step": "process",
-                "exactRecords": len(records),
-                "selected": len(selected_records),
-                "spotifyEnrichment": enrichment_counts,
-                "rightsClearanceAcknowledged": bool(arguments.rights_cleared),
-                "humanMadeClearanceAcknowledged": bool(arguments.human_made_cleared),
-                "pipelineState": existing_counts,
-            }
-        )
+        summary: dict[str, Any] = {
+            "mode": "dry-run",
+            "step": "process",
+            "verificationMode": verification_mode,
+            "selected": len(selected_records),
+            "rightsClearanceAcknowledged": bool(arguments.rights_cleared),
+            "humanMadeClearanceAcknowledged": bool(arguments.human_made_cleared),
+            "pipelineState": existing_counts,
+        }
+        if direct:
+            summary["directRecords"] = len(records)
+        else:
+            summary["exactRecords"] = len(records)
+            summary["spotifyEnrichment"] = enrichment_counts
+        emit_aggregate(summary)
         return 0
 
     if not arguments.rights_cleared:
@@ -1681,6 +1916,8 @@ def process_exact_catalog(arguments: argparse.Namespace) -> int:
                     ffmpeg,
                     rights_cleared=True,
                     human_made_cleared=True,
+                    verification_mode=verification_mode,
+                    owner_evidence=owner_evidence,
                     temporary_root=arguments.temporary_root,
                 )
                 counts[outcome] = counts.get(outcome, 0) + 1
@@ -1691,12 +1928,20 @@ def process_exact_catalog(arguments: argparse.Namespace) -> int:
                     and error.status in {400, 401, 403, 404, 405}
                 ) or (error.retryable and error.code.startswith("api_")):
                     raise
-            if index % 25 == 0:
+            if not direct and index % 25 == 0:
                 emit_aggregate({"mode": "apply", "step": "process", "progress": index, "counts": counts})
         final_state = state_counts(connection)
     finally:
         connection.close()
-    emit_aggregate({"mode": "apply", "step": "process", "counts": counts, "pipelineState": final_state})
+    emit_aggregate(
+        {
+            "mode": "apply",
+            "step": "process",
+            "verificationMode": verification_mode,
+            "counts": counts,
+            "pipelineState": final_state,
+        }
+    )
     return 0 if counts["failed"] == 0 and counts["promotion_blocked"] == 0 else 2
 
 
@@ -1707,6 +1952,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ingestion-state", type=Path, default=DEFAULT_INGESTION_STATE)
     parser.add_argument("--pipeline-state", type=Path, default=DEFAULT_PIPELINE_STATE)
     parser.add_argument("--spotify-enrichment", type=Path, default=DEFAULT_SPOTIFY_ENRICHMENT)
+    parser.add_argument(
+        "--verification-mode",
+        choices=tuple(sorted(VERIFICATION_MODES)),
+        default="spotify",
+        help="Use Spotify evidence or the sealed catalogue-owner direct lane.",
+    )
+    parser.add_argument("--owner-attestation-sha256", help="Private owner-attestation digest for direct mode.")
+    parser.add_argument("--catalogue-scope-sha256", help="Configured source-scope digest for direct mode.")
+    parser.add_argument("--selection-sha256", help="Whole direct-manifest digest for direct mode.")
     parser.add_argument("--base-url", help="HTTPS catalogue backend origin; defaults to CATALOG_API_BASE_URL.")
     parser.add_argument("--batch-key", help="Stable backend batch key; derived from exact.jsonl by default.")
     parser.add_argument("--ffmpeg", type=Path, help="Full FFmpeg executable; imageio-ffmpeg is used by default.")
