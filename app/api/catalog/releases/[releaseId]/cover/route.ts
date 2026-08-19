@@ -2,12 +2,15 @@ import {
   requireCatalogAudioBucket,
   requireCatalogDatabase,
 } from "@/db/catalog-runtime";
-import { requireCatalogIdentity } from "../../../_lib/auth";
 import {
   catalogErrorResponse,
   CatalogApiError,
   requiredPositiveId,
 } from "../../../_lib/http";
+import {
+  publicCatalogOptionsResponse,
+  publicCatalogResponse,
+} from "../../../_lib/public-read";
 
 type RouteContext = { params: Promise<{ releaseId: string }> };
 
@@ -16,7 +19,6 @@ export async function GET(
   context: RouteContext,
 ): Promise<Response> {
   try {
-    await requireCatalogIdentity(request);
     const { releaseId: rawReleaseId } = await context.params;
     const releaseId = requiredPositiveId(rawReleaseId, "releaseId");
     const database = requireCatalogDatabase();
@@ -53,10 +55,14 @@ export async function GET(
     object.writeHttpMetadata(headers);
     headers.set("Content-Length", String(object.size));
     headers.set("ETag", object.httpEtag);
-    headers.set("Cache-Control", "private, max-age=3600");
+    headers.set("Cache-Control", "no-store");
     headers.set("X-Content-Type-Options", "nosniff");
-    return new Response(object.body, { headers });
+    return publicCatalogResponse(new Response(object.body, { headers }));
   } catch (error) {
-    return catalogErrorResponse(error);
+    return publicCatalogResponse(catalogErrorResponse(error));
   }
+}
+
+export function OPTIONS(): Response {
+  return publicCatalogOptionsResponse();
 }

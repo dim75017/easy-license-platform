@@ -5,7 +5,8 @@ import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
 import { FilteredCreatorTrackShowcase } from "../components/FilteredCreatorTrackShowcase";
 import { PublicShell } from "../components/PublicShell";
-import { getPlaylistAccent, lofiGirlPlaylists, moods } from "../data/catalog";
+import { getPlaylistAccent, lofiGirlPlaylists } from "../data/catalog";
+import { catalogueMoodFilters } from "../lib/catalog-moods";
 
 export const metadata: Metadata = {
   title: "Music library",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default function CataloguePage() {
-  const featuredMoods = moods.filter((item) => item !== "All moods").slice(0, 10);
+  const featuredMoods = catalogueMoodFilters.slice(0, 10);
 
   return (
     <PublicShell>
@@ -71,7 +72,7 @@ export default function CataloguePage() {
           <ul className="catalogue-moods-grid" data-reveal="group">
             {featuredMoods.map((mood, index) => (
               <li key={mood}>
-                <Link className="catalogue-mood-card" href={`/catalog?q=${encodeURIComponent(mood)}#music-library`}>
+                <Link className="catalogue-mood-card" href={`/catalog?mood=${encodeURIComponent(mood)}#music-library`}>
                   <span className="catalogue-mood-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <strong>{mood}</strong>
                   <span className="catalogue-mood-action">Browse tracks</span>

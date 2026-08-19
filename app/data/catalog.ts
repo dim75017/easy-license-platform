@@ -1,3 +1,5 @@
+import { catalogueMoodFilters, type CatalogueMood } from "../lib/catalog-moods";
+
 export const useCategories = [
   {
     slug: "travel",
@@ -267,7 +269,7 @@ export type CreatorPlaylistTrack = {
 };
 
 export const featuredMoods = ["Warm", "Calm", "Cozy", "Bright", "Easygoing", "Reflective", "Open", "Gentle", "Intimate", "Dreamy"] as const;
-export type FeaturedMood = (typeof featuredMoods)[number];
+export type FeaturedMood = (typeof featuredMoods)[number] | CatalogueMood;
 
 /**
  * Eight editor-selected tracks drawn from the featured public playlists,
@@ -287,7 +289,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT3M20S",
     cover: "/images/catalogue/creator-playlist-tracks/snowflakes.webp",
     suggestedUses: ["study-focus"],
-    moods: ["Warm", "Calm"],
+    moods: ["Warm", "Calm", "Laid Back", "Relaxing", "Peaceful"],
   },
   {
     playlistId: "synthwave-night",
@@ -301,7 +303,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT3M1S",
     cover: "/images/catalogue/creator-playlist-tracks/celestial-awakening.webp",
     suggestedUses: ["gaming-streaming"],
-    moods: ["Bright", "Open"],
+    moods: ["Bright", "Open", "Hopeful", "Happy", "Floating"],
   },
   {
     playlistId: "peaceful-piano",
@@ -315,7 +317,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT3M1S",
     cover: "/images/catalogue/creator-playlist-tracks/the-places-we-used-to-walk.webp",
     suggestedUses: ["podcasts"],
-    moods: ["Reflective"],
+    moods: ["Reflective", "Sad", "Sentimental", "Peaceful"],
   },
   {
     playlistId: "dark-ambient",
@@ -329,7 +331,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT1M51S",
     cover: "/images/catalogue/creator-playlist-tracks/lightswitch.webp",
     suggestedUses: ["cinematic"],
-    moods: ["Dreamy"],
+    moods: ["Dreamy", "Dark", "Mysterious", "Floating"],
   },
   {
     playlistId: "jazz-lofi",
@@ -343,7 +345,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT2M8S",
     cover: "/images/catalogue/creator-playlist-tracks/frozen-bubbles.webp",
     suggestedUses: ["food-hospitality"],
-    moods: ["Cozy"],
+    moods: ["Cozy", "Smooth", "Happy", "Laid Back"],
   },
   {
     playlistId: "chill-house",
@@ -357,7 +359,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT2M26S",
     cover: "/images/catalogue/creator-playlist-tracks/tempel.webp",
     suggestedUses: ["travel"],
-    moods: ["Easygoing"],
+    moods: ["Easygoing", "Laid Back", "Smooth", "Relaxing"],
   },
   {
     playlistId: "sleep-ambient",
@@ -371,7 +373,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT2M8S",
     cover: "/images/catalogue/creator-playlist-tracks/flickering-dust.webp",
     suggestedUses: ["wellness"],
-    moods: ["Gentle"],
+    moods: ["Gentle", "Peaceful", "Relaxing", "Floating"],
   },
   {
     playlistId: "chill-guitar",
@@ -385,7 +387,7 @@ export const creatorPlaylistTracks = [
     durationIso: "PT2M26S",
     cover: "/images/catalogue/creator-playlist-tracks/green-glimmers.webp",
     suggestedUses: ["lifestyle-vlogs"],
-    moods: ["Intimate"],
+    moods: ["Intimate", "Romantic", "Warm", "Sentimental"],
   },
 ] satisfies readonly CreatorPlaylistTrack[];
 
@@ -489,6 +491,15 @@ export const tracks: Track[] = [
   },
 ];
 
+export type WorkspaceRelease = {
+  id: string;
+  title: string;
+  type: string;
+  upc: string | null;
+  releaseDate: string | null;
+  trackCount: number | null;
+};
+
 export type WorkspaceTrack = {
   id: string;
   spotifyId: string | null;
@@ -504,6 +515,8 @@ export type WorkspaceTrack = {
   duration: `${number}:${number}` | null;
   durationIso: `PT${number}M${number}S` | null;
   bpm: number | null;
+  release?: WorkspaceRelease | null;
+  publishedAt?: string | null;
 };
 
 /** A normalized, honest preview index for the connected search experience. */
@@ -542,13 +555,13 @@ export const workspaceTracks: readonly WorkspaceTrack[] = [
 
 export const featuredTracks = tracks;
 export const genres = ["All genres", ...Array.from(new Set(workspaceTracks.map((track) => track.genre)))];
-export const moods = ["All moods", ...Array.from(new Set(workspaceTracks.flatMap((track) => track.moods)))];
+export const moods = ["All moods", ...Array.from(new Set([...catalogueMoodFilters, ...workspaceTracks.flatMap((track) => track.moods)]))];
 export const uses = ["All themes", ...useCategories.map((category) => category.label)];
 
 /** Canonical search language for the connected music library. */
 export const musicSearchTaxonomy = {
   genres: genres.slice(1),
-  moods: moods.slice(1),
+  moods: catalogueMoodFilters,
   themes: useCategories.map(({ label, slug }) => ({ label, slug })),
   artists: Array.from(new Set(workspaceTracks.map((track) => track.artist))),
 } as const;

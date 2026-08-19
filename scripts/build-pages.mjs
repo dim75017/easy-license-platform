@@ -61,6 +61,7 @@ async function prefixPublicAssets() {
 
 const temporaryRoot = await mkdtemp(join(projectRoot, ".pages-staging-"));
 const buildRoot = join(temporaryRoot, "source");
+const privateCatalogPath = join("catalog-audit", "private");
 const excludedTopLevel = new Set([
   ".git",
   ".next",
@@ -86,7 +87,10 @@ try {
       recursive: entry.isDirectory(),
       filter: (path) => {
         const projectPath = relative(projectRoot, path);
-        return projectPath !== join("app", "api") && !projectPath.startsWith(`${join("app", "api")}${sep}`);
+        return projectPath !== join("app", "api")
+          && !projectPath.startsWith(`${join("app", "api")}${sep}`)
+          && projectPath !== privateCatalogPath
+          && !projectPath.startsWith(`${privateCatalogPath}${sep}`);
       },
     });
   }
@@ -100,6 +104,7 @@ try {
         ...process.env,
         BUILD_TARGET: "pages",
         NEXT_PUBLIC_STATIC_DEMO: "true",
+        NEXT_PUBLIC_CATALOG_API_ORIGIN: "https://easy-license.dsomoguy.chatgpt.site",
         PAGES_BASE_PATH: basePath,
       },
     },

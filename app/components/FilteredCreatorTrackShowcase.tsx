@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { creatorPlaylistTracks, useCategories, type CreatorPlaylistTrack, type MusicUseSlug } from "../data/catalog";
+import { trackMatchesMood } from "../lib/catalog-moods";
 import { CreatorTrackShowcase } from "./CreatorTrackShowcase";
 
 const useLabels = new Map(useCategories.map((category) => [category.slug, category.label]));
@@ -14,6 +15,7 @@ export function FilteredCreatorTrackShowcase() {
   const requestedUse = searchParams.get("use");
   const use = requestedUse && validUses.has(requestedUse as MusicUseSlug) ? requestedUse as MusicUseSlug : null;
   const genre = searchParams.get("genre")?.trim() ?? "";
+  const mood = searchParams.get("mood")?.trim() ?? "";
 
   const tracks = useMemo(() => {
     const normalizedQuery = query.toLocaleLowerCase();
@@ -24,11 +26,12 @@ export function FilteredCreatorTrackShowcase() {
       return (
         (!normalizedQuery || haystack.includes(normalizedQuery)) &&
         (!use || track.suggestedUses.includes(use)) &&
-        (!normalizedGenre || track.genre.toLocaleLowerCase() === normalizedGenre)
+        (!normalizedGenre || track.genre.toLocaleLowerCase() === normalizedGenre) &&
+        (!mood || trackMatchesMood(track.moods, mood))
       );
     });
-  }, [genre, query, use]);
+  }, [genre, mood, query, use]);
 
-  const filterLabel = [query, use ? useLabels.get(use) : null, genre].filter(Boolean).join(" · ");
+  const filterLabel = [query, mood, use ? useLabels.get(use) : null, genre].filter(Boolean).join(" · ");
   return <CreatorTrackShowcase tracks={tracks} filterLabel={filterLabel || undefined} />;
 }
