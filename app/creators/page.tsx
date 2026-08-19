@@ -81,7 +81,6 @@ export default function CreatorsPage() {
             <p>Search for a specific track by mood, style or intended use. Or begin with eight editor-selected tracks drawn from our main playlists for streams, edits and different kinds of content.</p>
           </div>
           <div data-reveal="scale"><CreatorTrackShowcase /></div>
-          <div className="creator-editorial-action"><Link className="offer-button offer-button-light offer-catalogue-link cta-swipe" href="/catalog">Explore the full music library</Link></div>
         </section>
 
         <section className="offer-flow creator-flow" aria-labelledby="creator-flow-title">

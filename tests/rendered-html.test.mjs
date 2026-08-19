@@ -487,7 +487,8 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.equal((cataloguePage.match(/<CreatorTrackShowcase \/>/g) ?? []).length, 1, "Music should provide the shared sampler as its static fallback");
   assert.equal((cataloguePage.match(/<FilteredCreatorTrackShowcase \/>/g) ?? []).length, 1, "Music should render the URL-aware shared sampler once");
   assert.match(showcase, /defaultTracks = creatorPlaylistTracks\.slice\(0, 8\)/);
-  assert.match(showcase, /\{tracks\.map\(\(track, index\)/);
+  assert.match(showcase, /className="creator-editorial-table-head" aria-hidden="true"[\s\S]{0,220}<span>Track<\/span>[\s\S]{0,80}<span>Player<\/span>[\s\S]{0,80}<span>Genre<\/span>[\s\S]{0,80}<span>Mood<\/span>/);
+  assert.match(showcase, /\{tracks\.map\(\(track\) =>/);
   assert.match(showcase, /className=\{`\$\{isActive \? "creator-editorial-track is-selected" : "creator-editorial-track"\}\$\{hasError \? " has-preview-error" : ""\}`\}/);
   assert.match(showcase, /<article/);
   assert.match(showcase, /role="list"/);
@@ -499,9 +500,11 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /\{track\.title\}/);
   assert.match(showcase, /\{track\.artist\}/);
   assert.match(showcase, /\{track\.genre\}/);
-  assert.match(showcase, /\{track\.duration\}/);
+  assert.match(showcase, /track\.moods\.slice\(0, 2\)\.join\(" · "\)/);
+  assert.match(showcase, /className="creator-editorial-taxonomy creator-editorial-genre"[\s\S]{0,120}<small>Genre<\/small>[\s\S]{0,80}\{track\.genre\}/);
+  assert.match(showcase, /className="creator-editorial-taxonomy creator-editorial-mood"[\s\S]{0,120}<small>Mood<\/small>[\s\S]{0,100}track\.moods\.slice/);
   assert.match(showcase, /src=\{track\.cover\}[\s\S]{0,220}width=\{640\}[\s\S]{0,100}height=\{640\}[\s\S]{0,120}loading="lazy"[\s\S]{0,120}decoding="async"/);
-  assert.match(showcase, /<audio[\s\S]{0,180}preload="none"[\s\S]{0,300}onEnded=\{preview\.onEnded\}[\s\S]{0,160}onError=\{preview\.onError\}/);
+  assert.match(showcase, /<audio[\s\S]{0,180}preload="none"[\s\S]{0,80}playsInline[\s\S]{0,260}onDurationChange=\{preview\.onLoadedMetadata\}[\s\S]{0,160}onEnded=\{preview\.onEnded\}[\s\S]{0,120}onError=\{preview\.onError\}/);
   assert.match(showcase, /data-playing=\{isPlaying \|\| undefined\}/);
   assert.match(showcase, /preview\.toggle\(\{ id: track\.spotifyId, previewUrl: track\.previewUrl \}\)/);
   const publicWave = showcase.match(/const TrackWave = memo\(function TrackWave\([\s\S]*?\n\}\);/);
@@ -517,8 +520,9 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.doesNotMatch(publicWave[0], /Array\.from\(\{\s*length:|<i\b/, "public waveform bars should be painted rather than mounted as DOM nodes");
   assert.match(publicWave[0], /<input[\s\S]{0,80}type="range"[\s\S]{0,160}max=\{active && canSeek \? duration : 1\}[\s\S]{0,220}onChange=\{\(event\) => onSeek\(Number\(event\.currentTarget\.value\)\)\}[\s\S]{0,140}disabled=\{!active \|\| !canSeek\}/);
   assert.match(showcase, /<TrackWave[\s\S]{0,260}progress=\{isActive \? preview\.progress : 0\}[\s\S]{0,180}onSeek=\{preview\.seekTo\}/);
-  assert.match(showcase, /https:\/\/open\.spotify\.com\/track\/\$\{track\.spotifyId\}/);
-  assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|open\.spotify\.com\/embed/);
+  assert.match(showcase, /isActive && preview\.canSeek \? formatPlaybackTime\(preview\.duration\) : track\.duration/);
+  assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|PlatformLogo|open\.spotify\.com|Open on Spotify/);
+  assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link" href="\/app\?view=music"[\s\S]{0,100}Listen to the full library/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
   assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
   assert.match(filteredShowcase, /track\.suggestedUses\.includes\(use\)/);
@@ -557,7 +561,7 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(previewHook, /onEnded[\s\S]{0,180}setProgress\(0\)/);
   assert.match(previewHook, /requestIdRef\.current === requestId/);
   assert.match(previewHook, /activeTrackIdRef\.current/);
-  assert.equal((showcase.match(/>Open on Spotify<\/a>/g) ?? []).length, 1, "the Creator sampler should keep one track-preview fallback link");
+  assert.equal((showcase.match(/>Open on Spotify<\/a>/g) ?? []).length, 0, "the public sampler should not expose the retired Spotify action");
   assert.equal((cataloguePage.match(/>Open on Spotify<\/a>/g) ?? []).length, 0, "playlist cards should not restore a visible Spotify instruction");
   assert.equal((await source("app/components/CatalogueExplorer.tsx")).match(/>Open on Spotify<\/a>/g)?.length ?? 0, 1, "the legacy track explorer may keep its preview fallback link");
 
@@ -602,17 +606,22 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   }
   assert.ok(coverBytes <= 500_000, "the eight editorial covers should stay below 500 KB");
 
-  assert.match(offerCss, /\.creator-editorial-grid\s*\{[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(offerCss, /V69: shared previews play in place[\s\S]{0,500}\.creator-editorial-showcase \.creator-editorial-track\s*\{[^}]*grid-template-columns:\s*92px minmax\(0, 1fr\) minmax\(150px, 180px\) 52px/s);
-  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\s*\{[^}]*flex:\s*1 1 0;[^}]*opacity:\s*\.28/s);
-  assert.match(offerCss, /\.creator-editorial-showcase \.creator-editorial-wave i\.is-played\s*\{[^}]*background:\s*var\(--marketing-night\);[^}]*opacity:\s*\.92/s);
   assert.match(offerCss, /\.creator-editorial-cover\s*\{[\s\S]{0,180}aspect-ratio:\s*1/);
   assert.match(offerCss, /\.creator-editorial-cover img\s*\{[\s\S]{0,180}object-fit:\s*cover/);
-  assert.match(offerCss, /V69: shared previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,100}\.creator-editorial-showcase \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
   const publicPlayerCss = offerCss.slice(offerCss.indexOf("/* V70"));
-  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player\s*\{[^}]*grid-template-columns:\s*42px 34px minmax\(160px, 1fr\) 38px/);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-table-head\s*\{[^}]*grid-template-columns:\s*minmax\(210px, \.78fr\) minmax\(300px, 1\.45fr\) minmax\(88px, \.36fr\) minmax\(118px, \.48fr\);[^}]*gap:\s*16px/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-track\s*\{[^}]*min-height:\s*82px;[^}]*grid-template-columns:\s*minmax\(210px, \.78fr\) minmax\(300px, 1\.45fr\) minmax\(88px, \.36fr\) minmax\(118px, \.48fr\);[^}]*gap:\s*16px/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-identity\s*\{[^}]*grid-template-columns:\s*56px minmax\(0, 1fr\)/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player\s*\{[^}]*grid-template-columns:\s*40px 32px minmax\(160px, 1fr\) 32px;[^}]*gap:\s*8px/s);
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player > time\s*\{[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
-  assert.match(publicPlayerCss, /@media \(min-width:\s*1081px\)\s*\{\s*\.public-shell \.creator-editorial-showcase \.creator-editorial-meta\s*\{\s*padding-left:\s*8px;/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-wave canvas\s*\{[^}]*height:\s*30px/s);
+  assert.match(publicPlayerCss, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.creator-editorial-table-head > span:nth-child\(3\),\s*\.public-shell \.creator-editorial-showcase \.creator-editorial-genre\s*\{\s*padding-left:\s*32px;/s);
+  assert.match(publicPlayerCss, /@media \(max-width:\s*760px\)[\s\S]{0,900}grid-template-columns:\s*40px 30px minmax\(80px, 1fr\) 30px/);
+  assert.match(publicPlayerCss, /@media \(max-width:\s*480px\)[\s\S]{0,900}grid-template-columns:\s*42px 28px minmax\(64px, 1fr\) 28px/);
+  const publicLibraryCtaCss = offerCss.slice(offerCss.indexOf("/* V74"));
+  assert.match(publicLibraryCtaCss, /\.creator-editorial-library-link\s*\{[^}]*min-height:\s*48px;[^}]*border-radius:\s*999px/s);
+  assert.match(publicLibraryCtaCss, /\.creator-editorial-library-link:focus-visible\s*\{[^}]*outline:\s*3px solid #e06343;[^}]*outline-offset:\s*3px/s);
+  assert.match(publicLibraryCtaCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]{0,160}\.creator-editorial-library-link\s*\{\s*transition:\s*none/s);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -1300,7 +1309,7 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.match(swipeCss, /\.business-quote \.cta-swipe\.button-primary\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px var\(--symbiose-night\)/s);
 
   assert.equal((home.match(/cta-swipe/g) ?? []).length, 7, "all seven homepage CTA buttons should swipe");
-  assert.equal((creators.match(/cta-swipe/g) ?? []).length, 4, "all four Creator CTA buttons should swipe");
+  assert.equal((creators.match(/cta-swipe/g) ?? []).length, 3, "the three page-level Creator CTA buttons should swipe");
   assert.equal((business.match(/cta-swipe/g) ?? []).length, 4, "all four Business CTA buttons should swipe");
   assert.match(catalogue, /music-v26-button music-v26-button-light cta-swipe/);
   assert.match(catalogue, /music-playlists-all cta-swipe/);
@@ -1319,7 +1328,8 @@ test("gives every public call to action one accessible colour-swipe interaction"
   for (const [, , body] of publicCtaBodies) assert.doesNotMatch(body, /[↗→↓]/, "CTA labels should not contain decorative arrows");
   assert.doesNotMatch(publicCtaSource, /(?:Browse collection|View (?:Creator|Pro|Business) details|Open on Spotify|Browse tracks|Explore Commercial Sync|Join early access|Spotify)[^<\n]*[↗→↓]/, "public linked surfaces should not retain decorative arrows");
 
-  assert.doesNotMatch(trackShowcase, /cta-swipe/, "track playback controls are not marketing CTA buttons");
+  assert.doesNotMatch(trackShowcase, /cta-swipe/, "track playback controls and the embedded library route use their dedicated interaction styles");
+  assert.match(trackShowcase, /className="creator-editorial-library-link" href="\/app\?view=music"/);
   assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
 });
 
@@ -1470,6 +1480,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const stableHeaderRule = symbioseBrandCss.slice(symbioseBrandCss.indexOf("/* V8:"));
   assert.doesNotMatch(stableHeaderRule, /lofi-girl-wordmark|font-size|--lofi-wordmark-height|transform|scale/, "scroll stability should not resize the wordmark itself");
   assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
+  assert.match(musicWorkspace, /const libraryViewIds: readonly LibraryView\[\] = \["discover", "music", "playlists", "liked", "downloads", "channels", "licences"\]/);
+  assert.match(musicWorkspace, /function isLibraryView\(value: string \| null\): value is LibraryView[\s\S]{0,160}libraryViewIds\.includes\(value as LibraryView\)/);
+  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
+  assert.match(musicWorkspace, /function writeLibraryViewToLocation\(view: LibraryView, mode: "push" \| "replace"\)[\s\S]{0,180}url\.searchParams\.set\("view", view\)[\s\S]{0,120}view !== "music"[\s\S]{0,80}url\.searchParams\.delete\("track"\)/);
+  assert.match(musicWorkspace, /mode === "push"[\s\S]{0,100}window\.history\.pushState[\s\S]{0,100}window\.history\.replaceState/);
+  assert.match(musicWorkspace, /syncViewFromLocation\(\)[\s\S]{0,180}window\.addEventListener\("popstate", handlePopState\)[\s\S]{0,120}window\.removeEventListener\("popstate", handlePopState\)/);
+  assert.match(musicWorkspace, /function navigateToView\(nextView: LibraryView\)[\s\S]{0,220}setView\(nextView\)[\s\S]{0,100}writeLibraryViewToLocation\(nextView, historyMode\)/);
   assert.doesNotMatch(musicWorkspace, /ProductNavigation|music-product-nav/);
   assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/, "Discover should open directly without the retired tuning setup");
@@ -1487,6 +1504,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /<header className=\{`music-app-topbar\$\{usesWideCanvas \? " is-wide" : ""\}`\}>/);
   assert.match(musicWorkspace, /view === "discover"[\s\S]{0,100}className="music-library-view music-workspace-view"/);
   assert.match(musicWorkspace, /view === "music"[\s\S]{0,100}className="music-track-browser music-workspace-view"/);
+  assert.match(musicWorkspace, /view === "music"[\s\S]{0,160}className="music-track-browser music-workspace-view" aria-label="Music catalogue"/);
+  assert.match(musicWorkspace, /className="music-track-browser-head music-track-browser-controls"[\s\S]{0,220}className="music-track-results-status" role="status" aria-live="polite"/);
+  assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
   assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,180}className="music-secondary-view music-playlists-view music-workspace-view"/);
   for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
@@ -1770,7 +1790,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v14BaseCss, /\.music-action-icon\s*\{[^}]*width:\s*18px;[^}]*height:\s*18px/s);
   assert.match(musicWorkspaceV15, /\.music-action-icon svg\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*height:\s*100%/s);
   assert.match(musicWorkspaceV15, /\.music-action-icon::before,[\s\S]{0,180}\.music-action-icon > b\s*\{[^}]*display:\s*none !important;[^}]*content:\s*none !important/s);
-  assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*14px;/s);
+  assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*32px;/s);
+  assert.match(musicWorkspaceV15, /\.music-track-browser-controls > \.music-track-results-status\s*\{\s*margin:\s*0;/s);
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
