@@ -4,7 +4,6 @@ import Link from "next/link";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { creatorPlaylistTracks, type CreatorPlaylistTrack } from "../data/catalog";
 import { useTrackPreview } from "../hooks/useTrackPreview";
-import { PlatformLogo } from "./PlatformLogo";
 
 function formatPlaybackTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -139,8 +138,15 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
         </div>
       )}
 
-      {tracks.length > 0 ? <div className="creator-editorial-grid" role="list" aria-label={`${tracks.length} tracks selected across featured Symbiome playlists`}>
-        {tracks.map((track, index) => {
+      {tracks.length > 0 ? <>
+        <div className="creator-editorial-table-head" aria-hidden="true">
+          <span>Track</span>
+          <span>Player</span>
+          <span>Genre</span>
+          <span>Mood</span>
+        </div>
+        <div className="creator-editorial-grid" role="list" aria-label={`${tracks.length} tracks selected across featured Symbiome playlists`}>
+        {tracks.map((track) => {
           const isActive = preview.activeTrackId === track.spotifyId;
           const isPlaying = isActive && preview.isPlaying;
           const hasError = preview.errorTrackId === track.spotifyId;
@@ -152,13 +158,11 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
               role="listitem"
               aria-label={`${track.title} by ${track.artist}`}
             >
-              <span className="creator-editorial-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <span className="creator-editorial-identity">
                 <span className="creator-editorial-cover">
                   <img src={track.cover} alt={`Album cover for ${track.title} by ${track.artist}`} width={640} height={640} loading="lazy" decoding="async" />
                 </span>
                 <span className="creator-editorial-copy">
-                  <small>From {track.playlistTitle}</small>
                   <strong>{track.title}</strong>
                   <em>{track.artist}</em>
                 </span>
@@ -185,37 +189,51 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
                   title={track.title}
                   onSeek={preview.seekTo}
                 />
-                <time dateTime={track.durationIso}>{track.duration}</time>
+                <time dateTime={isActive && preview.canSeek ? `PT${Math.floor(preview.duration)}S` : track.durationIso}>
+                  {isActive && preview.canSeek ? formatPlaybackTime(preview.duration) : track.duration}
+                </time>
               </span>
-              <span className="creator-editorial-meta">
-                <span className="creator-editorial-genre">{track.genre}</span>
-                <a href={`https://open.spotify.com/track/${track.spotifyId}`} target="_blank" rel="noreferrer" aria-label={`Open ${track.title} on Spotify`}>
-                  <PlatformLogo platform="Spotify" bare />
-                  <span>Spotify</span>
-                </a>
+              <span className="creator-editorial-taxonomy creator-editorial-genre">
+                <small>Genre</small>
+                <span>{track.genre}</span>
+              </span>
+              <span className="creator-editorial-taxonomy creator-editorial-mood">
+                <small>Mood</small>
+                <span>{track.moods.slice(0, 2).join(" · ")}</span>
               </span>
               {hasError && (
                 <span className="creator-editorial-error" role="status">
-                  Preview unavailable. <a href={`https://open.spotify.com/track/${track.spotifyId}`} target="_blank" rel="noreferrer">Open on Spotify</a>
+                  Preview unavailable.
                 </span>
               )}
             </article>
           );
         })}
-      </div> : (
+        </div>
+      </> : (
         <div className="creator-editorial-empty" role="status">
           <strong>No tracks match this selection yet.</strong>
           <Link href="/catalog#music-library">Show all editor-selected tracks</Link>
         </div>
       )}
 
+      <div className="creator-editorial-library-cta">
+        <span>Keep listening with every track in one place.</span>
+        <Link className="creator-editorial-library-link" href="/app?view=music">
+          Listen to the full library
+          <i aria-hidden="true">→</i>
+        </Link>
+      </div>
+
       <audio
         ref={preview.audioRef}
         preload="none"
+        playsInline
         onPlay={preview.onPlay}
         onPause={preview.onPause}
         onTimeUpdate={preview.onTimeUpdate}
         onLoadedMetadata={preview.onLoadedMetadata}
+        onDurationChange={preview.onLoadedMetadata}
         onEnded={preview.onEnded}
         onError={preview.onError}
         hidden

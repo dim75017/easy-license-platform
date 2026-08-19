@@ -21,6 +21,35 @@ type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
 type CatalogLoadState = "loading" | "live" | "fallback";
 
+const libraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked", "downloads", "channels", "licences"];
+
+function isLibraryView(value: string | null): value is LibraryView {
+  return value !== null && libraryViewIds.includes(value as LibraryView);
+}
+
+function readLibraryViewFromLocation(): LibraryView {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("track")?.trim()) return "music";
+
+  const requestedView = params.get("view");
+  if (isLibraryView(requestedView)) return requestedView;
+
+  return "discover";
+}
+
+function writeLibraryViewToLocation(view: LibraryView, mode: "push" | "replace") {
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", view);
+  if (view !== "music") url.searchParams.delete("track");
+
+  const destination = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (destination === current) return;
+
+  if (mode === "push") window.history.pushState(window.history.state, "", destination);
+  else window.history.replaceState(window.history.state, "", destination);
+}
+
 type PersonalPlaylist = {
   id: string;
   name: string;
@@ -377,7 +406,6 @@ export function CreatorWorkspace() {
   const [genre, setGenre] = useState("All genres");
   const [mood, setMood] = useState("All moods");
   const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
-  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
   const [likedReady, setLikedReady] = useState(false);
   const [personalPlaylists, setPersonalPlaylists] = useState<PersonalPlaylist[]>(() => [defaultPersonalPlaylist]);
@@ -391,11 +419,26 @@ export function CreatorWorkspace() {
   const [highlightedTrackId, setHighlightedTrackId] = useState<string | null>(null);
   const trackMenuOpenerRef = useRef<HTMLElement | null>(null);
   const sharedTrackHandledRef = useRef(false);
+  const activeViewRef = useRef<LibraryView>("discover");
   const preview = useTrackPreview();
   const libraryTracks = catalogTracks?.length ? catalogTracks : workspaceTracks;
   const recentTracks = useMemo(() => libraryTracks.slice(0, 8), [libraryTracks]);
   const availableGenres = useMemo(() => ["All genres", ...new Set(libraryTracks.map((track) => track.genre))], [libraryTracks]);
   const availableMoods = useMemo(() => ["All moods", ...new Set(libraryTracks.flatMap((track) => track.moods))], [libraryTracks]);
+
+  useEffect(() => {
+    const syncViewFromLocation = () => {
+      const nextView = readLibraryViewFromLocation();
+      activeViewRef.current = nextView;
+      setView(nextView);
+      writeLibraryViewToLocation(nextView, "replace");
+    };
+
+    syncViewFromLocation();
+    const handlePopState = () => syncViewFromLocation();
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -448,7 +491,6 @@ export function CreatorWorkspace() {
       setGenre("All genres");
       setMood("All moods");
       setActiveUse(null);
-      setActivePlaylistId(null);
       setQuery("");
       setHighlightedTrackId(sharedTrack.id);
       setView("music");
@@ -546,9 +588,6 @@ export function CreatorWorkspace() {
   const downloadedTracks = useMemo(() => libraryTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, libraryTracks]);
   const selectedTrack = libraryTracks.find((track) => track.id === preview.activeTrackId);
   const menuTrack = trackMenu ? libraryTracks.find((track) => track.id === trackMenu.trackId) : undefined;
-  const activePlaylist = lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId);
-  const activeTheme = musicSearchTaxonomy.themes.find((theme) => theme.slug === activeUse);
-
   useEffect(() => {
     if (preview.activeTrackId && !libraryTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
   }, [libraryTracks, preview.activeTrackId, preview.stop]);
@@ -557,16 +596,21 @@ export function CreatorWorkspace() {
     setGenre("All genres");
     setMood("All moods");
     setActiveUse(null);
-    setActivePlaylistId(null);
     setQuery("");
   }
 
+  function navigateToView(nextView: LibraryView) {
+    const historyMode = activeViewRef.current === nextView ? "replace" : "push";
+    activeViewRef.current = nextView;
+    setView(nextView);
+    writeLibraryViewToLocation(nextView, historyMode);
+  }
+
   function showMusic() {
-    setView("music");
+    navigateToView("music");
   }
 
   function openPlaylist(playlist: LofiGirlPlaylist) {
-    setActivePlaylistId(playlist.id);
     setActiveUse(playlist.use);
     setGenre("All genres");
     setMood("All moods");
@@ -577,7 +621,6 @@ export function CreatorWorkspace() {
     setGenre("All genres");
     setMood("All moods");
     setActiveUse(null);
-    setActivePlaylistId(null);
     setQuery("");
     if (kind === "genre") setGenre(value);
     if (kind === "mood") setMood(value);
@@ -747,7 +790,7 @@ export function CreatorWorkspace() {
           <div className="music-no-results">
             <strong>No matching tracks yet.</strong>
             <p>Try another category or return to the full music preview.</p>
-            <button type="button" onClick={() => { resetFilters(); setView("music"); }}>Show all music</button>
+            <button type="button" onClick={() => { resetFilters(); navigateToView("music"); }}>Show all music</button>
           </div>
         )}
       </div>
@@ -772,7 +815,7 @@ export function CreatorWorkspace() {
                     className={view === item.id ? "is-active" : ""}
                     {...(item.mobileSecondary ? { "data-mobile-secondary": "true" } : {})}
                     type="button"
-                    onClick={() => setView(item.id)}
+                    onClick={() => navigateToView(item.id)}
                     aria-current={view === item.id ? "page" : undefined}
                     key={item.id}
                   >
@@ -799,13 +842,12 @@ export function CreatorWorkspace() {
               onChange={(event) => {
                 setQuery(event.target.value);
                 setActiveUse(null);
-                setActivePlaylistId(null);
-                setView("music");
+                navigateToView("music");
               }}
               placeholder="Search by track, artist, genre, mood or theme"
             />
           </label>
-          <button className="music-topbar-action" type="button" onClick={() => setView("downloads")}>Downloads</button>
+          <button className="music-topbar-action" type="button" onClick={() => navigateToView("downloads")}>Downloads</button>
         </header>
 
         {view === "discover" && (
@@ -828,7 +870,7 @@ export function CreatorWorkspace() {
                         : "Recent releases from the local catalogue."}
                   </p>
                 </div>
-                <button type="button" onClick={() => setView("music")}>Browse all music</button>
+                <button type="button" onClick={() => navigateToView("music")}>Browse all music</button>
               </div>
               <div className="music-recent-grid" role="list" aria-label="Recent catalogue releases">
                 {recentTracks.map((track) => {
@@ -856,7 +898,7 @@ export function CreatorWorkspace() {
             </div>
 
             <section className="music-shelf" aria-labelledby="project-playlists-title">
-              <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Start with a playlist.</h3><p>Twelve listening directions using the original playlist photography and a genre colour code.</p></div><button type="button" onClick={() => setView("playlists")}>View all playlists</button></div>
+              <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Start with a playlist.</h3><p>Twelve listening directions using the original playlist photography and a genre colour code.</p></div><button type="button" onClick={() => navigateToView("playlists")}>View all playlists</button></div>
               <div className="music-playlist-shelf">
                 {lofiGirlPlaylists.slice(0, 8).map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
               </div>
@@ -865,19 +907,15 @@ export function CreatorWorkspace() {
         )}
 
         {view === "music" && (
-          <section className="music-track-browser music-workspace-view" aria-labelledby="tracks-title">
-            <div className="music-track-browser-head">
-              <div>
-                <span>MUSIC SEARCH</span>
-                <h2 id="tracks-title">{activePlaylist?.title ?? activeTheme?.label ?? (query ? `Results for “${query}”` : "All music")}</h2>
-                <p className="music-track-results-status" role="status" aria-live="polite">
-                  {catalogLoadState === "loading"
-                    ? "Loading your private catalogue..."
-                    : catalogLoadState === "live"
-                      ? `${visibleTracks.length} shown from ${catalogTotal} available ${catalogTotal === 1 ? "track" : "tracks"}`
-                      : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue`}
-                </p>
-              </div>
+          <section className="music-track-browser music-workspace-view" aria-label="Music catalogue">
+            <div className="music-track-browser-head music-track-browser-controls">
+              <p className="music-track-results-status" role="status" aria-live="polite">
+                {catalogLoadState === "loading"
+                  ? "Loading your private catalogue..."
+                  : catalogLoadState === "live"
+                    ? `${visibleTracks.length} shown from ${catalogTotal} available ${catalogTotal === 1 ? "track" : "tracks"}`
+                    : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue`}
+              </p>
               <div className="music-filter-row">
                 <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
