@@ -172,7 +172,7 @@ export function AccountSetup() {
               >
                 Open the secure app
               </a>
-              <Link className="account-secondary-link" href="/catalog">
+              <Link className="account-secondary-link" href="/app">
                 Browse music first
               </Link>
             </div>

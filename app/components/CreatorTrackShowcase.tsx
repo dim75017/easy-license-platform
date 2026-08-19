@@ -219,10 +219,7 @@ export function CreatorTrackShowcase({ tracks = defaultTracks, filterLabel }: { 
 
       <div className="creator-editorial-library-cta">
         <span>Keep listening with every track in one place.</span>
-        <Link className="creator-editorial-library-link" href="/app?view=music">
-          Listen to the full library
-          <i aria-hidden="true">→</i>
-        </Link>
+        <Link className="creator-editorial-library-link cta-swipe" href="/app">Listen to the full library</Link>
       </div>
 
       <audio
