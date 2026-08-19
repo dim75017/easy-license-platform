@@ -15,22 +15,33 @@ import {
 
 const MAX_PROMOTE_BODY_BYTES = 16 * 1024;
 const MAX_DURATION_DELTA_MS = 2_000;
+const CATALOG_OWNER_DIRECT_BATCH_KEY = "symbiome-catalog-owner-drain-v1";
 const ALLOWED_KEYS = new Set([
   "trackId",
   "batchKey",
   "sourceKey",
   "sourceSha256",
   "measuredDurationMs",
+  "verificationMode",
 ]);
+
+type VerificationMode = "spotify" | "catalog_owner_direct";
 
 type PromotionRow = {
   ingest_id: number;
   ingest_status: string;
   ingest_failure_code: string | null;
   ingest_review_note: string | null;
+  source_row_number: number | null;
   source_sha256: string | null;
   measured_duration_ms: number | null;
   ingest_asset_id: number | null;
+  verification_mode: string | null;
+  owner_attestation_sha256: string | null;
+  catalogue_scope_sha256: string | null;
+  selection_sha256: string | null;
+  master_inspection_sha256: string | null;
+  master_read_complete: number | null;
   release_id: number;
   release_title: string;
   release_upc: string | null;
@@ -94,6 +105,7 @@ export async function POST(request: Request): Promise<Response> {
     if (measuredDurationMs === null) {
       throw new CatalogApiError("measuredDurationMs is required.");
     }
+    const verificationMode = parseVerificationMode(payload.verificationMode);
 
     const database = requireCatalogDatabase();
     const row = await database
@@ -103,9 +115,16 @@ export async function POST(request: Request): Promise<Response> {
            ii.status AS ingest_status,
            ii.failure_code AS ingest_failure_code,
            ii.review_note AS ingest_review_note,
+           ii.source_row_number,
            ii.source_sha256,
            ii.measured_duration_ms,
            ii.asset_id AS ingest_asset_id,
+           ii.verification_mode,
+           ii.owner_attestation_sha256,
+           ii.catalogue_scope_sha256,
+           ii.selection_sha256,
+           ii.master_inspection_sha256,
+           ii.master_read_complete,
            t.release_id,
            r.title AS release_title,
            r.upc AS release_upc,
@@ -146,7 +165,22 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    assertPromotionMetadata(row, sourceSha256, measuredDurationMs);
+    if (
+      verificationMode === "catalog_owner_direct" &&
+      batchKey !== CATALOG_OWNER_DIRECT_BATCH_KEY
+    ) {
+      throw new CatalogApiError(
+        "Catalog-owner direct promotion is restricted to its sealed pipeline batch.",
+        409,
+        "promotion_owner_direct_batch_mismatch",
+      );
+    }
+    assertPromotionMetadata(
+      row,
+      sourceSha256,
+      measuredDurationMs,
+      verificationMode,
+    );
 
     const assetRows = await database
       .prepare(
@@ -186,6 +220,16 @@ export async function POST(request: Request): Promise<Response> {
         "Verified source master, streaming copy and waveform peaks are required.",
         409,
         "promotion_assets_incomplete",
+      );
+    }
+    if (
+      verificationMode === "catalog_owner_direct" &&
+      sourceMaster.mime_type !== "audio/wav"
+    ) {
+      throw new CatalogApiError(
+        "Catalog-owner direct promotion requires a fully inspected WAV master.",
+        409,
+        "promotion_owner_master_type_invalid",
       );
     }
     assertAssetDuration(streamingCopy, measuredDurationMs, "streaming copy");
@@ -317,32 +361,56 @@ export async function POST(request: Request): Promise<Response> {
                  AND ii.status = 'ready'
                  AND ii.failure_code IS NULL
                  AND ii.review_note IS NULL
-             )
-             AND EXISTS (
-               SELECT 1
-               FROM spotify_matches AS sm
-               JOIN releases AS sr ON sr.id = t.release_id
-               WHERE sm.track_id = t.id
-                 AND sm.status = 'verified'
-                 AND sm.spotify_duration_ms IS NOT NULL
-                 AND sm.duration_delta_ms BETWEEN 0 AND 2000
-                 AND ABS(sm.spotify_duration_ms - ?) <= 2000
-                 AND sm.spotify_title = ?
-                 AND sm.spotify_artist_credit = ?
-                 AND sm.spotify_album_title = ?
                  AND (
                    (
-                     sm.method = 'orchard_uri'
-                     AND sr.upc = ?
-                     AND sm.spotify_album_title = sr.title
-                     AND sm.spotify_isrc = t.isrc
+                     ? = 'spotify'
+                     AND ii.verification_mode IS NULL
                    )
                    OR (
-                     sm.method != 'orchard_uri'
-                     AND sm.spotify_album_id IS NOT NULL
+                     ? = 'catalog_owner_direct'
+                     AND ii.verification_mode = 'catalog_owner_direct'
+                     AND ii.batch_key = 'symbiome-catalog-owner-drain-v1'
+                     AND ii.source_row_number IS NOT NULL
+                     AND ii.owner_attestation_sha256 = ?
+                     AND ii.catalogue_scope_sha256 = ?
+                     AND ii.selection_sha256 = ?
+                     AND ii.master_inspection_sha256 = ?
+                     AND ii.master_inspection_sha256 = ii.source_sha256
+                     AND ii.master_read_complete = 1
                    )
                  )
              )
+             AND (
+               ? = 'catalog_owner_direct'
+               OR (
+                 ? = 'spotify'
+                 AND EXISTS (
+                   SELECT 1
+                   FROM spotify_matches AS sm
+                   JOIN releases AS sr ON sr.id = t.release_id
+                   WHERE sm.track_id = t.id
+                     AND sm.status = 'verified'
+                     AND sm.spotify_duration_ms IS NOT NULL
+                     AND sm.duration_delta_ms BETWEEN 0 AND 2000
+                     AND ABS(sm.spotify_duration_ms - ?) <= 2000
+                     AND sm.spotify_title = ?
+                     AND sm.spotify_artist_credit = ?
+                     AND sm.spotify_album_title = ?
+                     AND (
+                       (
+                         sm.method = 'orchard_uri'
+                         AND sr.upc = ?
+                         AND sm.spotify_album_title = sr.title
+                         AND sm.spotify_isrc = t.isrc
+                       )
+                       OR (
+                         sm.method != 'orchard_uri'
+                         AND sm.spotify_album_id IS NOT NULL
+                       )
+                     )
+                   )
+                 )
+               )
              AND EXISTS (
                SELECT 1
                FROM track_assets AS master
@@ -353,6 +421,10 @@ export async function POST(request: Request): Promise<Response> {
                  AND master.sha256 = ?
                  AND master.duration_ms = ?
                  AND master.byte_size IS NOT NULL
+                 AND (
+                   ? != 'catalog_owner_direct'
+                   OR master.mime_type = 'audio/wav'
+                 )
              )
              AND EXISTS (
                SELECT 1
@@ -394,6 +466,14 @@ export async function POST(request: Request): Promise<Response> {
           sourceKey,
           sourceSha256,
           measuredDurationMs,
+          verificationMode,
+          verificationMode,
+          row.owner_attestation_sha256,
+          row.catalogue_scope_sha256,
+          row.selection_sha256,
+          row.master_inspection_sha256,
+          verificationMode,
+          verificationMode,
           measuredDurationMs,
           row.spotify_title,
           row.spotify_artist_credit,
@@ -402,6 +482,7 @@ export async function POST(request: Request): Promise<Response> {
           sourceMaster.id,
           sourceSha256,
           measuredDurationMs,
+          verificationMode,
           streamingCopy.id,
           streamingCopy.sha256,
           sourceSha256,
@@ -485,6 +566,7 @@ function assertPromotionMetadata(
   row: PromotionRow,
   sourceSha256: string,
   measuredDurationMs: number,
+  verificationMode: VerificationMode,
 ): void {
   if (!["ready", "imported"].includes(row.ingest_status)) {
     throw new CatalogApiError(
@@ -552,6 +634,54 @@ function assertPromotionMetadata(
       "promotion_catalog_duration_mismatch",
     );
   }
+  if (verificationMode === "catalog_owner_direct") {
+    assertCatalogOwnerDirectEvidence(row, sourceSha256);
+  } else {
+    if (row.verification_mode !== null) {
+      throw new CatalogApiError(
+        "The requested verification mode does not match the ingest authority.",
+        409,
+        "promotion_verification_mode_mismatch",
+      );
+    }
+    assertSpotifyEvidence(row, measuredDurationMs);
+  }
+  if (!row.cover_storage_key) {
+    throw new CatalogApiError(
+      "A private release cover is required.",
+      409,
+      "promotion_cover_missing",
+    );
+  }
+}
+
+function assertCatalogOwnerDirectEvidence(
+  row: PromotionRow,
+  sourceSha256: string,
+): void {
+  if (
+    row.verification_mode !== "catalog_owner_direct" ||
+    row.source_row_number === null ||
+    row.source_row_number < 1 ||
+    !isSha256(row.owner_attestation_sha256) ||
+    !isSha256(row.catalogue_scope_sha256) ||
+    !isSha256(row.selection_sha256) ||
+    !isSha256(row.master_inspection_sha256) ||
+    row.master_inspection_sha256 !== sourceSha256 ||
+    row.master_read_complete !== 1
+  ) {
+    throw new CatalogApiError(
+      "The sealed catalog-owner, source-scope and full-master evidence is incomplete or corrupt.",
+      409,
+      "promotion_owner_evidence_invalid",
+    );
+  }
+}
+
+function assertSpotifyEvidence(
+  row: PromotionRow,
+  measuredDurationMs: number,
+): void {
   if (
     row.spotify_duration_ms === null ||
     row.spotify_duration_delta_ms === null
@@ -598,13 +728,10 @@ function assertPromotionMetadata(
       "promotion_spotify_evidence_incomplete",
     );
   }
-  if (!row.cover_storage_key) {
-    throw new CatalogApiError(
-      "A private release cover is required.",
-      409,
-      "promotion_cover_missing",
-    );
-  }
+}
+
+function isSha256(value: string | null): value is string {
+  return value !== null && /^[a-f0-9]{64}$/u.test(value);
 }
 
 function normalizeEvidenceText(value: string | null): string {
@@ -622,6 +749,20 @@ function requiredSha256(value: unknown, label: string): string {
     throw new CatalogApiError(`${label} must be a hexadecimal SHA-256 digest.`);
   }
   return sha256;
+}
+
+function parseVerificationMode(value: unknown): VerificationMode {
+  if (value === undefined || value === null) return "spotify";
+  const verificationMode = requiredString(value, "verificationMode", 40);
+  if (
+    verificationMode !== "spotify" &&
+    verificationMode !== "catalog_owner_direct"
+  ) {
+    throw new CatalogApiError(
+      "verificationMode must be spotify or catalog_owner_direct.",
+    );
+  }
+  return verificationMode;
 }
 
 function assertAssetDuration(

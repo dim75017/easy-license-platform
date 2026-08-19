@@ -178,6 +178,29 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn("--token", command)
         self.assertNotIn("--api-key", command)
 
+    def test_global_inventory_drain_runs_sequential_checkpoints_until_exhausted(self):
+        documents = [
+            [{"status": "partial", "mode": "apply", "pendingReleases": 150, "inventoryItems": 100, "errors": 0, "complete": False}],
+            [{"status": "partial", "mode": "apply", "pendingReleases": 50, "inventoryItems": 200, "errors": 0, "complete": False}],
+            [{"status": "ok", "mode": "apply", "pendingReleases": 0, "inventoryItems": 250, "errors": 0, "complete": True}],
+        ]
+        config = {
+            "drive_seed": Path("seed.json"),
+            "inventory_directory": Path("inventory"),
+            "inventory_release_batch": 50,
+        }
+        with mock.patch.object(sync, "run_step", side_effect=documents) as runner:
+            summary = sync.drain_drive_inventory(config)
+        self.assertEqual(runner.call_count, 3)
+        self.assertEqual(summary["passes"], 3)
+        self.assertTrue(summary["complete"])
+        for call in runner.call_args_list:
+            command = call.args[1]
+            self.assertEqual(
+                command[command.index("--max-releases") + 1],
+                str(sync.DIRECT_INVENTORY_RELEASE_BATCH),
+            )
+
     def test_drive_summary_keeps_real_aggregate_fields_and_drops_private_rows(self):
         summary = sync.compact_child_summary(
             "drive_sync",
@@ -734,6 +757,24 @@ class FfmpegTests(unittest.TestCase):
         self.assertNotIn("ffmpeg", summary)
         self.assertNotIn(str(private_ffmpeg), json.dumps(summary))
 
+    def test_owner_direct_process_command_has_sealed_evidence_and_no_spotify_gate(self):
+        command = sync.build_process_catalog_command(
+            exact_manifest=Path("private") / "direct.jsonl",
+            pipeline_state=Path("private") / "pipeline.sqlite3",
+            spotify_enrichment=None,
+            ffmpeg_executable=Path("private") / "ffmpeg.exe",
+            verification_mode="catalog_owner_direct",
+            owner_attestation_sha256="1" * 64,
+            catalogue_scope_sha256="2" * 64,
+            selection_sha256="3" * 64,
+            apply=True,
+        )
+        self.assertNotIn("--spotify-enrichment", command)
+        self.assertEqual(command[command.index("--verification-mode") + 1], "catalog_owner_direct")
+        self.assertEqual(command[command.index("--batch-key") + 1], sync.DIRECT_BATCH_KEY)
+        self.assertIn("--rights-cleared", command)
+        self.assertIn("--human-made-cleared", command)
+
 
 class SelectionTests(unittest.TestCase):
     def test_spotify_selection_requires_full_hash_and_rotates_by_attempt_count(self):
@@ -747,6 +788,44 @@ class SelectionTests(unittest.TestCase):
         second["inspection"]["mode"] = "range"
         selected = sync.select_spotify_batch([first, second], state, 2)
         self.assertEqual([item["candidate_id"] for item in selected], [first["candidate_id"]])
+
+    def test_owner_direct_selection_skips_identical_historical_published_base(self):
+        published = exact_record("b" * 28)
+        fresh = exact_record("c" * 28)
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / "pipeline.sqlite3"
+            connection = sync.process.open_pipeline_state(state)
+            connection.execute(
+                """INSERT INTO pipeline_items (
+                candidate_id, manifest_fingerprint, batch_key, status,
+                rights_cleared_ack, human_made_cleared_ack, created_at, updated_at
+                ) VALUES (?, ?, 'historical', 'published', 1, 1, ?, ?)""",
+                (published["candidate_id"], "f" * 64, sync.utc_now(), sync.utc_now()),
+            )
+            connection.execute(
+                """CREATE TABLE published_manifest_bases (
+                candidate_id TEXT PRIMARY KEY,
+                base_fingerprint TEXT NOT NULL,
+                source_manifest_fingerprint TEXT NOT NULL,
+                verified_at TEXT NOT NULL
+                )"""
+            )
+            connection.execute(
+                "INSERT INTO published_manifest_bases VALUES (?, ?, ?, ?)",
+                (
+                    published["candidate_id"],
+                    sync.process.canonical_fingerprint(published),
+                    "f" * 64,
+                    sync.utc_now(),
+                ),
+            )
+            connection.commit()
+            connection.close()
+            selected = sync.select_unpublished_direct_records(
+                [published, fresh],
+                state,
+            )
+        self.assertEqual([record["candidate_id"] for record in selected], [fresh["candidate_id"]])
 
     def test_publication_skips_only_identical_completed_fingerprint(self):
         record = exact_record()

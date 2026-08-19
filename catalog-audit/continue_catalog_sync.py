@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Continue the private Drive catalogue audit in small, resumable batches.
+"""Continue or globally drain the private Drive catalogue pipeline.
 
 This is an orchestration layer around ``ingest_catalog.py``,
 ``enrich-spotify-metadata.mjs`` and ``process_catalog.py``.  It keeps every
@@ -8,6 +8,11 @@ only.  Publication is impossible unless two explicit, selection-bound evidence
 files are present, or are derived from a valid catalogue-owner attestation
 scoped to the configured sources, and the operator deliberately chooses
 ``--mode publish``.
+
+``--mode drain`` is the separately sealed catalogue-owner lane: it treats the
+configured Sheet + Drive roots as authoritative, skips Spotify and redundant
+WAV preinspection, then processes every deterministic row sequentially to a
+resumable terminal checkpoint.
 """
 
 from __future__ import annotations
@@ -48,6 +53,7 @@ MAX_PUBLICATION_BATCH = 25
 MAX_RELEASE_BATCH = 10
 MAX_RUN_MINUTES = 60
 MAX_INVENTORY_RELEASE_BATCH = 50
+DIRECT_INVENTORY_RELEASE_BATCH = 100
 MAX_WORKBOOK_BYTES = 50 * 1024 * 1024
 MAX_ATTESTATION_BYTES = 64 * 1024
 DRIVE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{10,200}$")
@@ -64,6 +70,7 @@ PUBLICATION_SECRET_ENVIRONMENT_KEYS = (
 )
 MAX_PRIVATE_SECRET_LENGTH = 64 * 1024
 SYNC_LOCK_FILENAME = ".catalog-sync.lock"
+DIRECT_BATCH_KEY = "symbiome-catalog-owner-drain-v1"
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
 LOW_RESOURCE_NICE_INCREMENT = 10
 LOW_RESOURCE_THREAD_ENVIRONMENT_KEYS = (
@@ -543,7 +550,7 @@ def run_step_result(
     step: str,
     command: Sequence[str],
     *,
-    timeout: int = 7_200,
+    timeout: int | None = 7_200,
     environment: Mapping[str, str] | None = None,
     accepted_return_codes: Sequence[int] = (0,),
 ) -> tuple[list[object], int]:
@@ -591,7 +598,7 @@ def run_step(
     step: str,
     command: Sequence[str],
     *,
-    timeout: int = 7_200,
+    timeout: int | None = 7_200,
     environment: Mapping[str, str] | None = None,
 ) -> list[object]:
     documents, _return_code = run_step_result(
@@ -727,7 +734,9 @@ def resolve_ffmpeg_executable(
     raise SyncError("ffmpeg_missing")
 
 
-def build_drive_sync_command(config: Mapping[str, Any]) -> list[str]:
+def build_drive_sync_command(
+    config: Mapping[str, Any], *, release_limit: int | None = None
+) -> list[str]:
     script = AUDIT_DIRECTORY / "sync_lofi_drive.py"
     if not script.is_file():
         raise SyncError("drive_sync_script_missing")
@@ -741,9 +750,50 @@ def build_drive_sync_command(config: Mapping[str, Any]) -> list[str]:
         "--allow-network",
         "--apply",
         "--max-releases",
-        str(config["inventory_release_batch"]),
+        str(release_limit or config["inventory_release_batch"]),
         "--resume",
     ]
+
+
+def drain_drive_inventory(config: Mapping[str, Any]) -> dict[str, Any]:
+    """Drain the resumable release inventory inside one top-level invocation.
+
+    The crawler itself is deliberately bounded to 100 sequential folders. We
+    keep invoking that same checkpointed worker until the inventory is complete
+    or a whole pass makes no aggregate progress, which represents unreachable
+    folders rather than an arbitrary batch boundary.
+    """
+
+    previous_signature: tuple[int, int, int] | None = None
+    latest: dict[str, Any] = {}
+    passes = 0
+    while True:
+        documents = run_step(
+            "drive_sync",
+            build_drive_sync_command(
+                config,
+                release_limit=DIRECT_INVENTORY_RELEASE_BATCH,
+            ),
+            timeout=1800,
+        )
+        compact = compact_child_summary("drive_sync", documents)
+        if not isinstance(compact, dict):
+            raise SyncError("drive_sync_summary_invalid")
+        latest = compact
+        passes += 1
+        pending = compact.get("pendingReleases")
+        inventory_items = compact.get("inventoryItems")
+        errors = compact.get("errors")
+        if not all(isinstance(value, int) and not isinstance(value, bool) and value >= 0 for value in (pending, inventory_items, errors)):
+            raise SyncError("drive_sync_summary_invalid")
+        if compact.get("complete") is True or pending == 0:
+            break
+        signature = (pending, inventory_items, errors)
+        if signature == previous_signature:
+            latest = {**latest, "stalled": True}
+            break
+        previous_signature = signature
+    return {**latest, "passes": passes}
 
 
 def drive_inventory_summary(path: Path) -> dict[str, Any]:
@@ -1102,6 +1152,23 @@ def completed_pipeline_fingerprints(path: Path) -> dict[str, str]:
     result = {str(candidate_id): str(fingerprint) for candidate_id, fingerprint in rows}
     result.update({str(candidate_id): str(fingerprint) for candidate_id, fingerprint in base_rows})
     return result
+
+
+def select_unpublished_direct_records(
+    records: Sequence[Mapping[str, Any]],
+    pipeline_state: Path,
+) -> list[dict[str, Any]]:
+    """Skip only owner-source rows with an identical published base fingerprint."""
+
+    published = completed_pipeline_fingerprints(pipeline_state)
+    selected: list[dict[str, Any]] = []
+    for record in records:
+        candidate_id = str(record.get("candidate_id") or "")
+        fingerprint = process.canonical_fingerprint(record)
+        if published.get(candidate_id) == fingerprint:
+            continue
+        selected.append(dict(record))
+    return selected
 
 
 def publication_pipeline_rows(path: Path) -> dict[str, dict[str, Any]]:
@@ -1768,7 +1835,25 @@ def compact_child_summary(step: str, documents: Sequence[object]) -> object:
             summary["error"] = error
         return summary
     item = dictionaries[-1]
-    allowed = {key: item[key] for key in ("mode", "step", "enrichment", "matchedCandidates", "merge", "manifest", "exactRecords", "selected", "spotifyEnrichment", "pipelineState", "counts") if key in item}
+    allowed = {
+        key: item[key]
+        for key in (
+            "mode",
+            "step",
+            "verificationMode",
+            "enrichment",
+            "matchedCandidates",
+            "merge",
+            "manifest",
+            "exactRecords",
+            "directRecords",
+            "selected",
+            "spotifyEnrichment",
+            "pipelineState",
+            "counts",
+        )
+        if key in item
+    }
     return allowed
 
 
@@ -1845,9 +1930,13 @@ def build_process_catalog_command(
     *,
     exact_manifest: Path,
     pipeline_state: Path,
-    spotify_enrichment: Path,
+    spotify_enrichment: Path | None,
     ffmpeg_executable: Path,
     apply: bool,
+    verification_mode: str = "spotify",
+    owner_attestation_sha256: str | None = None,
+    catalogue_scope_sha256: str | None = None,
+    selection_sha256: str | None = None,
 ) -> list[str]:
     command = [
         sys.executable,
@@ -1856,16 +1945,137 @@ def build_process_catalog_command(
         str(exact_manifest),
         "--pipeline-state",
         str(pipeline_state),
-        "--spotify-enrichment",
-        str(spotify_enrichment),
+        "--verification-mode",
+        verification_mode,
         "--ffmpeg",
         str(ffmpeg_executable),
     ]
+    if verification_mode == "spotify":
+        if spotify_enrichment is None:
+            raise SyncError("spotify_evidence_missing")
+        command.extend(["--spotify-enrichment", str(spotify_enrichment)])
+    elif verification_mode == "catalog_owner_direct":
+        evidence = (
+            owner_attestation_sha256,
+            catalogue_scope_sha256,
+            selection_sha256,
+        )
+        if any(value is None or SHA256_PATTERN.fullmatch(value) is None for value in evidence):
+            raise SyncError("catalog_owner_evidence_invalid")
+        command.extend(
+            [
+                "--batch-key",
+                DIRECT_BATCH_KEY,
+                "--owner-attestation-sha256",
+                str(owner_attestation_sha256),
+                "--catalogue-scope-sha256",
+                str(catalogue_scope_sha256),
+                "--selection-sha256",
+                str(selection_sha256),
+            ]
+        )
+    else:
+        raise SyncError("verification_mode_invalid")
     if apply:
         command.extend(["--apply", "--rights-cleared", "--human-made-cleared"])
     else:
         command.append("--dry-run")
     return command
+
+
+def execute_catalog_owner_drain(
+    config: Mapping[str, Any],
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    """Publish every deterministic, technically readable owner-source row."""
+
+    work_directory: Path = config["work_directory"]
+    inventory = config["inventory_directory"] / "drive-inventory.json"
+    manifest = work_directory / "manifest.jsonl"
+    direct_manifest = work_directory / "catalog-owner-direct.jsonl"
+    direct_selection = work_directory / "catalog-owner-direct-selection.jsonl"
+    pipeline_state = work_directory / "pipeline-state.sqlite3"
+
+    report["workbookRefresh"] = refresh_workbook(
+        config["workbook_source_url"], config["workbook"]
+    )
+    report["driveSync"] = drain_drive_inventory(config)
+    report["inventory"] = drive_inventory_summary(inventory)
+
+    seed_documents = run_step(
+        "ingest",
+        build_ingest_command(config, inventory, apply=True, inspect_full=False),
+        timeout=1800,
+    )
+    report["catalog"] = compact_child_summary("ingest", seed_documents)
+    all_records = read_jsonl(manifest)
+    direct_records = read_jsonl(direct_manifest)
+    if any(not ingest.direct_publication_eligible(record) for record in direct_records):
+        raise SyncError("catalog_owner_direct_manifest_invalid")
+    selected_records = select_unpublished_direct_records(
+        direct_records,
+        pipeline_state,
+    )
+    selection_sha256 = write_jsonl(direct_selection, selected_records)
+    report["directSource"] = {
+        "candidates": len(all_records),
+        "eligible": len(direct_records),
+        "excluded": max(0, len(all_records) - len(direct_records)),
+        "alreadyPublished": len(direct_records) - len(selected_records),
+    }
+    report["publication"] = {
+        "selected": len(selected_records),
+        "action": "apply",
+        "verificationMode": "catalog_owner_direct",
+    }
+    inventory_complete = report["inventory"].get("complete") is True
+    if not selected_records:
+        report["status"] = "ok" if inventory_complete else "partial"
+        return report
+
+    owner = validate_catalog_owner_attestation(
+        config.get("catalog_owner_attestation"), config
+    )
+    report["publication"]["authorization"] = {
+        "source": "catalog_owner_attestation",
+        "scopeBound": True,
+    }
+    ffmpeg_executable = resolve_ffmpeg_executable(config.get("ffmpeg_executable"))
+    command_options = {
+        "exact_manifest": direct_selection,
+        "pipeline_state": pipeline_state,
+        "spotify_enrichment": None,
+        "ffmpeg_executable": ffmpeg_executable,
+        "verification_mode": "catalog_owner_direct",
+        "owner_attestation_sha256": str(owner["attestationSha256"]),
+        "catalogue_scope_sha256": str(owner["catalogueScopeSha256"]),
+        "selection_sha256": selection_sha256,
+    }
+    dry_documents = run_step(
+        "publication_dry_run",
+        build_process_catalog_command(**command_options, apply=False),
+    )
+    report["publication"]["plan"] = compact_child_summary(
+        "process", dry_documents
+    )
+    apply_documents, apply_return_code = run_step_result(
+        "publication_apply",
+        build_process_catalog_command(**command_options, apply=True),
+        environment=publication_apply_environment(config),
+        accepted_return_codes=(0, 2),
+        timeout=None,
+    )
+    apply_summary, process_partial = publication_apply_summary(
+        apply_documents, apply_return_code
+    )
+    report["publication"]["result"] = apply_summary
+    report["publication"]["publishedManifestBases"] = (
+        record_published_manifest_bases(selected_records, pipeline_state)
+    )
+    report["status"] = (
+        "partial" if process_partial or not inventory_complete else "ok"
+    )
+    return report
 
 
 def execute(
@@ -1918,6 +2128,8 @@ def execute(
     if not arguments.allow_network:
         raise SyncError("allow_network_required")
     work_directory.mkdir(parents=True, exist_ok=True)
+    if arguments.mode == "drain":
+        return execute_catalog_owner_drain(config, report)
     report["workbookRefresh"] = refresh_workbook(
         config["workbook_source_url"], config["workbook"]
     )
@@ -2074,7 +2286,11 @@ def execute(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="Ignored private JSON configuration.")
-    parser.add_argument("--mode", choices=("plan", "continue", "publish"), default="plan")
+    parser.add_argument(
+        "--mode",
+        choices=("plan", "continue", "publish", "drain"),
+        default="plan",
+    )
     parser.add_argument("--allow-network", action="store_true", help="Required for continue/publish network reads and writes.")
     return parser
 

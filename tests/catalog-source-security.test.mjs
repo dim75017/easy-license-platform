@@ -25,6 +25,7 @@ const files = {
   orchardMigration: "drizzle/0003_orchard_evidence_gate.sql",
   aiReviewMigration: "drizzle/0004_bouncy_bastion.sql",
   lineageMigration: "drizzle/0005_volatile_bulldozer.sql",
+  ownerEvidenceMigration: "drizzle/0006_romantic_spiral.sql",
 };
 
 async function source(name) {
@@ -373,10 +374,25 @@ test("catalog migrations apply in order and backfill new security fields fail-cl
         1, 1, 'streaming_copy', 'catalog/legacy.mp3', 'audio/mpeg', 100,
         180000, '${"a".repeat(64)}', 'available'
       );
+      INSERT INTO ingest_items (
+        id, batch_key, source_key, source_row_number, source_file_name,
+        source_sha256, declared_duration_ms, measured_duration_ms,
+        track_id, asset_id, status
+      ) VALUES (
+        1, 'legacy-batch', 'legacy-source', 7, 'legacy.wav',
+        '${"b".repeat(64)}', 180000, 180000, 1, 1, 'ready'
+      );
     `);
     applyMigration(database, await source("orchardMigration"));
     applyMigration(database, await source("aiReviewMigration"));
     applyMigration(database, await source("lineageMigration"));
+    applyMigration(database, await source("ownerEvidenceMigration"));
+    const promotionSql = /\.prepare\(\s*`(UPDATE tracks AS t[\s\S]*?)`,\s*\)\s*\.bind\(/u.exec(
+      await source("promote"),
+    )?.[1];
+    assert.ok(promotionSql, "the atomic track promotion SQL must be present");
+    assert.equal((promotionSql.match(/\?/gu) ?? []).length, 37);
+    assert.doesNotThrow(() => database.prepare(promotionSql));
 
     const track = database
       .prepare("SELECT ai_review_status FROM tracks WHERE id = 1")
@@ -384,8 +400,50 @@ test("catalog migrations apply in order and backfill new security fields fail-cl
     const asset = database
       .prepare("SELECT derived_from_sha256 FROM track_assets WHERE id = 1")
       .get();
+    const ingest = database
+      .prepare(
+        `SELECT verification_mode, owner_attestation_sha256,
+                master_read_complete
+         FROM ingest_items WHERE id = 1`,
+      )
+      .get();
     assert.equal(track.ai_review_status, "pending");
     assert.equal(asset.derived_from_sha256, null);
+    assert.equal(ingest.verification_mode, null);
+    assert.equal(ingest.owner_attestation_sha256, null);
+    assert.equal(ingest.master_read_complete, null);
+    database.exec(`
+      INSERT INTO ingest_items (
+        id, batch_key, source_key, source_row_number, source_file_name,
+        source_sha256, verification_mode, owner_attestation_sha256,
+        catalogue_scope_sha256, selection_sha256,
+        master_inspection_sha256, master_read_complete,
+        declared_duration_ms, measured_duration_ms, track_id, status
+      ) VALUES (
+        2, 'symbiome-catalog-owner-drain-v1', 'owner-source', 8,
+        'owner.wav', '${"c".repeat(64)}', 'catalog_owner_direct',
+        '${"d".repeat(64)}', '${"e".repeat(64)}', '${"f".repeat(64)}',
+        '${"c".repeat(64)}', 1, 180000, 180000, 1, 'ready'
+      );
+    `);
+    assert.throws(
+      () =>
+        database.exec(`
+          INSERT INTO ingest_items (
+            batch_key, source_key, source_row_number, source_file_name,
+            source_sha256, verification_mode, owner_attestation_sha256,
+            catalogue_scope_sha256, selection_sha256,
+            master_inspection_sha256, master_read_complete,
+            declared_duration_ms, measured_duration_ms, track_id, status
+          ) VALUES (
+            'symbiome-catalog-owner-drain-v1', 'corrupt-owner-source', 9,
+            'corrupt.wav', '${"1".repeat(64)}', 'catalog_owner_direct',
+            '${"2".repeat(64)}', '${"3".repeat(64)}', '${"4".repeat(64)}',
+            '${"5".repeat(64)}', 1, 180000, 180000, 1, 'ready'
+          );
+        `),
+      /ingest_items_owner_direct_evidence_shape_check/u,
+    );
     assert.throws(
       () => database.exec("UPDATE tracks SET status = 'published' WHERE id = 1"),
       /tracks_publish_ai_review_check/u,
@@ -399,6 +457,34 @@ test("metadata ingestion cannot bypass the publication quality gate", async () =
   const text = await source("metadata");
   assert.match(text, /publication_gate_required/u);
   assert.match(text, /cannot be published through metadata ingestion/u);
+});
+
+test("catalog-owner evidence is strict, source-bound and pipeline-only", async () => {
+  const metadata = await source("metadata");
+  assert.match(metadata, /verificationMode: "catalog_owner_direct" \| null/u);
+  assert.match(metadata, /masterReadComplete !== true/u);
+  assert.match(
+    metadata,
+    /catalogOwnerEvidence\.masterInspectionSha256 !== sourceSha256/u,
+  );
+  assert.match(metadata, /catalog_owner_direct_spotify_forbidden/u);
+  assert.match(metadata, /symbiome-catalog-owner-drain-v1/u);
+  assert.match(metadata, /catalog_owner_direct_batch_required/u);
+  assert.match(metadata, /sourceRowNumber === null/u);
+  assert.match(metadata, /rightsStatus !== "cleared"/u);
+  assert.match(metadata, /aiReviewStatus !== "cleared"/u);
+  const batchRoute = await source("batch");
+  assert.match(batchRoute, /writer\.kind !== "pipeline"/u);
+  assert.match(batchRoute, /catalog_owner_direct_pipeline_required/u);
+  const promote = await source("promote");
+  assert.doesNotMatch(promote, /promotion_owner_direct_not_enabled/u);
+  assert.match(promote, /assertCatalogOwnerDirectEvidence/u);
+  assert.match(promote, /promotion_owner_evidence_invalid/u);
+  assert.match(promote, /ii\.master_inspection_sha256 = ii\.source_sha256/u);
+  assert.match(promote, /ii\.master_read_complete = 1/u);
+  assert.match(promote, /master\.mime_type = 'audio\/wav'/u);
+  assert.match(promote, /\? = 'spotify'\s+AND ii\.verification_mode IS NULL/u);
+  assert.match(promote, /\? = 'catalog_owner_direct'\s+OR \(/u);
 });
 
 test("duplicate ISRCs stay release-scoped and rights restrictions fail closed", async () => {
