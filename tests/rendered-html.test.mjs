@@ -609,6 +609,10 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(offerCss, /\.creator-editorial-cover\s*\{[\s\S]{0,180}aspect-ratio:\s*1/);
   assert.match(offerCss, /\.creator-editorial-cover img\s*\{[\s\S]{0,180}object-fit:\s*cover/);
   assert.match(offerCss, /V69: shared previews play in place[\s\S]*?@media \(max-width: 900px\)[\s\S]{0,100}\.creator-editorial-showcase \.creator-editorial-grid\s*\{\s*grid-template-columns:\s*1fr/);
+  const publicPlayerCss = offerCss.slice(offerCss.indexOf("/* V70"));
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player\s*\{[^}]*grid-template-columns:\s*42px 34px minmax\(160px, 1fr\) 38px/);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player > time\s*\{[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
+  assert.match(publicPlayerCss, /@media \(min-width:\s*1081px\)\s*\{\s*\.public-shell \.creator-editorial-showcase \.creator-editorial-meta\s*\{\s*padding-left:\s*8px;/s);
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -1683,6 +1687,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /article\.music-track-row\[role="listitem"\]\s*\{[^}]*min-height:\s*82px;[^}]*padding-block:\s*9px/s);
   assert.match(musicWorkspaceV13, /\.music-track-identity > img\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;[^}]*object-fit:\s*cover/s);
   assert.match(musicWorkspaceV13, /\.music-track-inline-player\s*\{[^}]*grid-template-columns:\s*40px 32px minmax\(160px, 1fr\) 32px;[^}]*gap:\s*8px/s);
+  assert.match(musicWorkspaceV13, /\.music-player-time\s*\{[^}]*color:\s*rgba\(41, 40, 50, \.68\);[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
   assert.match(musicWorkspaceV13, /\.music-player-transport\s*\{[^}]*grid-template-columns:\s*40px;[^}]*place-items:\s*center/s);
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-skip\b/);
   assert.match(musicWorkspaceV13, /\.music-player-play\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px/s);
@@ -1765,6 +1770,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v14BaseCss, /\.music-action-icon\s*\{[^}]*width:\s*18px;[^}]*height:\s*18px/s);
   assert.match(musicWorkspaceV15, /\.music-action-icon svg\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*height:\s*100%/s);
   assert.match(musicWorkspaceV15, /\.music-action-icon::before,[\s\S]{0,180}\.music-action-icon > b\s*\{[^}]*display:\s*none !important;[^}]*content:\s*none !important/s);
+  assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*14px;/s);
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);

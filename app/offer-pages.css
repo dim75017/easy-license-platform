@@ -3404,9 +3404,9 @@
 
 .public-shell .creator-editorial-showcase .creator-editorial-inline-player > time {
   color: var(--public-player-muted);
-  font-size: 9px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
-  font-weight: 680;
+  font-weight: 700;
   letter-spacing: -.01em;
   text-align: center;
   white-space: nowrap;
@@ -3463,6 +3463,10 @@
   align-items: flex-start;
   flex-direction: column;
   gap: 5px;
+}
+
+@media (min-width: 1081px) {
+  .public-shell .creator-editorial-showcase .creator-editorial-meta { padding-left: 8px; }
 }
 
 .public-shell .creator-editorial-showcase .creator-editorial-genre {
