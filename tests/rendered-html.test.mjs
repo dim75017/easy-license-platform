@@ -522,7 +522,7 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /<TrackWave[\s\S]{0,260}progress=\{isActive \? preview\.progress : 0\}[\s\S]{0,180}onSeek=\{preview\.seekTo\}/);
   assert.match(showcase, /isActive && preview\.canSeek \? formatPlaybackTime\(preview\.duration\) : track\.duration/);
   assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|PlatformLogo|open\.spotify\.com|Open on Spotify/);
-  assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link" href="\/app\?view=music"[\s\S]{0,100}Listen to the full library/);
+  assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link cta-swipe" href="\/app"[\s\S]{0,100}Listen to the full library/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
   assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
   assert.match(filteredShowcase, /track\.suggestedUses\.includes\(use\)/);
@@ -613,15 +613,17 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-track\s*\{[^}]*min-height:\s*82px;[^}]*grid-template-columns:\s*minmax\(210px, \.78fr\) minmax\(300px, 1\.45fr\) minmax\(88px, \.36fr\) minmax\(118px, \.48fr\);[^}]*gap:\s*16px/s);
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-identity\s*\{[^}]*grid-template-columns:\s*56px minmax\(0, 1fr\)/s);
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player\s*\{[^}]*grid-template-columns:\s*40px 32px minmax\(160px, 1fr\) 32px;[^}]*gap:\s*8px/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-side\s*\{[^}]*display:\s*flex;[^}]*width:\s*40px;[^}]*height:\s*40px;[^}]*align-items:\s*center;[^}]*justify-content:\s*center;[^}]*gap:\s*0;/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-side i\s*\{[^}]*width:\s*16px;[^}]*height:\s*16px;[^}]*background:\s*transparent;[^}]*transform:\s*none;/s);
+  assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-side i\.is-play::before\s*\{[^}]*top:\s*2px;[^}]*left:\s*4px;[^}]*width:\s*11px;[^}]*height:\s*12px;[^}]*border:\s*0;[^}]*background:\s*currentColor;[^}]*clip-path:\s*polygon\(0 0, 100% 50%, 0 100%\);[^}]*transform:\s*translateX\(\.5px\);/s);
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-inline-player > time\s*\{[^}]*font-size:\s*11px;[^}]*font-weight:\s*700/s);
   assert.match(publicPlayerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-wave canvas\s*\{[^}]*height:\s*30px/s);
   assert.match(publicPlayerCss, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.creator-editorial-table-head > span:nth-child\(3\),\s*\.public-shell \.creator-editorial-showcase \.creator-editorial-genre\s*\{\s*padding-left:\s*32px;/s);
   assert.match(publicPlayerCss, /@media \(max-width:\s*760px\)[\s\S]{0,900}grid-template-columns:\s*40px 30px minmax\(80px, 1fr\) 30px/);
   assert.match(publicPlayerCss, /@media \(max-width:\s*480px\)[\s\S]{0,900}grid-template-columns:\s*42px 28px minmax\(64px, 1fr\) 28px/);
   const publicLibraryCtaCss = offerCss.slice(offerCss.indexOf("/* V74"));
-  assert.match(publicLibraryCtaCss, /\.creator-editorial-library-link\s*\{[^}]*min-height:\s*48px;[^}]*border-radius:\s*999px/s);
-  assert.match(publicLibraryCtaCss, /\.creator-editorial-library-link:focus-visible\s*\{[^}]*outline:\s*3px solid #e06343;[^}]*outline-offset:\s*3px/s);
-  assert.match(publicLibraryCtaCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]{0,160}\.creator-editorial-library-link\s*\{\s*transition:\s*none/s);
+  assert.match(publicLibraryCtaCss, /\.public-shell \.creator-editorial-library-link\s*\{[^}]*display:\s*inline-flex;[^}]*align-items:\s*center;[^}]*justify-content:\s*center;[^}]*border:\s*1px solid #292832;[^}]*border-radius:\s*999px;[^}]*background:\s*#292832;[^}]*color:\s*#fff9f1;[^}]*text-decoration:\s*none;/s);
+  assert.doesNotMatch(publicLibraryCtaCss, /\.creator-editorial-library-link(?:::before|:hover|:focus-visible)\s*\{/, "the full-library CTA should inherit motion and focus treatment from the shared swipe layer");
 });
 
 test("uses real platform logos instead of placeholder glyphs", async () => {
@@ -1204,6 +1206,8 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
   assert.match(setup, /No payment is taken today/);
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
+  assert.match(setup, /className="account-secondary-link" href="\/app"[\s\S]{0,80}Browse music first/);
+  assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
   assert.match(footer, /href="\/create-account\?mode=login">Log in/);
   assert.match(footer, /href="\/create-account">Create account/);
   assert.equal((pricing.match(/href="\/create-account\?plan=(?:creator|pro)"/g) ?? []).length, 2);
@@ -1322,14 +1326,14 @@ test("gives every public call to action one accessible colour-swipe interaction"
   assert.equal((help.match(/cta-swipe/g) ?? []).length, 3, "all Help Center CTA buttons should swipe");
   assert.match(licenseBooth, /v5-console-action cta-swipe/);
 
-  const publicCtaSource = [home, creators, business, catalogue, retail, leadForm, pricingCards, siteHeader, editorialInfoPage, help, licenseBooth].join("\n");
+  const publicCtaSource = [home, creators, business, catalogue, retail, leadForm, pricingCards, siteHeader, editorialInfoPage, help, licenseBooth, trackShowcase].join("\n");
   const publicCtaBodies = [...publicCtaSource.matchAll(/<(Link|a|button)\b[^>]*className=(?:"[^"]*\bcta-swipe\b[^"]*"|\{className\})[^>]*>([\s\S]*?)<\/\1>/g)];
   assert.ok(publicCtaBodies.length >= 27, "every public CTA should be covered by the shared button treatment");
   for (const [, , body] of publicCtaBodies) assert.doesNotMatch(body, /[↗→↓]/, "CTA labels should not contain decorative arrows");
   assert.doesNotMatch(publicCtaSource, /(?:Browse collection|View (?:Creator|Pro|Business) details|Open on Spotify|Browse tracks|Explore Commercial Sync|Join early access|Spotify)[^<\n]*[↗→↓]/, "public linked surfaces should not retain decorative arrows");
 
-  assert.doesNotMatch(trackShowcase, /cta-swipe/, "track playback controls and the embedded library route use their dedicated interaction styles");
-  assert.match(trackShowcase, /className="creator-editorial-library-link" href="\/app\?view=music"/);
+  assert.match(trackShowcase, /className="creator-editorial-library-link cta-swipe" href="\/app"/);
+  assert.doesNotMatch(trackShowcase, /className="creator-editorial-(?:side|wave)[^"]*\bcta-swipe\b/, "track playback controls should remain independent from marketing CTA motion");
   assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
 });
 
