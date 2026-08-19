@@ -642,6 +642,24 @@ class ThroughputBoundsTests(unittest.TestCase):
         self.assertEqual(command[command.index("--max-inspection-seconds") + 1], "3300")
         self.assertEqual(command.count("--allow-network"), 1)
 
+    def test_ingest_command_adds_private_central_snapshot_when_available(self):
+        central = Path("private") / "central.json"
+        config = {
+            "workbook": Path("private.xlsx"),
+            "orchard": None,
+            "work_directory": Path("private"),
+            "central_inventory": central,
+            "inspection_batch": 1,
+            "release_batch": 1,
+            "maximum_run_minutes": 1,
+        }
+        command = sync.build_ingest_command(
+            config, Path("inventory.json"), apply=False
+        )
+        self.assertEqual(
+            command[command.index("--central-drive-inventory") + 1], str(central)
+        )
+
 
 class FfmpegTests(unittest.TestCase):
     def test_private_config_accepts_optional_existing_ffmpeg_and_rejects_missing_file(self):

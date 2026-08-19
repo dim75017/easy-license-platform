@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import array
+from collections import OrderedDict
 import contextlib
 import datetime as dt
 import hashlib
@@ -58,6 +59,7 @@ MP3_BITRATE = "192k"
 MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024
 MAX_DERIVED_ASSET_BYTES = 20 * 1024 * 1024
 MAX_COVER_SOURCE_BYTES = 100 * 1024 * 1024
+MAX_COVER_CACHE_BYTES = 512 * 1024 * 1024
 COVER_OUTPUT_SIZE = 3_000
 MIN_TEMP_FREE_BYTES = 3 * 1024 * 1024 * 1024
 MAX_EXACT_DURATION_DELTA_SECONDS = 2.0
@@ -306,6 +308,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
           ingest_id INTEGER,
           track_id INTEGER,
           source_sha256 TEXT,
+          source_byte_size INTEGER,
           measured_duration_ms INTEGER,
           streaming_sha256 TEXT,
           streaming_byte_size INTEGER,
@@ -335,6 +338,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
         "cover_sha256": "TEXT",
         "cover_byte_size": "INTEGER",
         "cover_content_type": "TEXT",
+        "source_byte_size": "INTEGER",
         "master_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "cover_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "rights_cleared_ack": "INTEGER NOT NULL DEFAULT 0",
@@ -353,6 +357,7 @@ STATE_COLUMNS = {
     "ingest_id",
     "track_id",
     "source_sha256",
+    "source_byte_size",
     "measured_duration_ms",
     "streaming_sha256",
     "streaming_byte_size",
@@ -414,6 +419,7 @@ def ensure_state_row(
             UPDATE pipeline_items
             SET manifest_fingerprint=?, batch_key=?, status='planned', attempts=0,
                 ingest_id=NULL, track_id=NULL, source_sha256=NULL,
+                source_byte_size=NULL,
                 measured_duration_ms=NULL, streaming_sha256=NULL,
                 streaming_byte_size=NULL, streaming_duration_ms=NULL,
                 peaks_sha256=NULL, peaks_byte_size=NULL,
@@ -709,6 +715,95 @@ def prepare_cover_artwork(
                 raise
     content_type, width, height = optimize_cover_artwork(executable, source, optimized)
     return optimized, content_type, width, height
+
+
+class CoverArtifactCache:
+    """Bounded, process-local cache for release artwork.
+
+    Direct drains commonly contain several tracks with the same owned Drive
+    cover.  The first use still downloads, validates and, when necessary,
+    normalizes the image.  Later uses in the same sealed run reuse those exact
+    bytes.  The key is a digest of the private Drive identifier, entries live
+    only below the random temporary directory, and LRU eviction keeps the
+    cache from competing with the one-track audio workspace.
+    """
+
+    def __init__(self, root: Path, maximum_bytes: int = MAX_COVER_CACHE_BYTES) -> None:
+        if maximum_bytes < MAX_DERIVED_ASSET_BYTES:
+            raise PipelineError("cover_cache_limit_invalid")
+        self.root = root
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.maximum_bytes = maximum_bytes
+        self.total_bytes = 0
+        self._entries: OrderedDict[str, tuple[Path, str, str, int]] = OrderedDict()
+
+    @staticmethod
+    def _key(drive_file_id: str) -> str:
+        return hashlib.sha256(drive_file_id.encode("utf-8")).hexdigest()
+
+    def _evict_for(self, incoming_bytes: int) -> None:
+        while self._entries and self.total_bytes + incoming_bytes > self.maximum_bytes:
+            _key, (path, _content_type, _sha256, byte_size) = self._entries.popitem(last=False)
+            self.total_bytes -= byte_size
+            with contextlib.suppress(FileNotFoundError):
+                path.unlink()
+
+    def prepare(
+        self,
+        drive_file_id: str,
+        downloader: "DriveDownloader",
+        executable: Path,
+    ) -> tuple[Path, str, str, int]:
+        key = self._key(drive_file_id)
+        cached = self._entries.get(key)
+        if cached is not None and cached[0].is_file():
+            self._entries.move_to_end(key)
+            return cached
+        if cached is not None:
+            self.total_bytes -= cached[3]
+            del self._entries[key]
+
+        source = self.root / f"{key}.source"
+        optimized = self.root / f"{key}.optimized.jpg"
+        for path in (source, optimized):
+            with contextlib.suppress(FileNotFoundError):
+                path.unlink()
+        try:
+            downloader.download(
+                drive_file_id,
+                source,
+                expected_sha256=None,
+                expected_size=None,
+                maximum_bytes=MAX_COVER_SOURCE_BYTES,
+            )
+            prepared, content_type, _width, _height = prepare_cover_artwork(
+                executable,
+                source,
+                optimized,
+            )
+            sha256, byte_size = sha256_file(prepared)
+            suffix = {
+                "image/jpeg": ".jpg",
+                "image/png": ".png",
+                "image/webp": ".webp",
+            }.get(content_type)
+            if suffix is None:
+                raise PipelineError("cover_artwork_type_invalid")
+            cached_path = self.root / f"{key}{suffix}"
+            if prepared != cached_path:
+                with contextlib.suppress(FileNotFoundError):
+                    cached_path.unlink()
+                prepared.replace(cached_path)
+            self._evict_for(byte_size)
+            entry = (cached_path, content_type, sha256, byte_size)
+            self._entries[key] = entry
+            self.total_bytes += byte_size
+            return entry
+        finally:
+            for path in (source, optimized):
+                if path not in {entry[0] for entry in self._entries.values()}:
+                    with contextlib.suppress(FileNotFoundError):
+                        path.unlink()
 
 
 def inspect_downloaded_wav(
@@ -1415,6 +1510,7 @@ def process_record(
     verification_mode: str = "spotify",
     owner_evidence: Mapping[str, Any] | None = None,
     temporary_root: Path | None = None,
+    cover_cache: CoverArtifactCache | None = None,
 ) -> str:
     row = ensure_state_row(
         connection,
@@ -1434,14 +1530,6 @@ def process_record(
         and row["cover_uploaded"]
     ):
         return try_promote(connection, api, row, verification_mode=verification_mode)
-
-    row = update_state(
-        connection,
-        candidate_id,
-        status="processing",
-        attempts=int(row["attempts"]) + 1,
-        last_error_code=None,
-    )
     inspection = record.get("inspection") if isinstance(record.get("inspection"), Mapping) else {}
     inspected_sha256 = str(inspection.get("sha256") or "").strip().lower()
     has_full_inspection = (
@@ -1453,6 +1541,13 @@ def process_record(
     expected_size = positive_integer(inspection.get("content_length")) if has_full_inspection else None
 
     try:
+        row = update_state(
+            connection,
+            candidate_id,
+            status="processing",
+            attempts=int(row["attempts"]) + 1,
+            last_error_code=None,
+        )
         with tempfile.TemporaryDirectory(prefix="symbiome-catalog-", dir=temporary_root) as temporary:
             directory = Path(temporary)
             source_path = directory / "source.wav"
@@ -1461,56 +1556,48 @@ def process_record(
             cover_source_path = directory / "cover-source.bin"
             optimized_cover_path = directory / "cover.jpg"
 
-            source_sha256, source_size = downloader.download(
-                record["audio"]["file_id"],
-                source_path,
-                expected_sha256=expected_sha256,
-                expected_size=expected_size,
+            checkpoint_sha256 = str(row["source_sha256"] or "").strip().lower()
+            source_sha256 = checkpoint_sha256 if SHA256_PATTERN.fullmatch(checkpoint_sha256) else ""
+            source_size = positive_integer(row["source_byte_size"])
+            source_duration_ms = positive_integer(row["measured_duration_ms"])
+            source_checkpoint_complete = bool(source_sha256 and source_duration_ms is not None)
+            needs_source_file = bool(
+                not source_checkpoint_complete
+                or (not row["master_uploaded"] and source_size is None)
+                or not row["streaming_uploaded"]
+                or not row["peaks_uploaded"]
             )
-            _wav, source_duration_ms = inspect_downloaded_wav(
-                source_path,
-                record,
-                verification_mode=verification_mode,
-            )
-            transcode_mp3(ffmpeg, source_path, streaming_path)
-            streaming_duration_ms = probe_audio_duration(ffmpeg, streaming_path)
-            if abs(streaming_duration_ms - source_duration_ms) > round(MAX_EXACT_DURATION_DELTA_SECONDS * 1000):
-                raise PipelineError("streaming_duration_mismatch")
-            peaks = generate_peaks(ffmpeg, source_path, duration_ms=source_duration_ms)
-            if len(peaks) != PEAK_BIN_COUNT:
-                raise PipelineError("peaks_bin_count_invalid")
-            write_peaks_json(peaks_path, peaks, source_duration_ms)
-
-            downloader.download(
-                record["cover"]["file_id"],
-                cover_source_path,
-                expected_sha256=None,
-                expected_size=None,
-                maximum_bytes=MAX_COVER_SOURCE_BYTES,
-            )
-            cover_path, cover_type, _cover_width, _cover_height = prepare_cover_artwork(
-                ffmpeg,
-                cover_source_path,
-                optimized_cover_path,
-            )
-            cover_sha256, cover_size = sha256_file(cover_path)
-
-            streaming_sha256, streaming_size = sha256_file(streaming_path)
-            peaks_sha256, peaks_size = sha256_file(peaks_path)
-            row = update_state(
-                connection,
-                candidate_id,
-                source_sha256=source_sha256,
-                measured_duration_ms=source_duration_ms,
-                streaming_sha256=streaming_sha256,
-                streaming_byte_size=streaming_size,
-                streaming_duration_ms=streaming_duration_ms,
-                peaks_sha256=peaks_sha256,
-                peaks_byte_size=peaks_size,
-                cover_sha256=cover_sha256,
-                cover_byte_size=cover_size,
-                cover_content_type=cover_type,
-            )
+            if needs_source_file:
+                source_sha256, source_size = downloader.download(
+                    record["audio"]["file_id"],
+                    source_path,
+                    expected_sha256=expected_sha256 or (source_sha256 or None),
+                    expected_size=expected_size or source_size,
+                )
+                if source_checkpoint_complete:
+                    # The unchanged manifest fingerprint and matching full-file
+                    # checksum make the previous measured WAV facts reusable.
+                    if source_duration_ms is None:  # pragma: no cover - narrowed above
+                        raise PipelineError("source_duration_checkpoint_invalid")
+                else:
+                    _wav, source_duration_ms = inspect_downloaded_wav(
+                        source_path,
+                        record,
+                        verification_mode=verification_mode,
+                    )
+                row = update_state(
+                    connection,
+                    candidate_id,
+                    source_sha256=source_sha256,
+                    source_byte_size=source_size,
+                    measured_duration_ms=source_duration_ms,
+                )
+            if (
+                not source_sha256
+                or source_duration_ms is None
+                or (not row["master_uploaded"] and source_size is None)
+            ):
+                raise PipelineError("source_checkpoint_incomplete")
 
             if not row["metadata_uploaded"]:
                 ingest_id, track_id = api.ingest_metadata(
@@ -1552,6 +1639,20 @@ def process_record(
                 )
 
             if not row["streaming_uploaded"]:
+                if not source_path.is_file():
+                    raise PipelineError("source_workspace_missing")
+                transcode_mp3(ffmpeg, source_path, streaming_path)
+                streaming_duration_ms = probe_audio_duration(ffmpeg, streaming_path)
+                if abs(streaming_duration_ms - source_duration_ms) > round(MAX_EXACT_DURATION_DELTA_SECONDS * 1000):
+                    raise PipelineError("streaming_duration_mismatch")
+                streaming_sha256, streaming_size = sha256_file(streaming_path)
+                row = update_state(
+                    connection,
+                    candidate_id,
+                    streaming_sha256=streaming_sha256,
+                    streaming_byte_size=streaming_size,
+                    streaming_duration_ms=streaming_duration_ms,
+                )
                 api.upload_asset(
                     streaming_path,
                     track_id=int(row["track_id"]),
@@ -1571,6 +1672,19 @@ def process_record(
                 )
 
             if not row["peaks_uploaded"]:
+                if not source_path.is_file():
+                    raise PipelineError("source_workspace_missing")
+                peaks = generate_peaks(ffmpeg, source_path, duration_ms=source_duration_ms)
+                if len(peaks) != PEAK_BIN_COUNT:
+                    raise PipelineError("peaks_bin_count_invalid")
+                write_peaks_json(peaks_path, peaks, source_duration_ms)
+                peaks_sha256, peaks_size = sha256_file(peaks_path)
+                row = update_state(
+                    connection,
+                    candidate_id,
+                    peaks_sha256=peaks_sha256,
+                    peaks_byte_size=peaks_size,
+                )
                 api.upload_asset(
                     peaks_path,
                     track_id=int(row["track_id"]),
@@ -1590,6 +1704,43 @@ def process_record(
                 )
 
             if not row["cover_uploaded"]:
+                outcome = try_promote(connection, api, row, verification_mode=verification_mode)
+                if outcome == "published":
+                    row = update_state(
+                        connection,
+                        candidate_id,
+                        cover_uploaded=1,
+                        status="published",
+                        last_error_code=None,
+                    )
+                    return outcome
+                if cover_cache is not None:
+                    cover_path, cover_type, cover_sha256, cover_size = cover_cache.prepare(
+                        record["cover"]["file_id"],
+                        downloader,
+                        ffmpeg,
+                    )
+                else:
+                    downloader.download(
+                        record["cover"]["file_id"],
+                        cover_source_path,
+                        expected_sha256=None,
+                        expected_size=None,
+                        maximum_bytes=MAX_COVER_SOURCE_BYTES,
+                    )
+                    cover_path, cover_type, _cover_width, _cover_height = prepare_cover_artwork(
+                        ffmpeg,
+                        cover_source_path,
+                        optimized_cover_path,
+                    )
+                    cover_sha256, cover_size = sha256_file(cover_path)
+                row = update_state(
+                    connection,
+                    candidate_id,
+                    cover_sha256=cover_sha256,
+                    cover_byte_size=cover_size,
+                    cover_content_type=cover_type,
+                )
                 api.upload_asset(
                     cover_path,
                     track_id=int(row["track_id"]),
@@ -1905,32 +2056,38 @@ def process_exact_catalog(arguments: argparse.Namespace) -> int:
         "failed": 0,
     }
     try:
-        for index, record in enumerate(selected_records, start=1):
-            try:
-                outcome = process_record(
-                    connection,
-                    record,
-                    batch_key,
-                    downloader,
-                    api,
-                    ffmpeg,
-                    rights_cleared=True,
-                    human_made_cleared=True,
-                    verification_mode=verification_mode,
-                    owner_evidence=owner_evidence,
-                    temporary_root=arguments.temporary_root,
-                )
-                counts[outcome] = counts.get(outcome, 0) + 1
-            except PipelineError as error:
-                counts["failed"] += 1
-                if (
-                    isinstance(error, ApiHttpError)
-                    and error.status in {400, 401, 403, 404, 405}
-                ) or (error.retryable and error.code.startswith("api_")):
-                    raise
-            if not direct and index % 25 == 0:
-                emit_aggregate({"mode": "apply", "step": "process", "progress": index, "counts": counts})
-        final_state = state_counts(connection)
+        with tempfile.TemporaryDirectory(
+            prefix="symbiome-cover-cache-",
+            dir=arguments.temporary_root,
+        ) as cover_cache_root:
+            cover_cache = CoverArtifactCache(Path(cover_cache_root))
+            for index, record in enumerate(selected_records, start=1):
+                try:
+                    outcome = process_record(
+                        connection,
+                        record,
+                        batch_key,
+                        downloader,
+                        api,
+                        ffmpeg,
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode=verification_mode,
+                        owner_evidence=owner_evidence,
+                        temporary_root=arguments.temporary_root,
+                        cover_cache=cover_cache,
+                    )
+                    counts[outcome] = counts.get(outcome, 0) + 1
+                except PipelineError as error:
+                    counts["failed"] += 1
+                    if (
+                        isinstance(error, ApiHttpError)
+                        and error.status in {400, 401, 403, 404, 405}
+                    ) or (error.retryable and error.code.startswith("api_")):
+                        raise
+                if not direct and index % 25 == 0:
+                    emit_aggregate({"mode": "apply", "step": "process", "progress": index, "counts": counts})
+            final_state = state_counts(connection)
     finally:
         connection.close()
     emit_aggregate(

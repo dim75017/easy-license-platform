@@ -249,10 +249,10 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const coverStorageKey = row.cover_storage_key as string;
+    const coverStorageKey = row.cover_storage_key;
     const expectedCoverPrefix =
       `catalog/releases/${row.release_id}/cover_artwork/`;
-    if (!coverStorageKey.startsWith(expectedCoverPrefix)) {
+    if (!coverStorageKey || !coverStorageKey.startsWith(expectedCoverPrefix)) {
       throw new CatalogApiError(
         "The release cover is not owned by this release.",
         409,

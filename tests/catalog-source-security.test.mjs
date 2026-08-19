@@ -230,6 +230,7 @@ test("promotion rechecks every publication gate and commits one D1 batch", async
     /stream\.kind = 'streaming_copy'/u,
     /peaks\.kind = 'waveform_peaks'/u,
     /expectedCoverPrefix/u,
+    /!coverStorageKey \|\| !coverStorageKey\.startsWith\(expectedCoverPrefix\)/u,
     /bucket\.head\(sourceMaster\.storage_key\)/u,
     /database\.batch\(\[/u,
     /SET status = 'deleted'/u,

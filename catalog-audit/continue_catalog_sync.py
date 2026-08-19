@@ -291,6 +291,12 @@ def load_config(path: Path) -> dict[str, Any]:
         base=base,
         label="drive_inventory_directory",
     )
+    central_inventory = resolve_config_path(
+        payload.get("centralDriveInventory")
+        or "catalog-audit/private/central-drive-connector/partial-inventory.json",
+        base=base,
+        label="central_drive_inventory",
+    )
     ffmpeg_executable = (
         resolve_config_path(
             payload["ffmpegExecutable"],
@@ -309,6 +315,7 @@ def load_config(path: Path) -> dict[str, Any]:
         "workbook_source_url": workbook_source_url,
         "drive_seed": drive_seed,
         "inventory_directory": inventory_directory,
+        "central_inventory": central_inventory if central_inventory.is_file() else None,
         "ffmpeg_executable": ffmpeg_executable,
         "inventory_release_batch": bounded_integer(
             payload, "driveInventoryReleasesPerRun", 25, MAX_INVENTORY_RELEASE_BATCH
@@ -1789,6 +1796,8 @@ def compact_child_summary(step: str, documents: Sequence[object]) -> object:
             "releaseAudioGroups": plan.get("release_audio_groups", 0),
             "candidates": plan.get("candidates", 0),
             "plannedStatus": plan.get("planned_status", {}),
+            "ownerDirectCandidates": plan.get("owner_direct_candidates", 0),
+            "centralInventory": plan.get("central_inventory", {}),
             "inspection": result.get("inspection", {}),
             "manifest": result.get("manifest", {}),
         }
@@ -1905,6 +1914,10 @@ def build_ingest_command(
         command.extend(["--orchard", str(config["orchard"])])
     if inventory.is_file() or apply:
         command.extend(["--drive-inventory", str(inventory)])
+    if config.get("central_inventory"):
+        command.extend(
+            ["--central-drive-inventory", str(config["central_inventory"])]
+        )
     if apply:
         command.append("--apply")
         if inspect_full:

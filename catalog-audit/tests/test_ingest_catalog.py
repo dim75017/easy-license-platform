@@ -122,6 +122,146 @@ class DriveParsingTests(unittest.TestCase):
         )
 
 
+class CentralDriveMappingTests(unittest.TestCase):
+    @staticmethod
+    def track(
+        row: int,
+        title: str,
+        *,
+        release: str = "Release",
+        upc: str = "12345678",
+        isrc: str = "",
+        artist: str = "Artist",
+    ):
+        return ingest.Track(row, release, upc, title, (artist,), 120, isrc, "Lofi", "")
+
+    def test_unique_flat_filename_fills_only_one_missing_track(self):
+        tracks = [self.track(2, "Quiet Morning"), self.track(3, "Night Walk")]
+        audio = ingest.DriveAudio("1" + "A" * 20, "Artist - Quiet Morning.wav")
+        merged, summary = ingest.merge_central_audio_mappings(tracks, [], [audio])
+        self.assertEqual(summary["mapped"], 1)
+        self.assertEqual([item.file_id for group in merged for item in group.files], [audio.file_id])
+
+    def test_duplicate_title_and_duplicate_file_claims_remain_ambiguous(self):
+        duplicate_title = [
+            self.track(2, "Home", release="One", upc="11111111"),
+            self.track(3, "Home", release="Two", upc="22222222"),
+        ]
+        audio = ingest.DriveAudio("1" + "A" * 20, "Home.wav")
+        merged, summary = ingest.merge_central_audio_mappings(duplicate_title, [], [audio])
+        self.assertEqual(merged, [])
+        self.assertEqual(summary["ambiguousFiles"], 1)
+
+        track = self.track(4, "Unique")
+        files = [
+            ingest.DriveAudio("1" + "B" * 20, "Unique.wav"),
+            ingest.DriveAudio("1" + "C" * 20, "Artist - Unique.wav"),
+        ]
+        merged, summary = ingest.merge_central_audio_mappings([track], [], files)
+        self.assertEqual(merged, [])
+        self.assertEqual(summary["ambiguousTracks"], 1)
+
+    def test_unique_isrc_can_bind_a_central_wav_without_spotify(self):
+        track = self.track(2, "Different Display Name", isrc="FR-ABC-26-12345")
+        audio = ingest.DriveAudio("1" + "D" * 20, "FRABC2612345_master.wav")
+        merged, summary = ingest.merge_central_audio_mappings([track], [], [audio])
+        self.assertEqual(summary["mapped"], 1)
+        self.assertEqual(merged[-1].files, (audio,))
+
+    def test_existing_deterministic_audio_is_never_replaced_by_central_snapshot(self):
+        track = self.track(2, "Quiet Morning")
+        existing = ingest.DriveAudio("1" + "E" * 20, "Quiet Morning.wav")
+        central = ingest.DriveAudio("1" + "F" * 20, "Artist - Quiet Morning.wav")
+        release = ingest.ReleaseAudio(track.upc, track.release, "1" + "R" * 20, (existing,))
+        merged, summary = ingest.merge_central_audio_mappings([track], [release], [central])
+        self.assertEqual(merged, [release])
+        self.assertEqual(summary["mapped"], 0)
+
+    def test_existing_match_cannot_be_subtracted_into_a_false_unique_match(self):
+        existing_track = self.track(
+            2,
+            "Existing",
+            release="One",
+            upc="11111111",
+            isrc="FR-ABC-26-12345",
+        )
+        missing_track = self.track(3, "Home", release="Two", upc="22222222")
+        existing_audio = ingest.DriveAudio("1" + "J" * 20, "Existing.wav")
+        release = ingest.ReleaseAudio(
+            existing_track.upc,
+            existing_track.release,
+            "1" + "R" * 20,
+            (existing_audio,),
+        )
+        conflicting = ingest.DriveAudio(
+            "1" + "K" * 20,
+            "FRABC2612345 X 22222222 Home.wav",
+        )
+
+        merged, summary = ingest.merge_central_audio_mappings(
+            [existing_track, missing_track],
+            [release],
+            [conflicting],
+        )
+
+        self.assertEqual(merged, [release])
+        self.assertEqual(summary["mapped"], 0)
+        self.assertEqual(summary["ambiguousFiles"], 1)
+
+    def test_cover_prefers_one_approved_central_artwork_and_fails_closed_on_ties(self):
+        track = self.track(2, "Quiet Morning", release="Blue Hours", upc="12345678")
+        ordinary = {
+            "id": "1" + "G" * 20,
+            "name": "12345678.jpg",
+            "mimeType": "image/jpeg",
+            "path": "Artwork/12345678.jpg",
+        }
+        approved = {
+            "id": "1" + "H" * 20,
+            "name": "12345678.jpg",
+            "mimeType": "image/jpeg",
+            "path": "Artwork les bon/12345678.jpg",
+        }
+        merged, summary = ingest.merge_central_cover_mappings({}, [track], [ordinary, approved])
+        self.assertEqual(summary["mapped"], 1)
+        self.assertEqual(merged[track.upc].file_id, approved["id"])
+
+        tied = dict(approved, id="1" + "I" * 20)
+        merged, summary = ingest.merge_central_cover_mappings({}, [track], [approved, tied])
+        self.assertNotIn(track.upc, merged)
+        self.assertEqual(summary["ambiguous"], 1)
+
+    def test_partial_central_snapshot_cannot_authorize_stale_quarantine(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            drive_inventory = root / "drive.json"
+            central_inventory = root / "central.json"
+            drive_inventory.write_text('{"complete": true, "files": []}', encoding="utf-8")
+            central_inventory.write_text('{"complete": false, "files": []}', encoding="utf-8")
+
+            self.assertFalse(
+                ingest.source_inventories_are_complete(
+                    drive_inventory,
+                    central_inventory,
+                    central_complete=False,
+                )
+            )
+            self.assertTrue(
+                ingest.source_inventories_are_complete(
+                    drive_inventory,
+                    central_inventory,
+                    central_complete=True,
+                )
+            )
+            self.assertTrue(
+                ingest.source_inventories_are_complete(
+                    drive_inventory,
+                    None,
+                    central_complete=False,
+                )
+            )
+
+
 class WavInspectionTests(unittest.TestCase):
     def test_reads_pcm_duration_from_prefix(self):
         stream = io.BytesIO()

@@ -585,6 +585,280 @@ def load_drive_inventory(path: Path | None) -> tuple[dict[str, list[DriveAudio]]
     return dict(by_release), dict(by_parent)
 
 
+def load_central_drive_inventory(
+    path: Path | None,
+) -> tuple[list[DriveAudio], list[dict[str, Any]], bool]:
+    """Load an additive flat catalogue snapshot from the central Drive folders.
+
+    Connector snapshots may be partial (notably when a provider page is
+    capped).  A partial snapshot is still useful for positive matches, but it
+    can never imply that an older mapping was removed.
+    """
+
+    if path is None or not path.is_file():
+        return [], [], False
+    rows = load_tabular_rows(path)
+    audio: dict[str, DriveAudio] = {}
+    artwork: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        file_id = extract_drive_id(row_value(row, "id", "file_id", "webViewLink"), folder=False)
+        if not file_id:
+            continue
+        name = clean(row_value(row, "name", "file_name"))
+        mime_type = clean(row_value(row, "mimeType", "mime_type"))
+        central_kind = normalize_text(row_value(row, "central_kind", "centralKind", "kind"))
+        is_wav = name.casefold().endswith((".wav", ".wave")) or mime_type.casefold() in WAV_MIME_TYPES
+        is_artwork = mime_type.casefold().startswith("image/") or Path(name).suffix.casefold() in {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+        }
+        if is_wav and central_kind in {"", "audio"}:
+            audio.setdefault(
+                file_id,
+                drive_audio_from_row(
+                    row,
+                    folder_id=clean(row_value(row, "parent_id", "parentId")),
+                    folder_path=clean(row_value(row, "path", "folder_path", "folderPath")),
+                ),
+            )
+        elif is_artwork and central_kind in {"", "artwork", "cover"}:
+            artwork.setdefault(file_id, dict(row))
+    complete = False
+    if path.suffix.casefold() == ".json":
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+            complete = isinstance(payload, dict) and payload.get("complete") is True
+        except (OSError, json.JSONDecodeError):
+            complete = False
+    return list(audio.values()), list(artwork.values()), complete
+
+
+def _audio_stem(value: str) -> str:
+    stem = re.sub(r"\.(?:wav|wave)$", "", clean(value), flags=re.IGNORECASE)
+    stem = re.sub(r"^\s*\d{1,3}\s*[._-]+\s*", "", stem)
+    return normalize_text(stem)
+
+
+def _compact_identifier(value: Any) -> str:
+    return re.sub(r"[^A-Z0-9]", "", clean(value).upper())
+
+
+def _unique_audio_from_files(track: Track, files: Sequence[DriveAudio]) -> DriveAudio | None:
+    scored = sorted(
+        (
+            (audio, *filename_match_score(audio, track))
+            for audio in files
+            if not incompatible_version(audio.name, track.title) and not is_suspicious_audio_name(audio.name)
+        ),
+        key=lambda item: (-item[1], normalize_text(item[0].name), item[0].file_id),
+    )
+    if not scored or scored[0][1] < 90:
+        return None
+    if len(scored) > 1 and scored[1][1] >= scored[0][1] - 2:
+        return None
+    return scored[0][0]
+
+
+def _existing_unique_audio(track: Track, release_audio: Sequence[ReleaseAudio]) -> DriveAudio | None:
+    return _unique_audio_from_files(track, match_release_audio(track, release_audio))
+
+
+def merge_central_audio_mappings(
+    tracks: Sequence[Track],
+    release_audio: Sequence[ReleaseAudio],
+    central_audio: Sequence[DriveAudio],
+) -> tuple[list[ReleaseAudio], dict[str, int]]:
+    """Fill missing audio only from one-to-one deterministic central matches.
+
+    Accepted signals are a unique ISRC embedded in the filename, a unique
+    UPC+title match, or an exact filename key that identifies one workbook row.
+    A file matching several rows, several files matching one row, suspicious
+    versions and already mapped rows are all left untouched.
+    """
+
+    by_id = {track.stable_id: track for track in tracks}
+    title_keys: dict[str, set[str]] = defaultdict(set)
+    isrc_index: dict[str, set[str]] = defaultdict(set)
+    upc_index: dict[str, list[Track]] = defaultdict(list)
+    for track in tracks:
+        title = track.normalized_title
+        artists = {normalize_text(artist) for artist in track.artists if normalize_text(artist)}
+        if track.artists:
+            artists.add(normalize_text(" ".join(track.artists)))
+        keys = {title}
+        for artist in artists:
+            keys.update({f"{artist} {title}".strip(), f"{title} {artist}".strip()})
+        if track.normalized_release:
+            keys.update(
+                {
+                    f"{track.normalized_release} {title}".strip(),
+                    f"{title} {track.normalized_release}".strip(),
+                }
+            )
+        if track.upc:
+            keys.update({f"{track.upc} {title}".strip(), f"{title} {track.upc}".strip()})
+            upc_index[track.upc].append(track)
+        compact_isrc = _compact_identifier(track.isrc)
+        if compact_isrc:
+            isrc_index[compact_isrc].add(track.stable_id)
+            normalized_isrc = normalize_text(track.isrc)
+            keys.update({f"{normalized_isrc} {title}".strip(), f"{title} {normalized_isrc}".strip()})
+        for key in keys:
+            if key:
+                title_keys[key].add(track.stable_id)
+
+    existing_audio_ids = {audio.file_id for group in release_audio for audio in group.files}
+    groups_by_both: dict[tuple[str, str], list[DriveAudio]] = defaultdict(list)
+    groups_by_upc: dict[str, list[DriveAudio]] = defaultdict(list)
+    groups_by_release: dict[str, list[DriveAudio]] = defaultdict(list)
+    for group in release_audio:
+        normalized_release = normalize_text(group.release)
+        groups_by_both[(group.upc, normalized_release)].extend(group.files)
+        if group.upc:
+            groups_by_upc[group.upc].extend(group.files)
+        if normalized_release:
+            groups_by_release[normalized_release].extend(group.files)
+    already_mapped: set[str] = set()
+    for track in tracks:
+        files = groups_by_both.get((track.upc, track.normalized_release))
+        if not files and track.upc:
+            files = groups_by_upc.get(track.upc)
+        if not files:
+            files = groups_by_release.get(track.normalized_release, [])
+        unique_files = list({audio.file_id: audio for audio in files}.values())
+        if _unique_audio_from_files(track, unique_files) is not None:
+            already_mapped.add(track.stable_id)
+    claims_by_track: dict[str, list[DriveAudio]] = defaultdict(list)
+    ambiguous_files = 0
+    rejected_files = 0
+    for audio in central_audio:
+        if audio.file_id in existing_audio_ids:
+            continue
+        if is_suspicious_audio_name(audio.name):
+            rejected_files += 1
+            continue
+        stem = _audio_stem(audio.name)
+        compact_stem = _compact_identifier(Path(audio.name).stem)
+        candidates = set(title_keys.get(stem, set()))
+
+        # ISRC is globally unique when the source itself has no duplicate.
+        for isrc, track_ids in isrc_index.items():
+            if len(track_ids) == 1 and isrc in compact_stem:
+                candidates.update(track_ids)
+
+        # UPC alone identifies a release, never a track.  Require the regular
+        # title matcher to select one row inside that UPC with a clear gap.
+        digit_runs = re.findall(r"\d{8,14}", compact_stem)
+        matched_upcs = {
+            upc
+            for run in digit_runs
+            for upc in upc_index
+            if len(upc) >= 8 and upc in run
+        }
+        for upc in matched_upcs:
+            scored = sorted(
+                ((track, *filename_match_score(audio, track)) for track in upc_index[upc]),
+                key=lambda item: (-item[1], item[0].stable_id),
+            )
+            if scored and scored[0][1] >= 90 and (
+                len(scored) == 1 or scored[1][1] < scored[0][1] - 2
+            ):
+                candidates.add(scored[0][0].stable_id)
+
+        mapped_candidates = candidates.intersection(already_mapped)
+        if mapped_candidates:
+            ambiguous_files += int(bool(candidates.difference(already_mapped)))
+            rejected_files += int(not candidates.difference(already_mapped))
+            continue
+        candidates = {
+            track_id
+            for track_id in candidates
+            if track_id in by_id
+            and not incompatible_version(audio.name, by_id[track_id].title)
+        }
+        if len(candidates) != 1:
+            ambiguous_files += int(len(candidates) > 1)
+            rejected_files += int(not candidates)
+            continue
+        claims_by_track[next(iter(candidates))].append(audio)
+
+    additions: dict[tuple[str, str], list[DriveAudio]] = defaultdict(list)
+    mapped = 0
+    ambiguous_tracks = 0
+    for track_id, audio_files in claims_by_track.items():
+        unique = {audio.file_id: audio for audio in audio_files}
+        if len(unique) != 1:
+            ambiguous_tracks += 1
+            continue
+        track = by_id[track_id]
+        additions[(track.upc, track.release)].append(next(iter(unique.values())))
+        mapped += 1
+
+    merged = list(release_audio)
+    for (upc, release), files in sorted(additions.items(), key=lambda item: (item[0][0], normalize_text(item[0][1]))):
+        merged.append(ReleaseAudio(upc=upc, release=release, folder_id="", files=tuple(files)))
+    return merged, {
+        "available": len(central_audio),
+        "mapped": mapped,
+        "ambiguousFiles": ambiguous_files,
+        "ambiguousTracks": ambiguous_tracks,
+        "rejected": rejected_files,
+    }
+
+
+def merge_central_cover_mappings(
+    covers: Mapping[str, Cover],
+    tracks: Sequence[Track],
+    artwork_rows: Sequence[Mapping[str, Any]],
+) -> tuple[dict[str, Cover], dict[str, int]]:
+    """Fill missing covers from one uniquely highest-ranked central image."""
+
+    merged = dict(covers)
+    release_upcs: dict[str, set[str]] = defaultdict(set)
+    known_upcs = {track.upc for track in tracks if track.upc}
+    for track in tracks:
+        if track.upc and track.normalized_release:
+            release_upcs[track.normalized_release].add(track.upc)
+    candidates: dict[str, dict[str, tuple[int, str]]] = defaultdict(dict)
+    for row in artwork_rows:
+        file_id = extract_drive_id(row_value(row, "id", "file_id", "webViewLink"), folder=False)
+        name = clean(row_value(row, "name", "file_name"))
+        if not file_id or not name:
+            continue
+        stem = normalize_text(Path(name).stem)
+        digits = re.sub(r"\D", "", name)
+        matched = {upc for upc in known_upcs if len(upc) >= 8 and upc in digits}
+        if not matched:
+            matched = set(release_upcs.get(stem, set()))
+        if len(matched) != 1:
+            continue
+        upc = next(iter(matched))
+        if upc in merged:
+            continue
+        path = normalize_text(row_value(row, "path", "folder_path", "folderPath"))
+        priority = 2 if "artwork les bon" in path else 1
+        candidates[upc][file_id] = (priority, name)
+
+    mapped = 0
+    ambiguous = 0
+    for upc, by_file in candidates.items():
+        ranked = sorted(
+            ((priority, normalize_text(name), file_id, name) for file_id, (priority, name) in by_file.items()),
+            key=lambda item: (-item[0], item[1], item[2]),
+        )
+        best_priority = ranked[0][0]
+        best = [row for row in ranked if row[0] == best_priority]
+        if len(best) != 1:
+            ambiguous += 1
+            continue
+        _priority, _normalized, file_id, name = best[0]
+        merged[upc] = Cover(upc=upc, file_id=file_id, quality=name, is_square=False)
+        mapped += 1
+    return merged, {"available": len(artwork_rows), "mapped": mapped, "ambiguous": ambiguous}
+
+
 def drive_inventory_is_complete(path: Path | None) -> bool:
     if path is None or path.suffix.casefold() != ".json" or not path.is_file():
         return False
@@ -593,6 +867,16 @@ def drive_inventory_is_complete(path: Path | None) -> bool:
     except (OSError, json.JSONDecodeError):
         return False
     return isinstance(payload, dict) and payload.get("complete") is True
+
+
+def source_inventories_are_complete(
+    drive_inventory: Path | None,
+    central_inventory: Path | None,
+    central_complete: bool,
+) -> bool:
+    return drive_inventory_is_complete(drive_inventory) and (
+        central_inventory is None or central_complete
+    )
 
 
 def merge_drive_cover_fallbacks(
@@ -1676,6 +1960,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--workbook", type=Path, required=True, help="Private All DATA.xlsx export.")
     parser.add_argument("--orchard", type=Path, help="Private The Orchard Spotify mapping export (XLSX/CSV/TSV/JSON).")
     parser.add_argument("--drive-inventory", type=Path, help="Optional private connector export for recursive Drive discovery.")
+    parser.add_argument(
+        "--central-drive-inventory",
+        type=Path,
+        help="Optional additive private connector snapshot of the flat central Fichiers/Artwork folders.",
+    )
     parser.add_argument("--output-dir", type=Path, default=PRIVATE_DIRECTORY, help="Ignored private working directory.")
     parser.add_argument("--release", action="append", default=[], help="Limit to a release name; repeat for several releases.")
     parser.add_argument("--smoke", action="store_true", help="Select one WAV each from Time, Rise and Signal Flow.")
@@ -1722,6 +2011,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     tracks, release_audio, covers = load_workbook_sources(arguments.workbook)
     orchard = merge_orchard_rows(load_orchard(arguments.orchard), load_identity_info(arguments.workbook))
     inventory_by_release, inventory_children = load_drive_inventory(arguments.drive_inventory)
+    central_audio, central_artwork, central_complete = load_central_drive_inventory(
+        arguments.central_drive_inventory
+    )
     drive = GoogleDriveClient(clean(os.environ.get("GOOGLE_DRIVE_ACCESS_TOKEN")))
     release_audio = merge_drive_discovery(
         release_audio,
@@ -1732,12 +2024,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         inventory_complete=drive_inventory_is_complete(arguments.drive_inventory),
     )
     covers = merge_drive_cover_fallbacks(covers, release_audio, inventory_children)
+    release_audio, central_audio_summary = merge_central_audio_mappings(
+        tracks, release_audio, central_audio
+    )
+    covers, central_cover_summary = merge_central_cover_mappings(
+        covers, tracks, central_artwork
+    )
     tracks, release_audio = filter_release_scope(tracks, release_audio, arguments.release)
     candidates = build_candidates(tracks, release_audio, covers, orchard)
     if arguments.smoke:
         candidates = select_smoke_candidates(candidates)
 
     planned_counts = {status: sum(candidate.status == status for candidate in candidates) for status in ("exact", "review", "quarantine")}
+    owner_direct_candidates = sum(
+        direct_publication_eligible(
+            {
+                **candidate_payload(candidate),
+                "status": candidate.status,
+                "reasons": candidate.reasons,
+            }
+        )
+        for candidate in candidates
+    )
     print(
         json.dumps(
             {
@@ -1746,8 +2054,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "release_audio_groups": len(release_audio),
                 "candidates": len(candidates),
                 "planned_status": planned_counts,
+                "owner_direct_candidates": owner_direct_candidates,
                 "orchard_rows": len(orchard),
                 "covers": len(covers),
+                "central_inventory": {
+                    "complete": central_complete,
+                    "audio": central_audio_summary,
+                    "artwork": central_cover_summary,
+                },
             },
             indent=2,
         )
@@ -1761,7 +2075,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         upsert_candidates(connection, candidates, force=bool(arguments.force))
         stale_quarantined = 0
         if (
-            drive_inventory_is_complete(arguments.drive_inventory)
+            source_inventories_are_complete(
+                arguments.drive_inventory,
+                arguments.central_drive_inventory,
+                central_complete,
+            )
             and not arguments.release
             and not arguments.smoke
         ):
