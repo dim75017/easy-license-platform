@@ -206,6 +206,10 @@ export const ingestStatuses = [
 ] as const;
 export type IngestStatus = (typeof ingestStatuses)[number];
 
+export const catalogVerificationModes = ["catalog_owner_direct"] as const;
+export type CatalogVerificationMode =
+  (typeof catalogVerificationModes)[number];
+
 export const spotifyMatchStatuses = [
   "candidate",
   "verified",
@@ -518,6 +522,14 @@ export const ingestItems = sqliteTable(
     sourceRowNumber: integer("source_row_number"),
     sourceFileName: text("source_file_name").notNull(),
     sourceSha256: text("source_sha256"),
+    verificationMode: text("verification_mode", {
+      enum: catalogVerificationModes,
+    }),
+    ownerAttestationSha256: text("owner_attestation_sha256"),
+    catalogueScopeSha256: text("catalogue_scope_sha256"),
+    selectionSha256: text("selection_sha256"),
+    masterInspectionSha256: text("master_inspection_sha256"),
+    masterReadComplete: integer("master_read_complete", { mode: "boolean" }),
     declaredTitle: text("declared_title"),
     declaredArtist: text("declared_artist"),
     declaredDurationMs: integer("declared_duration_ms"),
@@ -564,6 +576,47 @@ export const ingestItems = sqliteTable(
       sql`${table.sourceSha256} IS NULL OR length(${table.sourceSha256}) = 64`,
     ),
     check(
+      "ingest_items_verification_mode_check",
+      sql`${table.verificationMode} IS NULL OR ${table.verificationMode} = 'catalog_owner_direct'`,
+    ),
+    check(
+      "ingest_items_owner_attestation_sha256_check",
+      sql`${table.ownerAttestationSha256} IS NULL OR length(${table.ownerAttestationSha256}) = 64`,
+    ),
+    check(
+      "ingest_items_catalogue_scope_sha256_check",
+      sql`${table.catalogueScopeSha256} IS NULL OR length(${table.catalogueScopeSha256}) = 64`,
+    ),
+    check(
+      "ingest_items_selection_sha256_check",
+      sql`${table.selectionSha256} IS NULL OR length(${table.selectionSha256}) = 64`,
+    ),
+    check(
+      "ingest_items_master_inspection_sha256_check",
+      sql`${table.masterInspectionSha256} IS NULL OR length(${table.masterInspectionSha256}) = 64`,
+    ),
+    check(
+      "ingest_items_owner_direct_evidence_shape_check",
+      sql`(
+        ${table.verificationMode} IS NULL
+        AND ${table.ownerAttestationSha256} IS NULL
+        AND ${table.catalogueScopeSha256} IS NULL
+        AND ${table.selectionSha256} IS NULL
+        AND ${table.masterInspectionSha256} IS NULL
+        AND ${table.masterReadComplete} IS NULL
+      ) OR (
+        ${table.verificationMode} = 'catalog_owner_direct'
+        AND ${table.ownerAttestationSha256} IS NOT NULL
+        AND ${table.catalogueScopeSha256} IS NOT NULL
+        AND ${table.selectionSha256} IS NOT NULL
+        AND ${table.masterInspectionSha256} = ${table.sourceSha256}
+        AND ${table.masterReadComplete} = 1
+        AND ${table.sourceRowNumber} IS NOT NULL
+        AND ${table.sourceSha256} IS NOT NULL
+        AND ${table.declaredDurationMs} IS NOT NULL
+      )`,
+    ),
+    check(
       "ingest_items_declared_title_length_check",
       sql`${table.declaredTitle} IS NULL OR length(${table.declaredTitle}) BETWEEN 1 AND 500`,
     ),
@@ -597,6 +650,7 @@ export const ingestItems = sqliteTable(
     ),
     index("idx_ingest_items_track_id").on(table.trackId),
     index("idx_ingest_items_source_sha256").on(table.sourceSha256),
+    index("idx_ingest_items_verification_mode").on(table.verificationMode),
   ],
 );
 

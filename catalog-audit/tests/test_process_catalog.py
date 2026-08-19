@@ -113,6 +113,31 @@ def attach_evidence(record=None):
     return record
 
 
+def direct_record():
+    record = exact_record()
+    record["status"] = "review"
+    record["reasons"] = [
+        "audio_inspection_pending",
+        "sha256_pending",
+        "spotify_duration_missing",
+        "spotify_id_missing",
+    ]
+    record["spotify_id"] = ""
+    record["spotify_duration_seconds"] = None
+    record["spotify_match_kind"] = "missing"
+    record["cover"]["is_square"] = False
+    record["inspection"] = {
+        "status": "pending",
+        "mode": None,
+        "content_type": None,
+        "content_length": None,
+        "sha256": None,
+        "error": None,
+        "wav": None,
+    }
+    return record
+
+
 def write_sine_wav(path, seconds=1.0, sample_rate=16_000):
     frame_count = round(seconds * sample_rate)
     with wave.open(str(path), "wb") as handle:
@@ -184,6 +209,33 @@ class ManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(process.PipelineError, "accepted_spotify_enrichment_mismatch"):
                 process.attach_verified_spotify_evidence([mismatch], path)
 
+    def test_owner_direct_accepts_deterministic_row_without_spotify_or_prescan(self):
+        record = direct_record()
+        process.validate_direct_record(record)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "direct.jsonl"
+            path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+            loaded = process.load_direct_manifest(path)
+        self.assertEqual(len(loaded), 1)
+
+    def test_owner_direct_rejects_ambiguous_or_reused_audio(self):
+        ambiguous = direct_record()
+        ambiguous["reasons"].append("audio_match_ambiguous")
+        with self.assertRaisesRegex(process.PipelineError, "direct_record_not_deterministic"):
+            process.validate_direct_record(ambiguous)
+
+        first = direct_record()
+        second = direct_record()
+        second["candidate_id"] = "c" * 28
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "direct.jsonl"
+            path.write_text(
+                json.dumps(first) + "\n" + json.dumps(second) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(process.PipelineError, "direct_manifest_duplicate_audio"):
+                process.load_direct_manifest(path)
+
 
 class StateTests(unittest.TestCase):
     def test_state_uses_single_process_delete_journal(self):
@@ -243,6 +295,43 @@ class StateTests(unittest.TestCase):
                 self.assertEqual(reset["human_made_cleared_ack"], 0)
             finally:
                 connection.close()
+
+    def test_owner_direct_resume_skips_an_already_published_checkpoint(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(connection, row["candidate_id"], status="published")
+                downloader = mock.Mock()
+                api = mock.Mock()
+                outcome = process.process_record(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    downloader,
+                    api,
+                    Path("ffmpeg"),
+                    rights_cleared=True,
+                    human_made_cleared=True,
+                    verification_mode="catalog_owner_direct",
+                    owner_evidence={
+                        "ownerAttestationSha256": "1" * 64,
+                        "catalogueScopeSha256": "2" * 64,
+                        "selectionSha256": "3" * 64,
+                    },
+                )
+            finally:
+                connection.close()
+        self.assertEqual(outcome, "already_published")
+        downloader.download.assert_not_called()
+        api.ingest_metadata.assert_not_called()
 
 
 class AudioTests(unittest.TestCase):
@@ -323,6 +412,26 @@ class AudioTests(unittest.TestCase):
             self.assertEqual(payload["bins"], 512)
             self.assertEqual(len(payload["peaks"]), 512)
 
+    def test_owner_direct_uses_measured_wav_duration_as_catalogue_truth(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.wav"
+            write_sine_wav(source, seconds=1.0, sample_rate=8_000)
+            record["track"]["duration_seconds"] = None
+            _wav, duration_ms = process.inspect_downloaded_wav(
+                source,
+                record,
+                verification_mode="catalog_owner_direct",
+            )
+            self.assertEqual(duration_ms, 1_000)
+
+            with self.assertRaisesRegex(process.PipelineError, "source_wav_too_short"):
+                process.inspect_downloaded_wav(
+                    source,
+                    record,
+                    verification_mode="spotify",
+                )
+
     def test_cover_inspection_requires_known_signature_and_square_geometry(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "cover.png"
@@ -339,6 +448,38 @@ class AudioTests(unittest.TestCase):
             path.write_bytes(contents)
             with self.assertRaisesRegex(process.PipelineError, "cover_artwork_not_square"):
                 process.inspect_cover_artwork(path)
+
+    def test_heavy_or_non_square_cover_is_optimized_to_bounded_square_jpeg(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "cover.png"
+            destination = directory / "cover.jpg"
+            source.write_bytes(
+                b"\x89PNG\r\n\x1a\n"
+                + b"\x00\x00\x00\x0dIHDR"
+                + (3000).to_bytes(4, "big")
+                + (2000).to_bytes(4, "big")
+                + b"\x08\x02\x00\x00\x00"
+            )
+
+            def run(command, **_kwargs):
+                destination.write_bytes(
+                    b"\xff\xd8\xff\xc0\x00\x07\x08"
+                    + process.COVER_OUTPUT_SIZE.to_bytes(2, "big")
+                    + process.COVER_OUTPUT_SIZE.to_bytes(2, "big")
+                )
+                return process.subprocess.CompletedProcess(command, 0, b"", b"")
+
+            with mock.patch.object(process.subprocess, "run", side_effect=run) as runner:
+                prepared, content_type, width, height = process.prepare_cover_artwork(
+                    Path("ffmpeg"), source, destination
+                )
+            command = runner.call_args.args[0]
+        self.assertEqual(prepared, destination)
+        self.assertEqual((content_type, width, height), ("image/jpeg", 3000, 3000))
+        self.assertEqual(command[command.index("-filter_threads") + 1], "1")
+        self.assertEqual(command[command.index("-threads") + 1], "1")
+        self.assertIn("crop=3000:3000", command[command.index("-vf") + 1])
 
 
 class DriveDownloadTests(unittest.TestCase):
@@ -485,6 +626,53 @@ class ApiTests(unittest.TestCase):
         with self.assertRaisesRegex(process.PipelineError, "accepted_spotify_enrichment_missing"):
             process.metadata_item("b" * 28, exact_record(), "a" * 64, 120_000, True, True)
 
+    def test_owner_direct_metadata_uses_local_source_and_sealed_master_evidence(self):
+        evidence = {
+            "ownerAttestationSha256": "1" * 64,
+            "catalogueScopeSha256": "2" * 64,
+            "selectionSha256": "3" * 64,
+        }
+        item = process.metadata_item(
+            "b" * 28,
+            direct_record(),
+            "a" * 64,
+            120_000,
+            True,
+            True,
+            verification_mode="catalog_owner_direct",
+            owner_evidence=evidence,
+        )
+        self.assertEqual(item["title"], "Test Track")
+        self.assertEqual(item["verificationMode"], "catalog_owner_direct")
+        self.assertIsNone(item["spotify"])
+        self.assertTrue(item["catalogOwnerEvidence"]["masterReadComplete"])
+        self.assertEqual(item["catalogOwnerEvidence"]["masterInspectionSha256"], "a" * 64)
+
+    def test_promote_emits_explicit_owner_direct_verification_mode(self):
+        requests = []
+
+        def opener(request, timeout):
+            requests.append((request, timeout))
+            return FakeResponse(b'{"trackStatus":"published"}')
+
+        client = process.CatalogApiClient(
+            "https://catalog.example.test",
+            "pipeline-secret",
+            "sites-secret",
+            opener=opener,
+            sleeper=lambda _delay: None,
+        )
+        client.promote(
+            track_id=12,
+            batch_key=process.DIRECT_BATCH_KEY,
+            source_key="b" * 28,
+            source_sha256="a" * 64,
+            measured_duration_ms=120_000,
+            verification_mode="catalog_owner_direct",
+        )
+        payload = json.loads(requests[0][0].data)
+        self.assertEqual(payload["verificationMode"], "catalog_owner_direct")
+
 
 class SpotifyMergeTests(unittest.TestCase):
     def test_only_accepted_unambiguous_durations_are_mergeable(self):
@@ -578,6 +766,38 @@ class CliSafetyTests(unittest.TestCase):
                         "--rights-cleared",
                     ]
                 )
+
+    def test_owner_direct_dry_run_needs_no_spotify_file_or_full_prescan(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            manifest = directory / "direct.jsonl"
+            manifest.write_text(json.dumps(record) + "\n", encoding="utf-8")
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                status = process.main(
+                    [
+                        "--exact-manifest",
+                        str(manifest),
+                        "--pipeline-state",
+                        str(directory / "pipeline.sqlite3"),
+                        "--verification-mode",
+                        "catalog_owner_direct",
+                        "--batch-key",
+                        process.DIRECT_BATCH_KEY,
+                        "--owner-attestation-sha256",
+                        "1" * 64,
+                        "--catalogue-scope-sha256",
+                        "2" * 64,
+                        "--selection-sha256",
+                        "3" * 64,
+                    ]
+                )
+        summary = json.loads(output.getvalue())
+        self.assertEqual(status, 0)
+        self.assertEqual(summary["verificationMode"], "catalog_owner_direct")
+        self.assertEqual(summary["directRecords"], 1)
+        self.assertNotIn("spotifyEnrichment", summary)
 
 
 if __name__ == "__main__":

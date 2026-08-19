@@ -5,6 +5,11 @@ Drive → full WAV inspection → Spotify evidence → exact manifest → Symbio
 pipeline. It never prints row-level data. All IDs, filenames, state, evidence
 and provider responses stay below `catalog-audit/private/`, which Git ignores.
 
+It also exposes an explicit catalogue-owner drain lane. That lane is reserved
+for the configured Sheet + Drive roots after the catalogue owner has confirmed
+that those sources are authoritative. It removes the Spotify dependency, but
+not the technical audio, ownership, source-association or publication gates.
+
 ## One-time private setup
 
 Create `catalog-audit/private/drive-sync/config.json` locally. Do not commit or
@@ -74,6 +79,53 @@ The default is a local, network-free plan:
 ```text
 python catalog-audit/continue_catalog_sync.py --mode plan
 ```
+
+## Catalogue-owner global drain
+
+Use this one top-level invocation only after the scoped private owner
+attestation is valid and the owner has explicitly accepted Sheet + Drive as the
+publication authority without independent Spotify confirmation:
+
+```text
+python catalog-audit/continue_catalog_sync.py --config catalog-audit/private/drive-sync/config.json --mode drain --allow-network
+```
+
+`drain` is intentionally not an arbitrary publication microbatch. It keeps the
+singleton lock for the whole run, refreshes the workbook once, drains the
+checkpointed Drive release inventory sequentially until complete (or until a
+full pass makes no progress), seeds all current candidates without downloading
+or pre-inspecting WAVs, and creates the ignored
+`catalog-owner-direct.jsonl`. That manifest accepts only a unique, deterministic
+Sheet-row ↔ Drive-file association. Missing, ambiguous, multiply claimed or
+stale audio is excluded. Missing workbook artwork is filled only when a unique
+owned image, or a clearly ranked cover/front/artwork image, exists inside the
+same release folder; ambiguous or absent artwork is excluded.
+
+The selected manifest is then processed to exhaustion in the same invocation,
+without the recurring lane's wall-clock cutoff, one track at a time and with
+one FFmpeg thread. Each selected WAV is downloaded
+once by the local worker while SHA-256 is calculated, parsed as WAV, decoded
+fully, converted to a full-length 192 kb/s MP3, and decoded again into a
+512-point waveform. The measured WAV duration becomes the catalogue duration
+for this owner-authoritative lane; an absent or different Sheet duration and a
+short but valid WAV do not block it. A corrupt, unreadable or undecodable file
+fails only its own checkpoint. Covers are kept when already bounded and square,
+otherwise normalized to a bounded square JPEG. Source masters stay in private
+storage; only listening copies, waveforms and cover delivery are public.
+
+Every backend metadata row stores the owner-attestation hash, configured source
+scope hash, whole-selection hash, measured master hash and a completed full-read
+flag under the sealed batch `symbiome-catalog-owner-drain-v1`. Promotion repeats
+the checksum, measured-duration, private-master, MP3, waveform, cover, rights
+and human-made gates atomically, but deliberately has no Spotify gate. Existing
+published checkpoints return `already_published`, so interruption or machine
+restart resumes instead of starting over. Output and `last-run.json` remain
+aggregate-only; row data stays private.
+
+The legacy `continue` / `publish` lane below remains unchanged and continues to
+require exact Spotify evidence. The direct lane never consumes `review.jsonl`
+or `quarantine.jsonl` wholesale; it consumes only its separately derived,
+deterministic owner manifest.
 
 The recurring continuation refreshes the complete Drive inventory on every
 run. The first runs consume the whole initial backlog (including the existing

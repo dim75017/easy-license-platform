@@ -31,7 +31,16 @@ const ITEM_KEYS = new Set([
   "rightsStatus",
   "aiReviewStatus",
   "catalogStatus",
+  "verificationMode",
+  "catalogOwnerEvidence",
   "spotify",
+]);
+const CATALOG_OWNER_EVIDENCE_KEYS = new Set([
+  "ownerAttestationSha256",
+  "catalogueScopeSha256",
+  "selectionSha256",
+  "masterInspectionSha256",
+  "masterReadComplete",
 ]);
 const SPOTIFY_KEYS = new Set([
   "trackId",
@@ -47,6 +56,7 @@ const SPOTIFY_KEYS = new Set([
   "status",
 ]);
 const MAX_BATCH_ITEMS = 50;
+const CATALOG_OWNER_DIRECT_BATCH_KEY = "symbiome-catalog-owner-drain-v1";
 
 const RELEASE_TYPES = new Set([
   "single",
@@ -99,6 +109,14 @@ export type CatalogSpotifyMatchInput = {
   status: "candidate" | "verified" | "rejected" | "stale";
 };
 
+export type CatalogOwnerEvidenceInput = {
+  ownerAttestationSha256: string;
+  catalogueScopeSha256: string;
+  selectionSha256: string;
+  masterInspectionSha256: string;
+  masterReadComplete: true;
+};
+
 export type CatalogMetadataItem = {
   sourceKey: string;
   sourceFileName: string;
@@ -125,6 +143,8 @@ export type CatalogMetadataItem = {
   rightsStatus: "pending" | "cleared" | "restricted";
   aiReviewStatus: "pending" | "cleared" | "rejected";
   catalogStatus: "draft" | "needs_review" | "ready" | "published";
+  verificationMode: "catalog_owner_direct" | null;
+  catalogOwnerEvidence: CatalogOwnerEvidenceInput | null;
   spotify: CatalogSpotifyMatchInput | null;
 };
 
@@ -155,10 +175,21 @@ export function parseMetadataBatch(
     );
   }
 
-  return {
-    batchKey,
-    items: payload.items.map((item, index) => parseMetadataItem(item, index)),
-  };
+  const items = payload.items.map((item, index) =>
+    parseMetadataItem(item, index),
+  );
+  if (
+    items.some((item) => item.verificationMode === "catalog_owner_direct") &&
+    batchKey !== CATALOG_OWNER_DIRECT_BATCH_KEY
+  ) {
+    throw new CatalogApiError(
+      `catalog_owner_direct verification requires batchKey ${CATALOG_OWNER_DIRECT_BATCH_KEY}.`,
+      409,
+      "catalog_owner_direct_batch_required",
+    );
+  }
+
+  return { batchKey, items };
 }
 
 function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
@@ -222,7 +253,62 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     1,
     86_400_000,
   );
+  const sourceRowNumber = optionalInteger(
+    value.sourceRowNumber,
+    `${prefix}.sourceRowNumber`,
+    1,
+    10_000_000,
+  );
+  const sourceSha256 = optionalSha256(
+    value.sourceSha256,
+    `${prefix}.sourceSha256`,
+  );
+  const verificationMode = parseVerificationMode(
+    value.verificationMode,
+    prefix,
+  );
+  const catalogOwnerEvidence = parseCatalogOwnerEvidence(
+    value.catalogOwnerEvidence,
+    prefix,
+  );
   const spotify = parseSpotifyMatch(value.spotify, prefix, durationMs);
+  if (verificationMode === "catalog_owner_direct") {
+    if (
+      !catalogOwnerEvidence ||
+      sourceRowNumber === null ||
+      sourceSha256 === null ||
+      durationMs === null ||
+      rightsStatus !== "cleared" ||
+      aiReviewStatus !== "cleared" ||
+      catalogStatus !== "ready"
+    ) {
+      throw new CatalogApiError(
+        `${prefix} catalog_owner_direct verification requires owner evidence, a Sheet row, source checksum, measured duration, cleared rights/AI review and ready status.`,
+        409,
+        "catalog_owner_direct_evidence_incomplete",
+      );
+    }
+    if (spotify) {
+      throw new CatalogApiError(
+        `${prefix} catalog_owner_direct verification cannot depend on Spotify evidence.`,
+        409,
+        "catalog_owner_direct_spotify_forbidden",
+      );
+    }
+    if (catalogOwnerEvidence.masterInspectionSha256 !== sourceSha256) {
+      throw new CatalogApiError(
+        `${prefix}.catalogOwnerEvidence.masterInspectionSha256 must match sourceSha256.`,
+        409,
+        "catalog_owner_direct_master_mismatch",
+      );
+    }
+  } else if (catalogOwnerEvidence) {
+    throw new CatalogApiError(
+      `${prefix}.catalogOwnerEvidence requires verificationMode catalog_owner_direct.`,
+      409,
+      "catalog_owner_direct_mode_required",
+    );
+  }
   if (spotify?.status === "verified" && spotify.method === "orchard_uri") {
     if (!upc) {
       throw new CatalogApiError(
@@ -255,13 +341,8 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
   return {
     sourceKey,
     sourceFileName,
-    sourceRowNumber: optionalInteger(
-      value.sourceRowNumber,
-      `${prefix}.sourceRowNumber`,
-      1,
-      10_000_000,
-    ),
-    sourceSha256: optionalSha256(value.sourceSha256, `${prefix}.sourceSha256`),
+    sourceRowNumber,
+    sourceSha256,
     title,
     normalizedTitle: normalizeCatalogText(title),
     artist,
@@ -293,7 +374,64 @@ function parseMetadataItem(value: unknown, index: number): CatalogMetadataItem {
     rightsStatus,
     aiReviewStatus,
     catalogStatus,
+    verificationMode,
+    catalogOwnerEvidence,
     spotify,
+  };
+}
+
+function parseVerificationMode(
+  value: unknown,
+  itemPrefix: string,
+): "catalog_owner_direct" | null {
+  if (value === undefined || value === null) return null;
+  if (value !== "catalog_owner_direct") {
+    throw new CatalogApiError(
+      `${itemPrefix}.verificationMode must be catalog_owner_direct.`,
+    );
+  }
+  return value;
+}
+
+function parseCatalogOwnerEvidence(
+  value: unknown,
+  itemPrefix: string,
+): CatalogOwnerEvidenceInput | null {
+  if (value === undefined || value === null) return null;
+  if (!isPlainObject(value)) {
+    throw new CatalogApiError(
+      `${itemPrefix}.catalogOwnerEvidence must be an object.`,
+    );
+  }
+  assertAllowedKeys(
+    value,
+    CATALOG_OWNER_EVIDENCE_KEYS,
+    `${itemPrefix}.catalogOwnerEvidence`,
+  );
+  const prefix = `${itemPrefix}.catalogOwnerEvidence`;
+  if (value.masterReadComplete !== true) {
+    throw new CatalogApiError(
+      `${prefix}.masterReadComplete must be true after a full master read.`,
+    );
+  }
+  return {
+    ownerAttestationSha256: requiredSha256(
+      value.ownerAttestationSha256,
+      `${prefix}.ownerAttestationSha256`,
+    ),
+    catalogueScopeSha256: requiredSha256(
+      value.catalogueScopeSha256,
+      `${prefix}.catalogueScopeSha256`,
+    ),
+    selectionSha256: requiredSha256(
+      value.selectionSha256,
+      `${prefix}.selectionSha256`,
+    ),
+    masterInspectionSha256: requiredSha256(
+      value.masterInspectionSha256,
+      `${prefix}.masterInspectionSha256`,
+    ),
+    masterReadComplete: true,
   };
 }
 
@@ -413,6 +551,14 @@ function optionalSha256(value: unknown, label: string): string | null {
   const sha256 = optionalString(value, label, 64)?.toLowerCase() ?? null;
   if (sha256 && !/^[a-f0-9]{64}$/u.test(sha256)) {
     throw new CatalogApiError(`${label} must be a hexadecimal SHA-256 digest.`);
+  }
+  return sha256;
+}
+
+function requiredSha256(value: unknown, label: string): string {
+  const sha256 = optionalSha256(value, label);
+  if (!sha256) {
+    throw new CatalogApiError(`${label} is required.`);
   }
   return sha256;
 }

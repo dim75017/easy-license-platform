@@ -43,6 +43,13 @@
       "when": 1786635998757,
       "tag": "0005_volatile_bulldozer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787155973429,
+      "tag": "0006_romantic_spiral",
+      "breakpoints": true
     }
   ]
 }
