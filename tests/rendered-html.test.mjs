@@ -1519,8 +1519,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(musicWorkspace, /className="music-recent-releases" aria-labelledby="recent-releases-title"/);
   assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
-  assert.match(musicWorkspace, /catalogLoadState === "live"[\s\S]{0,240}catalogLoadState === "loading"[\s\S]{0,180}Recent releases from the local catalogue/);
-  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,160}recentTracks\.map\(\(track\)/);
+  assert.match(musicWorkspace, /catalogLoadState === "live" && recentCatalogTracks !== null[\s\S]{0,320}catalogLoadState === "loading"[\s\S]{0,240}Demo catalogue · curated local releases, not the full live discography/);
+  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track\)/);
   assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,520}<PlaybackGlyph playing=\{isPlaying\} \/>/);
   assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
 
@@ -1537,7 +1537,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   }
 
   assert.match(musicWorkspace, /className="music-track-table" role="list" aria-label=\{label\}/);
-  assert.match(musicWorkspace, /role="listitem"[\s\S]{0,360}key=\{track\.id\}/);
+  assert.match(musicWorkspace, /className=\{`music-track-row[\s\S]*?role="listitem"[\s\S]*?data-track-id=\{track\.id\}[\s\S]*?key=\{track\.id\}/);
   assert.match(musicWorkspace, /<span>Track<\/span><span>Player<\/span><span>Genre<\/span><span>Mood<\/span><span>Actions<\/span>/);
   assert.match(musicWorkspace, /className="music-track-taxonomy music-track-genre"[\s\S]{0,120}>Genre<\/small><span>\{track\.genre\}<\/span>/);
   assert.match(musicWorkspace, /className="music-track-taxonomy music-track-mood"[\s\S]{0,120}>Mood<\/small><span>\{track\.moods\.slice\(0, 2\)\.join\(/);
@@ -1637,14 +1637,15 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
   assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
-  assert.match(musicWorkspace, /const knownTrackIds = new Set\(libraryTracks\.map\(\(track\) => track\.id\)\)/);
-  assert.match(musicWorkspace, /record\.trackIds\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
-  assert.match(musicWorkspace, /storedDownloads\.filter\(\(id\): id is string => typeof id === "string" && knownTrackIds\.has\(id\)\)/);
+  assert.doesNotMatch(musicWorkspace, /knownTrackIds\.has\(id\)/, "saved actions must not be purged by a partial catalogue page");
+  assert.match(musicWorkspace, /storedLiked\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /record\.trackIds\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /storedDownloads\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
-  assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} \/>/);
+  assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
   assert.match(musicWorkspace, /Full-length compressed listening copies are listed here\. WAV masters stay reserved for licensed downloads\./);
   assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);

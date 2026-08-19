@@ -279,3 +279,14 @@ Run the deterministic fixture tests with:
 ```text
 node --test catalog-audit/enrich-spotify-metadata.test.mjs
 ```
+
+## Recurring continuation
+
+[`sync_lofi_drive.py`](./sync_lofi_drive.py) maintains the private, resumable
+inventory and detects new or changed release folders without downloading the
+media. [`continue_catalog_sync.py`](./continue_catalog_sync.py) then refreshes
+the source workbook and continues inspection, enrichment, merge and
+publication preparation in bounded batches. The default is network-free and
+publication remains gated by two explicit evidence files bound to the current
+exact selection. Setup, recovery and the recommended hourly Codex heartbeat are documented in
+[`CATALOG_SYNC_RUNBOOK.md`](./CATALOG_SYNC_RUNBOOK.md).

@@ -1932,8 +1932,77 @@ article.music-track-row[role="listitem"] {
 
 .music-track-browser-controls > .music-track-results-status { margin: 0; }
 
+.music-catalogue-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 12px 4px;
+}
+
+.music-catalogue-load-more button {
+  --cta-swipe-fill: var(--wm-clay);
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--wm-ink);
+  border-radius: 999px;
+  padding: 0 18px;
+  background: var(--wm-ink);
+  color: var(--wm-cream);
+  cursor: pointer;
+  font-weight: 760;
+  transition: border-color 320ms ease, background-color 320ms ease, box-shadow 320ms ease, transform 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.music-catalogue-load-more button::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--cta-swipe-fill);
+  content: "";
+  pointer-events: none;
+  transform: translate3d(-101%, 0, 0);
+  transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .music-catalogue-load-more button:hover:not(:disabled) { border-color: var(--wm-cream); }
+  .music-catalogue-load-more button:hover:not(:disabled)::before { transform: translate3d(0, 0, 0); }
+}
+
+.music-catalogue-load-more button:focus-visible {
+  border-color: var(--wm-cream);
+  outline: 3px solid var(--wm-cream);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--wm-ink);
+}
+
+.music-catalogue-load-more button:focus-visible::before {
+  transform: translate3d(0, 0, 0);
+}
+
+.music-catalogue-load-more button:disabled {
+  cursor: wait;
+  opacity: .62;
+}
+
+.music-catalogue-load-more button:disabled::before { display: none; }
+
+.music-catalogue-load-more span {
+  color: rgba(41, 40, 50, .58);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-catalogue-load-more button,
+  .music-catalogue-load-more button::before { transition: none; }
+}
+
 @media (max-width: 860px) {
   .music-track-browser-controls { gap: 12px; }
+  .music-catalogue-load-more { align-items: stretch; flex-direction: column; text-align: center; }
 }
 
 article.music-track-row[role="listitem"] { cursor: pointer; }

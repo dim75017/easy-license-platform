@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProper
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { useTrackPreview } from "../hooks/useTrackPreview";
-import { parseCatalogPage } from "../lib/catalog-client";
+import { parseCatalogPage, type CatalogPagination } from "../lib/catalog-client";
 import {
   lofiGirlPlaylists,
   musicSearchTaxonomy,
@@ -65,6 +65,93 @@ type TrackMenuState = {
 
 const defaultPersonalPlaylist: PersonalPlaylist = { id: "my-playlist", name: "My playlist", trackIds: [] };
 const trackControlSelector = "button, a, input, select, textarea, [role='menu'], [role='dialog']";
+const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
+const CATALOG_PAGE_SIZE = 40;
+const RECENT_RELEASE_LIMIT = 8;
+
+type CatalogFilters = {
+  query: string;
+  genre: string;
+  mood: string;
+  theme: MusicUseSlug | null;
+};
+
+function catalogFilterSignature(filters: CatalogFilters): string {
+  return JSON.stringify({
+    q: filters.query.trim(),
+    genre: filters.genre,
+    mood: filters.mood,
+    theme: filters.theme,
+  });
+}
+
+function catalogRequestUrl({
+  page,
+  pageSize = CATALOG_PAGE_SIZE,
+  filters,
+  onePerRelease = false,
+  trackId = null,
+}: {
+  page: number;
+  pageSize?: number;
+  filters?: CatalogFilters;
+  onePerRelease?: boolean;
+  trackId?: number | null;
+}): string {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (filters?.query.trim()) params.set("q", filters.query.trim());
+  if (filters && filters.genre !== "All genres") params.set("genre", filters.genre);
+  if (filters && filters.mood !== "All moods") params.set("mood", filters.mood);
+  if (filters?.theme) params.set("theme", filters.theme);
+  if (onePerRelease) params.set("onePerRelease", "true");
+  if (trackId !== null) params.set("trackId", String(trackId));
+  return `/api/catalog/tracks?${params.toString()}`;
+}
+
+function mergeTrackPages(
+  current: readonly WorkspaceTrack[],
+  incoming: readonly WorkspaceTrack[],
+): WorkspaceTrack[] {
+  const merged = new Map(current.map((track) => [track.id, track]));
+  for (const track of incoming) merged.set(track.id, track);
+  return [...merged.values()];
+}
+
+function distinctReleaseTracks(tracks: readonly WorkspaceTrack[], limit: number): WorkspaceTrack[] {
+  const seen = new Set<string>();
+  const releases: WorkspaceTrack[] = [];
+  for (const track of tracks) {
+    const releaseId = track.release?.id ?? track.id;
+    if (seen.has(releaseId)) continue;
+    seen.add(releaseId);
+    releases.push(track);
+    if (releases.length === limit) break;
+  }
+  return releases;
+}
+
+function catalogNumericTrackId(trackId: string): number | null {
+  const match = /^CATALOG-(\d+)$/u.exec(trackId);
+  if (!match) return null;
+  const numericId = Number(match[1]);
+  return Number.isSafeInteger(numericId) && numericId > 0 ? numericId : null;
+}
+
+function isStoredTrackId(value: unknown): value is string {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= 160
+    && !/[\u0000-\u001f\u007f]/u.test(value);
+}
+
+function releaseMeta(track: WorkspaceTrack): string {
+  const release = track.release;
+  if (!release) return `${track.genre}${track.moods[0] ? ` · ${track.moods[0]}` : ""}`;
+  const parts = [release.type.charAt(0).toUpperCase() + release.type.slice(1)];
+  if (release.releaseDate) parts.push(release.releaseDate);
+  if (release.trackCount) parts.push(`${release.trackCount} ${release.trackCount === 1 ? "track" : "tracks"}`);
+  return parts.join(" · ");
+}
 
 const navGroups: ReadonlyArray<{
   label: string;
@@ -414,17 +501,49 @@ export function CreatorWorkspace() {
   const [trackMenu, setTrackMenu] = useState<TrackMenuState | null>(null);
   const [actionStatus, setActionStatus] = useState("");
   const [catalogTracks, setCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
-  const [catalogTotal, setCatalogTotal] = useState(0);
-  const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
+  const [catalogKnownTracks, setCatalogKnownTracks] = useState<readonly WorkspaceTrack[]>([]);
+  const [catalogPagination, setCatalogPagination] = useState<CatalogPagination | null>(null);
+  const [catalogResolvedSignature, setCatalogResolvedSignature] = useState<string | null>(null);
+  const [recentCatalogTracks, setRecentCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
+  const [recentCatalogTotal, setRecentCatalogTotal] = useState(0);
+  const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>(isStaticDemo ? "fallback" : "loading");
+  const [catalogBusy, setCatalogBusy] = useState(!isStaticDemo);
+  const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
+  const [catalogRequestFailed, setCatalogRequestFailed] = useState(false);
+  const [catalogRetryNonce, setCatalogRetryNonce] = useState(0);
   const [highlightedTrackId, setHighlightedTrackId] = useState<string | null>(null);
   const trackMenuOpenerRef = useRef<HTMLElement | null>(null);
-  const sharedTrackHandledRef = useRef(false);
+  const sharedTrackHandledRef = useRef<string | null>(null);
   const activeViewRef = useRef<LibraryView>("discover");
+  const loadMoreControllerRef = useRef<AbortController | null>(null);
+  const catalogHasLoadedRef = useRef(false);
+  const catalogRequestGenerationRef = useRef(0);
+  const catalogResolvedSignatureRef = useRef<string | null>(null);
   const preview = useTrackPreview();
-  const libraryTracks = catalogTracks?.length ? catalogTracks : workspaceTracks;
-  const recentTracks = useMemo(() => libraryTracks.slice(0, 8), [libraryTracks]);
-  const availableGenres = useMemo(() => ["All genres", ...new Set(libraryTracks.map((track) => track.genre))], [libraryTracks]);
-  const availableMoods = useMemo(() => ["All moods", ...new Set(libraryTracks.flatMap((track) => track.moods))], [libraryTracks]);
+  const catalogFilters = useMemo<CatalogFilters>(() => ({ query, genre, mood, theme: activeUse }), [activeUse, genre, mood, query]);
+  const catalogQuerySignature = useMemo(() => catalogFilterSignature(catalogFilters), [catalogFilters]);
+  const catalogQuerySignatureRef = useRef(catalogQuerySignature);
+  catalogQuerySignatureRef.current = catalogQuerySignature;
+  const catalogViewIsCurrent = catalogResolvedSignature === catalogQuerySignature;
+  const libraryTracks = catalogTracks ?? workspaceTracks;
+  const knownTracks = catalogLoadState === "live" ? catalogKnownTracks : workspaceTracks;
+  const knownTracksRef = useRef(knownTracks);
+  knownTracksRef.current = knownTracks;
+  const recentTracks = useMemo(
+    () =>
+      catalogLoadState === "live" && recentCatalogTracks !== null
+        ? recentCatalogTracks
+        : distinctReleaseTracks(workspaceTracks, RECENT_RELEASE_LIMIT),
+    [catalogLoadState, recentCatalogTracks],
+  );
+  const availableGenres = useMemo(
+    () => ["All genres", ...new Set([...musicSearchTaxonomy.genres, ...knownTracks.map((track) => track.genre)])],
+    [knownTracks],
+  );
+  const availableMoods = useMemo(
+    () => ["All moods", ...new Set([...musicSearchTaxonomy.moods, ...knownTracks.flatMap((track) => track.moods)])],
+    [knownTracks],
+  );
 
   useEffect(() => {
     const syncViewFromLocation = () => {
@@ -440,64 +559,177 @@ export function CreatorWorkspace() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  useEffect(() => () => loadMoreControllerRef.current?.abort(), []);
 
-    async function loadCatalog() {
+  useEffect(() => {
+    if (isStaticDemo) return;
+    const requestGeneration = ++catalogRequestGenerationRef.current;
+    const requestSignature = catalogQuerySignature;
+    const preservesCurrentPage = catalogResolvedSignatureRef.current === requestSignature;
+    const controller = new AbortController();
+    loadMoreControllerRef.current?.abort();
+    setCatalogBusy(true);
+    setCatalogLoadingMore(false);
+    setCatalogRequestFailed(false);
+    if (!preservesCurrentPage) {
+      catalogResolvedSignatureRef.current = null;
+      setCatalogResolvedSignature(null);
+      setCatalogTracks([]);
+      setCatalogPagination(null);
+    }
+    if (!catalogHasLoadedRef.current) setCatalogLoadState("loading");
+
+    const delay = query.trim() ? 250 : 0;
+    const timer = window.setTimeout(async () => {
       try {
-        const response = await fetch("/api/catalog/tracks?page=1&pageSize=30", {
+        const response = await fetch(catalogRequestUrl({ page: 1, filters: catalogFilters }), {
           cache: "no-store",
           credentials: "same-origin",
           headers: { accept: "application/json" },
           signal: controller.signal,
         });
-        if (!response.ok) {
-          setCatalogLoadState("fallback");
-          return;
-        }
+        if (!response.ok) throw new Error("Catalogue request failed");
 
         const page = parseCatalogPage(await response.json());
-        if (!page || page.tracks.length === 0) {
-          setCatalogLoadState("fallback");
-          return;
-        }
+        if (!page || page.view !== "tracks") throw new Error("Catalogue response was invalid");
+        if (catalogRequestGenerationRef.current !== requestGeneration || catalogQuerySignatureRef.current !== requestSignature) return;
 
         setCatalogTracks(page.tracks);
-        setCatalogTotal(page.total);
+        setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
+        setCatalogPagination(page.pagination);
+        catalogResolvedSignatureRef.current = requestSignature;
+        setCatalogResolvedSignature(requestSignature);
         setCatalogLoadState("live");
+        setCatalogRequestFailed(false);
+        catalogHasLoadedRef.current = true;
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setCatalogLoadState("fallback");
+        if (
+          (error instanceof DOMException && error.name === "AbortError")
+          || catalogRequestGenerationRef.current !== requestGeneration
+          || catalogQuerySignatureRef.current !== requestSignature
+        ) return;
+        setCatalogRequestFailed(true);
+        if (!catalogHasLoadedRef.current) {
+          setCatalogTracks(null);
+          setCatalogPagination(null);
+          setCatalogLoadState("fallback");
+        } else {
+          setCatalogLoadState("live");
+          setActionStatus(
+            preservesCurrentPage
+              ? "The catalogue update failed. The last loaded results are still shown."
+              : "The matching catalogue view could not be loaded. Retry when you are ready.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted && catalogRequestGenerationRef.current === requestGeneration) setCatalogBusy(false);
+      }
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [catalogFilters, catalogQuerySignature, catalogRetryNonce, query]);
+
+  useEffect(() => {
+    if (isStaticDemo) return;
+    const controller = new AbortController();
+
+    async function loadRecentReleases() {
+      try {
+        const response = await fetch(catalogRequestUrl({
+          page: 1,
+          pageSize: RECENT_RELEASE_LIMIT,
+          onePerRelease: true,
+        }), {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const page = parseCatalogPage(await response.json());
+        if (!page || page.view !== "releases") return;
+        setRecentCatalogTracks(page.tracks);
+        setRecentCatalogTotal(page.pagination.total);
+        setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setRecentCatalogTracks(null);
+        }
       }
     }
 
-    void loadCatalog();
+    void loadRecentReleases();
     return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    if (sharedTrackHandledRef.current || catalogLoadState === "loading") return;
-    const trackId = new URLSearchParams(window.location.search).get("track");
-    sharedTrackHandledRef.current = true;
-    if (!trackId) return;
+    if (catalogLoadState === "loading") return;
+    const trackId = new URLSearchParams(window.location.search).get("track")?.trim() ?? "";
+    if (!trackId || sharedTrackHandledRef.current === trackId) return;
 
-    const sharedTrack = libraryTracks.find((track) => track.id === trackId);
-    const frame = window.requestAnimationFrame(() => {
-      if (!sharedTrack) {
-        setActionStatus("This shared track is not available in the active catalogue.");
-        return;
-      }
-
+    const controller = new AbortController();
+    const openSharedTrack = (track: WorkspaceTrack) => {
       setGenre("All genres");
       setMood("All moods");
       setActiveUse(null);
       setQuery("");
-      setHighlightedTrackId(sharedTrack.id);
+      setCatalogTracks((current) => current === null ? current : [track, ...current.filter((item) => item.id !== track.id)]);
+      setHighlightedTrackId(track.id);
+      activeViewRef.current = "music";
       setView("music");
-      setActionStatus(`${sharedTrack.title} opened from a shared link. Press play to listen.`);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [catalogLoadState, libraryTracks]);
+      setActionStatus(`${track.title} opened from a shared link. Press play to listen.`);
+    };
+
+    const availableTrack = knownTracksRef.current.find((track) => track.id === trackId);
+    if (availableTrack) {
+      sharedTrackHandledRef.current = trackId;
+      openSharedTrack(availableTrack);
+      return () => controller.abort();
+    }
+
+    const numericTrackId = catalogNumericTrackId(trackId);
+    if (isStaticDemo || numericTrackId === null) {
+      sharedTrackHandledRef.current = trackId;
+      setActionStatus("This shared track is not available in the active catalogue.");
+      return () => controller.abort();
+    }
+    if (catalogLoadState !== "live") {
+      setActionStatus("The live catalogue is temporarily unavailable. Retry to open this shared track.");
+      return () => controller.abort();
+    }
+
+    async function resolveSharedTrack() {
+      try {
+        const response = await fetch(catalogRequestUrl({ page: 1, pageSize: 1, trackId: numericTrackId }), {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Shared track request failed");
+        const page = parseCatalogPage(await response.json());
+        const sharedTrack = page?.tracks[0];
+        if (!sharedTrack) {
+          sharedTrackHandledRef.current = trackId;
+          setActionStatus("This shared track is not available in the active catalogue.");
+          return;
+        }
+        sharedTrackHandledRef.current = trackId;
+        setCatalogKnownTracks((current) => mergeTrackPages(current, [sharedTrack]));
+        openSharedTrack(sharedTrack);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCatalogRequestFailed(true);
+        setActionStatus("This shared track could not be loaded. Retry the live catalogue to try again.");
+      }
+    }
+
+    void resolveSharedTrack();
+    return () => controller.abort();
+  }, [catalogLoadState, catalogRetryNonce]);
 
   useEffect(() => {
     if (!highlightedTrackId || view !== "music") return;
@@ -519,10 +751,9 @@ export function CreatorWorkspace() {
   }, [highlightedTrackId, view]);
 
   useEffect(() => {
-    const knownTrackIds = new Set(libraryTracks.map((track) => track.id));
     try {
       const storedLiked = JSON.parse(window.localStorage.getItem("symbiome-liked-tracks") ?? "[]") as unknown;
-      if (Array.isArray(storedLiked)) setLiked(new Set(storedLiked.filter((id): id is string => typeof id === "string" && knownTrackIds.has(id))));
+      if (Array.isArray(storedLiked)) setLiked(new Set(storedLiked.filter(isStoredTrackId)));
     } catch { /* Ignore only the malformed liked-tracks key. */ }
     try {
       const storedPlaylists = JSON.parse(window.localStorage.getItem("symbiome-personal-playlists-v1") ?? "[]") as unknown;
@@ -530,19 +761,19 @@ export function CreatorWorkspace() {
         const validPlaylists = storedPlaylists.flatMap((item): PersonalPlaylist[] => {
           if (!item || typeof item !== "object") return [];
           const record = item as Record<string, unknown>;
-          if (typeof record.id !== "string" || typeof record.name !== "string" || !Array.isArray(record.trackIds)) return [];
-          return [{ id: record.id, name: record.name.slice(0, 48), trackIds: [...new Set(record.trackIds.filter((id): id is string => typeof id === "string" && knownTrackIds.has(id)))] }];
+          if (!isStoredTrackId(record.id) || typeof record.name !== "string" || !record.name.trim() || !Array.isArray(record.trackIds)) return [];
+          return [{ id: record.id, name: record.name.trim().slice(0, 48), trackIds: [...new Set(record.trackIds.filter(isStoredTrackId))] }];
         });
         if (validPlaylists.length) setPersonalPlaylists(validPlaylists);
       }
     } catch { /* Ignore only the malformed personal-playlists key. */ }
     try {
       const storedDownloads = JSON.parse(window.localStorage.getItem("symbiome-preview-downloads-v1") ?? "[]") as unknown;
-      if (Array.isArray(storedDownloads)) setDownloadedTrackIds(new Set(storedDownloads.filter((id): id is string => typeof id === "string" && knownTrackIds.has(id))));
+      if (Array.isArray(storedDownloads)) setDownloadedTrackIds(new Set(storedDownloads.filter(isStoredTrackId)));
     } catch { /* Ignore only the malformed downloads key. */ }
     setLikedReady(true);
     setLibraryActionsReady(true);
-  }, [libraryTracks]);
+  }, []);
 
   useEffect(() => {
     if (!likedReady) return;
@@ -573,6 +804,9 @@ export function CreatorWorkspace() {
   }, [actionStatus]);
 
   const visibleTracks = useMemo(() => {
+    if (catalogLoadState === "live") {
+      return catalogViewIsCurrent && catalogTracks !== null ? catalogTracks : [];
+    }
     const needle = query.trim().toLowerCase();
     return libraryTracks.filter((track) => {
       const themeLabels = track.themes.map((slug) => musicSearchTaxonomy.themes.find((theme) => theme.slug === slug)?.label ?? slug);
@@ -582,15 +816,63 @@ export function CreatorWorkspace() {
         && (mood === "All moods" || track.moods.includes(mood))
         && (!activeUse || track.themes.includes(activeUse));
     });
-  }, [activeUse, genre, libraryTracks, mood, query]);
+  }, [activeUse, catalogLoadState, catalogTracks, catalogViewIsCurrent, genre, libraryTracks, mood, query]);
 
-  const likedTracks = useMemo(() => libraryTracks.filter((track) => liked.has(track.id)), [libraryTracks, liked]);
-  const downloadedTracks = useMemo(() => libraryTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, libraryTracks]);
-  const selectedTrack = libraryTracks.find((track) => track.id === preview.activeTrackId);
-  const menuTrack = trackMenu ? libraryTracks.find((track) => track.id === trackMenu.trackId) : undefined;
+  const likedTracks = useMemo(() => knownTracks.filter((track) => liked.has(track.id)), [knownTracks, liked]);
+  const downloadedTracks = useMemo(() => knownTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, knownTracks]);
+  const selectedTrack = knownTracks.find((track) => track.id === preview.activeTrackId);
+  const menuTrack = trackMenu ? knownTracks.find((track) => track.id === trackMenu.trackId) : undefined;
   useEffect(() => {
-    if (preview.activeTrackId && !libraryTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
-  }, [libraryTracks, preview.activeTrackId, preview.stop]);
+    if (preview.activeTrackId && !knownTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
+  }, [knownTracks, preview.activeTrackId, preview.stop]);
+
+  async function loadMoreCatalog() {
+    const nextPage = catalogPagination?.nextPage;
+    if (
+      isStaticDemo
+      || catalogLoadState !== "live"
+      || !catalogViewIsCurrent
+      || catalogBusy
+      || typeof nextPage !== "number"
+      || catalogLoadingMore
+    ) return;
+
+    const requestGeneration = catalogRequestGenerationRef.current;
+    const requestSignature = catalogQuerySignature;
+    const controller = new AbortController();
+    loadMoreControllerRef.current?.abort();
+    loadMoreControllerRef.current = controller;
+    setCatalogLoadingMore(true);
+    try {
+      const response = await fetch(catalogRequestUrl({ page: nextPage, filters: catalogFilters }), {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Catalogue page request failed");
+      const page = parseCatalogPage(await response.json());
+      if (!page || page.view !== "tracks" || page.pagination.page !== nextPage) throw new Error("Catalogue page response was invalid");
+      if (
+        catalogRequestGenerationRef.current !== requestGeneration
+        || catalogQuerySignatureRef.current !== requestSignature
+        || catalogResolvedSignatureRef.current !== requestSignature
+      ) return;
+
+      setCatalogTracks((current) => mergeTrackPages(current ?? [], page.tracks));
+      setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
+      setCatalogPagination(page.pagination);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setActionStatus("The next catalogue page could not be loaded right now.");
+      }
+    } finally {
+      if (loadMoreControllerRef.current === controller) {
+        loadMoreControllerRef.current = null;
+        setCatalogLoadingMore(false);
+      }
+    }
+  }
 
   function resetFilters() {
     setGenre("All genres");
@@ -863,11 +1145,11 @@ export function CreatorWorkspace() {
                   <span>NEW IN THE CATALOGUE</span>
                   <h3 id="recent-releases-title">Recent releases</h3>
                   <p role="status" aria-live="polite">
-                    {catalogLoadState === "live"
-                      ? `${recentTracks.length} latest tracks from ${catalogTotal} published ${catalogTotal === 1 ? "track" : "tracks"}.`
+                    {catalogLoadState === "live" && recentCatalogTracks !== null
+                      ? `${recentTracks.length} latest ${recentTracks.length === 1 ? "release" : "releases"} from ${recentCatalogTotal} published ${recentCatalogTotal === 1 ? "release" : "releases"}.`
                       : catalogLoadState === "loading"
-                        ? "Showing recent local releases while the live catalogue loads."
-                        : "Recent releases from the local catalogue."}
+                        ? "Loading the latest releases from the private catalogue."
+                        : "Demo catalogue · curated local releases, not the full live discography."}
                   </p>
                 </div>
                 <button type="button" onClick={() => navigateToView("music")}>Browse all music</button>
@@ -877,12 +1159,12 @@ export function CreatorWorkspace() {
                   const isActive = preview.activeTrackId === track.id;
                   const isPlaying = isActive && preview.isPlaying;
                   return (
-                    <article className={isActive ? "is-active" : ""} role="listitem" key={track.id}>
-                      <button className="music-recent-cover" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title} by ${track.artist}`} aria-pressed={isPlaying}>
+                    <article className={isActive ? "is-active" : ""} role="listitem" key={track.release?.id ?? track.id}>
+                      <button className="music-recent-cover" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title} from ${track.release?.title ?? track.title} by ${track.artist}`} aria-pressed={isPlaying}>
                         {track.cover ? <img src={track.cover} alt="" width={420} height={420} loading="lazy" decoding="async" /> : <span className="music-recent-cover-placeholder" aria-hidden="true">♪</span>}
                         <span className="music-recent-play"><PlaybackGlyph playing={isPlaying} /></span>
                       </button>
-                      <div className="music-recent-copy"><strong>{track.title}</strong><span>{track.artist}</span><small>{track.genre}{track.moods[0] ? ` · ${track.moods[0]}` : ""}</small></div>
+                      <div className="music-recent-copy"><strong>{track.release?.title ?? track.title}</strong><span>{track.artist}</span><small>{releaseMeta(track)}</small></div>
                       <button className="music-recent-share" type="button" onClick={() => void shareTrack(track)} aria-label={`Copy link to ${track.title}`}><TrackActionIcon kind="share" /></button>
                     </article>
                   );
@@ -913,29 +1195,44 @@ export function CreatorWorkspace() {
                 {catalogLoadState === "loading"
                   ? "Loading your private catalogue..."
                   : catalogLoadState === "live"
-                    ? `${visibleTracks.length} shown from ${catalogTotal} available ${catalogTotal === 1 ? "track" : "tracks"}`
-                    : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue`}
+                    ? !catalogViewIsCurrent
+                      ? catalogBusy
+                        ? "Loading tracks for the current filters..."
+                        : catalogRequestFailed
+                          ? "The current catalogue filters could not be loaded. Retry when you are ready."
+                          : "Preparing the current catalogue filters..."
+                      : `${visibleTracks.length} loaded from ${catalogPagination?.total ?? visibleTracks.length} matching ${(catalogPagination?.total ?? visibleTracks.length) === 1 ? "track" : "tracks"}${catalogBusy ? " · Updating..." : catalogRequestFailed ? " · Update failed, previous results kept" : ""}`
+                    : `${visibleTracks.length} matching preview ${visibleTracks.length === 1 ? "track" : "tracks"} · Demo catalogue only${catalogRequestFailed && !isStaticDemo ? " · Live catalogue unavailable" : ""}`}
               </p>
               <div className="music-filter-row">
                 <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
                 <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
                 {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
+                {catalogRequestFailed && !isStaticDemo && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
               </div>
             </div>
             {renderTrackTable(visibleTracks, "Matching music tracks")}
+            {catalogLoadState === "live" && catalogViewIsCurrent && catalogPagination?.hasNextPage && (
+              <div className="music-catalogue-load-more">
+                <button className="cta-swipe" type="button" onClick={() => void loadMoreCatalog()} disabled={catalogLoadingMore}>
+                  {catalogLoadingMore ? "Loading more..." : `Load ${Math.min(CATALOG_PAGE_SIZE, Math.max(1, catalogPagination.total - (catalogPagination.page * catalogPagination.pageSize)))} more tracks`}
+                </button>
+                <span>{visibleTracks.length} of {catalogPagination.total} matching tracks loaded</span>
+              </div>
+            )}
           </section>
         )}
 
         {view === "liked" && (
           <section className="music-track-browser music-liked-view music-workspace-view" aria-labelledby="liked-tracks-title">
-            <div className="music-track-browser-head"><div><span>YOUR LIBRARY</span><h2 id="liked-tracks-title">Liked tracks</h2><p className="music-track-results-status" role="status">{likedTracks.length} saved {likedTracks.length === 1 ? "track" : "tracks"}</p></div></div>
+            <div className="music-track-browser-head"><div><span>YOUR LIBRARY</span><h2 id="liked-tracks-title">Liked tracks</h2><p className="music-track-results-status" role="status">{likedTracks.length} loaded of {liked.size} saved {liked.size === 1 ? "track" : "tracks"}</p></div></div>
             {renderTrackTable(likedTracks, "Liked tracks")}
           </section>
         )}
 
         {view === "playlists" && <PlaylistLibrary onOpen={openPlaylist} personalPlaylists={personalPlaylists} />}
-        {view === "downloads" && <DownloadsLibrary tracks={downloadedTracks} />}
+        {view === "downloads" && <DownloadsLibrary tracks={downloadedTracks} savedCount={downloadedTrackIds.size} />}
         {view === "channels" && <ChannelsView />}
         {view === "licences" && <LicencesView />}
       </main>
@@ -1010,8 +1307,8 @@ function PlaylistLibrary({ onOpen, personalPlaylists }: { onOpen: (playlist: Lof
   return <div className="music-secondary-view music-playlists-view music-workspace-view"><header><span className="workspace-lofi-kicker"><LofiGirlWordmark /> LISTENING WORLDS</span><h2>Playlists</h2><p>Twelve distinct directions drawn from the public <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> profile, translated into a Symbiome starting point.</p></header><section className="music-personal-playlists" aria-labelledby="personal-playlists-title"><div><span>YOUR PLAYLISTS</span><h3 id="personal-playlists-title">Saved directions</h3></div><div>{personalPlaylists.map((playlist) => <article key={playlist.id}><TrackActionIcon kind="playlist" /><span><strong>{playlist.name}</strong><small>{playlist.trackIds.length} {playlist.trackIds.length === 1 ? "track" : "tracks"}</small></span></article>)}</div></section><div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div></div>;
 }
 
-function DownloadsLibrary({ tracks }: { tracks: readonly WorkspaceTrack[] }) {
-  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Full-length compressed listening copies are listed here. WAV masters stay reserved for licensed downloads.</p></header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a track from Music and it will appear here.</p></div>}</div>;
+function DownloadsLibrary({ tracks, savedCount }: { tracks: readonly WorkspaceTrack[]; savedCount: number }) {
+  return <div className="music-secondary-view"><header><span>YOUR LIBRARY</span><h2>Downloads</h2><p>Full-length compressed listening copies are listed here. WAV masters stay reserved for licensed downloads.</p>{savedCount > tracks.length && <small>{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</small>}</header>{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
 }
 
 function ChannelsView() {

@@ -489,6 +489,15 @@ export const tracks: Track[] = [
   },
 ];
 
+export type WorkspaceRelease = {
+  id: string;
+  title: string;
+  type: string;
+  upc: string | null;
+  releaseDate: string | null;
+  trackCount: number | null;
+};
+
 export type WorkspaceTrack = {
   id: string;
   spotifyId: string | null;
@@ -504,6 +513,8 @@ export type WorkspaceTrack = {
   duration: `${number}:${number}` | null;
   durationIso: `PT${number}M${number}S` | null;
   bpm: number | null;
+  release?: WorkspaceRelease | null;
+  publishedAt?: string | null;
 };
 
 /** A normalized, honest preview index for the connected search experience. */
