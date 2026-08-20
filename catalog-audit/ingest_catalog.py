@@ -1853,10 +1853,12 @@ def direct_publication_eligible(record: Mapping[str, Any]) -> bool:
     """Return whether Sheet + Drive provide one deterministic publishable pair.
 
     This owner-authoritative lane deliberately ignores Spotify and historical
-    inspection state.  It still refuses missing or multiply claimed audio,
-    missing artwork and any non-deterministic filename association.  The
-    publication worker performs the one full WAV download, checksum and decode
-    before it can stage or promote the row.
+    inspection state.  It still refuses missing or multiply claimed audio and
+    any non-deterministic filename association.  Artwork is optional because
+    the public client has an explicit neutral placeholder; when artwork is
+    present it must still be one owned Drive file.  The publication worker
+    performs the one full source download, checksum and decode before it can
+    stage or promote the row.
     """
 
     track = record.get("track")
@@ -1865,7 +1867,11 @@ def direct_publication_eligible(record: Mapping[str, Any]) -> bool:
     reasons = record.get("reasons")
     score = record.get("audio_match_score")
     match_kind = clean(record.get("audio_match_kind"))
-    if not isinstance(track, Mapping) or not isinstance(audio, Mapping) or not isinstance(cover, Mapping):
+    if (
+        not isinstance(track, Mapping)
+        or not isinstance(audio, Mapping)
+        or (cover is not None and not isinstance(cover, Mapping))
+    ):
         return False
     if not isinstance(reasons, list) or any(reason in DIRECT_PUBLICATION_BLOCKERS for reason in reasons):
         return False
@@ -1889,7 +1895,10 @@ def direct_publication_eligible(record: Mapping[str, Any]) -> bool:
     return bool(
         DRIVE_ID_PATTERN.fullmatch(clean(audio.get("file_id")))
         and clean(audio.get("name"))
-        and DRIVE_ID_PATTERN.fullmatch(clean(cover.get("file_id")))
+        and (
+            cover is None
+            or DRIVE_ID_PATTERN.fullmatch(clean(cover.get("file_id")))
+        )
     )
 
 

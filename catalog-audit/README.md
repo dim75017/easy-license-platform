@@ -122,8 +122,8 @@ track at a time and removes its temporary workspace before selecting the next:
 - stream and re-hash the Drive WAV, then re-check its WAV duration;
 - create a full-length 192 kb/s MP3 and exactly 512 mono PCM peak bins;
 - ask the backend to copy the verified source master from Drive into private R2;
-- download, identify and re-check the square owned cover, then upload the MP3,
-  peaks and cover with their calculated SHA-256 values;
+- when supplied, download, identify and re-check the owned cover, then upload
+  the MP3, peaks and cover with their calculated SHA-256 values;
 - bind MP3 and peaks to the exact master SHA as cryptographic lineage;
 - request publication only after every server-side evidence gate passes.
 
@@ -131,11 +131,22 @@ The sealed catalogue-owner lane additionally accepts central MP3 sources only
 when one exact ISRC, UPC+title, artist+title or release+title pin is injective in
 both directions. Title-only, fuzzy/scored, contradictory and multiply claimed
 MP3 matches are excluded. Every accepted MP3 is fully downloaded and hashed,
-signature-checked, decoded/probed to a positive duration, transcoded to the same
-deterministic full-length 192 kb/s listening copy and reduced to the same 512
-peaks. Its original bytes remain a private source master. Canonical source MIME
-and format are checkpointed locally and recorded on the private stored asset;
-promotion binds those values before publication.
+signature-checked and decoded/probed to a positive duration. A source declared
+at exactly 192 kb/s is deterministically remuxed with metadata stripped; every
+other source is transcoded to the same full-length 192 kb/s listening format.
+The public copy is then fully decoded once to verify its duration and derive all
+512 peaks in the same pass. Remux failure falls back to the normal transcode.
+The original bytes remain a private source master. Stream-copy eligibility is
+checkpointed only in private local state. Canonical source MIME and format are
+also recorded on the private stored asset, and promotion binds both before
+publication.
+
+The owner-direct manifest may omit artwork. Only that lane can explicitly opt
+in to coverless promotion, in which case the public client uses its neutral
+placeholder. The backend treats an omitted opt-in as cover-required, preserving
+fail-closed behavior for older workers during rolling deployment. A supplied
+cover is always uploaded before promotion and remains subject to the normal
+release ownership and storage checks.
 
 The private `pipeline-state.sqlite3` checkpoints metadata, master, stream,
 peaks, cover and promotion independently. Re-run the same command after an

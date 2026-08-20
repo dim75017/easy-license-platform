@@ -228,6 +228,17 @@ class ManifestTests(unittest.TestCase):
             loaded = process.load_direct_manifest(path)
         self.assertEqual(len(loaded), 1)
 
+    def test_owner_direct_accepts_a_missing_cover_when_audio_is_deterministic(self):
+        record = direct_record()
+        record["cover"] = None
+        process.validate_direct_record(record)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "direct.jsonl"
+            path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+            loaded = process.load_direct_manifest(path)
+        self.assertEqual(len(loaded), 1)
+        self.assertIsNone(loaded[0]["cover"])
+
     def test_owner_direct_accepts_only_strictly_pinned_mp3_sources(self):
         record = direct_mp3_record()
         process.validate_direct_record(record)
@@ -270,7 +281,13 @@ class StateTests(unittest.TestCase):
                     row[1]
                     for row in connection.execute("PRAGMA table_info(pipeline_items)")
                 }
-                self.assertTrue({"source_mime_type", "source_format"}.issubset(columns))
+                self.assertTrue(
+                    {
+                        "source_mime_type",
+                        "source_format",
+                        "source_stream_copy_eligible",
+                    }.issubset(columns)
+                )
             finally:
                 connection.close()
 
@@ -361,7 +378,7 @@ class StateTests(unittest.TestCase):
         downloader.download.assert_not_called()
         api.ingest_metadata.assert_not_called()
 
-    def test_cover_only_resume_uses_release_gate_without_reprocessing_audio(self):
+    def test_cover_only_resume_uploads_provided_artwork_before_promotion(self):
         record = direct_record()
         with tempfile.TemporaryDirectory() as temporary:
             connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
@@ -388,7 +405,100 @@ class StateTests(unittest.TestCase):
                 )
                 downloader = mock.Mock()
                 api = mock.Mock()
-                api.promote.return_value = {"trackStatus": "published"}
+                calls: list[str] = []
+                api.upload_asset.side_effect = lambda *_args, **_kwargs: calls.append("upload")
+
+                def promote(**_kwargs):
+                    calls.append("promote")
+                    return {"trackStatus": "published"}
+
+                api.promote.side_effect = promote
+                cover_cache = mock.Mock()
+                cover_cache.prepare.return_value = (
+                    Path("cover.jpg"),
+                    "image/jpeg",
+                    "b" * 64,
+                    123,
+                )
+                outcome = process.process_record(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    downloader,
+                    api,
+                    Path("ffmpeg"),
+                    rights_cleared=True,
+                    human_made_cleared=True,
+                    verification_mode="catalog_owner_direct",
+                    owner_evidence={
+                        "ownerAttestationSha256": "1" * 64,
+                        "catalogueScopeSha256": "2" * 64,
+                        "selectionSha256": "3" * 64,
+                    },
+                    cover_cache=cover_cache,
+                )
+                completed = connection.execute(
+                    "SELECT status, cover_uploaded FROM pipeline_items WHERE candidate_id = ?",
+                    (row["candidate_id"],),
+                ).fetchone()
+            finally:
+                connection.close()
+        self.assertEqual(outcome, "published")
+        self.assertEqual((completed["status"], completed["cover_uploaded"]), ("published", 1))
+        self.assertEqual(calls, ["upload", "promote"])
+        downloader.download.assert_not_called()
+        api.ingest_metadata.assert_not_called()
+        api.ingest_source_master.assert_not_called()
+        cover_cache.prepare.assert_called_once_with(
+            record["cover"]["file_id"],
+            downloader,
+            Path("ffmpeg"),
+        )
+        self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "cover_artwork")
+
+    def test_owner_direct_without_cover_promotes_without_image_work(self):
+        record = direct_record()
+        record["cover"] = None
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="assets_uploaded",
+                    ingest_id=11,
+                    track_id=12,
+                    source_sha256="a" * 64,
+                    source_byte_size=100,
+                    source_mime_type="audio/wav",
+                    source_format="wav",
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    peaks_uploaded=1,
+                )
+                downloader = mock.Mock()
+                requests = []
+
+                def opener(request, timeout):
+                    requests.append((request, timeout))
+                    return FakeResponse(b'{"trackStatus":"published"}')
+
+                api = process.CatalogApiClient(
+                    "https://catalog.example.test",
+                    "pipeline-secret",
+                    "sites-secret",
+                    opener=opener,
+                    sleeper=lambda _delay: None,
+                )
                 outcome = process.process_record(
                     connection,
                     record,
@@ -406,17 +516,19 @@ class StateTests(unittest.TestCase):
                     },
                 )
                 completed = connection.execute(
-                    "SELECT status, cover_uploaded FROM pipeline_items WHERE candidate_id = ?",
+                    "SELECT status, cover_uploaded FROM pipeline_items "
+                    "WHERE candidate_id = ?",
                     (row["candidate_id"],),
                 ).fetchone()
             finally:
                 connection.close()
         self.assertEqual(outcome, "published")
-        self.assertEqual((completed["status"], completed["cover_uploaded"]), ("published", 1))
+        self.assertEqual((completed["status"], completed["cover_uploaded"]), ("published", 0))
         downloader.download.assert_not_called()
-        api.ingest_metadata.assert_not_called()
-        api.ingest_source_master.assert_not_called()
-        api.upload_asset.assert_not_called()
+        self.assertEqual(len(requests), 1)
+        self.assertTrue(requests[0][0].full_url.endswith("/api/catalog/pipeline/promote"))
+        promote_payload = json.loads(requests[0][0].data)
+        self.assertIs(promote_payload["allowMissingCover"], True)
 
     def test_partial_retry_generates_only_the_missing_derivative(self):
         record = direct_record()
@@ -483,6 +595,85 @@ class StateTests(unittest.TestCase):
         self.assertEqual(api.upload_asset.call_count, 1)
         self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "waveform_peaks")
 
+    def test_fresh_owner_mp3_reuses_one_public_decode_for_peaks_and_duration(self):
+        record = direct_mp3_record()
+        record["cover"] = None
+        source_bytes = b"ID3" + b"\x00" * 100
+        source_sha256 = hashlib.sha256(source_bytes).hexdigest()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                downloader = mock.Mock()
+
+                def download(_file_id, destination, **_kwargs):
+                    destination.write_bytes(source_bytes)
+                    return source_sha256, len(source_bytes)
+
+                downloader.download.side_effect = download
+                api = mock.Mock()
+                api.ingest_metadata.return_value = (11, 12)
+
+                def build_stream(_ffmpeg, _source, destination, **_kwargs):
+                    destination.write_bytes(b"public-mp3")
+                    return "stream_copy"
+
+                with (
+                    mock.patch.object(
+                        process,
+                        "inspect_downloaded_mp3_details",
+                        return_value=(120_000, True),
+                    ) as inspect_mp3,
+                    mock.patch.object(
+                        process,
+                        "build_streaming_mp3",
+                        side_effect=build_stream,
+                    ) as build_mp3,
+                    mock.patch.object(
+                        process,
+                        "generate_peaks_and_duration",
+                        return_value=([0.5] * process.PEAK_BIN_COUNT, 120_000),
+                    ) as combined_decode,
+                    mock.patch.object(process, "generate_peaks") as source_peaks,
+                    mock.patch.object(process, "probe_audio_duration") as duration_probe,
+                    mock.patch.object(process, "try_promote", return_value="published"),
+                ):
+                    outcome = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        temporary_root=Path(temporary),
+                    )
+                completed = connection.execute(
+                    "SELECT source_stream_copy_eligible, streaming_uploaded, "
+                    "peaks_uploaded FROM pipeline_items WHERE candidate_id = ?",
+                    (record["candidate_id"],),
+                ).fetchone()
+            finally:
+                connection.close()
+
+        self.assertEqual(outcome, "published")
+        self.assertEqual(tuple(completed), (1, 1, 1))
+        inspect_mp3.assert_called_once()
+        self.assertTrue(build_mp3.call_args.kwargs["allow_stream_copy"])
+        combined_decode.assert_called_once()
+        source_peaks.assert_not_called()
+        duration_probe.assert_not_called()
+        self.assertEqual(
+            [call.kwargs["kind"] for call in api.upload_asset.call_args_list],
+            ["streaming_copy", "waveform_peaks"],
+        )
+
     def test_missing_release_cover_falls_back_to_cover_only_transfer(self):
         record = direct_record()
         cover_bytes = (
@@ -524,10 +715,7 @@ class StateTests(unittest.TestCase):
 
                 downloader.download.side_effect = download
                 api = mock.Mock()
-                api.promote.side_effect = [
-                    {"trackStatus": "ready"},
-                    {"trackStatus": "published"},
-                ]
+                api.promote.return_value = {"trackStatus": "published"}
                 outcome = process.process_record(
                     connection,
                     record,
@@ -550,6 +738,7 @@ class StateTests(unittest.TestCase):
         downloader.download.assert_called_once()
         api.upload_asset.assert_called_once()
         self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "cover_artwork")
+        api.promote.assert_called_once()
 
 
 class AudioTests(unittest.TestCase):
@@ -610,6 +799,105 @@ class AudioTests(unittest.TestCase):
                     verification_mode="catalog_owner_direct",
                 )
 
+    def test_owner_direct_mp3_marks_only_exact_192k_for_stream_copy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp3"
+            source.write_bytes(b"ID3" + b"\x00" * 100)
+            with mock.patch.object(
+                process,
+                "probe_mp3_duration_and_bitrate",
+                return_value=(123_000, 192),
+            ):
+                self.assertEqual(
+                    process.inspect_downloaded_mp3_details(
+                        source,
+                        Path("ffmpeg"),
+                        verification_mode="catalog_owner_direct",
+                    ),
+                    (123_000, True),
+                )
+            with mock.patch.object(
+                process,
+                "probe_mp3_duration_and_bitrate",
+                return_value=(123_000, 320),
+            ):
+                self.assertEqual(
+                    process.inspect_downloaded_mp3_details(
+                        source,
+                        Path("ffmpeg"),
+                        verification_mode="catalog_owner_direct",
+                    ),
+                    (123_000, False),
+                )
+
+    def test_mp3_probe_requires_one_unambiguous_declared_bitrate(self):
+        with mock.patch.object(
+            process,
+            "_decode_audio_probe",
+            return_value=(123_000, "Stream #0:0: Audio: mp3, 44100 Hz, 192 kb/s"),
+        ):
+            self.assertEqual(
+                process.probe_mp3_duration_and_bitrate(Path("ffmpeg"), Path("source.mp3")),
+                (123_000, 192),
+            )
+        with mock.patch.object(
+            process,
+            "_decode_audio_probe",
+            return_value=(
+                123_000,
+                "Stream #0:0: Audio: mp3, 44100 Hz, 192 kb/s\n"
+                "Stream #0:1: Audio: mp3, 44100 Hz, 128 kb/s",
+            ),
+        ):
+            self.assertEqual(
+                process.probe_mp3_duration_and_bitrate(Path("ffmpeg"), Path("source.mp3")),
+                (123_000, None),
+            )
+
+    def test_stream_copy_falls_back_to_transcode_without_partial_output(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "source.mp3"
+            destination = directory / "stream.mp3"
+            source.write_bytes(b"source")
+
+            def failed_remux(_ffmpeg, _source, output):
+                output.write_bytes(b"partial")
+                raise process.PipelineError("ffmpeg_stream_copy_failed")
+
+            def transcode(_ffmpeg, _source, output):
+                self.assertFalse(output.exists())
+                output.write_bytes(b"transcoded")
+
+            with (
+                mock.patch.object(process, "remux_mp3_stream_copy", side_effect=failed_remux),
+                mock.patch.object(process, "transcode_mp3", side_effect=transcode) as fallback,
+            ):
+                method = process.build_streaming_mp3(
+                    Path("ffmpeg"), source, destination, allow_stream_copy=True
+                )
+            self.assertEqual(method, "transcoded")
+            self.assertEqual(destination.read_bytes(), b"transcoded")
+            fallback.assert_called_once()
+
+    def test_stream_copy_does_not_hide_a_nonrecoverable_size_failure(self):
+        with (
+            mock.patch.object(
+                process,
+                "remux_mp3_stream_copy",
+                side_effect=process.PipelineError("streaming_copy_too_large"),
+            ),
+            mock.patch.object(process, "transcode_mp3") as transcode,
+            self.assertRaisesRegex(process.PipelineError, "streaming_copy_too_large"),
+        ):
+            process.build_streaming_mp3(
+                Path("ffmpeg"),
+                Path("source.mp3"),
+                Path("stream.mp3"),
+                allow_stream_copy=True,
+            )
+        transcode.assert_not_called()
+
     def test_all_audio_ffmpeg_commands_force_single_thread_processing(self):
         completed = process.subprocess.CompletedProcess(
             args=[], returncode=0, stdout=b"out_time_us=1000000\n", stderr=b""
@@ -628,6 +916,13 @@ class AudioTests(unittest.TestCase):
             self.assert_ffmpeg_command_is_single_threaded(transcode_command)
 
             with mock.patch.object(process.subprocess, "run", return_value=completed) as runner:
+                process.remux_mp3_stream_copy(Path("ffmpeg"), source, destination)
+                remux_command = runner.call_args.args[0]
+            self.assert_ffmpeg_command_is_single_threaded(remux_command)
+            self.assertEqual(remux_command[remux_command.index("-codec:a") + 1], "copy")
+            self.assertEqual(remux_command[remux_command.index("-map_metadata") + 1], "-1")
+
+            with mock.patch.object(process.subprocess, "run", return_value=completed) as runner:
                 self.assertEqual(process.probe_audio_duration(Path("ffmpeg"), destination), 1_000)
                 probe_command = runner.call_args.args[0]
             self.assert_ffmpeg_command_is_single_threaded(probe_command)
@@ -642,6 +937,21 @@ class AudioTests(unittest.TestCase):
                 peaks_command = popen.call_args.args[0]
             self.assertEqual(len(peaks), process.PEAK_BIN_COUNT)
             self.assert_ffmpeg_command_is_single_threaded(peaks_command)
+
+            pcm_with_remainder = b"\x00\x00" * 1_500
+            fake_process = mock.Mock()
+            fake_process.stdout = io.BytesIO(pcm_with_remainder)
+            fake_process.stderr = io.BytesIO()
+            fake_process.wait.return_value = 0
+            with mock.patch.object(process.subprocess, "Popen", return_value=fake_process):
+                combined_peaks, decoded_duration_ms = process.generate_peaks_and_duration(
+                    Path("ffmpeg"),
+                    source,
+                    duration_ms=1_000,
+                    sample_rate=1_000,
+                )
+            self.assertEqual(len(combined_peaks), process.PEAK_BIN_COUNT)
+            self.assertEqual(decoded_duration_ms, 1_500)
 
     def test_imageio_ffmpeg_builds_full_mp3_and_512_peaks(self):
         try:
@@ -973,6 +1283,19 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(payload["verificationMode"], "catalog_owner_direct")
         self.assertEqual(payload["sourceMimeType"], "audio/wav")
         self.assertEqual(payload["sourceFormat"], "wav")
+        self.assertNotIn("allowMissingCover", payload)
+
+        client.promote(
+            track_id=12,
+            batch_key=process.DIRECT_BATCH_KEY,
+            source_key="b" * 28,
+            source_sha256="a" * 64,
+            measured_duration_ms=120_000,
+            verification_mode="catalog_owner_direct",
+            allow_missing_cover=True,
+        )
+        coverless_payload = json.loads(requests[1][0].data)
+        self.assertIs(coverless_payload["allowMissingCover"], True)
 
 
 class SpotifyMergeTests(unittest.TestCase):
