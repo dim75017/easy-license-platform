@@ -75,6 +75,7 @@ DIRECT_PUBLICATION_BLOCKERS = frozenset(
 )
 STRICT_CENTRAL_MP3_MATCH_KINDS = frozenset(
     {
+        "release_unique_isrc",
         "central_unique_isrc",
         "central_unique_upc_title",
         "central_unique_artist_title",
@@ -675,6 +676,29 @@ def _audio_stem(value: str) -> str:
 
 def _compact_identifier(value: Any) -> str:
     return re.sub(r"[^A-Z0-9]", "", clean(value).upper())
+
+
+STRICT_ISRC_PATTERN = re.compile(r"[A-Z]{2}[A-Z0-9]{3}\d{7}")
+STRICT_FILENAME_ISRC_PATTERN = re.compile(
+    r"(?<![A-Z0-9])([A-Z]{2})[ ._-]*([A-Z0-9]{3})[ ._-]*(\d{2})[ ._-]*(\d{5})(?![A-Z0-9])",
+    flags=re.IGNORECASE,
+)
+
+
+def strict_isrc(value: Any) -> str:
+    """Return one canonical ISO-shaped ISRC, or fail closed."""
+
+    compact = _compact_identifier(value)
+    return compact if STRICT_ISRC_PATTERN.fullmatch(compact) else ""
+
+
+def filename_strict_isrcs(value: str) -> set[str]:
+    """Extract only boundary-delimited, structurally valid ISRC tokens."""
+
+    return {
+        "".join(match.groups()).upper()
+        for match in STRICT_FILENAME_ISRC_PATTERN.finditer(Path(clean(value)).stem.upper())
+    }
 
 
 def audio_source_descriptor(value: DriveAudio | Mapping[str, Any]) -> tuple[str, str] | None:
@@ -1587,6 +1611,165 @@ def match_release_audio(track: Track, release_audio: Sequence[ReleaseAudio]) -> 
     return list(files.values())
 
 
+def build_release_isrc_audio_pins(
+    tracks: Sequence[Track],
+    baseline_candidates: Sequence[Candidate],
+    release_audio: Sequence[ReleaseAudio],
+) -> tuple[dict[int, CentralAudioPin], dict[str, int]]:
+    """Recover missing release-scoped audio from one strict injective ISRC token.
+
+    This is additive only. A valid WAV/MP3 file must expose exactly one
+    boundary-delimited ISO-shaped ISRC in its filename, that ISRC must occur on
+    exactly one source row, and the file must belong to that row's resolved
+    release scope. Existing or ambiguous associations are never reconsidered.
+    """
+
+    tracks_by_row: dict[int, list[Track]] = defaultdict(list)
+    isrc_rows: dict[str, set[int]] = defaultdict(set)
+    candidates_by_row: dict[int, list[Candidate]] = defaultdict(list)
+    for track in tracks:
+        tracks_by_row[track.source_row].append(track)
+        canonical_isrc = strict_isrc(track.isrc)
+        if canonical_isrc:
+            isrc_rows[canonical_isrc].add(track.source_row)
+    for candidate in baseline_candidates:
+        if candidate.track is not None:
+            candidates_by_row[candidate.track.source_row].append(candidate)
+
+    eligible_rows = {
+        row
+        for row, source_tracks in tracks_by_row.items()
+        if len(source_tracks) == 1 and len(candidates_by_row.get(row, ())) == 1
+    }
+    claimed_file_ids = {
+        candidate.audio.file_id
+        for candidate in baseline_candidates
+        if candidate.track is not None and candidate.audio is not None
+    }
+    observations_by_file: dict[str, list[DriveAudio]] = defaultdict(list)
+    scoped_rows_by_file: dict[str, set[int]] = defaultdict(set)
+    releases_by_upc: dict[str, list[ReleaseAudio]] = defaultdict(list)
+    releases_by_name: dict[str, list[ReleaseAudio]] = defaultdict(list)
+    releases_by_both: dict[tuple[str, str], list[ReleaseAudio]] = defaultdict(list)
+    for group in release_audio:
+        normalized_release = normalize_text(group.release)
+        if group.upc:
+            releases_by_upc[group.upc].append(group)
+            releases_by_both[(group.upc, normalized_release)].append(group)
+        if normalized_release:
+            releases_by_name[normalized_release].append(group)
+    for track in tracks:
+        groups = releases_by_both.get((track.upc, track.normalized_release))
+        if not groups:
+            groups = releases_by_upc.get(track.upc) if track.upc else None
+        if not groups:
+            groups = releases_by_name.get(track.normalized_release, [])
+        seen_for_row: set[str] = set()
+        for group in groups:
+            for audio in group.files:
+                scoped_rows_by_file[audio.file_id].add(track.source_row)
+                if audio.file_id not in seen_for_row:
+                    observations_by_file[audio.file_id].append(audio)
+                    seen_for_row.add(audio.file_id)
+
+    claims_by_row: dict[int, dict[str, DriveAudio]] = defaultdict(dict)
+    summary = {
+        "available": len(observations_by_file),
+        "considered": 0,
+        "pinned": 0,
+        "pinnedWav": 0,
+        "pinnedMp3": 0,
+        "duplicateIsrc": 0,
+        "multiClaimFiles": 0,
+        "ambiguousTracks": 0,
+        "alreadyMapped": 0,
+        "unsupported": 0,
+        "rejected": 0,
+    }
+    for file_id, observations in observations_by_file.items():
+        summary["considered"] += 1
+        names = {clean(audio.name) for audio in observations}
+        descriptors = {audio_source_descriptor(audio) for audio in observations}
+        if len(names) != 1 or None in descriptors or len(descriptors) != 1:
+            summary["unsupported"] += 1
+            summary["rejected"] += 1
+            continue
+        audio = sorted(observations, key=lambda item: (item.name, item.file_id))[0]
+        tokens = filename_strict_isrcs(audio.name)
+        if len(tokens) != 1:
+            summary["multiClaimFiles"] += int(len(tokens) > 1)
+            summary["rejected"] += 1
+            continue
+        canonical_isrc = next(iter(tokens))
+        rows = isrc_rows.get(canonical_isrc, set())
+        if len(rows) != 1:
+            summary["duplicateIsrc"] += int(len(rows) > 1)
+            summary["rejected"] += 1
+            continue
+        row = next(iter(rows))
+        if row not in scoped_rows_by_file[file_id] or row not in eligible_rows:
+            summary["rejected"] += 1
+            continue
+        baseline = candidates_by_row[row][0]
+        if (
+            baseline.audio is not None
+            or file_id in claimed_file_ids
+            or "audio_match_missing" not in baseline.reasons
+            or "audio_match_ambiguous" in baseline.reasons
+            or "audio_file_claimed_by_multiple_tracks" in baseline.reasons
+        ):
+            summary["alreadyMapped"] += int(baseline.audio is not None or file_id in claimed_file_ids)
+            summary["rejected"] += 1
+            continue
+        track = tracks_by_row[row][0]
+        if is_suspicious_audio_name(audio.name) or incompatible_version(audio.name, track.title):
+            summary["rejected"] += 1
+            continue
+        claims_by_row[row][file_id] = audio
+
+    pins: dict[int, CentralAudioPin] = {}
+    for row, files in claims_by_row.items():
+        if len(files) != 1:
+            summary["ambiguousTracks"] += 1
+            continue
+        audio = next(iter(files.values()))
+        track = tracks_by_row[row][0]
+        pins[row] = CentralAudioPin(row, track.stable_id, audio, "release_unique_isrc")
+        source_format, _mime = audio_source_descriptor(audio) or ("", "")
+        if source_format == "wav":
+            summary["pinnedWav"] += 1
+        elif source_format == "mp3":
+            summary["pinnedMp3"] += 1
+    summary["pinned"] = len(pins)
+    return pins, summary
+
+
+def apply_release_isrc_audio_pins(
+    candidates: Sequence[Candidate], pins: Mapping[int, CentralAudioPin]
+) -> list[Candidate]:
+    """Apply release ISRC pins and remove only their superseded orphan rows."""
+
+    result = apply_central_audio_pins(candidates, pins)
+    applied_file_ids = {
+        candidate.audio.file_id
+        for candidate in result
+        if candidate.track is not None
+        and candidate.audio is not None
+        and candidate.audio_match_kind == "release_unique_isrc"
+        and candidate.track.source_row in pins
+        and pins[candidate.track.source_row].audio.file_id == candidate.audio.file_id
+    }
+    return [
+        candidate
+        for candidate in result
+        if not (
+            candidate.track is None
+            and candidate.audio is not None
+            and candidate.audio.file_id in applied_file_ids
+        )
+    ]
+
+
 def candidate_fingerprint(track: Track | None, audio: DriveAudio | None, spotify_id: str, cover: Cover | None) -> str:
     raw = json.dumps(
         {
@@ -2472,6 +2655,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             }
         )
     }
+    release_isrc_pins, release_isrc_summary = build_release_isrc_audio_pins(
+        tracks, candidates, release_audio
+    )
+    candidates = apply_release_isrc_audio_pins(candidates, release_isrc_pins)
+    release_isrc_direct_rows = {
+        candidate.track.source_row
+        for candidate in candidates
+        if candidate.track is not None
+        and direct_publication_eligible(
+            {
+                **candidate_payload(candidate),
+                "status": candidate.status,
+                "reasons": candidate.reasons,
+            }
+        )
+    }
+    if not baseline_direct_rows.issubset(release_isrc_direct_rows):
+        raise RuntimeError("release_isrc_audio_pin_non_monotonic")
     baseline_file_ids = {
         audio.file_id for group in release_audio for audio in group.files
     }.union(audio.file_id for audio in baseline_central_wav)
@@ -2500,8 +2701,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "available": len(central_audio),
         "mapped": baseline_audio_summary["mapped"] + pin_summary["pinned"],
         "baselineMapped": baseline_audio_summary["mapped"],
-        "baselineOwnerDirect": len(baseline_direct_rows),
-        "ownerDirectAdded": len(final_direct_rows.difference(baseline_direct_rows)),
+        "baselineOwnerDirect": len(release_isrc_direct_rows),
+        "ownerDirectAdded": len(final_direct_rows.difference(release_isrc_direct_rows)),
         **{key: value for key, value in pin_summary.items() if key != "available"},
     }
     if arguments.smoke:
@@ -2538,6 +2739,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "owner_direct_candidates": owner_direct_candidates,
                 "orchard_rows": len(orchard),
                 "covers": len(covers),
+                "release_isrc_audio": {
+                    **release_isrc_summary,
+                    "ownerDirectAdded": len(
+                        release_isrc_direct_rows.difference(baseline_direct_rows)
+                    ),
+                },
                 "central_inventory": {
                     "complete": central_complete,
                     "audio": central_audio_summary,
