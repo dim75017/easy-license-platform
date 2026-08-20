@@ -113,32 +113,38 @@ owned image, or a clearly ranked cover/front/artwork image, exists inside the
 same release folder; ambiguous or absent artwork is excluded.
 
 When `centralDriveInventory` exists, the drain also considers its flat central
-files after release-folder matching. Central WAVs are accepted only by a unique
-ISRC in the filename, a unique UPC+title association, or an exact normalized
-filename key that resolves to one workbook row. Rows already mapped from their
-release folder keep that mapping; a file matching several rows or several files
-matching one row is excluded. Central covers require one unique UPC filename or
-one release name that maps to a single UPC. `Artwork les bon` outranks the
-general `Artwork` folder only when exactly one image exists at that higher rank;
-ties stay excluded.
+files after release-folder matching. The established release/WAV path remains
+unchanged. Additional central WAV or MP3 sources use a separate monotone pin:
+an exact unique ISRC, exact UPC+title, exact artist+title, or exact
+release+title must resolve the file to one workbook row, and that row must be
+claimed by exactly one file. The MP3 lane never accepts a title-only or scored
+filename match. Contradictory exact signals, renamed MIME/extension conflicts,
+multiple rows and multiple file claims all fail closed. Aggregate output keeps
+WAV, MP3 and per-rule pin counts separate. Central covers require one unique
+UPC filename or one release name that maps to a single UPC. `Artwork les bon`
+outranks the general `Artwork` folder only when exactly one image exists at
+that higher rank; ties stay excluded.
 
 The selected manifest is then processed to exhaustion in the same invocation,
 without the recurring lane's wall-clock cutoff, one track at a time and with
-one FFmpeg thread. Each selected WAV is downloaded
-once by the local worker while SHA-256 is calculated, parsed as WAV, decoded
-fully, converted to a full-length 192 kb/s MP3, and decoded again into a
-512-point waveform. The measured WAV duration becomes the catalogue duration
-for this owner-authoritative lane; an absent or different Sheet duration and a
-short but valid WAV do not block it. A corrupt, unreadable or undecodable file
-fails only its own checkpoint. Covers are kept when already bounded and square,
+one FFmpeg thread. Each selected source is downloaded fully while SHA-256 is
+calculated. WAV follows the established parser and complete decode path
+unchanged. A strictly pinned MP3 must have a valid signature and complete a
+positive-duration FFmpeg decode/probe. Either source is deterministically
+transcoded to a full-length 192 kb/s listening MP3 and decoded into a 512-point
+waveform. The measured source duration becomes the catalogue duration for this
+owner-authoritative lane; an absent or different Sheet duration and a short but
+valid source do not block it. A corrupt, unreadable or undecodable file fails
+only its own checkpoint. Covers are kept when already bounded and square,
 otherwise normalized to a bounded square JPEG. Source masters stay in private
 storage; only listening copies, waveforms and cover delivery are public.
 
 The processor checkpoints each completed stage separately. A resumed item does
 not repeat metadata ingestion, private-master registration, MP3 transcoding or
 waveform generation when that exact manifest fingerprint already completed the
-stage. The measured source checksum, byte size and duration are retained in the
-ignored pipeline state; a retry still re-downloads and checksum-verifies the WAV
+stage. The measured source checksum, byte size, MIME, format and duration are
+retained in the ignored pipeline state; a retry still re-downloads and
+checksum-verifies the source
 whenever a missing derivative needs its bytes. This preserves the full-read and
 lineage gates while avoiding unrelated work after a late network failure.
 

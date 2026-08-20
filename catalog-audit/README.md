@@ -127,6 +127,16 @@ track at a time and removes its temporary workspace before selecting the next:
 - bind MP3 and peaks to the exact master SHA as cryptographic lineage;
 - request publication only after every server-side evidence gate passes.
 
+The sealed catalogue-owner lane additionally accepts central MP3 sources only
+when one exact ISRC, UPC+title, artist+title or release+title pin is injective in
+both directions. Title-only, fuzzy/scored, contradictory and multiply claimed
+MP3 matches are excluded. Every accepted MP3 is fully downloaded and hashed,
+signature-checked, decoded/probed to a positive duration, transcoded to the same
+deterministic full-length 192 kb/s listening copy and reduced to the same 512
+peaks. Its original bytes remain a private source master. Canonical source MIME
+and format are checkpointed locally and recorded on the private stored asset;
+promotion binds those values before publication.
+
 The private `pipeline-state.sqlite3` checkpoints metadata, master, stream,
 peaks, cover and promotion independently. Re-run the same command after an
 interruption. The log contains aggregate counters and stable redacted error

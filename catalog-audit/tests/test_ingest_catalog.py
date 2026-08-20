@@ -208,6 +208,274 @@ class CentralDriveMappingTests(unittest.TestCase):
         self.assertEqual(summary["mapped"], 0)
         self.assertEqual(summary["ambiguousFiles"], 1)
 
+    @staticmethod
+    def direct_rows(candidates):
+        return {
+            candidate.track.source_row
+            for candidate in candidates
+            if candidate.track is not None
+            and ingest.direct_publication_eligible(
+                {
+                    **ingest.candidate_payload(candidate),
+                    "status": candidate.status,
+                    "reasons": candidate.reasons,
+                }
+            )
+        }
+
+    def test_row_pins_are_monotone_and_idempotent(self):
+        existing_track = self.track(2, "Quiet Morning")
+        missing_track = self.track(3, "Night Walk")
+        existing_audio = ingest.DriveAudio("1" + "L" * 20, "Quiet Morning.wav")
+        release = ingest.ReleaseAudio(
+            existing_track.upc,
+            existing_track.release,
+            "1" + "R" * 20,
+            (existing_audio,),
+        )
+        cover = ingest.Cover(existing_track.upc, "1" + "C" * 20, "owned", True)
+        baseline = ingest.build_candidates(
+            [existing_track, missing_track], [release], {existing_track.upc: cover}, []
+        )
+        new_audio = ingest.DriveAudio("1" + "M" * 20, "Artist - Night Walk.wav")
+
+        pins, summary = ingest.build_central_audio_pins(
+            [existing_track, missing_track], baseline, [new_audio]
+        )
+        result = ingest.apply_central_audio_pins(baseline, pins)
+        repeated = ingest.apply_central_audio_pins(result, pins)
+
+        self.assertEqual(summary["pinned"], 1)
+        self.assertEqual(result, repeated)
+        self.assertTrue(self.direct_rows(baseline).issubset(self.direct_rows(result)))
+        self.assertEqual(self.direct_rows(result), {2, 3})
+        self.assertEqual(result[0], baseline[0])
+        self.assertEqual(result[1].audio, new_audio)
+
+    def test_row_pins_never_resolve_a_baseline_ambiguity(self):
+        track = self.track(2, "Home", isrc="FR-ABC-26-12345")
+        release = ingest.ReleaseAudio(
+            track.upc,
+            track.release,
+            "1" + "R" * 20,
+            (
+                ingest.DriveAudio("1" + "N" * 20, "Home.wav"),
+                ingest.DriveAudio("1" + "O" * 20, "Artist - Home.wav"),
+            ),
+        )
+        baseline = ingest.build_candidates([track], [release], {}, [])
+        central = ingest.DriveAudio("1" + "P" * 20, "FRABC2612345.wav")
+
+        pins, summary = ingest.build_central_audio_pins([track], baseline, [central])
+        result = ingest.apply_central_audio_pins(baseline, pins)
+
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["pinned"], 0)
+        self.assertEqual(result, baseline)
+        self.assertIn("audio_match_ambiguous", result[0].reasons)
+
+    def test_row_pins_do_not_subtract_an_existing_claim_to_create_uniqueness(self):
+        existing_track = self.track(
+            2,
+            "Existing",
+            release="One",
+            upc="11111111",
+            isrc="FR-ABC-26-12345",
+        )
+        missing_track = self.track(3, "Home", release="Two", upc="22222222")
+        existing_audio = ingest.DriveAudio("1" + "W" * 20, "Existing.wav")
+        release = ingest.ReleaseAudio(
+            existing_track.upc,
+            existing_track.release,
+            "1" + "R" * 20,
+            (existing_audio,),
+        )
+        baseline = ingest.build_candidates(
+            [existing_track, missing_track], [release], {}, []
+        )
+        conflicting = ingest.DriveAudio(
+            "1" + "X" * 20,
+            "FRABC2612345 22222222 Home.wav",
+        )
+
+        pins, summary = ingest.build_central_audio_pins(
+            [existing_track, missing_track], baseline, [conflicting]
+        )
+
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["pinned"], 0)
+        self.assertIsNone(baseline[1].audio)
+
+    def test_row_pins_fail_closed_for_duplicate_titles_and_multiple_files(self):
+        duplicate_tracks = [
+            self.track(2, "Home", release="One", upc="11111111"),
+            self.track(3, "Home", release="Two", upc="22222222"),
+        ]
+        duplicate_baseline = ingest.build_candidates(duplicate_tracks, [], {}, [])
+        pins, _summary = ingest.build_central_audio_pins(
+            duplicate_tracks,
+            duplicate_baseline,
+            [ingest.DriveAudio("1" + "Q" * 20, "Home.wav")],
+        )
+        self.assertEqual(pins, {})
+
+        track = self.track(4, "Unique")
+        baseline = ingest.build_candidates([track], [], {}, [])
+        pins, summary = ingest.build_central_audio_pins(
+            [track],
+            baseline,
+            [
+                ingest.DriveAudio("1" + "S" * 20, "Unique.wav"),
+                ingest.DriveAudio("1" + "T" * 20, "Artist - Unique.wav"),
+            ],
+        )
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["ambiguousTracks"], 1)
+
+    def test_row_pin_uses_unique_isrc_then_exact_upc_title(self):
+        isrc_track = self.track(
+            2, "First", release="One", upc="11111111", isrc="FR-ABC-26-12345"
+        )
+        upc_track = self.track(3, "Second", release="Two", upc="22222222")
+        tracks = [isrc_track, upc_track]
+        baseline = ingest.build_candidates(tracks, [], {}, [])
+        files = [
+            ingest.DriveAudio("1" + "U" * 20, "FRABC2612345.wav"),
+            ingest.DriveAudio("1" + "V" * 20, "22222222 Artist - Second.wav"),
+        ]
+
+        pins, summary = ingest.build_central_audio_pins(tracks, baseline, files)
+
+        self.assertEqual(summary["pinned"], 2)
+        self.assertEqual(pins[2].match_kind, "central_unique_isrc")
+        self.assertEqual(pins[3].match_kind, "central_unique_upc_title")
+
+    def test_central_mp3_requires_injective_exact_composite_and_counts_rules(self):
+        artist_track = self.track(2, "Night Walk", release="One", upc="11111111")
+        release_track = self.track(
+            3,
+            "Quiet Rain",
+            release="Blue Hours",
+            upc="22222222",
+            artist="Other",
+        )
+        tracks = [artist_track, release_track]
+        baseline = ingest.build_candidates(tracks, [], {}, [])
+        files = [
+            ingest.DriveAudio(
+                "1" + "Y" * 20,
+                "Artist - Night Walk.mp3",
+                mime_type="audio/mpeg",
+            ),
+            ingest.DriveAudio(
+                "1" + "Z" * 20,
+                "Blue Hours - Quiet Rain.mp3",
+                mime_type="audio/mp3",
+            ),
+        ]
+
+        pins, summary = ingest.build_central_audio_pins(tracks, baseline, files)
+
+        self.assertEqual(summary["pinnedMp3"], 2)
+        self.assertEqual(summary["pinnedWav"], 0)
+        self.assertEqual(summary["pinnedByRule"]["central_unique_artist_title"], 1)
+        self.assertEqual(summary["pinnedByRule"]["central_unique_release_title"], 1)
+        self.assertEqual(
+            summary["pinnedByRule"]["central_globally_unique_exact_title"], 0
+        )
+        self.assertEqual(pins[2].match_kind, "central_unique_artist_title")
+        self.assertEqual(pins[3].match_kind, "central_unique_release_title")
+
+    def test_central_mp3_rejects_title_only_fuzzy_and_multiple_claims(self):
+        track = self.track(2, "Night Walk")
+        baseline = ingest.build_candidates([track], [], {}, [])
+        files = [
+            ingest.DriveAudio("1" + "2" * 20, "Night Walk.mp3"),
+            ingest.DriveAudio("1" + "3" * 20, "Artist - Night Walk Final.mp3"),
+        ]
+        pins, summary = ingest.build_central_audio_pins([track], baseline, files)
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["pinnedMp3"], 0)
+        self.assertEqual(summary["rejected"], 2)
+
+        exact_files = [
+            ingest.DriveAudio("1" + "4" * 20, "Artist - Night Walk.mp3"),
+            ingest.DriveAudio("1" + "5" * 20, "Night Walk - Artist.mp3"),
+        ]
+        pins, summary = ingest.build_central_audio_pins(
+            [track], baseline, exact_files
+        )
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["ambiguousTracks"], 1)
+
+    def test_central_exact_rules_must_agree_and_mime_cannot_conflict(self):
+        isrc_track = self.track(2, "First", isrc="FR-ABC-26-12345")
+        composite_track = self.track(3, "Second", artist="Other")
+        baseline = ingest.build_candidates([isrc_track, composite_track], [], {}, [])
+        contradictory = ingest.DriveAudio(
+            "1" + "6" * 20,
+            "FRABC2612345 Other Second.mp3",
+            mime_type="audio/mpeg",
+        )
+        renamed = ingest.DriveAudio(
+            "1" + "7" * 20,
+            "Artist - First.mp3",
+            mime_type="audio/wav",
+        )
+
+        pins, summary = ingest.build_central_audio_pins(
+            [isrc_track, composite_track], baseline, [contradictory, renamed]
+        )
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["conflicts"], 1)
+        self.assertEqual(summary["unsupported"], 1)
+
+    def test_central_wav_composite_counter_is_separate_from_mp3(self):
+        track = self.track(2, "Night Walk")
+        baseline = ingest.build_candidates([track], [], {}, [])
+        audio = ingest.DriveAudio("1" + "8" * 20, "Artist - Night Walk.wav")
+        pins, summary = ingest.build_central_audio_pins([track], baseline, [audio])
+        self.assertEqual(len(pins), 1)
+        self.assertEqual(summary["pinnedWav"], 1)
+        self.assertEqual(summary["pinnedMp3"], 0)
+        self.assertEqual(summary["pinnedByRule"]["central_unique_artist_title"], 1)
+
+    def test_central_inventory_accepts_only_supported_wav_and_mp3_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "central.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "complete": True,
+                        "files": [
+                            {
+                                "id": "1" + "9" * 20,
+                                "name": "Artist - One.wav",
+                                "mimeType": "audio/wav",
+                                "central_kind": "audio",
+                            },
+                            {
+                                "id": "1" + "0" * 20,
+                                "name": "Artist - Two.mp3",
+                                "mimeType": "audio/mpeg",
+                                "central_kind": "audio",
+                            },
+                            {
+                                "id": "1" + "A" * 20,
+                                "name": "notes.txt",
+                                "mimeType": "text/plain",
+                                "central_kind": "audio",
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            audio, artwork, complete = ingest.load_central_drive_inventory(path)
+        self.assertEqual({item.name for item in audio}, {"Artist - One.wav", "Artist - Two.mp3"})
+        self.assertEqual(artwork, [])
+        self.assertTrue(complete)
+
     def test_cover_prefers_one_approved_central_artwork_and_fails_closed_on_ties(self):
         track = self.track(2, "Quiet Morning", release="Blue Hours", upc="12345678")
         ordinary = {

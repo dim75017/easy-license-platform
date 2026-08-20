@@ -159,6 +159,23 @@ def require_text(value: object, code: str, maximum: int) -> str:
     return normalized
 
 
+def source_descriptor(record: Mapping[str, Any]) -> tuple[str, str]:
+    audio = record.get("audio")
+    if not isinstance(audio, Mapping):
+        raise PipelineError("source_audio_missing")
+    descriptor = ingest.audio_source_descriptor(audio)
+    if descriptor is None:
+        raise PipelineError("source_audio_format_invalid")
+    source_format, source_mime_type = descriptor
+    declared_format = str(audio.get("source_format") or "").strip().casefold()
+    declared_mime = str(audio.get("source_mime_type") or "").strip().casefold()
+    if declared_format and declared_format != source_format:
+        raise PipelineError("source_audio_format_mismatch")
+    if declared_mime and declared_mime != source_mime_type:
+        raise PipelineError("source_audio_mime_mismatch")
+    return source_format, source_mime_type
+
+
 def load_exact_manifest(path: Path) -> list[dict[str, Any]]:
     assert_private_artifact_path(path, "exact_manifest")
     if not path.is_file():
@@ -237,6 +254,13 @@ def validate_direct_record(value: object) -> None:
     if not DRIVE_ID_PATTERN.fullmatch(drive_file_id):
         raise PipelineError("drive_file_id_invalid")
     require_text(audio.get("name"), "source_file_name_missing", 1000)
+    source_format, _source_mime_type = source_descriptor(value)
+    if (
+        source_format == "mp3"
+        and str(value.get("audio_match_kind") or "").strip()
+        not in ingest.STRICT_CENTRAL_MP3_MATCH_KINDS
+    ):
+        raise PipelineError("direct_mp3_pin_not_strict")
     cover_file_id = require_text(cover.get("file_id"), "owned_cover_missing", 200)
     if not DRIVE_ID_PATTERN.fullmatch(cover_file_id):
         raise PipelineError("owned_cover_missing")
@@ -309,6 +333,8 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
           track_id INTEGER,
           source_sha256 TEXT,
           source_byte_size INTEGER,
+          source_mime_type TEXT,
+          source_format TEXT,
           measured_duration_ms INTEGER,
           streaming_sha256 TEXT,
           streaming_byte_size INTEGER,
@@ -339,6 +365,8 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
         "cover_byte_size": "INTEGER",
         "cover_content_type": "TEXT",
         "source_byte_size": "INTEGER",
+        "source_mime_type": "TEXT",
+        "source_format": "TEXT",
         "master_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "cover_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "rights_cleared_ack": "INTEGER NOT NULL DEFAULT 0",
@@ -358,6 +386,8 @@ STATE_COLUMNS = {
     "track_id",
     "source_sha256",
     "source_byte_size",
+    "source_mime_type",
+    "source_format",
     "measured_duration_ms",
     "streaming_sha256",
     "streaming_byte_size",
@@ -419,7 +449,7 @@ def ensure_state_row(
             UPDATE pipeline_items
             SET manifest_fingerprint=?, batch_key=?, status='planned', attempts=0,
                 ingest_id=NULL, track_id=NULL, source_sha256=NULL,
-                source_byte_size=NULL,
+                source_byte_size=NULL, source_mime_type=NULL, source_format=NULL,
                 measured_duration_ms=NULL, streaming_sha256=NULL,
                 streaming_byte_size=NULL, streaming_duration_ms=NULL,
                 peaks_sha256=NULL, peaks_byte_size=NULL,
@@ -844,6 +874,34 @@ def inspect_downloaded_wav(
     return wav, duration_ms
 
 
+def inspect_downloaded_mp3(
+    path: Path,
+    ffmpeg: Path,
+    *,
+    verification_mode: str,
+) -> int:
+    """Validate an owner-direct MP3 by signature and a complete decode pass."""
+
+    if verification_mode != "catalog_owner_direct":
+        raise PipelineError("source_mp3_owner_direct_only")
+    with path.open("rb") as handle:
+        prefix = handle.read(64 * 1024)
+    has_id3 = prefix.startswith(b"ID3")
+    has_frame_sync = any(
+        prefix[index] == 0xFF and prefix[index + 1] & 0xE0 == 0xE0
+        for index in range(max(0, len(prefix) - 1))
+    )
+    if not has_id3 and not has_frame_sync:
+        raise PipelineError("source_mp3_signature_invalid")
+    try:
+        duration_ms = probe_audio_duration(ffmpeg, path)
+    except PipelineError as error:
+        raise PipelineError("source_mp3_decode_failed") from error
+    if duration_ms < 1:
+        raise PipelineError("source_mp3_duration_invalid")
+    return duration_ms
+
+
 def resolve_ffmpeg(explicit_path: Path | None) -> Path:
     if explicit_path:
         executable = explicit_path.resolve()
@@ -1244,6 +1302,7 @@ class CatalogApiClient:
         expected_byte_size: int,
         expected_sha256: str,
         duration_ms: int,
+        source_mime_type: str,
     ) -> dict[str, Any]:
         response = self.post_json(
             "/api/catalog/ingest/asset",
@@ -1257,7 +1316,7 @@ class CatalogApiClient:
                 "sourceFileName": source_file_name,
                 "assetKind": "source_master",
                 "expectedByteSize": expected_byte_size,
-                "expectedContentType": "audio/wav",
+                "expectedContentType": source_mime_type,
                 "expectedSha256": expected_sha256,
                 "durationMs": duration_ms,
             },
@@ -1327,6 +1386,8 @@ class CatalogApiClient:
         source_sha256: str,
         measured_duration_ms: int,
         verification_mode: str = "spotify",
+        source_mime_type: str = "audio/wav",
+        source_format: str = "wav",
     ) -> dict[str, Any]:
         return self.post_json(
             "/api/catalog/pipeline/promote",
@@ -1337,6 +1398,8 @@ class CatalogApiClient:
                 "sourceSha256": source_sha256,
                 "measuredDurationMs": measured_duration_ms,
                 "verificationMode": verification_mode,
+                "sourceMimeType": source_mime_type,
+                "sourceFormat": source_format,
             },
         )
 
@@ -1467,6 +1530,8 @@ def try_promote(
     row: sqlite3.Row,
     *,
     verification_mode: str = "spotify",
+    source_mime_type: str,
+    source_format: str,
 ) -> str:
     try:
         response = api.promote(
@@ -1476,6 +1541,8 @@ def try_promote(
             source_sha256=str(row["source_sha256"]),
             measured_duration_ms=int(row["measured_duration_ms"]),
             verification_mode=verification_mode,
+            source_mime_type=source_mime_type,
+            source_format=source_format,
         )
     except ApiHttpError as error:
         if error.status in {409, 422}:
@@ -1512,6 +1579,7 @@ def process_record(
     temporary_root: Path | None = None,
     cover_cache: CoverArtifactCache | None = None,
 ) -> str:
+    source_format, source_mime_type = source_descriptor(record)
     row = ensure_state_row(
         connection,
         record,
@@ -1529,7 +1597,14 @@ def process_record(
         and row["peaks_uploaded"]
         and row["cover_uploaded"]
     ):
-        return try_promote(connection, api, row, verification_mode=verification_mode)
+        return try_promote(
+            connection,
+            api,
+            row,
+            verification_mode=verification_mode,
+            source_mime_type=source_mime_type,
+            source_format=source_format,
+        )
     inspection = record.get("inspection") if isinstance(record.get("inspection"), Mapping) else {}
     inspected_sha256 = str(inspection.get("sha256") or "").strip().lower()
     has_full_inspection = (
@@ -1550,7 +1625,7 @@ def process_record(
         )
         with tempfile.TemporaryDirectory(prefix="symbiome-catalog-", dir=temporary_root) as temporary:
             directory = Path(temporary)
-            source_path = directory / "source.wav"
+            source_path = directory / f"source.{source_format}"
             streaming_path = directory / "stream.mp3"
             peaks_path = directory / "peaks.json"
             cover_source_path = directory / "cover-source.bin"
@@ -1560,7 +1635,32 @@ def process_record(
             source_sha256 = checkpoint_sha256 if SHA256_PATTERN.fullmatch(checkpoint_sha256) else ""
             source_size = positive_integer(row["source_byte_size"])
             source_duration_ms = positive_integer(row["measured_duration_ms"])
-            source_checkpoint_complete = bool(source_sha256 and source_duration_ms is not None)
+            checkpoint_mime_type = str(row["source_mime_type"] or "")
+            checkpoint_format = str(row["source_format"] or "")
+            if (
+                source_sha256
+                and source_duration_ms is not None
+                and not checkpoint_mime_type
+                and not checkpoint_format
+            ):
+                # Existing WAV checkpoints predate these audit columns.  Their
+                # unchanged manifest fingerprint and sealed full-read evidence
+                # let us backfill the deterministic descriptor without another
+                # download or disturbing an active/resumed drain.
+                row = update_state(
+                    connection,
+                    candidate_id,
+                    source_mime_type=source_mime_type,
+                    source_format=source_format,
+                )
+                checkpoint_mime_type = source_mime_type
+                checkpoint_format = source_format
+            source_checkpoint_complete = bool(
+                source_sha256
+                and source_duration_ms is not None
+                and checkpoint_mime_type == source_mime_type
+                and checkpoint_format == source_format
+            )
             needs_source_file = bool(
                 not source_checkpoint_complete
                 or (not row["master_uploaded"] and source_size is None)
@@ -1580,16 +1680,25 @@ def process_record(
                     if source_duration_ms is None:  # pragma: no cover - narrowed above
                         raise PipelineError("source_duration_checkpoint_invalid")
                 else:
-                    _wav, source_duration_ms = inspect_downloaded_wav(
-                        source_path,
-                        record,
-                        verification_mode=verification_mode,
-                    )
+                    if source_format == "wav":
+                        _wav, source_duration_ms = inspect_downloaded_wav(
+                            source_path,
+                            record,
+                            verification_mode=verification_mode,
+                        )
+                    else:
+                        source_duration_ms = inspect_downloaded_mp3(
+                            source_path,
+                            ffmpeg,
+                            verification_mode=verification_mode,
+                        )
                 row = update_state(
                     connection,
                     candidate_id,
                     source_sha256=source_sha256,
                     source_byte_size=source_size,
+                    source_mime_type=source_mime_type,
+                    source_format=source_format,
                     measured_duration_ms=source_duration_ms,
                 )
             if (
@@ -1630,6 +1739,7 @@ def process_record(
                     expected_byte_size=source_size,
                     expected_sha256=source_sha256,
                     duration_ms=source_duration_ms,
+                    source_mime_type=source_mime_type,
                 )
                 row = update_state(
                     connection,
@@ -1704,7 +1814,14 @@ def process_record(
                 )
 
             if not row["cover_uploaded"]:
-                outcome = try_promote(connection, api, row, verification_mode=verification_mode)
+                outcome = try_promote(
+                    connection,
+                    api,
+                    row,
+                    verification_mode=verification_mode,
+                    source_mime_type=source_mime_type,
+                    source_format=source_format,
+                )
                 if outcome == "published":
                     row = update_state(
                         connection,
@@ -1774,7 +1891,14 @@ def process_record(
         )
         raise PipelineError("unexpected_processing_failure") from error
 
-    return try_promote(connection, api, row, verification_mode=verification_mode)
+    return try_promote(
+        connection,
+        api,
+        row,
+        verification_mode=verification_mode,
+        source_mime_type=source_mime_type,
+        source_format=source_format,
+    )
 
 
 def derive_batch_key(_exact_manifest: Path, requested: str | None) -> str:

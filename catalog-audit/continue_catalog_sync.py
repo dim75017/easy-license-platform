@@ -297,6 +297,13 @@ def load_config(path: Path) -> dict[str, Any]:
         base=base,
         label="central_drive_inventory",
     )
+    central_baseline_inventory = resolve_config_path(
+        payload.get("centralDriveBaselineInventory")
+        or payload.get("centralDriveInventory")
+        or "catalog-audit/private/central-drive-connector/partial-inventory.json",
+        base=base,
+        label="central_drive_baseline_inventory",
+    )
     ffmpeg_executable = (
         resolve_config_path(
             payload["ffmpegExecutable"],
@@ -316,6 +323,9 @@ def load_config(path: Path) -> dict[str, Any]:
         "drive_seed": drive_seed,
         "inventory_directory": inventory_directory,
         "central_inventory": central_inventory if central_inventory.is_file() else None,
+        "central_baseline_inventory": (
+            central_baseline_inventory if central_baseline_inventory.is_file() else None
+        ),
         "ffmpeg_executable": ffmpeg_executable,
         "inventory_release_batch": bounded_integer(
             payload, "driveInventoryReleasesPerRun", 25, MAX_INVENTORY_RELEASE_BATCH
@@ -1917,6 +1927,13 @@ def build_ingest_command(
     if config.get("central_inventory"):
         command.extend(
             ["--central-drive-inventory", str(config["central_inventory"])]
+        )
+    if config.get("central_baseline_inventory"):
+        command.extend(
+            [
+                "--central-drive-baseline-inventory",
+                str(config["central_baseline_inventory"]),
+            ]
         )
     if apply:
         command.append("--apply")
