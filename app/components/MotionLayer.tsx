@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 export function MotionLayer() {
   const pathname = usePathname();
+  const progressRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
+    const shell = progressRef.current?.closest<HTMLElement>(".public-shell");
+    const revealRoot = shell?.querySelector<HTMLElement>(":scope > main") ?? document.body;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const finePointer = window.matchMedia("(pointer: fine)");
-    const revealNodes = new Set(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const revealNodes = new Set(revealRoot.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const registeredRevealNodes = new Set<HTMLElement>();
+    const queuedRevealNodes = new Set<HTMLElement>();
+    const revealFrames = new Set<number>();
     const parallaxNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
     const glowNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-pointer-glow]"));
     const tiltNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-tilt]"));
@@ -19,11 +25,56 @@ export function MotionLayer() {
     let observer: IntersectionObserver | null = null;
     let revealMutationObserver: MutationObserver | null = null;
     let animationFrame = 0;
+    let disposed = false;
+
+    // Route segments can reuse DOM nodes. Never carry a completed reveal into
+    // the next pathname, otherwise the first banner has no entry animation.
+    root.classList.remove("motion-enhanced");
+    revealNodes.forEach((node) => {
+      node.classList.remove("is-revealed", "is-reveal-pending");
+    });
+
+    const cancelRevealFrames = () => {
+      revealFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      revealFrames.clear();
+      queuedRevealNodes.clear();
+    };
+
+    const revealNode = (node: HTMLElement) => {
+      queuedRevealNodes.delete(node);
+      node.classList.remove("is-reveal-pending");
+      node.classList.add("is-revealed");
+    };
+
+    const scheduleReveal = (node: HTMLElement) => {
+      if (queuedRevealNodes.has(node)) return;
+      queuedRevealNodes.add(node);
+
+      try {
+        const firstFrame = window.requestAnimationFrame(() => {
+          revealFrames.delete(firstFrame);
+          if (disposed) return;
+
+          try {
+            const secondFrame = window.requestAnimationFrame(() => {
+              revealFrames.delete(secondFrame);
+              if (!disposed) revealNode(node);
+            });
+            revealFrames.add(secondFrame);
+          } catch {
+            revealNode(node);
+          }
+        });
+        revealFrames.add(firstFrame);
+      } catch {
+        revealNode(node);
+      }
+    };
 
     const revealEverything = () => {
+      cancelRevealFrames();
       revealNodes.forEach((node) => {
-        node.classList.remove("is-reveal-pending");
-        node.classList.add("is-revealed");
+        revealNode(node);
       });
     };
 
@@ -52,28 +103,23 @@ export function MotionLayer() {
           (entries) => {
             entries.forEach((entry) => {
               if (!entry.isIntersecting) return;
-              entry.target.classList.remove("is-reveal-pending");
-              entry.target.classList.add("is-revealed");
               observer?.unobserve(entry.target);
+              scheduleReveal(entry.target as HTMLElement);
             });
           },
-          { threshold: 0.12, rootMargin: "0px 0px -9% 0px" },
+          { threshold: 0.01, rootMargin: "0px 0px -9% 0px" },
         );
 
         const registerRevealNode = (node: HTMLElement) => {
+          if (registeredRevealNodes.has(node)) return;
+          registeredRevealNodes.add(node);
           revealNodes.add(node);
-          if (node.classList.contains("is-revealed")) return;
-          const rect = node.getBoundingClientRect();
-          if (rect.top < window.innerHeight * 0.94) {
-            node.classList.add("is-revealed");
-          } else {
-            try {
-              observer?.observe(node);
-              node.classList.add("is-reveal-pending");
-            } catch {
-              node.classList.remove("is-reveal-pending");
-              node.classList.add("is-revealed");
-            }
+          node.classList.remove("is-revealed");
+          node.classList.add("is-reveal-pending");
+          try {
+            observer?.observe(node);
+          } catch {
+            revealNode(node);
           }
         };
 
@@ -89,7 +135,7 @@ export function MotionLayer() {
               });
             });
           });
-          revealMutationObserver.observe(document.body, { childList: true, subtree: true });
+          revealMutationObserver.observe(revealRoot, { childList: true, subtree: true });
         }
 
         // Only hide pending reveal nodes once every node is safely observed.
@@ -231,8 +277,10 @@ export function MotionLayer() {
     }
 
     return () => {
+      disposed = true;
       observer?.disconnect();
       revealMutationObserver?.disconnect();
+      cancelRevealFrames();
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", scheduleMotion);
       window.removeEventListener("resize", scheduleMotion);
@@ -246,5 +294,5 @@ export function MotionLayer() {
     };
   }, [pathname]);
 
-  return <div className="page-progress" aria-hidden="true"><span /></div>;
+  return <div ref={progressRef} className="page-progress" aria-hidden="true"><span /></div>;
 }
