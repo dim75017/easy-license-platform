@@ -497,6 +497,8 @@ export function CreatorWorkspace() {
   const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
   const [catalogBusy, setCatalogBusy] = useState(true);
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
+  const [catalogLoadMoreFailed, setCatalogLoadMoreFailed] = useState(false);
+  const [catalogInfiniteScrollSupported, setCatalogInfiniteScrollSupported] = useState<boolean | null>(null);
   const [catalogRequestFailed, setCatalogRequestFailed] = useState(false);
   const [catalogRetryNonce, setCatalogRetryNonce] = useState(0);
   const [highlightedTrackId, setHighlightedTrackId] = useState<string | null>(null);
@@ -504,6 +506,7 @@ export function CreatorWorkspace() {
   const sharedTrackHandledRef = useRef<string | null>(null);
   const activeViewRef = useRef<LibraryView>("discover");
   const loadMoreControllerRef = useRef<AbortController | null>(null);
+  const catalogLoadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
   const catalogHasLoadedRef = useRef(false);
   const catalogRequestGenerationRef = useRef(0);
   const catalogResolvedSignatureRef = useRef<string | null>(null);
@@ -544,13 +547,19 @@ export function CreatorWorkspace() {
   useEffect(() => () => loadMoreControllerRef.current?.abort(), []);
 
   useEffect(() => {
+    setCatalogInfiniteScrollSupported("IntersectionObserver" in window);
+  }, []);
+
+  useEffect(() => {
     const requestGeneration = ++catalogRequestGenerationRef.current;
     const requestSignature = catalogQuerySignature;
     const preservesCurrentPage = catalogResolvedSignatureRef.current === requestSignature;
     const controller = new AbortController();
     loadMoreControllerRef.current?.abort();
+    loadMoreControllerRef.current = null;
     setCatalogBusy(true);
     setCatalogLoadingMore(false);
+    setCatalogLoadMoreFailed(false);
     setCatalogRequestFailed(false);
     if (!preservesCurrentPage) {
       catalogResolvedSignatureRef.current = null;
@@ -809,21 +818,23 @@ export function CreatorWorkspace() {
     if (preview.activeTrackId && !knownTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
   }, [knownTracks, preview.activeTrackId, preview.stop]);
 
-  async function loadMoreCatalog() {
+  const loadMoreCatalog = useCallback(async () => {
     const nextPage = catalogPagination?.nextPage;
     if (
       catalogLoadState !== "live"
       || !catalogViewIsCurrent
       || catalogBusy
+      || catalogRequestFailed
       || typeof nextPage !== "number"
       || catalogLoadingMore
+      || loadMoreControllerRef.current !== null
     ) return;
 
     const requestGeneration = catalogRequestGenerationRef.current;
     const requestSignature = catalogQuerySignature;
     const controller = new AbortController();
-    loadMoreControllerRef.current?.abort();
     loadMoreControllerRef.current = controller;
+    setCatalogLoadMoreFailed(false);
     setCatalogLoadingMore(true);
     try {
       const response = await fetch(catalogRequestUrl({ page: nextPage, filters: catalogFilters }), {
@@ -844,17 +855,70 @@ export function CreatorWorkspace() {
       setCatalogTracks((current) => mergeTrackPages(current ?? [], page.tracks));
       setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
       setCatalogPagination(page.pagination);
+      setCatalogLoadMoreFailed(false);
     } catch (error) {
-      if (!(error instanceof DOMException && error.name === "AbortError")) {
-        setActionStatus("The next catalogue page could not be loaded right now.");
-      }
+      if (
+        (error instanceof DOMException && error.name === "AbortError")
+        || catalogRequestGenerationRef.current !== requestGeneration
+        || catalogQuerySignatureRef.current !== requestSignature
+        || catalogResolvedSignatureRef.current !== requestSignature
+      ) return;
+      setCatalogLoadMoreFailed(true);
+      setActionStatus("The next catalogue page could not be loaded right now.");
     } finally {
       if (loadMoreControllerRef.current === controller) {
         loadMoreControllerRef.current = null;
         setCatalogLoadingMore(false);
       }
     }
-  }
+  }, [
+    catalogBusy,
+    catalogFilters,
+    catalogLoadingMore,
+    catalogLoadState,
+    catalogPagination?.nextPage,
+    catalogQuerySignature,
+    catalogRequestFailed,
+    catalogViewIsCurrent,
+  ]);
+
+  useEffect(() => {
+    if (
+      view !== "music"
+      || catalogInfiniteScrollSupported !== true
+      || catalogLoadState !== "live"
+      || !catalogViewIsCurrent
+      || catalogBusy
+      || catalogRequestFailed
+      || catalogLoadMoreFailed
+      || catalogLoadingMore
+      || !catalogPagination?.hasNextPage
+    ) return;
+
+    const sentinel = catalogLoadMoreSentinelRef.current;
+    if (!sentinel) return;
+
+    try {
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry?.isIntersecting) void loadMoreCatalog();
+      }, { rootMargin: "720px 0px", threshold: 0 });
+      observer.observe(sentinel);
+      return () => observer.disconnect();
+    } catch {
+      setCatalogInfiniteScrollSupported(false);
+    }
+  }, [
+    catalogBusy,
+    catalogInfiniteScrollSupported,
+    catalogLoadMoreFailed,
+    catalogLoadingMore,
+    catalogLoadState,
+    catalogPagination?.hasNextPage,
+    catalogRequestFailed,
+    catalogViewIsCurrent,
+    loadMoreCatalog,
+    view,
+  ]);
 
   function resetFilters() {
     setGenre("All genres");
@@ -1203,11 +1267,23 @@ export function CreatorWorkspace() {
             </div>
             {renderTrackTable(visibleTracks, "Matching music tracks")}
             {catalogLoadState === "live" && catalogViewIsCurrent && catalogPagination?.hasNextPage && (
-              <div className="music-catalogue-load-more">
-                <button className="cta-swipe" type="button" onClick={() => void loadMoreCatalog()} disabled={catalogLoadingMore}>
-                  {catalogLoadingMore ? "Loading more..." : `Load ${Math.min(CATALOG_PAGE_SIZE, Math.max(1, catalogPagination.total - (catalogPagination.page * catalogPagination.pageSize)))} more tracks`}
-                </button>
-                <span>{visibleTracks.length} of {catalogPagination.total} matching tracks loaded</span>
+              <div className="music-catalogue-load-more" ref={catalogLoadMoreSentinelRef}>
+                {(catalogInfiniteScrollSupported === false || catalogLoadMoreFailed) && !catalogRequestFailed && (
+                  <button className="cta-swipe" type="button" onClick={() => void loadMoreCatalog()} disabled={catalogLoadingMore}>
+                    {catalogLoadingMore
+                      ? "Loading more..."
+                      : catalogLoadMoreFailed
+                        ? "Retry loading more tracks"
+                        : `Load ${Math.min(CATALOG_PAGE_SIZE, Math.max(1, catalogPagination.total - (catalogPagination.page * catalogPagination.pageSize)))} more tracks`}
+                  </button>
+                )}
+                <span role="status" aria-live="polite">
+                  {catalogLoadingMore
+                    ? `Loading more tracks · ${visibleTracks.length} of ${catalogPagination.total} currently loaded`
+                    : catalogLoadMoreFailed
+                      ? `Automatic loading paused · ${visibleTracks.length} of ${catalogPagination.total} matching tracks loaded`
+                      : `${visibleTracks.length} of ${catalogPagination.total} matching tracks loaded`}
+                </span>
               </div>
             )}
           </section>
