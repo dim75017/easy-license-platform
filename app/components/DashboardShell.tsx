@@ -16,12 +16,14 @@ export function DashboardShell({
   items,
   active,
   onChange,
+  sidebarFooter,
   children,
 }: {
   area: "client" | "admin";
   items: DashboardItem[];
   active: string;
   onChange: (id: string) => void;
+  sidebarFooter?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -38,6 +40,7 @@ export function DashboardShell({
               key={item.id}
               className={active === item.id ? "is-active" : ""}
               type="button"
+              aria-pressed={active === item.id}
               onClick={() => onChange(item.id)}
             >
               <span>{item.icon}</span>
@@ -47,7 +50,7 @@ export function DashboardShell({
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <Link href="/">← Back to website</Link>
+          {sidebarFooter ?? <Link href="/">← Back to website</Link>}
         </div>
       </aside>
       <section className="dashboard-main">

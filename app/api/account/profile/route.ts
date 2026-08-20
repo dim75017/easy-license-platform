@@ -1,4 +1,5 @@
 import { accountDatabase } from "../../../../db/account-runtime";
+import { catalogAdminEmails } from "../../../../db/catalog-runtime";
 import { sitesIdentityFromHeaders } from "../../../_lib/sites-identity";
 
 const plans = new Set(["creator", "pro"]);
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
   return json({
     identity: { email: identity.email, displayName: identity.displayName },
     profile: profile ? publicProfile(profile) : null,
+    capabilities: { admin: catalogAdminEmails().has(identity.email) },
   });
 }
 

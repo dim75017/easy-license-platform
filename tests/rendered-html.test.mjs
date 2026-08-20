@@ -58,7 +58,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(businessRoute, /home26-audience-media" aria-hidden="true"[\s\S]{0,180}alt=""/);
   assert.doesNotMatch(businessRoute, /home26-audience-media" data-reveal="scale"/);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
-  assert.match(page, /Explore the full music library[\s\S]*href="\/catalog"|href="\/catalog"[\s\S]*Explore the full music library/i);
+  assert.match(page, /<Link className="home26-button home26-button-primary cta-swipe" href="\/app">Explore the full music library<\/Link>/i);
   assert.match(page, /creator-video-editor-WsJBwU9psWI\.webp/i);
   assert.match(page, /business-headphones-books-T3mKJXfdims\.webp/i);
   assert.doesNotMatch(page, /business-headphones-B88PgQXS4qg\.jpg/i);
@@ -182,6 +182,8 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /import \{ CatalogueFacts \} from "\.\.\/components\/CatalogueFacts"/);
   assert.equal((cataloguePage.match(/<CatalogueFacts \/>/g) ?? []).length, 1, "Music should render the shared catalogue facts once");
   assert.match(cataloguePage, /className="music-library-hero"[\s\S]*?<\/section>\s*<CatalogueFacts \/>\s*<section className="music-playlists"/);
+  assert.match(cataloguePage, /<Link className="music-v26-button music-v26-button-light cta-swipe" href="\/app">Open the library<\/Link>/);
+  assert.doesNotMatch(cataloguePage, /href="#music-library">Open the library/);
   assert.match(cataloguePage, /lofiGirlPlaylists/);
   assert.match(cataloguePage, /Explore all playlists/);
   assert.match(cataloguePage, /Browse by mood/);
@@ -270,7 +272,7 @@ test("defines every public and connected product surface", async () => {
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
-    ["app/admin/page.tsx", /AdminWorkspace/],
+    ["app/admin/page.tsx", /robots:\s*\{ index: false, follow: false \}/],
   ];
 
   for (const [path, expected] of routes) {
@@ -335,7 +337,7 @@ test("defines every public and connected product surface", async () => {
   assert.equal([...businessFaq.matchAll(/<summary/g)].length, 5);
   assert.match(businessFaq, /href="\/help#business-licensing"/);
   assert.match(businessFaq, /<p>[^<]+<\/p><\/details>/);
-  assert.match(businessFaq, /<\/section>\s*<\/div>\s*<\/PublicShell>/);
+  assert.match(businessFaq, /<\/section>\s*<\/div>\s*<aside className="business-profile-access"[\s\S]{0,180}<WorkspaceProfileSwitcher activeRole="business" \/>[\s\S]{0,80}<\/aside>\s*<\/PublicShell>/);
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /FOR BUSINESSES/i);
   assert.match(pricing, /<PricingCards expanded \/>/i);
@@ -1027,10 +1029,10 @@ test("ships the cozy Lofi Girl identity, focused navigation and real artist prof
   assert.match(homeCss, /\.site-header \.site-nav > a:hover::after,[\s\S]{0,120}transform:\s*scaleX\(1\)/);
   assert.doesNotMatch(css, /font-family:\s*"Newsreader"|font-family:\s*"IBM Plex Sans"/);
   assert.match(brand, /className="brand-name"><span>sym<span className="brand-accent">biome<\/span>/);
-  assert.equal((header.match(/>Log in<\/Link>/g) ?? []).length, 1);
-  assert.equal((header.match(/>Create account<\/Link>/g) ?? []).length, 1);
-  assert.match(header, /href="\/create-account\?mode=login"[^\n]*>Log in<\/Link>/);
-  assert.match(header, /href="\/create-account"[^\n]*>Create account<\/Link>/);
+  assert.equal((header.match(/>Log in<\/a>/g) ?? []).length, 1);
+  assert.equal((header.match(/>Create account<\/a>/g) ?? []).length, 1);
+  assert.match(header, /href=\{publicAccountSignOutHref\("login"\)\}[^\n]*>Log in<\/a>/);
+  assert.match(header, /href=\{publicAccountSignOutHref\("create"\)\}[^\n]*>Create account<\/a>/);
   assert.match(header, /href:\s*"\/",\s*label:\s*"Home"[\s\S]{0,120}href:\s*"\/catalog",\s*label:\s*"Music"/);
   assert.match(header, /if \(href === "\/"\) return pathname === "\/";/);
   assert.match(header, /For Creators/);
@@ -1264,11 +1266,10 @@ test("uses the two-colour Symbiome surface system instead of retired UI palettes
 });
 
 test("account creation is a secure, persistent and static-demo-safe onboarding", async () => {
-  const [page, setup, css, footer, pricing, schema, runtime, route, layout] = await Promise.all([
+  const [page, setup, css, pricing, schema, runtime, route, layout] = await Promise.all([
     source("app/create-account/page.tsx"),
     source("app/components/AccountSetup.tsx"),
     source("app/account-page.css"),
-    source("app/components/SiteFooter.tsx"),
     source("app/components/PricingCards.tsx"),
     source("db/schema.ts"),
     source("db/account-runtime.ts"),
@@ -1276,14 +1277,26 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
     source("app/layout.tsx"),
   ]);
 
-  assert.match(page, /<PublicShell>[\s\S]*<AccountSetup \/>[\s\S]*<\/PublicShell>/);
+  assert.match(page, /<PublicShell>[\s\S]*<Suspense fallback=\{null\}>[\s\S]*<AccountSetup \/>[\s\S]*<\/Suspense>[\s\S]*<\/PublicShell>/);
+  assert.match(page, /import \{ Suspense \} from "react"/);
   assert.match(page, /title:\s*"Create your account"/);
   assert.match(page, /robots:\s*\{ index: false, follow: false \}/);
   assert.match(setup, /<h1 id="account-title">Music ready for/);
   assert.match(setup, /Continue with ChatGPT/);
   assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
   assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
-  assert.match(setup, /https:\/\/easy-license\.dsomoguy\.chatgpt\.site\/create-account/);
+  assert.match(setup, /useSearchParams\(\)/);
+  assert.match(setup, /searchParams\.get\("mode"\) === "login" \? "login" : "create"/);
+  assert.match(setup, /searchParams\.get\("auth"\) === "resume"/);
+  assert.match(setup, /const requestedPlan: Plan = searchParams\.get\("plan"\) === "pro" \? "pro" : "creator"/);
+  assert.match(setup, /key=\{`\$\{mode\}:\$\{requestedPlan\}:\$\{resumeAuthentication \? "resume" : "signed-out"\}`\}/);
+  assert.match(setup, /useState<Plan>\(requestedPlan\)/);
+  assert.match(setup, /useState<LoadState>\([\s\S]{0,100}isStaticDemo \? "demo" : resumeAuthentication \? "checking" : "signed-out"/);
+  assert.match(setup, /new URLSearchParams\(\{ auth: "resume", plan \}\)/);
+  assert.match(setup, /if \(isStaticDemo \|\| !resumeAuthentication\) return;[\s\S]{0,160}fetch\("\/api\/account\/profile"/);
+  assert.doesNotMatch(setup, /useEffect\(\(\) => \{[\s\S]{0,200}setState\("checking"\)/, "the keyed flow should initialise loading without a synchronous effect state change");
+  assert.match(setup, /mode === "login" \? "Welcome back\." : "Create your account\."/);
+  assert.match(setup, /mode === "login" \? "Log in with ChatGPT" : "Continue with ChatGPT"/);
   assert.match(setup, /fetch\("\/api\/account\/profile"/);
   assert.match(setup, /method:\s*"POST"/);
   assert.match(setup, /type="radio"[\s\S]*value="creator"/);
@@ -1293,9 +1306,7 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
   assert.match(setup, /className="account-secondary-link" href="\/app"[\s\S]{0,80}Browse music first/);
   assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
-  assert.match(footer, /href="\/create-account\?mode=login">Log in/);
-  assert.match(footer, /href="\/create-account">Create account/);
-  assert.equal((pricing.match(/href="\/create-account\?plan=(?:creator|pro)"/g) ?? []).length, 2);
+  assert.equal((pricing.match(/href=\{publicAccountSignOutHref\("create", "(?:creator|pro)"\)\}/g) ?? []).length, 2);
   assert.match(layout, /import "\.\/account-page\.css"/);
 
   assert.match(schema, /export const userProfiles = sqliteTable\(\s*"user_profiles"/s);
@@ -1307,12 +1318,159 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(route, /if \(!isSameOrigin\(request\)\)/);
   assert.match(route, /policies_acknowledgement_required/);
   assert.doesNotMatch(route, /source\.userId|source\.email|source\.plan === "admin"/);
+  assert.doesNotMatch(route, /resumeAuthentication|searchParams\.get\("auth"\)/);
+  const accountAuthGate = route.indexOf("if (!identity) return json({ error: \"authentication_required\" }, 401);");
+  const accountDatabaseOpen = route.indexOf("const database = await accountDatabase();");
+  assert.notEqual(accountAuthGate, -1, "the account API must keep its authentication gate");
+  assert.notEqual(accountDatabaseOpen, -1, "the account API must keep its database access");
+  assert.ok(
+    accountAuthGate < accountDatabaseOpen,
+    "the account API must authenticate before opening the profile database",
+  );
 
   assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /@media \(forced-colors: active\)/);
+});
+
+test("public account entry points clear the Sites session before showing login or creation", async () => {
+  const [accountAuth, header, footer, pricing, switcher, setup] = await Promise.all([
+    source("app/_lib/public-account-auth.ts"),
+    source("app/components/SiteHeader.tsx"),
+    source("app/components/SiteFooter.tsx"),
+    source("app/components/PricingCards.tsx"),
+    source("app/components/WorkspaceProfileSwitcher.tsx"),
+    source("app/components/AccountSetup.tsx"),
+  ]);
+
+  assert.match(accountAuth, /const secureSiteOrigin = "https:\/\/easy-license\.dsomoguy\.chatgpt\.site"/);
+  assert.match(accountAuth, /login: "\/create-account\?mode=login"/);
+  assert.match(accountAuth, /create: "\/create-account"/);
+  assert.match(accountAuth, /const separator = mode === "login" \? "&" : "\?"/);
+  assert.match(accountAuth, /const returnTo = `\$\{accountReturnTo\[mode\]\}\$\{plan \? `\$\{separator\}plan=\$\{plan\}` : ""\}`/);
+  assert.match(accountAuth, /\/signout-with-chatgpt\?return_to=\$\{encodeURIComponent\(returnTo\)\}/);
+  assert.match(header, /<a className="header-login" href=\{publicAccountSignOutHref\("login"\)\}/);
+  assert.match(header, /<a className="button button-small button-primary cta-swipe" href=\{publicAccountSignOutHref\("create"\)\}/);
+  assert.match(footer, /<a href=\{publicAccountSignOutHref\("login"\)\}>Log in<\/a>/);
+  assert.match(footer, /<a href=\{publicAccountSignOutHref\("create"\)\}>Create account<\/a>/);
+  assert.match(pricing, /<a className="button button-primary button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "creator"\)\}>License my channel<\/a>/);
+  assert.match(pricing, /<a className="button button-light button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "pro"\)\}>License my channels<\/a>/);
+  assert.match(switcher, /const signOutHref = publicAccountSignOutHref\("login"\)/);
+  assert.match(switcher, /profileState === "authenticated" \? \([\s\S]{0,180}<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem">Log out<\/a>/);
+  assert.match(switcher, /<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem" onClick=\{closeMenu\}>Log in<\/a>/);
+  assert.match(setup, /href=\{publicAccountSignOutHref\(mode\)\}/);
+  assert.doesNotMatch(header, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
+  assert.doesNotMatch(footer, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
+  assert.doesNotMatch(pricing, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
+  assert.doesNotMatch(switcher, /<Link[^>]+signOutHref/, "sign-out navigation must not be prefetched");
+});
+
+test("offers an accessible server-backed profile switcher across workspace views", async () => {
+  const [switcher, workspace, workspaceCss, profileRoute] = await Promise.all([
+    source("app/components/WorkspaceProfileSwitcher.tsx"),
+    source("app/components/CreatorWorkspace.tsx"),
+    source("app/workspace-music.css"),
+    source("app/api/account/profile/route.ts"),
+  ]);
+
+  assert.match(workspace, /import \{ WorkspaceProfileSwitcher \} from "\.\/WorkspaceProfileSwitcher"/);
+  assert.match(workspace, /<WorkspaceProfileSwitcher activeRole="creator" \/>/);
+  assert.match(workspace, /<WorkspaceProfileSwitcher activeRole="creator" compact \/>/);
+  assert.match(switcher, /type WorkspaceRole = "creator" \| "business" \| "admin"/);
+  for (const [role, href] of [["Creator", "/app"], ["Business", "/business"], ["Admin", "/admin"]]) {
+    assert.match(
+      switcher,
+      new RegExp(`href="${href}" role="menuitem"[\\s\\S]{0,260}<strong>${role}</strong>`),
+      `${role} should remain available from the profile menu`,
+    );
+  }
+  assert.match(switcher, /aria-current=\{activeRole === "creator" \? "page" : undefined\}/);
+  assert.match(switcher, /aria-current=\{activeRole === "business" \? "page" : undefined\}/);
+  assert.match(switcher, /aria-current=\{activeRole === "admin" \? "page" : undefined\}/);
+
+  assert.match(switcher, /const signOutHref = publicAccountSignOutHref\("login"\)/);
+  assert.match(switcher, /profileState === "authenticated" \? \([\s\S]{0,180}<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem">Log out<\/a>/);
+  assert.match(switcher, /href=\{signOutHref\} role="menuitem" onClick=\{closeMenu\}>Log in<\/a>/);
+  assert.match(profileRoute, /import \{ catalogAdminEmails \} from "\.\.\/\.\.\/\.\.\/\.\.\/db\/catalog-runtime"/);
+  assert.match(profileRoute, /capabilities:\s*\{ admin: catalogAdminEmails\(\)\.has\(identity\.email\) \}/);
+  assert.match(switcher, /capabilities\?: \{ admin\?: boolean \}/);
+  assert.match(switcher, /admin: payload\.capabilities\?\.admin === true/);
+  assert.doesNotMatch(switcher, /catalogAdminEmails|ADMIN_EMAILS|source\.email|@lofigirl/i, "admin capability must remain server-authoritative");
+
+  assert.match(switcher, /aria-haspopup="menu"[\s\S]{0,180}aria-expanded=\{open\}/);
+  assert.equal((switcher.match(/compact \? "music-profile-menu-mobile" : "music-profile-menu-desktop"/g) ?? []).length, 2, "the mobile and desktop controls should reference their own menu IDs");
+  assert.match(switcher, /role="menu"[\s\S]{0,140}onKeyDown=\{handleMenuKeyDown\}/);
+  assert.match(switcher, /\["ArrowDown", "ArrowUp", "Home", "End"\]\.includes\(event\.key\)[\s\S]{0,700}event\.preventDefault\(\)[\s\S]{0,700}items\[nextIndex\]\?\.focus\(\)/);
+  assert.match(switcher, /event\.key !== "Escape"[\s\S]{0,120}setOpen\(false\)[\s\S]{0,120}buttonRef\.current\?\.focus\(\)/);
+  assert.match(switcher, /requestAnimationFrame\(\(\) => \{[\s\S]{0,180}querySelector<HTMLElement>\('\[role="menuitem"\]'\)\?\.focus\(\)/);
+  assert.match(switcher, /handlePointerDown[\s\S]{0,180}!rootRef\.current\?\.contains\(event\.target as Node\)\) setOpen\(false\)/);
+  assert.match(switcher, /document\.addEventListener\("pointerdown", handlePointerDown\)[\s\S]{0,500}document\.removeEventListener\("pointerdown", handlePointerDown\)/);
+
+  assert.match(workspaceCss, /\.music-profile-switcher\.is-compact\s*\{\s*display:\s*none;/);
+  assert.match(workspaceCss, /@media \(max-width: 860px\)[\s\S]{0,220}\.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
+  assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,260}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;/s);
+});
+
+test("keeps the Business profile switcher persistent and closes the 861–900px admin gap", async () => {
+  const [business, offerCss, globalCss] = await Promise.all([
+    source("app/business/page.tsx"),
+    source("app/offer-pages.css"),
+    source("app/globals.css"),
+  ]);
+
+  assert.match(business, /import \{ WorkspaceProfileSwitcher \} from "\.\.\/components\/WorkspaceProfileSwitcher"/);
+  assert.match(business, /import "\.\.\/workspace-music\.css"/);
+  assert.match(business, /<aside className="business-profile-access" aria-label="Account and workspace views">[\s\S]{0,120}<WorkspaceProfileSwitcher activeRole="business" \/>/);
+  assert.match(offerCss, /\.public-shell \.business-profile-access\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*max\(18px, env\(safe-area-inset-bottom\)\);[^}]*left:\s*18px;[^}]*width:\s*248px;/s);
+  assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,520}\.public-shell \.business-profile-access button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
+  assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,1100}\.public-shell \.business-profile-access \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*left:\s*16px;[^}]*width:\s*min\(242px, calc\(100vw - 32px\)\);/s);
+  assert.match(globalCss, /@media \(min-width: 861px\) and \(max-width: 900px\)[\s\S]{0,180}\.admin-shell \.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
+  assert.match(globalCss, /@media \(min-width: 861px\) and \(max-width: 900px\)[\s\S]{0,520}\.admin-shell \.music-profile-switcher\.is-compact button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
+});
+
+test("renders real fail-closed admin analytics without legacy demo records", async () => {
+  const [adminPage, admin, dashboardShell] = await Promise.all([
+    source("app/admin/page.tsx"),
+    source("app/components/AdminWorkspace.tsx"),
+    source("app/components/DashboardShell.tsx"),
+  ]);
+
+  assert.match(adminPage, /robots:\s*\{ index: false, follow: false \}/);
+  assert.match(admin, /type AdminState = "loading" \| "ready" \| "signed-out" \| "forbidden" \| "unconfigured" \| "error" \| "demo"/);
+  assert.match(admin, /useState<AdminState>\(isStaticDemo \? "demo" : "loading"\)/);
+  assert.match(admin, /fetch\("\/api\/admin\/analytics", \{[\s\S]{0,180}credentials: "same-origin"[\s\S]{0,100}cache: "no-store"/);
+  for (const [status, state] of [[401, "signed-out"], [403, "forbidden"], [503, "unconfigured"]]) {
+    assert.match(admin, new RegExp(`response\\.status === ${status}[\\s\\S]{0,80}setState\\("${state}"\\)`));
+  }
+  assert.match(admin, /if \(!response\.ok\) throw new Error\("admin_analytics_unavailable"\)/);
+  assert.match(admin, /name\?: string \}\)\.name !== "AbortError"\) setState\("error"\)/);
+  assert.match(admin, /const secureAdminUrl = "https:\/\/easy-license\.dsomoguy\.chatgpt\.site\/admin"/);
+  assert.match(admin, /state === "demo"[\s\S]{0,180}href=\{secureAdminUrl\}>Open secure Admin<\/a>/);
+  assert.match(admin, /state === "signed-out"[\s\S]{0,180}href=\{adminSignInHref\}>Sign in with ChatGPT<\/a>/);
+  assert.match(admin, /state === "error"[\s\S]{0,180}onClick=\{onRetry\}>Retry analytics<\/button>/);
+  assert.match(admin, /state === "forbidden" \|\| state === "unconfigured"[\s\S]{0,180}href="\/app">Return to Creator view<\/Link>/);
+
+  assert.match(admin, /members:\s*\{[\s\S]{0,420}byPlan: GroupCount\[\][\s\S]{0,120}byPlatform: GroupCount\[\][\s\S]{0,120}daily30d:/);
+  assert.match(admin, /catalogue: null \| \{[\s\S]{0,700}tracksByStatus: GroupCount\[\][\s\S]{0,120}assetsByState: GroupCount\[\][\s\S]{0,120}ingestByStatus:/);
+  assert.match(admin, /leads:\s*\{[\s\S]{0,260}byStatus: GroupCount\[\]/);
+  assert.match(admin, /if \(!catalogue\) return [\s\S]{0,220}Catalogue analytics unavailable[\s\S]{0,180}No catalogue total is replaced with zero/);
+  assert.match(admin, /item\.id === "catalogue"[\s\S]{0,100}analytics\.catalogue[\s\S]{0,100}formatCompact\(analytics\.catalogue\.publishedTracks\)[\s\S]{0,80}: undefined/);
+  assert.doesNotMatch(admin, /analytics\.catalogue\?\.publishedTracks \?\? 0/, "an unavailable catalogue must not be presented as zero");
+  assert.match(admin, /The dashboard will not substitute missing data with a false zero/);
+  assert.match(admin, /Names, emails and project descriptions are not exposed in this dashboard response/);
+  for (const legacy of [
+    /const (?:rightsRequests|customers|syncProjects)\s*=/,
+    /Demo data|Prototype MRR|Active customers|Studio Mornings|Alex Morgan|Northstar Games|Search 8,000 tracks/,
+    /€2\.85k|€124k|6,560|1,040/,
+  ]) assert.doesNotMatch(admin, legacy, "legacy admin demo data must not return");
+
+  assert.match(admin, /sidebarFooter=\{<WorkspaceProfileSwitcher activeRole="admin" \/>\}/);
+  assert.match(admin, /<WorkspaceProfileSwitcher activeRole="admin" compact \/>/);
+  assert.match(dashboardShell, /sidebarFooter\?: ReactNode/);
+  assert.match(dashboardShell, /aria-pressed=\{active === item\.id\}/);
+  assert.match(dashboardShell, /\{sidebarFooter \?\? <Link href="\/">← Back to website<\/Link>\}/);
 });
 
 test("uses one calm plan-card hover across Home and Pricing", async () => {
@@ -1964,7 +2122,6 @@ test("build emits product assets and removes starter artifacts", async () => {
   ]);
 
   assert.ok(clientAssets.some((name) => name.startsWith("CreatorWorkspace-")));
-  assert.ok(clientAssets.some((name) => name.startsWith("AdminWorkspace-")));
   assert.ok(clientAssets.some((name) => name.endsWith(".css")));
   assert.ok(serverAssets.some((name) => name.startsWith("LeadForm-")));
   await assert.rejects(access(new URL("app/_sites-preview/SkeletonPreview.tsx", root)));

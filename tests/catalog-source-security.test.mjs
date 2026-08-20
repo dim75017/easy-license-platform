@@ -6,6 +6,8 @@ import { sitesIdentityFromHeaders } from "../app/_lib/sites-identity.ts";
 
 const files = {
   auth: "app/api/catalog/_lib/auth.ts",
+  http: "app/api/catalog/_lib/http.ts",
+  adminAnalytics: "app/api/admin/analytics/route.ts",
   batch: "app/api/catalog/ingest/batch/route.ts",
   asset: "app/api/catalog/ingest/asset/route.ts",
   pipelineAsset: "app/api/catalog/pipeline/assets/route.ts",
@@ -144,6 +146,46 @@ test("Drive ingestion streams to R2 and rejects unverifiable sizes", async () =>
     /case "download_copy":[\s\S]*?case "streaming_copy":/u.exec(text)?.[0] ?? "",
     /audio\/mpeg/u,
   );
+});
+
+test("admin analytics authenticate before D1 and expose aggregates only", async () => {
+  const [route, http] = await Promise.all([source("adminAnalytics"), source("http")]);
+  const authGate = route.indexOf("await requireCatalogAdmin(request)");
+  const databaseOpen = route.indexOf("const database = await accountDatabase()");
+  const leadSchemaOpen = route.indexOf("await ensureLeadSchema()");
+  assert.ok(authGate >= 0, "admin analytics must require a catalogue administrator");
+  assert.ok(databaseOpen > authGate, "admin authentication must precede D1 access");
+  assert.ok(leadSchemaOpen > authGate, "admin authentication must precede lead schema access");
+  assert.match(route, /return noStoreJson\(\{[\s\S]{0,220}members: memberPayload\(memberResults\)[\s\S]{0,100}catalogue,[\s\S]{0,100}leads: leadPayload\(leadResults\)/u);
+  assert.match(route, /if \(error instanceof CatalogApiError\) return catalogErrorResponse\(error\)/u);
+  assert.match(route, /admin_analytics_unavailable[\s\S]{0,180}\{ status: 500 \}/u);
+  assert.match(http, /catalogErrorResponse[\s\S]{0,500}"Cache-Control": "no-store"/u);
+  assert.match(http, /function noStoreJson[\s\S]{0,300}headers\.set\("Cache-Control", "no-store"\)/u);
+
+  for (const aggregate of [
+    /FROM user_profiles/u,
+    /new_7d/u,
+    /new_30d/u,
+    /company_profiles/u,
+    /marketing_opt_ins/u,
+    /GROUP BY plan_preference/u,
+    /GROUP BY primary_platform/u,
+    /FROM tracks/u,
+    /published_tracks/u,
+    /rights_pending/u,
+    /ai_rejected/u,
+    /playable_tracks/u,
+    /FROM releases/u,
+    /FROM track_assets/u,
+    /FROM ingest_items/u,
+    /FROM leads/u,
+    /retail_waitlist/u,
+    /GROUP BY status/u,
+  ]) assert.match(route, aggregate);
+
+  assert.match(route, /let catalogue: ReturnType<typeof cataloguePayload> \| null = null/u);
+  assert.match(route, /try \{[\s\S]{0,900}catalogue = cataloguePayload\(catalogueResults\);[\s\S]{0,120}\} catch \(error\) \{[\s\S]{0,180}Admin catalogue analytics are unavailable/u);
+  assert.doesNotMatch(route, /SELECT[^;]*(?:email|display_name|project_description|message)/iu, "admin analytics must stay aggregate-only");
 });
 
 test("metadata and asset ingestion contain idempotency guards", async () => {

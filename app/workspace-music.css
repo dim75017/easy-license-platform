@@ -1979,6 +1979,149 @@ article.music-track-row[role="listitem"] {
   box-shadow: 0 0 0 6px var(--wm-ink);
 }
 
+/* V19: accessible account switcher for Creator, Business and Admin views. */
+.music-profile-switcher { position: relative; min-width: 0; }
+
+button.music-app-account {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  min-height: 58px;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid rgba(255, 249, 241, .1);
+  border-radius: 0 0 10px 10px;
+  padding: 12px 8px 6px;
+  background: transparent;
+  color: #fff9f1;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.music-app-account::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--wm-clay);
+  content: "";
+  pointer-events: none;
+  transform: translate3d(-101%, 0, 0);
+  transition: transform 480ms cubic-bezier(.22, 1, .36, 1);
+}
+
+button.music-app-account > i {
+  color: rgba(255, 249, 241, .55);
+  font-size: 12px;
+  font-style: normal;
+  transition: transform 220ms ease;
+}
+
+button.music-app-account[aria-expanded="true"] > i { transform: rotate(180deg); }
+
+.music-profile-menu {
+  position: absolute;
+  z-index: 140;
+  bottom: calc(100% + 10px);
+  left: 0;
+  display: grid;
+  width: 242px;
+  gap: 4px;
+  border: 1px solid rgba(255, 249, 241, .14);
+  border-radius: 16px;
+  padding: 10px;
+  background: #23222b;
+  box-shadow: 0 24px 60px rgba(12, 12, 18, .34);
+  color: #fff9f1;
+}
+
+.music-profile-menu-label {
+  padding: 5px 8px 7px;
+  color: rgba(255, 249, 241, .46);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.music-profile-menu > a {
+  display: grid;
+  min-height: 52px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border-radius: 10px;
+  padding: 7px 9px;
+  color: rgba(255, 249, 241, .76);
+  text-decoration: none;
+  transition: background-color 220ms ease, color 220ms ease, transform 220ms ease;
+}
+
+.music-profile-menu > a > i {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 249, 241, .08);
+  font-size: 14px;
+  font-style: normal;
+}
+
+.music-profile-menu > a > span { display: grid; min-width: 0; gap: 2px; }
+.music-profile-menu > a strong { font-size: 12px; }
+.music-profile-menu > a small { overflow: hidden; color: rgba(255, 249, 241, .46); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.music-profile-menu > a.is-active { background: rgba(224, 99, 67, .18); color: #fff9f1; }
+.music-profile-menu > a.is-active > i { background: var(--wm-clay); }
+.music-profile-menu-divider { height: 1px; margin: 4px 5px; background: rgba(255, 249, 241, .1); }
+.music-profile-menu > a.music-profile-session-action { min-height: 40px; grid-template-columns: 1fr; color: #fff9f1; font-weight: 760; }
+
+@media (hover: hover) and (pointer: fine) {
+  button.music-app-account:hover::before { transform: translate3d(0, 0, 0); }
+  .music-profile-menu > a:hover { background: var(--wm-clay); color: #fff9f1; transform: translateX(2px); }
+  .music-profile-menu > a:hover small { color: rgba(255, 249, 241, .72); }
+}
+
+button.music-app-account:focus-visible,
+.music-profile-menu > a:focus-visible {
+  outline: 3px solid var(--wm-clay);
+  outline-offset: 3px;
+}
+
+.music-profile-switcher.is-compact { display: none; }
+
+@media (max-width: 860px) {
+  .music-app-topbar { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .music-profile-switcher.is-compact { display: block; }
+  .music-profile-switcher.is-compact button.music-app-account {
+    display: grid;
+    width: 44px;
+    min-height: 44px;
+    grid-template-columns: 1fr;
+    place-items: center;
+    border: 1px solid rgba(41, 40, 50, .18);
+    border-radius: 50%;
+    padding: 0;
+    background: var(--wm-ink);
+  }
+  .music-profile-switcher.is-compact button.music-app-account > span { width: 32px; height: 32px; font-size: 10px; }
+  .music-profile-switcher.is-compact button.music-app-account > i { display: none; }
+  .music-profile-switcher.is-compact .music-profile-menu { top: calc(100% + 10px); right: 0; bottom: auto; left: auto; }
+}
+
+@media (max-width: 480px) {
+  .music-app-topbar { gap: 7px; padding-inline: 12px; }
+  .music-profile-switcher.is-compact .music-profile-menu { position: fixed; top: 72px; right: 12px; left: 12px; width: auto; }
+}
+
+@media (forced-colors: active) {
+  button.music-app-account,
+  .music-profile-menu,
+  .music-profile-menu > a { border: 1px solid ButtonText; }
+}
+
 .music-catalogue-load-more button:focus-visible::before {
   transform: translate3d(0, 0, 0);
 }

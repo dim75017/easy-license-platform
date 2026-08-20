@@ -23,7 +23,7 @@ export default function CataloguePage() {
           <div data-reveal="left">
             <h1>A real music<br />library for creators.</h1>
             <p>Listen, save your direction, then license the music that fits your video, stream, podcast or project. Every track is made by a real artist.</p>
-            <a className="music-v26-button music-v26-button-light cta-swipe" href="#music-library">Open the library</a>
+            <Link className="music-v26-button music-v26-button-light cta-swipe" href="/app">Open the library</Link>
           </div>
         </section>
 
