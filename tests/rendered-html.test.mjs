@@ -913,8 +913,23 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(motion, /data-plan-glide/);
   assert.match(motion, /requestAnimationFrame/);
   assert.match(motion, /prefers-reduced-motion/);
+  assert.match(css, /\.motion-enhanced \[data-reveal\]\s*\{[^}]*transition:\s*opacity var\(--motion-reveal\)/s);
   assert.match(css, /\.motion-enhanced \[data-reveal\]\.is-reveal-pending\s*\{[^}]*opacity:\s*0/s);
   assert.doesNotMatch(css, /\.motion-enhanced \[data-reveal\]\s*\{[^}]*opacity:\s*0/s);
+  assert.match(css, /\.motion-enhanced \[data-reveal\]\.is-revealed\s*\{[^}]*opacity:\s*1;[^}]*translate:\s*0 0;[^}]*scale:\s*1/s);
+  assert.match(css, /\.motion-enhanced \[data-reveal="hero-title"\] > span\s*\{[^}]*transition:\s*opacity 720ms/s);
+  assert.match(css, /\.motion-enhanced \[data-reveal="hero-title"\]\.is-revealed > span\s*\{[^}]*opacity:\s*1;[^}]*translate:\s*0 0/s);
+  assert.match(css, /\.motion-enhanced \[data-reveal="group"\] > \*\s*\{[^}]*transition:\s*opacity 570ms/s);
+  assert.match(css, /\.motion-enhanced \[data-reveal="group"\]\.is-revealed > \*\s*\{[^}]*opacity:\s*1;[^}]*translate:\s*0 0;[^}]*scale:\s*1/s);
+  assert.match(css, /\.motion-enhanced \.catalogue-motion-stage\.is-reveal-pending:not\(\.is-revealed\) \.catalogue-toolbar,[\s\S]{0,150}opacity:\s*0;[\s\S]{0,80}translate:\s*0 16px/s);
+  assert.match(css, /\.catalogue-motion-stage \.catalogue-toolbar,[\s\S]{0,100}\.catalogue-motion-stage \.track-row\s*\{[^}]*transition:\s*opacity 500ms/s);
+  const pendingRules = [
+    css.match(/\.motion-enhanced \[data-reveal\]\.is-reveal-pending\s*\{[^}]*\}/s)?.[0],
+    css.match(/\.motion-enhanced \[data-reveal="hero-title"\]\.is-reveal-pending > span\s*\{[^}]*\}/s)?.[0],
+    css.match(/\.motion-enhanced \[data-reveal="group"\]\.is-reveal-pending > \*\s*\{[^}]*\}/s)?.[0],
+  ];
+  assert.ok(pendingRules.every(Boolean));
+  pendingRules.forEach((rule) => assert.doesNotMatch(rule, /transition:/));
   assert.match(homeCss, /@keyframes v5Scan/);
   assert.match(home26Css, /@media \(min-width: 901px\)[\s\S]*?\.home26-artists \.home26-section-heading\s*\{[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}text-align:\s*center;/);
   assert.match(home26Css, /V56: a continuous artist marquee[\s\S]{0,650}width:\s*100vw;[\s\S]{0,180}overflow:\s*hidden/);
