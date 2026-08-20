@@ -137,6 +137,13 @@ test("Drive ingestion streams to R2 and rejects unverifiable sizes", async () =>
   assert.match(text, /asset_size_unavailable/u);
   assert.match(text, /MAX_ASSET_BYTES/u);
   assert.doesNotMatch(text, /arrayBuffer\(\)|bytes\(\)|text\(\)/u);
+  assert.match(text, /sourceMimeType: contentType/u);
+  assert.match(text, /sourceFormat: sourceFormatFromContentType\(contentType\)/u);
+  assert.match(text, /case "source_master":[\s\S]*?"audio\/mpeg"/u);
+  assert.doesNotMatch(
+    /case "download_copy":[\s\S]*?case "streaming_copy":/u.exec(text)?.[0] ?? "",
+    /audio\/mpeg/u,
+  );
 });
 
 test("metadata and asset ingestion contain idempotency guards", async () => {
@@ -144,6 +151,7 @@ test("metadata and asset ingestion contain idempotency guards", async () => {
   const asset = await source("asset");
   assert.match(asset, /idempotent:\s*true/u);
   assert.match(asset, /stableStorageKey/u);
+  assert.match(asset, /existing\.mime_type !== expectedContentType/u);
 });
 
 test("direct pipeline uploads are bounded, content-addressed and retry safe", async () => {
@@ -483,7 +491,12 @@ test("catalog-owner evidence is strict, source-bound and pipeline-only", async (
   assert.match(promote, /promotion_owner_evidence_invalid/u);
   assert.match(promote, /ii\.master_inspection_sha256 = ii\.source_sha256/u);
   assert.match(promote, /ii\.master_read_complete = 1/u);
-  assert.match(promote, /master\.mime_type = 'audio\/wav'/u);
+  assert.match(promote, /master\.mime_type IN \('audio\/wav', 'audio\/mpeg'\)/u);
+  assert.match(promote, /sourceMimeType/u);
+  assert.match(promote, /sourceFormat/u);
+  assert.match(promote, /promotion_source_format_invalid/u);
+  assert.match(promote, /sourceMaster\.mime_type !== sourceMimeType/u);
+  assert.match(promote, /stored\.httpMetadata\?\.contentType !== asset\.mime_type/u);
   assert.match(promote, /\? = 'spotify'\s+AND ii\.verification_mode IS NULL/u);
   assert.match(promote, /\? = 'catalog_owner_direct'\s+OR \(/u);
 });

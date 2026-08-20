@@ -124,6 +124,8 @@ export async function streamDriveFileToR2(
     customMetadata: {
       assetKind: options.assetKind,
       ingestedAt: new Date().toISOString(),
+      sourceMimeType: contentType,
+      sourceFormat: sourceFormatFromContentType(contentType),
       ...(options.expectedSha256 ? { sha256: options.expectedSha256 } : {}),
     },
   });
@@ -194,6 +196,9 @@ function normalizeContentType(value: string): string {
     return "audio/wav";
   }
   if (normalized === "audio/x-flac") return "audio/flac";
+  if (normalized === "audio/mp3" || normalized === "audio/x-mp3") {
+    return "audio/mpeg";
+  }
   if (normalized === "image/jpg") return "image/jpeg";
   return normalized;
 }
@@ -201,6 +206,13 @@ function normalizeContentType(value: string): string {
 function allowedContentTypes(assetKind: IngestableAssetKind): ReadonlySet<string> {
   switch (assetKind) {
     case "source_master":
+      return new Set([
+        "audio/wav",
+        "audio/flac",
+        "audio/aiff",
+        "audio/x-aiff",
+        "audio/mpeg",
+      ]);
     case "download_copy":
       return new Set([
         "audio/wav",
@@ -220,6 +232,38 @@ function allowedContentTypes(assetKind: IngestableAssetKind): ReadonlySet<string
       return new Set(["application/json"]);
     case "cover_artwork":
       return new Set(["image/jpeg", "image/png", "image/webp"]);
+  }
+}
+
+function sourceFormatFromContentType(contentType: string): string {
+  switch (contentType) {
+    case "audio/wav":
+      return "wav";
+    case "audio/mpeg":
+      return "mp3";
+    case "audio/flac":
+      return "flac";
+    case "audio/aiff":
+    case "audio/x-aiff":
+      return "aiff";
+    case "audio/mp4":
+      return "mp4";
+    case "audio/aac":
+      return "aac";
+    case "audio/ogg":
+      return "ogg";
+    case "audio/webm":
+      return "webm";
+    case "application/json":
+      return "json";
+    case "image/jpeg":
+      return "jpeg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    default:
+      return "unknown";
   }
 }
 

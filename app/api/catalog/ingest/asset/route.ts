@@ -208,7 +208,9 @@ export async function POST(request: Request): Promise<Response> {
       if (
         (expectedSha256 !== null && existing.sha256 !== expectedSha256) ||
         (expectedByteSize !== null && existing.byte_size !== expectedByteSize) ||
-        (durationMs !== null && existing.duration_ms !== durationMs)
+        (durationMs !== null && existing.duration_ms !== durationMs) ||
+        (expectedContentType !== null &&
+          existing.mime_type !== expectedContentType)
       ) {
         throw new CatalogApiError(
           "The available asset does not match the supplied checksum, size or duration.",

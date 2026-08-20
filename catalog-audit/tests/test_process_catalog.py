@@ -138,6 +138,16 @@ def direct_record():
     return record
 
 
+def direct_mp3_record():
+    record = direct_record()
+    record["audio_match_kind"] = "central_unique_artist_title"
+    record["audio"]["name"] = "Test Artist - Test Track.mp3"
+    record["audio"]["mime_type"] = "audio/mpeg"
+    record["audio"]["source_format"] = "mp3"
+    record["audio"]["source_mime_type"] = "audio/mpeg"
+    return record
+
+
 def write_sine_wav(path, seconds=1.0, sample_rate=16_000):
     frame_count = round(seconds * sample_rate)
     with wave.open(str(path), "wb") as handle:
@@ -218,6 +228,19 @@ class ManifestTests(unittest.TestCase):
             loaded = process.load_direct_manifest(path)
         self.assertEqual(len(loaded), 1)
 
+    def test_owner_direct_accepts_only_strictly_pinned_mp3_sources(self):
+        record = direct_mp3_record()
+        process.validate_direct_record(record)
+        weak = direct_mp3_record()
+        weak["audio_match_kind"] = "exact_title"
+        with self.assertRaisesRegex(process.PipelineError, "direct_record_not_deterministic"):
+            process.validate_direct_record(weak)
+
+        mismatched = direct_mp3_record()
+        mismatched["audio"]["mime_type"] = "audio/wav"
+        with self.assertRaisesRegex(process.PipelineError, "direct_record_not_deterministic"):
+            process.validate_direct_record(mismatched)
+
     def test_owner_direct_rejects_ambiguous_or_reused_audio(self):
         ambiguous = direct_record()
         ambiguous["reasons"].append("audio_match_ambiguous")
@@ -243,6 +266,11 @@ class StateTests(unittest.TestCase):
             connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
             try:
                 self.assertEqual(connection.execute("PRAGMA journal_mode").fetchone()[0], "delete")
+                columns = {
+                    row[1]
+                    for row in connection.execute("PRAGMA table_info(pipeline_items)")
+                }
+                self.assertTrue({"source_mime_type", "source_format"}.issubset(columns))
             finally:
                 connection.close()
 
@@ -543,6 +571,45 @@ class AudioTests(unittest.TestCase):
         fragment = struct.pack("<hhhh", 0, -32768, 12, 30_000)
         self.assertEqual(process.pcm_peak(fragment), 32768)
 
+    def test_owner_direct_mp3_requires_signature_and_complete_decode(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp3"
+            source.write_bytes(b"ID3" + b"\x00" * 100)
+            with mock.patch.object(process, "probe_audio_duration", return_value=123_000) as probe:
+                duration = process.inspect_downloaded_mp3(
+                    source,
+                    Path("ffmpeg"),
+                    verification_mode="catalog_owner_direct",
+                )
+            self.assertEqual(duration, 123_000)
+            probe.assert_called_once_with(Path("ffmpeg"), source)
+
+            source.write_bytes(b"not-an-mp3")
+            with self.assertRaisesRegex(process.PipelineError, "source_mp3_signature_invalid"):
+                process.inspect_downloaded_mp3(
+                    source,
+                    Path("ffmpeg"),
+                    verification_mode="catalog_owner_direct",
+                )
+
+    def test_mp3_decode_failure_stays_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp3"
+            source.write_bytes(b"\xff\xfb" + b"\x00" * 100)
+            with (
+                mock.patch.object(
+                    process,
+                    "probe_audio_duration",
+                    side_effect=process.PipelineError("ffmpeg_duration_probe_failed"),
+                ),
+                self.assertRaisesRegex(process.PipelineError, "source_mp3_decode_failed"),
+            ):
+                process.inspect_downloaded_mp3(
+                    source,
+                    Path("ffmpeg"),
+                    verification_mode="catalog_owner_direct",
+                )
+
     def test_all_audio_ffmpeg_commands_force_single_thread_processing(self):
         completed = process.subprocess.CompletedProcess(
             args=[], returncode=0, stdout=b"out_time_us=1000000\n", stderr=b""
@@ -802,11 +869,28 @@ class ApiTests(unittest.TestCase):
             expected_byte_size=100,
             expected_sha256="a" * 64,
             duration_ms=120_000,
+            source_mime_type="audio/wav",
         )
         master_payload = json.loads(requests[0][0].data)
         self.assertEqual(master_payload["trackId"], "12")
         self.assertEqual(master_payload["assetKind"], "source_master")
         self.assertEqual(master_payload["expectedSha256"], "a" * 64)
+        self.assertEqual(master_payload["expectedContentType"], "audio/wav")
+
+        requests.clear()
+        client.ingest_source_master(
+            track_id=13,
+            batch_key=process.DIRECT_BATCH_KEY,
+            source_key="c" * 28,
+            drive_file_id="1" + "B" * 24,
+            source_file_name="strict-source.mp3",
+            expected_byte_size=200,
+            expected_sha256="b" * 64,
+            duration_ms=121_000,
+            source_mime_type="audio/mpeg",
+        )
+        mp3_payload = json.loads(requests[0][0].data)
+        self.assertEqual(mp3_payload["expectedContentType"], "audio/mpeg")
 
         with tempfile.TemporaryDirectory() as temporary:
             cover = Path(temporary) / "cover.bin"
@@ -887,6 +971,8 @@ class ApiTests(unittest.TestCase):
         )
         payload = json.loads(requests[0][0].data)
         self.assertEqual(payload["verificationMode"], "catalog_owner_direct")
+        self.assertEqual(payload["sourceMimeType"], "audio/wav")
+        self.assertEqual(payload["sourceFormat"], "wav")
 
 
 class SpotifyMergeTests(unittest.TestCase):

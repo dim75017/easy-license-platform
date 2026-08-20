@@ -42,6 +42,7 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence
 PRIVATE_DIRECTORY = Path(__file__).resolve().parent / "private"
 DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder"
 WAV_MIME_TYPES = {"audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave"}
+MP3_MIME_TYPES = {"audio/mpeg", "audio/mp3", "audio/x-mp3"}
 AUDIO_FOLDER_NAMES = {"wav", "wave", "music", "musique", ".wav"}
 VERSION_TOKENS = {
     "acoustic",
@@ -71,6 +72,21 @@ DIRECT_PUBLICATION_BLOCKERS = frozenset(
         "unmatched_audio_file",
         "source_snapshot_missing",
     }
+)
+STRICT_CENTRAL_MP3_MATCH_KINDS = frozenset(
+    {
+        "central_unique_isrc",
+        "central_unique_upc_title",
+        "central_unique_artist_title",
+        "central_unique_release_title",
+    }
+)
+CENTRAL_AUDIO_PIN_RULES = (
+    "central_unique_isrc",
+    "central_unique_upc_title",
+    "central_unique_artist_title",
+    "central_unique_release_title",
+    "central_globally_unique_exact_title",
 )
 
 
@@ -123,6 +139,21 @@ class ReleaseAudio:
     release: str
     folder_id: str
     files: tuple[DriveAudio, ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class CentralAudioPin:
+    """One central file bound to one exact workbook row.
+
+    ``source_row`` is intentionally part of the binding. A release-wide audio
+    group is not precise enough here: adding such a group can make an
+    already-good neighbour ambiguous when a larger central snapshot arrives.
+    """
+
+    source_row: int
+    track_stable_id: str
+    audio: DriveAudio
+    match_kind: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -607,14 +638,15 @@ def load_central_drive_inventory(
         name = clean(row_value(row, "name", "file_name"))
         mime_type = clean(row_value(row, "mimeType", "mime_type"))
         central_kind = normalize_text(row_value(row, "central_kind", "centralKind", "kind"))
-        is_wav = name.casefold().endswith((".wav", ".wave")) or mime_type.casefold() in WAV_MIME_TYPES
+        descriptor = audio_source_descriptor({"name": name, "mime_type": mime_type})
+        is_audio = descriptor is not None
         is_artwork = mime_type.casefold().startswith("image/") or Path(name).suffix.casefold() in {
             ".jpg",
             ".jpeg",
             ".png",
             ".webp",
         }
-        if is_wav and central_kind in {"", "audio"}:
+        if is_audio and central_kind in {"", "audio"}:
             audio.setdefault(
                 file_id,
                 drive_audio_from_row(
@@ -636,13 +668,52 @@ def load_central_drive_inventory(
 
 
 def _audio_stem(value: str) -> str:
-    stem = re.sub(r"\.(?:wav|wave)$", "", clean(value), flags=re.IGNORECASE)
+    stem = re.sub(r"\.(?:wav|wave|mp3)$", "", clean(value), flags=re.IGNORECASE)
     stem = re.sub(r"^\s*\d{1,3}\s*[._-]+\s*", "", stem)
     return normalize_text(stem)
 
 
 def _compact_identifier(value: Any) -> str:
     return re.sub(r"[^A-Z0-9]", "", clean(value).upper())
+
+
+def audio_source_descriptor(value: DriveAudio | Mapping[str, Any]) -> tuple[str, str] | None:
+    """Return the canonical format/MIME pair for supported owner sources.
+
+    Extension and declared MIME are independent evidence.  If both are known
+    and disagree, the source fails closed instead of letting a renamed file
+    enter the direct lane.
+    """
+
+    if isinstance(value, DriveAudio):
+        name = value.name
+        raw_mimes = [value.mime_type]
+    else:
+        name = clean(value.get("name"))
+        raw_mimes = [
+            clean(value.get("source_mime_type")),
+            clean(value.get("mime_type")),
+        ]
+    extension = Path(name).suffix.casefold()
+    extension_format = (
+        "wav" if extension in {".wav", ".wave"} else "mp3" if extension == ".mp3" else None
+    )
+    mime_formats: set[str] = set()
+    for raw_mime in raw_mimes:
+        normalized_mime = raw_mime.split(";", 1)[0].strip().casefold()
+        if normalized_mime in WAV_MIME_TYPES:
+            mime_formats.add("wav")
+        elif normalized_mime in MP3_MIME_TYPES:
+            mime_formats.add("mp3")
+    if len(mime_formats) > 1:
+        return None
+    mime_format = next(iter(mime_formats), None)
+    if extension_format and mime_format and extension_format != mime_format:
+        return None
+    source_format = extension_format or mime_format
+    if source_format is None:
+        return None
+    return (source_format, "audio/wav" if source_format == "wav" else "audio/mpeg")
 
 
 def _unique_audio_from_files(track: Track, files: Sequence[DriveAudio]) -> DriveAudio | None:
@@ -805,6 +876,273 @@ def merge_central_audio_mappings(
         "ambiguousFiles": ambiguous_files,
         "ambiguousTracks": ambiguous_tracks,
         "rejected": rejected_files,
+    }
+
+
+def _central_exact_track_keys(track: Track) -> set[str]:
+    """Return conservative complete-filename keys for an exact title signal."""
+
+    title = _compact_identifier(track.title)
+    if not title:
+        return set()
+    keys = {title}
+    artists = {
+        _compact_identifier(artist)
+        for artist in track.artists
+        if _compact_identifier(artist)
+    }
+    if track.artists:
+        joined = _compact_identifier(" ".join(track.artists))
+        if joined:
+            artists.add(joined)
+    for artist in artists:
+        keys.update({f"{artist}{title}", f"{title}{artist}"})
+    release = _compact_identifier(track.release)
+    if release:
+        keys.update({f"{release}{title}", f"{title}{release}"})
+    return keys
+
+
+def _central_composite_track_keys(track: Track) -> dict[str, set[str]]:
+    """Build only complete deterministic keys, split by evidence rule."""
+
+    title = _compact_identifier(track.title)
+    artist_title: set[str] = set()
+    release_title: set[str] = set()
+    if title:
+        artists = {
+            _compact_identifier(artist)
+            for artist in track.artists
+            if _compact_identifier(artist)
+        }
+        joined = _compact_identifier(" ".join(track.artists))
+        if joined:
+            artists.add(joined)
+        for artist in artists:
+            artist_title.update({f"{artist}{title}", f"{title}{artist}"})
+        release = _compact_identifier(track.release)
+        if release:
+            release_title.update({f"{release}{title}", f"{title}{release}"})
+    return {
+        "title": {title} if title else set(),
+        "artist_title": artist_title,
+        "release_title": release_title,
+    }
+
+
+def build_central_audio_pins(
+    tracks: Sequence[Track],
+    baseline_candidates: Sequence[Candidate],
+    central_audio: Sequence[DriveAudio],
+    *,
+    excluded_file_ids: Iterable[str] = (),
+) -> tuple[dict[int, CentralAudioPin], dict[str, Any]]:
+    """Bind only new, conflict-free central files to exact source rows.
+
+    Every available signal is exact: unique ISRC, UPC plus a complete title
+    key, artist plus title, release plus title, and the established WAV-only
+    globally unique title fallback. All detected signals must agree on one row;
+    MP3 never receives the title-only fallback.
+
+    Existing and ambiguous baseline candidates are never reconsidered. This
+    makes a larger inventory monotone: it can fill a missing row, but cannot
+    subtract or weaken an association that the previous snapshot established.
+    """
+
+    excluded = set(excluded_file_ids)
+    tracks_by_row: dict[int, list[Track]] = defaultdict(list)
+    candidates_by_row: dict[int, list[Candidate]] = defaultdict(list)
+    isrc_rows: dict[str, set[int]] = defaultdict(set)
+    upc_rows: dict[str, set[int]] = defaultdict(set)
+    compact_title_rows: dict[str, set[int]] = defaultdict(set)
+    artist_title_rows: dict[str, set[int]] = defaultdict(set)
+    release_title_rows: dict[str, set[int]] = defaultdict(set)
+    exact_keys_by_row: dict[int, dict[str, set[str]]] = {}
+    for track in tracks:
+        tracks_by_row[track.source_row].append(track)
+        key_groups = _central_composite_track_keys(track)
+        exact_keys_by_row[track.source_row] = key_groups
+        compact_isrc = _compact_identifier(track.isrc)
+        if compact_isrc:
+            isrc_rows[compact_isrc].add(track.source_row)
+        if track.upc:
+            upc_rows[track.upc].add(track.source_row)
+        for key in key_groups["title"]:
+            compact_title_rows[key].add(track.source_row)
+        for key in key_groups["artist_title"]:
+            artist_title_rows[key].add(track.source_row)
+        for key in key_groups["release_title"]:
+            release_title_rows[key].add(track.source_row)
+    for candidate in baseline_candidates:
+        if candidate.track is not None:
+            candidates_by_row[candidate.track.source_row].append(candidate)
+
+    # Duplicate source rows are not identities and therefore cannot receive a
+    # pin. The same rule applies to a row represented by two candidate records.
+    eligible_rows = {
+        row
+        for row, source_tracks in tracks_by_row.items()
+        if len(source_tracks) == 1 and len(candidates_by_row.get(row, ())) == 1
+    }
+    isrc_lengths = sorted({len(value) for value in isrc_rows})
+    known_upcs = {
+        upc
+        for upc, rows in upc_rows.items()
+        if len(upc) >= 8 and any(row in eligible_rows for row in rows)
+    }
+    upc_lengths = sorted({len(value) for value in known_upcs})
+    claims_by_row: dict[int, list[tuple[DriveAudio, str]]] = defaultdict(list)
+    ambiguous_files = 0
+    rejected_files = 0
+    conflicts = 0
+    considered = 0
+    unsupported_files = 0
+    considered_by_format = {"wav": 0, "mp3": 0}
+    for audio in central_audio:
+        if audio.file_id in excluded:
+            continue
+        considered += 1
+        descriptor = audio_source_descriptor(audio)
+        if descriptor is None:
+            rejected_files += 1
+            unsupported_files += 1
+            continue
+        source_format, _source_mime_type = descriptor
+        considered_by_format[source_format] += 1
+        if is_suspicious_audio_name(audio.name):
+            rejected_files += 1
+            continue
+        normalized_stem = _audio_stem(audio.name)
+        compact_stem = _compact_identifier(normalized_stem)
+        if not compact_stem:
+            rejected_files += 1
+            continue
+        isrc_candidates: set[int] = set()
+        matched_isrcs: set[str] = set()
+        for length in isrc_lengths:
+            for start in range(len(compact_stem) - length + 1):
+                identifier = compact_stem[start : start + length]
+                rows = isrc_rows.get(identifier)
+                if rows:
+                    matched_isrcs.add(identifier)
+                    isrc_candidates.update(rows)
+
+        matched_upcs: set[str] = set()
+        for run in re.findall(r"\d{8,}", compact_stem):
+            for length in upc_lengths:
+                for start in range(len(run) - length + 1):
+                    value = run[start : start + length]
+                    if value in known_upcs:
+                        matched_upcs.add(value)
+        upc_title_candidates: set[int] = set()
+        for upc in matched_upcs:
+            without_upc = compact_stem.replace(upc, "")
+            for row in upc_rows[upc]:
+                if row not in eligible_rows:
+                    continue
+                key_groups = exact_keys_by_row.get(row, {})
+                exact_after_upc = set().union(*key_groups.values()) if key_groups else set()
+                if without_upc in exact_after_upc:
+                    upc_title_candidates.add(row)
+
+        identifier_variants = {compact_stem}
+        for identifier in matched_isrcs.union(matched_upcs):
+            identifier_variants.add(compact_stem.replace(identifier, ""))
+        without_identifiers = compact_stem
+        for identifier in sorted(
+            matched_isrcs.union(matched_upcs), key=len, reverse=True
+        ):
+            without_identifiers = without_identifiers.replace(identifier, "")
+        identifier_variants.add(without_identifiers)
+        artist_title_candidates: set[int] = set()
+        release_title_candidates: set[int] = set()
+        title_candidates: set[int] = set()
+        for variant in identifier_variants:
+            artist_title_candidates.update(artist_title_rows.get(variant, set()))
+            release_title_candidates.update(release_title_rows.get(variant, set()))
+            # Preserve the previous exact-title WAV recovery.  Central MP3s
+            # are intentionally narrower: identifier or full composite only.
+            if source_format == "wav":
+                rows = compact_title_rows.get(variant, set())
+                if len(rows) == 1:
+                    title_candidates.update(rows)
+
+        rule_candidates = {
+            "central_unique_isrc": isrc_candidates,
+            "central_unique_upc_title": upc_title_candidates,
+            "central_unique_artist_title": artist_title_candidates,
+            "central_unique_release_title": release_title_candidates,
+            "central_globally_unique_exact_title": title_candidates,
+        }
+        # Evidence tiers must agree on the same row.  A stronger identifier is
+        # not allowed to hide a contradictory exact composite claim.
+        candidates = set().union(*rule_candidates.values())
+        if len(candidates) != 1:
+            ambiguous_files += int(len(candidates) > 1)
+            rejected_files += int(not candidates)
+            conflicts += int(len(candidates) > 1)
+            continue
+        row = next(iter(candidates))
+        if row not in eligible_rows:
+            rejected_files += 1
+            continue
+        track = tracks_by_row[row][0]
+        if incompatible_version(audio.name, track.title):
+            rejected_files += 1
+            continue
+        match_kind = next(
+            kind
+            for kind in CENTRAL_AUDIO_PIN_RULES
+            if row in rule_candidates[kind]
+        )
+        baseline = candidates_by_row[row][0]
+        # Never turn an existing ambiguity into apparent uniqueness by adding
+        # or subtracting files from its candidate set.
+        if (
+            baseline.audio is not None
+            or "audio_match_missing" not in baseline.reasons
+            or "audio_match_ambiguous" in baseline.reasons
+            or "audio_file_claimed_by_multiple_tracks" in baseline.reasons
+        ):
+            rejected_files += 1
+            continue
+        claims_by_row[row].append((audio, match_kind))
+
+    pins: dict[int, CentralAudioPin] = {}
+    ambiguous_tracks = 0
+    pinned_by_format = {"wav": 0, "mp3": 0}
+    pinned_by_rule = {kind: 0 for kind in CENTRAL_AUDIO_PIN_RULES}
+    for row, claims in claims_by_row.items():
+        unique_files = {audio.file_id: (audio, kind) for audio, kind in claims}
+        if len(unique_files) != 1:
+            ambiguous_tracks += 1
+            continue
+        audio, kind = next(iter(unique_files.values()))
+        track = tracks_by_row[row][0]
+        pins[row] = CentralAudioPin(
+            source_row=row,
+            track_stable_id=track.stable_id,
+            audio=audio,
+            match_kind=kind,
+        )
+        source_format, _source_mime_type = audio_source_descriptor(audio) or ("", "")
+        if source_format in pinned_by_format:
+            pinned_by_format[source_format] += 1
+        pinned_by_rule[kind] += 1
+    return pins, {
+        "available": len(central_audio),
+        "considered": considered,
+        "pinned": len(pins),
+        "ambiguousFiles": ambiguous_files,
+        "ambiguousTracks": ambiguous_tracks,
+        "conflicts": conflicts,
+        "rejected": rejected_files,
+        "unsupported": unsupported_files,
+        "consideredWav": considered_by_format["wav"],
+        "consideredMp3": considered_by_format["mp3"],
+        "pinnedWav": pinned_by_format["wav"],
+        "pinnedMp3": pinned_by_format["mp3"],
+        "pinnedByRule": dict(sorted(pinned_by_rule.items())),
     }
 
 
@@ -1406,6 +1744,63 @@ def build_candidates(
     return preliminary
 
 
+def apply_central_audio_pins(
+    candidates: Sequence[Candidate],
+    pins: Mapping[int, CentralAudioPin],
+) -> list[Candidate]:
+    """Apply exact row pins without changing any pre-existing association."""
+
+    result: list[Candidate] = []
+    for candidate in candidates:
+        track = candidate.track
+        pin = pins.get(track.source_row) if track is not None else None
+        if (
+            pin is None
+            or candidate.audio is not None
+            or "audio_match_missing" not in candidate.reasons
+            or "audio_match_ambiguous" in candidate.reasons
+            or "audio_file_claimed_by_multiple_tracks" in candidate.reasons
+            or track is None
+            or pin.track_stable_id != track.stable_id
+        ):
+            result.append(candidate)
+            continue
+        reasons = sorted(
+            set(
+                [
+                    *(reason for reason in candidate.reasons if reason != "audio_match_missing"),
+                    "sha256_pending",
+                ]
+            )
+        )
+        quarantine_reasons = {
+            "audio_match_missing",
+            "audio_match_ambiguous",
+            "audio_version_mismatch",
+            "suspicious_audio_filename",
+            "expected_duration_under_30s",
+        }
+        status = "quarantine" if quarantine_reasons.intersection(reasons) else "review"
+        candidate_id = hashlib.sha256(
+            f"{track.stable_id}|{pin.audio.stable_id}".encode()
+        ).hexdigest()[:28]
+        result.append(
+            dataclasses.replace(
+                candidate,
+                candidate_id=candidate_id,
+                audio=pin.audio,
+                audio_match_score=100.0,
+                audio_match_kind=pin.match_kind,
+                status=status,
+                reasons=reasons,
+                fingerprint=candidate_fingerprint(
+                    track, pin.audio, candidate.spotify_id, candidate.cover
+                ),
+            )
+        )
+    return result
+
+
 def open_state(path: Path) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
@@ -1436,10 +1831,15 @@ def open_state(path: Path) -> sqlite3.Connection:
 
 
 def candidate_payload(candidate: Candidate) -> dict[str, Any]:
+    audio_payload = dataclasses.asdict(candidate.audio) if candidate.audio else None
+    if audio_payload is not None:
+        descriptor = audio_source_descriptor(audio_payload)
+        if descriptor is not None:
+            audio_payload["source_format"], audio_payload["source_mime_type"] = descriptor
     return {
         "candidate_id": candidate.candidate_id,
         "track": dataclasses.asdict(candidate.track) if candidate.track else None,
-        "audio": dataclasses.asdict(candidate.audio) if candidate.audio else None,
+        "audio": audio_payload,
         "audio_match_score": candidate.audio_match_score,
         "audio_match_kind": candidate.audio_match_kind,
         "spotify_id": candidate.spotify_id,
@@ -1476,6 +1876,12 @@ def direct_publication_eligible(record: Mapping[str, Any]) -> bool:
         or float(score) < 90
         or match_kind in {"", "missing", "ambiguous", "orphan"}
     ):
+        return False
+    descriptor = audio_source_descriptor(audio)
+    if descriptor is None:
+        return False
+    source_format, _source_mime_type = descriptor
+    if source_format == "mp3" and match_kind not in STRICT_CENTRAL_MP3_MATCH_KINDS:
         return False
     source_row = track.get("source_row")
     if isinstance(source_row, bool) or not isinstance(source_row, int) or source_row < 1:
@@ -1965,6 +2371,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Optional additive private connector snapshot of the flat central Fichiers/Artwork folders.",
     )
+    parser.add_argument(
+        "--central-drive-baseline-inventory",
+        type=Path,
+        help="Optional prior central snapshot whose established associations must remain immutable.",
+    )
     parser.add_argument("--output-dir", type=Path, default=PRIVATE_DIRECTORY, help="Ignored private working directory.")
     parser.add_argument("--release", action="append", default=[], help="Limit to a release name; repeat for several releases.")
     parser.add_argument("--smoke", action="store_true", help="Select one WAV each from Time, Rise and Signal Flow.")
@@ -2014,6 +2425,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     central_audio, central_artwork, central_complete = load_central_drive_inventory(
         arguments.central_drive_inventory
     )
+    baseline_central_audio, _baseline_artwork, _baseline_complete = load_central_drive_inventory(
+        arguments.central_drive_baseline_inventory or arguments.central_drive_inventory
+    )
     drive = GoogleDriveClient(clean(os.environ.get("GOOGLE_DRIVE_ACCESS_TOKEN")))
     release_audio = merge_drive_discovery(
         release_audio,
@@ -2024,18 +2438,73 @@ def main(argv: Sequence[str] | None = None) -> int:
         inventory_complete=drive_inventory_is_complete(arguments.drive_inventory),
     )
     covers = merge_drive_cover_fallbacks(covers, release_audio, inventory_children)
-    release_audio, central_audio_summary = merge_central_audio_mappings(
-        tracks, release_audio, central_audio
+    baseline_central_wav = [
+        audio
+        for audio in baseline_central_audio
+        if (audio_source_descriptor(audio) or (None, None))[0] == "wav"
+    ]
+    release_audio, baseline_audio_summary = merge_central_audio_mappings(
+        tracks, release_audio, baseline_central_wav
     )
     covers, central_cover_summary = merge_central_cover_mappings(
         covers, tracks, central_artwork
     )
     tracks, release_audio = filter_release_scope(tracks, release_audio, arguments.release)
     candidates = build_candidates(tracks, release_audio, covers, orchard)
+    baseline_direct_rows = {
+        candidate.track.source_row
+        for candidate in candidates
+        if candidate.track is not None
+        and direct_publication_eligible(
+            {
+                **candidate_payload(candidate),
+                "status": candidate.status,
+                "reasons": candidate.reasons,
+            }
+        )
+    }
+    baseline_file_ids = {
+        audio.file_id for group in release_audio for audio in group.files
+    }.union(audio.file_id for audio in baseline_central_wav)
+    central_audio_pins, pin_summary = build_central_audio_pins(
+        tracks,
+        candidates,
+        central_audio,
+        excluded_file_ids=baseline_file_ids,
+    )
+    candidates = apply_central_audio_pins(candidates, central_audio_pins)
+    final_direct_rows = {
+        candidate.track.source_row
+        for candidate in candidates
+        if candidate.track is not None
+        and direct_publication_eligible(
+            {
+                **candidate_payload(candidate),
+                "status": candidate.status,
+                "reasons": candidate.reasons,
+            }
+        )
+    }
+    if not baseline_direct_rows.issubset(final_direct_rows):
+        raise RuntimeError("central_audio_pin_non_monotonic")
+    central_audio_summary = {
+        "available": len(central_audio),
+        "mapped": baseline_audio_summary["mapped"] + pin_summary["pinned"],
+        "baselineMapped": baseline_audio_summary["mapped"],
+        "baselineOwnerDirect": len(baseline_direct_rows),
+        "ownerDirectAdded": len(final_direct_rows.difference(baseline_direct_rows)),
+        **{key: value for key, value in pin_summary.items() if key != "available"},
+    }
     if arguments.smoke:
         candidates = select_smoke_candidates(candidates)
 
-    planned_counts = {status: sum(candidate.status == status for candidate in candidates) for status in ("exact", "review", "quarantine")}
+    state_candidates = list(
+        {candidate.candidate_id: candidate for candidate in candidates}.values()
+    )
+    planned_counts = {
+        status: sum(candidate.status == status for candidate in state_candidates)
+        for status in ("exact", "review", "quarantine")
+    }
     owner_direct_candidates = sum(
         direct_publication_eligible(
             {
@@ -2044,15 +2513,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "reasons": candidate.reasons,
             }
         )
-        for candidate in candidates
+        for candidate in state_candidates
     )
     print(
         json.dumps(
             {
                 "mode": "apply" if apply else "dry-run",
                 "tracks": len(tracks),
+                "track_candidates": sum(
+                    candidate.track is not None for candidate in state_candidates
+                ),
                 "release_audio_groups": len(release_audio),
-                "candidates": len(candidates),
+                "candidates": len(state_candidates),
                 "planned_status": planned_counts,
                 "owner_direct_candidates": owner_direct_candidates,
                 "orchard_rows": len(orchard),

@@ -644,11 +644,13 @@ class ThroughputBoundsTests(unittest.TestCase):
 
     def test_ingest_command_adds_private_central_snapshot_when_available(self):
         central = Path("private") / "central.json"
+        baseline = Path("private") / "central-baseline.json"
         config = {
             "workbook": Path("private.xlsx"),
             "orchard": None,
             "work_directory": Path("private"),
             "central_inventory": central,
+            "central_baseline_inventory": baseline,
             "inspection_batch": 1,
             "release_batch": 1,
             "maximum_run_minutes": 1,
@@ -658,6 +660,10 @@ class ThroughputBoundsTests(unittest.TestCase):
         )
         self.assertEqual(
             command[command.index("--central-drive-inventory") + 1], str(central)
+        )
+        self.assertEqual(
+            command[command.index("--central-drive-baseline-inventory") + 1],
+            str(baseline),
         )
 
 

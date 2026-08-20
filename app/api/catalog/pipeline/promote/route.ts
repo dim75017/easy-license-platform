@@ -9,6 +9,7 @@ import {
   CatalogApiError,
   noStoreJson,
   optionalInteger,
+  optionalString,
   parseJsonObject,
   requiredString,
 } from "../../_lib/http";
@@ -23,6 +24,8 @@ const ALLOWED_KEYS = new Set([
   "sourceSha256",
   "measuredDurationMs",
   "verificationMode",
+  "sourceMimeType",
+  "sourceFormat",
 ]);
 
 type VerificationMode = "spotify" | "catalog_owner_direct";
@@ -106,6 +109,11 @@ export async function POST(request: Request): Promise<Response> {
       throw new CatalogApiError("measuredDurationMs is required.");
     }
     const verificationMode = parseVerificationMode(payload.verificationMode);
+    const { sourceMimeType, sourceFormat } = parseSourceDescriptor(
+      payload.sourceMimeType,
+      payload.sourceFormat,
+      verificationMode,
+    );
 
     const database = requireCatalogDatabase();
     const row = await database
@@ -223,11 +231,11 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     if (
-      verificationMode === "catalog_owner_direct" &&
-      sourceMaster.mime_type !== "audio/wav"
+      sourceMaster.mime_type !== sourceMimeType ||
+      sourceFormatFromMimeType(sourceMaster.mime_type) !== sourceFormat
     ) {
       throw new CatalogApiError(
-        "Catalog-owner direct promotion requires a fully inspected WAV master.",
+        "The source master MIME and format do not match the fully inspected source.",
         409,
         "promotion_owner_master_type_invalid",
       );
@@ -423,7 +431,7 @@ export async function POST(request: Request): Promise<Response> {
                  AND master.byte_size IS NOT NULL
                  AND (
                    ? != 'catalog_owner_direct'
-                   OR master.mime_type = 'audio/wav'
+                   OR master.mime_type IN ('audio/wav', 'audio/mpeg')
                  )
              )
              AND EXISTS (
@@ -765,6 +773,46 @@ function parseVerificationMode(value: unknown): VerificationMode {
   return verificationMode;
 }
 
+function parseSourceDescriptor(
+  mimeValue: unknown,
+  formatValue: unknown,
+  verificationMode: VerificationMode,
+): { sourceMimeType: "audio/wav" | "audio/mpeg"; sourceFormat: "wav" | "mp3" } {
+  const suppliedMimeType = optionalString(mimeValue, "sourceMimeType", 120);
+  const suppliedFormat = optionalString(formatValue, "sourceFormat", 20);
+  // Backward compatibility for already-running WAV-only workers during a
+  // rolling deployment.  MP3 never uses this implicit descriptor.
+  const sourceMimeType = suppliedMimeType ?? "audio/wav";
+  const sourceFormat = suppliedFormat ?? "wav";
+  if ((suppliedMimeType === null) !== (suppliedFormat === null)) {
+    throw new CatalogApiError(
+      "sourceMimeType and sourceFormat must be supplied together.",
+      409,
+      "promotion_source_format_invalid",
+    );
+  }
+  const validPair =
+    (sourceMimeType === "audio/wav" && sourceFormat === "wav") ||
+    (sourceMimeType === "audio/mpeg" && sourceFormat === "mp3");
+  if (!validPair || (verificationMode === "spotify" && sourceFormat !== "wav")) {
+    throw new CatalogApiError(
+      "sourceMimeType and sourceFormat must identify the same supported inspected source.",
+      409,
+      "promotion_source_format_invalid",
+    );
+  }
+  return {
+    sourceMimeType: sourceMimeType as "audio/wav" | "audio/mpeg",
+    sourceFormat: sourceFormat as "wav" | "mp3",
+  };
+}
+
+function sourceFormatFromMimeType(value: string): string | null {
+  if (value === "audio/wav") return "wav";
+  if (value === "audio/mpeg") return "mp3";
+  return null;
+}
+
 function assertAssetDuration(
   asset: PromotionAsset,
   measuredDurationMs: number,
@@ -792,6 +840,13 @@ function assertStoredAsset(
     asset.sha256 === null ||
     stored.size !== asset.byte_size ||
     stored.customMetadata?.sha256 !== asset.sha256 ||
+    stored.httpMetadata?.contentType !== asset.mime_type ||
+    (asset.kind === "source_master" &&
+      ((stored.customMetadata?.sourceMimeType !== undefined &&
+        stored.customMetadata.sourceMimeType !== asset.mime_type) ||
+        (stored.customMetadata?.sourceFormat !== undefined &&
+          stored.customMetadata.sourceFormat !==
+            sourceFormatFromMimeType(asset.mime_type)))) ||
     (asset.derived_from_sha256 !== null &&
       stored.customMetadata?.sourceSha256 !== asset.derived_from_sha256)
   ) {
