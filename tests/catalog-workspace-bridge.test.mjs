@@ -5,7 +5,7 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const source = (path) => readFile(new URL(path, root), "utf8");
 
-test("CreatorWorkspace pages and filters the live catalogue on Sites and GitHub Pages", async () => {
+test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites and GitHub Pages", async () => {
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
   assert.doesNotMatch(workspace, /if \(isStaticDemo\) return/u);
@@ -27,7 +27,15 @@ test("CreatorWorkspace pages and filters the live catalogue on Sites and GitHub 
   assert.match(workspace, /const nextPage = catalogPagination\?\.nextPage/u);
   assert.match(workspace, /catalogRequestUrl\(\{ page: nextPage, filters: catalogFilters \}\)/u);
   assert.match(workspace, /setCatalogTracks\(\(current\) => mergeTrackPages\(current \?\? \[\], page\.tracks\)\)/u);
-  assert.match(workspace, /className="cta-swipe"[\s\S]{0,180}loadMoreCatalog\(\)/u);
+  assert.match(workspace, /const catalogLoadMoreSentinelRef = useRef<HTMLDivElement \| null>\(null\)/u);
+  assert.match(workspace, /"IntersectionObserver" in window/u);
+  assert.match(workspace, /new IntersectionObserver\(\(\[entry\]\)[\s\S]{0,120}entry\?\.isIntersecting[\s\S]{0,80}loadMoreCatalog\(\)/u);
+  assert.match(workspace, /rootMargin: "720px 0px", threshold: 0/u);
+  assert.match(workspace, /ref=\{catalogLoadMoreSentinelRef\}/u);
+  assert.match(workspace, /catalogInfiniteScrollSupported === false \|\| catalogLoadMoreFailed/u);
+  assert.match(workspace, /Retry loading more tracks/u);
+  assert.match(workspace, /loadMoreControllerRef\.current !== null/u);
+  assert.match(workspace, /catalogQuerySignatureRef\.current !== requestSignature[\s\S]{0,120}catalogResolvedSignatureRef\.current !== requestSignature/u);
   assert.match(workspace, /catalogPagination\?\.hasNextPage/u);
 });
 
