@@ -592,6 +592,26 @@ class MatchingTests(unittest.TestCase):
         record["reasons"].append("audio_match_ambiguous")
         self.assertFalse(ingest.direct_publication_eligible(record))
 
+    def test_owner_direct_allows_missing_artwork_but_rejects_invalid_artwork(self):
+        record = {
+            "candidate_id": "b" * 28,
+            "status": "review",
+            "reasons": ["cover_missing"],
+            "audio_match_score": 100,
+            "audio_match_kind": "exact_title",
+            "track": {
+                "source_row": 4,
+                "title": "Time",
+                "release": "Time",
+                "artists": ["Voyage"],
+            },
+            "audio": {"file_id": "1" + "A" * 20, "name": "Voyage - Time.wav"},
+            "cover": None,
+        }
+        self.assertTrue(ingest.direct_publication_eligible(record))
+        record["cover"] = {"file_id": "not-a-drive-id"}
+        self.assertFalse(ingest.direct_publication_eligible(record))
+
     def test_owner_direct_treats_source_filename_and_sheet_duration_as_authoritative(self):
         base = {
             "candidate_id": "b" * 28,

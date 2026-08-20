@@ -238,7 +238,8 @@ test("promotion rechecks every publication gate and commits one D1 batch", async
     /stream\.kind = 'streaming_copy'/u,
     /peaks\.kind = 'waveform_peaks'/u,
     /expectedCoverPrefix/u,
-    /!coverStorageKey \|\| !coverStorageKey\.startsWith\(expectedCoverPrefix\)/u,
+    /coverStorageKey !== null/u,
+    /!coverStorageKey\.startsWith\(expectedCoverPrefix\)/u,
     /bucket\.head\(sourceMaster\.storage_key\)/u,
     /database\.batch\(\[/u,
     /SET status = 'deleted'/u,
@@ -247,6 +248,27 @@ test("promotion rechecks every publication gate and commits one D1 batch", async
   ]) {
     assert.match(text, gate);
   }
+});
+
+test("owner-direct promotion requires an explicit fail-closed missing-artwork opt-in", async () => {
+  const text = await source("promote");
+
+  assert.match(text, /"allowMissingCover"/u);
+  assert.match(text, /if \(value === undefined\) return false/u);
+  assert.match(text, /typeof value !== "boolean"/u);
+  assert.match(
+    text,
+    /value && verificationMode !== "catalog_owner_direct"/u,
+  );
+  assert.match(text, /!row\.cover_storage_key && !allowMissingCover/u);
+  assert.match(
+    text,
+    /coverStorageKey \? bucket\.head\(coverStorageKey\) : Promise\.resolve\(null\)/u,
+  );
+  assert.match(text, /r\.cover_storage_key IS \?/u);
+  assert.match(text, /assertStoredAsset\(sourceMaster, sourceObject\)/u);
+  assert.match(text, /assertStoredAsset\(streamingCopy, streamObject\)/u);
+  assert.match(text, /assertStoredAsset\(waveformPeaks, waveformObject\)/u);
 });
 
 test("legacy Drive writes cannot mutate published media or bypass promotion", async () => {

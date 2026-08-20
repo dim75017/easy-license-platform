@@ -110,7 +110,8 @@ or pre-inspecting WAVs, and creates the ignored
 Sheet-row ↔ Drive-file association. Missing, ambiguous, multiply claimed or
 stale audio is excluded. Missing workbook artwork is filled only when a unique
 owned image, or a clearly ranked cover/front/artwork image, exists inside the
-same release folder; ambiguous or absent artwork is excluded.
+same release folder. Ambiguous artwork is excluded; absent artwork is allowed
+only in this owner-direct lane and produces the public neutral placeholder.
 
 When `centralDriveInventory` exists, the drain also considers its flat central
 files after release-folder matching. The established release/WAV path remains
@@ -130,9 +131,13 @@ without the recurring lane's wall-clock cutoff, one track at a time and with
 one FFmpeg thread. Each selected source is downloaded fully while SHA-256 is
 calculated. WAV follows the established parser and complete decode path
 unchanged. A strictly pinned MP3 must have a valid signature and complete a
-positive-duration FFmpeg decode/probe. Either source is deterministically
-transcoded to a full-length 192 kb/s listening MP3 and decoded into a 512-point
-waveform. The measured source duration becomes the catalogue duration for this
+positive-duration FFmpeg decode/probe. A source MP3 declared at exactly
+192 kb/s is remuxed with metadata stripped; all other sources are
+deterministically transcoded to a full-length 192 kb/s listening MP3. Remux
+failure falls back to transcoding. On a fresh item, one complete decode of that
+public copy verifies its duration and simultaneously derives the 512-point
+waveform, avoiding a second redundant decode. The measured source duration
+becomes the catalogue duration for this
 owner-authoritative lane; an absent or different Sheet duration and a short but
 valid source do not block it. A corrupt, unreadable or undecodable file fails
 only its own checkpoint. Covers are kept when already bounded and square,
@@ -148,21 +153,23 @@ checksum-verifies the source
 whenever a missing derivative needs its bytes. This preserves the full-read and
 lineage gates while avoiding unrelated work after a late network failure.
 
-Release artwork is also release-aware. Before transferring a cover, the worker
-lets the promotion gate verify whether the release already owns an available
-cover from an earlier track. If so, that proof completes the cover checkpoint
-without another Drive read or upload. Otherwise the first use downloads and
-validates the owned cover normally; repeated uses during the same sealed run
-reuse its exact prepared bytes from a random process-local LRU cache capped at
-512 MiB. The cache contains no raw identifier in its filenames, is removed when
-the process exits, and never bypasses the backend cover-integrity gate.
+Release artwork is also release-aware. When a selected record supplies a cover,
+the worker always validates and uploads it before promotion; an exact cover
+already owned by the release is accepted idempotently by the backend. Repeated
+uses during the same sealed run reuse the exact prepared bytes from a random
+process-local LRU cache capped at 512 MiB. When the owner manifest has no cover,
+the new worker sends an explicit owner-direct-only opt-in; omission remains
+fail-closed so an older worker cannot start publishing coverless releases during
+a rolling deployment. The cache contains no raw identifier in its filenames,
+is removed when the process exits, and never bypasses the backend integrity gate.
 
 Every backend metadata row stores the owner-attestation hash, configured source
 scope hash, whole-selection hash, measured master hash and a completed full-read
 flag under the sealed batch `symbiome-catalog-owner-drain-v1`. Promotion repeats
-the checksum, measured-duration, private-master, MP3, waveform, cover, rights
-and human-made gates atomically, but deliberately has no Spotify gate. Existing
-published checkpoints return `already_published`, so interruption or machine
+the checksum, measured-duration, private-master, MP3, waveform, supplied-cover,
+rights and human-made gates atomically, but deliberately has no Spotify gate.
+Coverless promotion additionally requires the explicit opt-in described above.
+Existing published checkpoints return `already_published`, so interruption or machine
 restart resumes instead of starting over. Output and `last-run.json` remain
 aggregate-only; row data stays private.
 

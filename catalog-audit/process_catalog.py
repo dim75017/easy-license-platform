@@ -240,7 +240,7 @@ def validate_direct_record(value: object) -> None:
 
     track = value["track"]
     audio = value["audio"]
-    cover = value["cover"]
+    cover = value.get("cover")
     require_text(track.get("title"), "track_title_missing", 500)
     require_text(track.get("release"), "release_title_missing", 500)
     artists = track.get("artists")
@@ -261,9 +261,12 @@ def validate_direct_record(value: object) -> None:
         not in ingest.STRICT_CENTRAL_MP3_MATCH_KINDS
     ):
         raise PipelineError("direct_mp3_pin_not_strict")
-    cover_file_id = require_text(cover.get("file_id"), "owned_cover_missing", 200)
-    if not DRIVE_ID_PATTERN.fullmatch(cover_file_id):
-        raise PipelineError("owned_cover_missing")
+    if cover is not None:
+        if not isinstance(cover, Mapping):  # pragma: no cover - eligibility narrows this
+            raise PipelineError("owned_cover_missing")
+        cover_file_id = require_text(cover.get("file_id"), "owned_cover_missing", 200)
+        if not DRIVE_ID_PATTERN.fullmatch(cover_file_id):
+            raise PipelineError("owned_cover_missing")
 
 
 def validate_exact_record(value: object) -> None:
@@ -335,6 +338,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
           source_byte_size INTEGER,
           source_mime_type TEXT,
           source_format TEXT,
+          source_stream_copy_eligible INTEGER NOT NULL DEFAULT 0,
           measured_duration_ms INTEGER,
           streaming_sha256 TEXT,
           streaming_byte_size INTEGER,
@@ -367,6 +371,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
         "source_byte_size": "INTEGER",
         "source_mime_type": "TEXT",
         "source_format": "TEXT",
+        "source_stream_copy_eligible": "INTEGER NOT NULL DEFAULT 0",
         "master_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "cover_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "rights_cleared_ack": "INTEGER NOT NULL DEFAULT 0",
@@ -388,6 +393,7 @@ STATE_COLUMNS = {
     "source_byte_size",
     "source_mime_type",
     "source_format",
+    "source_stream_copy_eligible",
     "measured_duration_ms",
     "streaming_sha256",
     "streaming_byte_size",
@@ -450,6 +456,7 @@ def ensure_state_row(
             SET manifest_fingerprint=?, batch_key=?, status='planned', attempts=0,
                 ingest_id=NULL, track_id=NULL, source_sha256=NULL,
                 source_byte_size=NULL, source_mime_type=NULL, source_format=NULL,
+                source_stream_copy_eligible=0,
                 measured_duration_ms=NULL, streaming_sha256=NULL,
                 streaming_byte_size=NULL, streaming_duration_ms=NULL,
                 peaks_sha256=NULL, peaks_byte_size=NULL,
@@ -902,6 +909,34 @@ def inspect_downloaded_mp3(
     return duration_ms
 
 
+def inspect_downloaded_mp3_details(
+    path: Path,
+    ffmpeg: Path,
+    *,
+    verification_mode: str,
+) -> tuple[int, bool]:
+    """Return duration and whether a strict 192 kb/s stream copy is safe."""
+
+    if verification_mode != "catalog_owner_direct":
+        raise PipelineError("source_mp3_owner_direct_only")
+    with path.open("rb") as handle:
+        prefix = handle.read(64 * 1024)
+    has_id3 = prefix.startswith(b"ID3")
+    has_frame_sync = any(
+        prefix[index] == 0xFF and prefix[index + 1] & 0xE0 == 0xE0
+        for index in range(max(0, len(prefix) - 1))
+    )
+    if not has_id3 and not has_frame_sync:
+        raise PipelineError("source_mp3_signature_invalid")
+    try:
+        duration_ms, bitrate_kbps = probe_mp3_duration_and_bitrate(ffmpeg, path)
+    except PipelineError as error:
+        raise PipelineError("source_mp3_decode_failed") from error
+    if duration_ms < 1:
+        raise PipelineError("source_mp3_duration_invalid")
+    return duration_ms, bitrate_kbps == 192
+
+
 def resolve_ffmpeg(explicit_path: Path | None) -> Path:
     if explicit_path:
         executable = explicit_path.resolve()
@@ -976,6 +1011,77 @@ def transcode_mp3(executable: Path, source: Path, destination: Path) -> None:
         raise PipelineError("streaming_copy_too_large")
 
 
+def remux_mp3_stream_copy(executable: Path, source: Path, destination: Path) -> None:
+    """Strip metadata without re-encoding a fully validated 192 kb/s MP3."""
+
+    command = [
+        str(executable),
+        "-hide_banner",
+        "-nostdin",
+        "-loglevel",
+        "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
+        "-y",
+        "-i",
+        str(source),
+        "-map",
+        "0:a:0",
+        "-vn",
+        "-sn",
+        "-dn",
+        "-map_metadata",
+        "-1",
+        "-map_chapters",
+        "-1",
+        "-codec:a",
+        "copy",
+        "-threads",
+        "1",
+        "-write_xing",
+        "1",
+        str(destination),
+    ]
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            timeout=3600,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PipelineError("ffmpeg_stream_copy_failed") from error
+    if result.returncode != 0 or not destination.is_file() or destination.stat().st_size < 1:
+        raise PipelineError("ffmpeg_stream_copy_failed")
+    if destination.stat().st_size > MAX_DERIVED_ASSET_BYTES:
+        raise PipelineError("streaming_copy_too_large")
+
+
+def build_streaming_mp3(
+    executable: Path,
+    source: Path,
+    destination: Path,
+    *,
+    allow_stream_copy: bool,
+) -> str:
+    if allow_stream_copy:
+        try:
+            remux_mp3_stream_copy(executable, source, destination)
+            return "stream_copy"
+        except PipelineError as error:
+            if error.code != "ffmpeg_stream_copy_failed":
+                raise
+            with contextlib.suppress(FileNotFoundError):
+                destination.unlink()
+    transcode_mp3(executable, source, destination)
+    return "transcoded"
+
+
 def parse_ffmpeg_timestamp(value: str) -> float | None:
     match = re.fullmatch(r"(\d+):(\d{2}):(\d{2}(?:\.\d+)?)", value.strip())
     if not match:
@@ -983,13 +1089,18 @@ def parse_ffmpeg_timestamp(value: str) -> float | None:
     return int(match.group(1)) * 3600 + int(match.group(2)) * 60 + float(match.group(3))
 
 
-def probe_audio_duration(executable: Path, source: Path) -> int:
+def _decode_audio_probe(
+    executable: Path,
+    source: Path,
+    *,
+    loglevel: str = "error",
+) -> tuple[int, str]:
     command = [
         str(executable),
         "-hide_banner",
         "-nostdin",
         "-loglevel",
-        "error",
+        loglevel,
         "-filter_threads",
         "1",
         "-filter_complex_threads",
@@ -1028,7 +1139,34 @@ def probe_audio_duration(executable: Path, source: Path) -> int:
                 duration_seconds = parsed
     if duration_seconds is None or duration_seconds <= 0:
         raise PipelineError("ffmpeg_duration_probe_failed")
-    return max(1, round(duration_seconds * 1000))
+    return (
+        max(1, round(duration_seconds * 1000)),
+        result.stderr.decode("utf-8", errors="ignore"),
+    )
+
+
+def probe_audio_duration(executable: Path, source: Path) -> int:
+    duration_ms, _diagnostics = _decode_audio_probe(executable, source)
+    return duration_ms
+
+
+def probe_mp3_duration_and_bitrate(executable: Path, source: Path) -> tuple[int, int | None]:
+    """Fully decode an MP3 once and retain its declared audio bitrate."""
+
+    duration_ms, diagnostics = _decode_audio_probe(
+        executable,
+        source,
+        loglevel="info",
+    )
+    bitrates: set[int] = set()
+    for line in diagnostics.splitlines():
+        if not re.search(r"Audio:\s*mp3\b", line, flags=re.IGNORECASE):
+            continue
+        bitrates.update(
+            int(match)
+            for match in re.findall(r"\b(\d+)\s*kb/s\b", line, flags=re.IGNORECASE)
+        )
+    return duration_ms, next(iter(bitrates)) if len(bitrates) == 1 else None
 
 
 def pcm_peak(fragment: bytes) -> int:
@@ -1060,14 +1198,14 @@ def read_exact(handle: BinaryIO, size: int) -> bytes:
     return bytes(chunks)
 
 
-def generate_peaks(
+def _decode_peaks(
     executable: Path,
     source: Path,
     *,
     duration_ms: int,
     bins: int = PEAK_BIN_COUNT,
     sample_rate: int = PEAK_SAMPLE_RATE,
-) -> list[float]:
+) -> tuple[list[float], int]:
     if bins < 1 or sample_rate < 1 or duration_ms < 1:
         raise PipelineError("peaks_configuration_invalid")
     expected_samples = max(bins, round(duration_ms / 1000 * sample_rate))
@@ -1119,6 +1257,7 @@ def generate_peaks(
         remainder = process.stdout.read()
         if remainder:
             peaks[-1] = max(peaks[-1], pcm_peak(remainder))
+            consumed_samples += len(remainder) // 2
         process.stderr.read()
         return_code = process.wait(timeout=60)
     except BaseException:
@@ -1130,7 +1269,46 @@ def generate_peaks(
         process.stderr.close()
     if return_code != 0 or consumed_samples == 0:
         raise PipelineError("ffmpeg_peaks_failed")
-    return [round(min(1.0, peak / 32768), 6) for peak in peaks]
+    normalized_peaks = [round(min(1.0, peak / 32768), 6) for peak in peaks]
+    decoded_duration_ms = max(1, round(consumed_samples / sample_rate * 1000))
+    return normalized_peaks, decoded_duration_ms
+
+
+def generate_peaks(
+    executable: Path,
+    source: Path,
+    *,
+    duration_ms: int,
+    bins: int = PEAK_BIN_COUNT,
+    sample_rate: int = PEAK_SAMPLE_RATE,
+) -> list[float]:
+    peaks, _decoded_duration_ms = _decode_peaks(
+        executable,
+        source,
+        duration_ms=duration_ms,
+        bins=bins,
+        sample_rate=sample_rate,
+    )
+    return peaks
+
+
+def generate_peaks_and_duration(
+    executable: Path,
+    source: Path,
+    *,
+    duration_ms: int,
+    bins: int = PEAK_BIN_COUNT,
+    sample_rate: int = PEAK_SAMPLE_RATE,
+) -> tuple[list[float], int]:
+    """Decode once to derive both the public waveform and its actual duration."""
+
+    return _decode_peaks(
+        executable,
+        source,
+        duration_ms=duration_ms,
+        bins=bins,
+        sample_rate=sample_rate,
+    )
 
 
 def write_peaks_json(path: Path, peaks: Sequence[float], duration_ms: int) -> None:
@@ -1388,19 +1566,23 @@ class CatalogApiClient:
         verification_mode: str = "spotify",
         source_mime_type: str = "audio/wav",
         source_format: str = "wav",
+        allow_missing_cover: bool = False,
     ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "trackId": track_id,
+            "batchKey": batch_key,
+            "sourceKey": source_key,
+            "sourceSha256": source_sha256,
+            "measuredDurationMs": measured_duration_ms,
+            "verificationMode": verification_mode,
+            "sourceMimeType": source_mime_type,
+            "sourceFormat": source_format,
+        }
+        if allow_missing_cover:
+            payload["allowMissingCover"] = True
         return self.post_json(
             "/api/catalog/pipeline/promote",
-            {
-                "trackId": track_id,
-                "batchKey": batch_key,
-                "sourceKey": source_key,
-                "sourceSha256": source_sha256,
-                "measuredDurationMs": measured_duration_ms,
-                "verificationMode": verification_mode,
-                "sourceMimeType": source_mime_type,
-                "sourceFormat": source_format,
-            },
+            payload,
         )
 
 
@@ -1532,6 +1714,7 @@ def try_promote(
     verification_mode: str = "spotify",
     source_mime_type: str,
     source_format: str,
+    allow_missing_cover: bool = False,
 ) -> str:
     try:
         response = api.promote(
@@ -1543,6 +1726,7 @@ def try_promote(
             verification_mode=verification_mode,
             source_mime_type=source_mime_type,
             source_format=source_format,
+            allow_missing_cover=allow_missing_cover,
         )
     except ApiHttpError as error:
         if error.status in {409, 422}:
@@ -1580,6 +1764,10 @@ def process_record(
     cover_cache: CoverArtifactCache | None = None,
 ) -> str:
     source_format, source_mime_type = source_descriptor(record)
+    cover = record.get("cover")
+    cover_required = isinstance(cover, Mapping)
+    if not cover_required and verification_mode != "catalog_owner_direct":
+        raise PipelineError("owned_cover_missing")
     row = ensure_state_row(
         connection,
         record,
@@ -1595,7 +1783,7 @@ def process_record(
         and row["master_uploaded"]
         and row["streaming_uploaded"]
         and row["peaks_uploaded"]
-        and row["cover_uploaded"]
+        and (not cover_required or row["cover_uploaded"])
     ):
         return try_promote(
             connection,
@@ -1604,6 +1792,7 @@ def process_record(
             verification_mode=verification_mode,
             source_mime_type=source_mime_type,
             source_format=source_format,
+            allow_missing_cover=not cover_required,
         )
     inspection = record.get("inspection") if isinstance(record.get("inspection"), Mapping) else {}
     inspected_sha256 = str(inspection.get("sha256") or "").strip().lower()
@@ -1635,6 +1824,7 @@ def process_record(
             source_sha256 = checkpoint_sha256 if SHA256_PATTERN.fullmatch(checkpoint_sha256) else ""
             source_size = positive_integer(row["source_byte_size"])
             source_duration_ms = positive_integer(row["measured_duration_ms"])
+            source_stream_copy_eligible = bool(row["source_stream_copy_eligible"])
             checkpoint_mime_type = str(row["source_mime_type"] or "")
             checkpoint_format = str(row["source_format"] or "")
             if (
@@ -1686,8 +1876,12 @@ def process_record(
                             record,
                             verification_mode=verification_mode,
                         )
+                        source_stream_copy_eligible = False
                     else:
-                        source_duration_ms = inspect_downloaded_mp3(
+                        (
+                            source_duration_ms,
+                            source_stream_copy_eligible,
+                        ) = inspect_downloaded_mp3_details(
                             source_path,
                             ffmpeg,
                             verification_mode=verification_mode,
@@ -1699,6 +1893,7 @@ def process_record(
                     source_byte_size=source_size,
                     source_mime_type=source_mime_type,
                     source_format=source_format,
+                    source_stream_copy_eligible=int(source_stream_copy_eligible),
                     measured_duration_ms=source_duration_ms,
                 )
             if (
@@ -1748,11 +1943,26 @@ def process_record(
                     status="master_uploaded",
                 )
 
+            prepared_peaks: list[float] | None = None
             if not row["streaming_uploaded"]:
                 if not source_path.is_file():
                     raise PipelineError("source_workspace_missing")
-                transcode_mp3(ffmpeg, source_path, streaming_path)
-                streaming_duration_ms = probe_audio_duration(ffmpeg, streaming_path)
+                build_streaming_mp3(
+                    ffmpeg,
+                    source_path,
+                    streaming_path,
+                    allow_stream_copy=(
+                        source_format == "mp3" and source_stream_copy_eligible
+                    ),
+                )
+                if not row["peaks_uploaded"]:
+                    prepared_peaks, streaming_duration_ms = generate_peaks_and_duration(
+                        ffmpeg,
+                        streaming_path,
+                        duration_ms=source_duration_ms,
+                    )
+                else:
+                    streaming_duration_ms = probe_audio_duration(ffmpeg, streaming_path)
                 if abs(streaming_duration_ms - source_duration_ms) > round(MAX_EXACT_DURATION_DELTA_SECONDS * 1000):
                     raise PipelineError("streaming_duration_mismatch")
                 streaming_sha256, streaming_size = sha256_file(streaming_path)
@@ -1784,7 +1994,11 @@ def process_record(
             if not row["peaks_uploaded"]:
                 if not source_path.is_file():
                     raise PipelineError("source_workspace_missing")
-                peaks = generate_peaks(ffmpeg, source_path, duration_ms=source_duration_ms)
+                peaks = (
+                    prepared_peaks
+                    if prepared_peaks is not None
+                    else generate_peaks(ffmpeg, source_path, duration_ms=source_duration_ms)
+                )
                 if len(peaks) != PEAK_BIN_COUNT:
                     raise PipelineError("peaks_bin_count_invalid")
                 write_peaks_json(peaks_path, peaks, source_duration_ms)
@@ -1813,33 +2027,27 @@ def process_record(
                     status="assets_uploaded",
                 )
 
-            if not row["cover_uploaded"]:
-                outcome = try_promote(
+            if not cover_required:
+                return try_promote(
                     connection,
                     api,
                     row,
                     verification_mode=verification_mode,
                     source_mime_type=source_mime_type,
                     source_format=source_format,
+                    allow_missing_cover=True,
                 )
-                if outcome == "published":
-                    row = update_state(
-                        connection,
-                        candidate_id,
-                        cover_uploaded=1,
-                        status="published",
-                        last_error_code=None,
-                    )
-                    return outcome
+
+            if not row["cover_uploaded"]:
                 if cover_cache is not None:
                     cover_path, cover_type, cover_sha256, cover_size = cover_cache.prepare(
-                        record["cover"]["file_id"],
+                        cover["file_id"],
                         downloader,
                         ffmpeg,
                     )
                 else:
                     downloader.download(
-                        record["cover"]["file_id"],
+                        cover["file_id"],
                         cover_source_path,
                         expected_sha256=None,
                         expected_size=None,

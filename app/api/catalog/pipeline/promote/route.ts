@@ -26,6 +26,7 @@ const ALLOWED_KEYS = new Set([
   "verificationMode",
   "sourceMimeType",
   "sourceFormat",
+  "allowMissingCover",
 ]);
 
 type VerificationMode = "spotify" | "catalog_owner_direct";
@@ -109,6 +110,10 @@ export async function POST(request: Request): Promise<Response> {
       throw new CatalogApiError("measuredDurationMs is required.");
     }
     const verificationMode = parseVerificationMode(payload.verificationMode);
+    const allowMissingCover = parseAllowMissingCover(
+      payload.allowMissingCover,
+      verificationMode,
+    );
     const { sourceMimeType, sourceFormat } = parseSourceDescriptor(
       payload.sourceMimeType,
       payload.sourceFormat,
@@ -188,6 +193,7 @@ export async function POST(request: Request): Promise<Response> {
       sourceSha256,
       measuredDurationMs,
       verificationMode,
+      allowMissingCover,
     );
 
     const assetRows = await database
@@ -260,7 +266,10 @@ export async function POST(request: Request): Promise<Response> {
     const coverStorageKey = row.cover_storage_key;
     const expectedCoverPrefix =
       `catalog/releases/${row.release_id}/cover_artwork/`;
-    if (!coverStorageKey || !coverStorageKey.startsWith(expectedCoverPrefix)) {
+    if (
+      coverStorageKey !== null &&
+      (!coverStorageKey || !coverStorageKey.startsWith(expectedCoverPrefix))
+    ) {
       throw new CatalogApiError(
         "The release cover is not owned by this release.",
         409,
@@ -274,15 +283,18 @@ export async function POST(request: Request): Promise<Response> {
         bucket.head(sourceMaster.storage_key),
         bucket.head(streamingCopy.storage_key),
         bucket.head(waveformPeaks.storage_key),
-        bucket.head(coverStorageKey),
+        coverStorageKey ? bucket.head(coverStorageKey) : Promise.resolve(null),
       ]);
     assertStoredAsset(sourceMaster, sourceObject);
     assertStoredAsset(streamingCopy, streamObject);
     assertStoredAsset(waveformPeaks, waveformObject);
     if (
-      !coverObject ||
-      coverObject.size < 1 ||
-      !coverObject.httpMetadata?.contentType?.startsWith("image/")
+      coverStorageKey &&
+      (
+        !coverObject ||
+        coverObject.size < 1 ||
+        !coverObject.httpMetadata?.contentType?.startsWith("image/")
+      )
     ) {
       throw new CatalogApiError(
         "The release cover is unavailable in private storage.",
@@ -354,7 +366,7 @@ export async function POST(request: Request): Promise<Response> {
                FROM releases AS r
                WHERE r.id = t.release_id
                  AND r.status IN ('ready', 'published')
-                 AND r.cover_storage_key = ?
+                 AND r.cover_storage_key IS ?
                  AND r.title = ?
              )
              AND EXISTS (
@@ -506,7 +518,7 @@ export async function POST(request: Request): Promise<Response> {
            SET status = 'published', updated_at = CURRENT_TIMESTAMP
            WHERE r.id = ?
              AND r.status IN ('ready', 'published')
-             AND r.cover_storage_key = ?
+             AND r.cover_storage_key IS ?
              AND EXISTS (
                SELECT 1
                FROM tracks AS t
@@ -575,6 +587,7 @@ function assertPromotionMetadata(
   sourceSha256: string,
   measuredDurationMs: number,
   verificationMode: VerificationMode,
+  allowMissingCover: boolean,
 ): void {
   if (!["ready", "imported"].includes(row.ingest_status)) {
     throw new CatalogApiError(
@@ -654,7 +667,7 @@ function assertPromotionMetadata(
     }
     assertSpotifyEvidence(row, measuredDurationMs);
   }
-  if (!row.cover_storage_key) {
+  if (!row.cover_storage_key && !allowMissingCover) {
     throw new CatalogApiError(
       "A private release cover is required.",
       409,
@@ -771,6 +784,31 @@ function parseVerificationMode(value: unknown): VerificationMode {
     );
   }
   return verificationMode;
+}
+
+function parseAllowMissingCover(
+  value: unknown,
+  verificationMode: VerificationMode,
+): boolean {
+  // Omission is intentionally fail-closed so a worker started before this
+  // protocol existed cannot begin publishing coverless releases after a
+  // rolling backend deployment.
+  if (value === undefined) return false;
+  if (typeof value !== "boolean") {
+    throw new CatalogApiError(
+      "allowMissingCover must be a boolean.",
+      400,
+      "promotion_missing_cover_policy_invalid",
+    );
+  }
+  if (value && verificationMode !== "catalog_owner_direct") {
+    throw new CatalogApiError(
+      "Missing-cover promotion is restricted to catalog-owner direct verification.",
+      409,
+      "promotion_missing_cover_policy_invalid",
+    );
+  }
+  return value;
 }
 
 function parseSourceDescriptor(

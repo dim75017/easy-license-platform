@@ -111,7 +111,10 @@ test("Discover requests distinct releases and deep links can resolve a track out
 });
 
 test("catalog response mapper exposes only safe routes plus release and pagination metadata", async () => {
-  const client = await source("app/lib/catalog-client.ts");
+  const [client, workspace] = await Promise.all([
+    source("app/lib/catalog-client.ts"),
+    source("app/components/CreatorWorkspace.tsx"),
+  ]);
 
   assert.match(client, /playbackPath = \/\^\\\/api\\\/catalog\\\/tracks\\\/\(\\d\+\)\\\/stream\$\/u/u);
   assert.match(client, /cleanText\(value\.title, 500\)/u);
@@ -123,6 +126,8 @@ test("catalog response mapper exposes only safe routes plus release and paginati
   assert.match(client, /hasNextPage:\s*boolean/u);
   assert.match(client, /release,\s*\n\s*publishedAt/u);
   assert.match(client, /value\.trackCount === null \? null : safeInteger\(value\.trackCount, 1\)/u);
+  assert.match(client, /const cover = coverPathname \? catalogAssetUrl\(coverPathname\) : null/u);
+  assert.match(workspace, /track\.cover \? <img[\s\S]{0,180}music-track-cover-placeholder/u);
   assert.doesNotMatch(client, /storageKey|sourceKey|driveFileId|googleDriveId/u);
 });
 
