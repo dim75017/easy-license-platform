@@ -135,6 +135,94 @@ class CentralDriveMappingTests(unittest.TestCase):
     ):
         return ingest.Track(row, release, upc, title, (artist,), 120, isrc, "Lofi", "")
 
+    def test_release_scope_strict_isrc_pins_valid_wav_and_mp3(self):
+        tracks = [
+            self.track(2, "First", release="One", upc="11111111", isrc="FR-ABC-26-12345"),
+            self.track(3, "Second", release="Two", upc="22222222", isrc="US-XYZ-26-54321"),
+        ]
+        wav = ingest.DriveAudio("1" + "a" * 20, "FR-ABC-26-12345_master.wav", mime_type="audio/wav")
+        mp3 = ingest.DriveAudio("1" + "b" * 20, "USXYZ2654321 final.mp3", mime_type="audio/mpeg")
+        releases = [
+            ingest.ReleaseAudio("11111111", "One", "1" + "r" * 20, (wav,)),
+            ingest.ReleaseAudio("22222222", "Two", "1" + "s" * 20, (mp3,)),
+        ]
+        baseline = ingest.build_candidates(tracks, releases, {}, [])
+
+        pins, summary = ingest.build_release_isrc_audio_pins(tracks, baseline, releases)
+        result = ingest.apply_release_isrc_audio_pins(baseline, pins)
+
+        self.assertEqual(summary["pinned"], 2)
+        self.assertEqual(summary["pinnedWav"], 1)
+        self.assertEqual(summary["pinnedMp3"], 1)
+        self.assertEqual({pin.match_kind for pin in pins.values()}, {"release_unique_isrc"})
+        self.assertEqual({candidate.track.source_row for candidate in result if candidate.track and candidate.audio}, {2, 3})
+        self.assertFalse(any(candidate.track is None for candidate in result))
+
+    def test_release_scope_isrc_rejects_repeated_source_isrc(self):
+        tracks = [
+            self.track(2, "First", release="One", upc="11111111", isrc="FR-ABC-26-12345"),
+            self.track(3, "Second", release="Two", upc="22222222", isrc="FR-ABC-26-12345"),
+        ]
+        audio = ingest.DriveAudio("1" + "c" * 20, "FRABC2612345.wav")
+        releases = [ingest.ReleaseAudio("11111111", "One", "", (audio,))]
+        baseline = ingest.build_candidates(tracks, releases, {}, [])
+        pins, summary = ingest.build_release_isrc_audio_pins(tracks, baseline, releases)
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["duplicateIsrc"], 1)
+
+    def test_release_scope_isrc_rejects_file_with_multiple_claim_tokens(self):
+        tracks = [
+            self.track(2, "First", isrc="FR-ABC-26-12345"),
+            self.track(3, "Second", isrc="US-XYZ-26-54321"),
+        ]
+        audio = ingest.DriveAudio("1" + "d" * 20, "FRABC2612345_USXYZ2654321.wav")
+        releases = [ingest.ReleaseAudio("12345678", "Release", "", (audio,))]
+        baseline = ingest.build_candidates(tracks, releases, {}, [])
+        pins, summary = ingest.build_release_isrc_audio_pins(tracks, baseline, releases)
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["multiClaimFiles"], 1)
+
+    def test_release_scope_isrc_rejects_multiple_files_for_one_row(self):
+        track = self.track(2, "First", isrc="FR-ABC-26-12345")
+        files = (
+            ingest.DriveAudio("1" + "e" * 20, "FRABC2612345.wav"),
+            ingest.DriveAudio("1" + "f" * 20, "FR-ABC-26-12345.mp3", mime_type="audio/mpeg"),
+        )
+        releases = [ingest.ReleaseAudio(track.upc, track.release, "", files)]
+        baseline = ingest.build_candidates([track], releases, {}, [])
+        pins, summary = ingest.build_release_isrc_audio_pins([track], baseline, releases)
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["ambiguousTracks"], 1)
+
+    def test_release_scope_isrc_never_replaces_baseline_and_is_idempotent(self):
+        mapped = self.track(2, "First", release="One", upc="11111111", isrc="FR-ABC-26-12345")
+        missing = self.track(3, "Second", release="Two", upc="22222222", isrc="US-XYZ-26-54321")
+        existing = ingest.DriveAudio("1" + "g" * 20, "First.wav")
+        replacement = ingest.DriveAudio("1" + "h" * 20, "FRABC2612345.wav")
+        addition = ingest.DriveAudio("1" + "i" * 20, "USXYZ2654321.wav")
+        releases = [
+            ingest.ReleaseAudio(mapped.upc, mapped.release, "", (existing, replacement)),
+            ingest.ReleaseAudio(missing.upc, missing.release, "", (addition,)),
+        ]
+        baseline = ingest.build_candidates([mapped, missing], releases, {}, [])
+        pins, summary = ingest.build_release_isrc_audio_pins([mapped, missing], baseline, releases)
+        once = ingest.apply_release_isrc_audio_pins(baseline, pins)
+        twice = ingest.apply_release_isrc_audio_pins(once, pins)
+        mapped_after = next(candidate for candidate in once if candidate.track and candidate.track.source_row == 2)
+        self.assertEqual(mapped_after.audio, existing)
+        self.assertEqual(set(pins), {3})
+        self.assertGreaterEqual(summary["alreadyMapped"], 1)
+        self.assertEqual(once, twice)
+
+    def test_release_scope_isrc_requires_consistent_audio_descriptor(self):
+        track = self.track(2, "First", isrc="FR-ABC-26-12345")
+        renamed = ingest.DriveAudio("1" + "j" * 20, "FRABC2612345.mp3", mime_type="audio/wav")
+        releases = [ingest.ReleaseAudio(track.upc, track.release, "", (renamed,))]
+        baseline = ingest.build_candidates([track], releases, {}, [])
+        pins, summary = ingest.build_release_isrc_audio_pins([track], baseline, releases)
+        self.assertEqual(pins, {})
+        self.assertEqual(summary["unsupported"], 1)
+
     def test_unique_flat_filename_fills_only_one_missing_track(self):
         tracks = [self.track(2, "Quiet Morning"), self.track(3, "Night Walk")]
         audio = ingest.DriveAudio("1" + "A" * 20, "Artist - Quiet Morning.wav")
