@@ -1,50 +1,102 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function MotionLayer() {
+  const pathname = usePathname();
+
   useEffect(() => {
     const root = document.documentElement;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const finePointer = window.matchMedia("(pointer: fine)");
-    const revealNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const revealNodes = new Set(document.querySelectorAll<HTMLElement>("[data-reveal]"));
     const parallaxNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
     const glowNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-pointer-glow]"));
     const tiltNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-tilt]"));
     const planGlideNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-plan-glide]"));
     const cleanups: Array<() => void> = [];
     let observer: IntersectionObserver | null = null;
+    let revealMutationObserver: MutationObserver | null = null;
     let animationFrame = 0;
 
     const revealEverything = () => {
-      revealNodes.forEach((node) => node.classList.add("is-revealed"));
+      revealNodes.forEach((node) => {
+        node.classList.remove("is-reveal-pending");
+        node.classList.add("is-revealed");
+      });
+    };
+
+    const disableRevealMotion = () => {
+      observer?.disconnect();
+      observer = null;
+      revealMutationObserver?.disconnect();
+      revealMutationObserver = null;
+      revealEverything();
+      root.classList.remove("motion-enhanced");
     };
 
     const startObserver = () => {
       if (reducedMotion.matches) {
-        revealEverything();
+        disableRevealMotion();
         return;
       }
 
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add("is-revealed");
-            observer?.unobserve(entry.target);
-          });
-        },
-        { threshold: 0.12, rootMargin: "0px 0px -9% 0px" },
-      );
+      if (typeof window.IntersectionObserver !== "function") {
+        disableRevealMotion();
+        return;
+      }
 
-      revealNodes.forEach((node) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.94) {
-          node.classList.add("is-revealed");
-        } else {
-          observer?.observe(node);
+      try {
+        observer = new window.IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.remove("is-reveal-pending");
+              entry.target.classList.add("is-revealed");
+              observer?.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -9% 0px" },
+        );
+
+        const registerRevealNode = (node: HTMLElement) => {
+          revealNodes.add(node);
+          if (node.classList.contains("is-revealed")) return;
+          const rect = node.getBoundingClientRect();
+          if (rect.top < window.innerHeight * 0.94) {
+            node.classList.add("is-revealed");
+          } else {
+            try {
+              observer?.observe(node);
+              node.classList.add("is-reveal-pending");
+            } catch {
+              node.classList.remove("is-reveal-pending");
+              node.classList.add("is-revealed");
+            }
+          }
+        };
+
+        revealNodes.forEach(registerRevealNode);
+
+        if (typeof window.MutationObserver === "function") {
+          revealMutationObserver = new window.MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              mutation.addedNodes.forEach((addedNode) => {
+                if (!(addedNode instanceof HTMLElement)) return;
+                if (addedNode.matches("[data-reveal]")) registerRevealNode(addedNode);
+                addedNode.querySelectorAll<HTMLElement>("[data-reveal]").forEach(registerRevealNode);
+              });
+            });
+          });
+          revealMutationObserver.observe(document.body, { childList: true, subtree: true });
         }
-      });
+
+        // Only hide pending reveal nodes once every node is safely observed.
+        root.classList.add("motion-enhanced");
+      } catch {
+        disableRevealMotion();
+      }
     };
 
     const updateMotion = () => {
@@ -88,7 +140,7 @@ export function MotionLayer() {
       observer?.disconnect();
       observer = null;
       if (reducedMotion.matches) {
-        revealEverything();
+        disableRevealMotion();
         resetInteractiveMotion();
       } else {
         startObserver();
@@ -96,7 +148,6 @@ export function MotionLayer() {
       scheduleMotion();
     };
 
-    root.classList.add("motion-enhanced");
     startObserver();
     scheduleMotion();
     window.addEventListener("scroll", scheduleMotion, { passive: true });
@@ -181,17 +232,19 @@ export function MotionLayer() {
 
     return () => {
       observer?.disconnect();
+      revealMutationObserver?.disconnect();
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", scheduleMotion);
       window.removeEventListener("resize", scheduleMotion);
       reducedMotion.removeEventListener("change", handlePreferenceChange);
       cleanups.forEach((cleanup) => cleanup());
+      revealNodes.forEach((node) => node.classList.remove("is-reveal-pending"));
       resetInteractiveMotion();
       root.classList.remove("motion-enhanced");
       root.classList.remove("page-scrolled");
       root.style.removeProperty("--page-progress");
     };
-  }, []);
+  }, [pathname]);
 
   return <div className="page-progress" aria-hidden="true"><span /></div>;
 }

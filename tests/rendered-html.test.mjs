@@ -903,10 +903,18 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(booth, /role="tablist"/);
   assert.match(shell, /<MotionLayer/);
   assert.match(motion, /IntersectionObserver/);
+  assert.match(motion, /usePathname/);
+  assert.match(motion, /\}, \[pathname\]\);/);
+  assert.match(motion, /typeof window\.IntersectionObserver !== "function"[\s\S]{0,100}disableRevealMotion\(\)/);
+  assert.match(motion, /new window\.MutationObserver/);
+  assert.match(motion, /addedNode\.querySelectorAll<HTMLElement>\("\[data-reveal\]"\)/);
+  assert.match(motion, /node\.classList\.add\("is-reveal-pending"\)/);
+  assert.match(motion, /catch \{[\s\S]{0,100}disableRevealMotion\(\)/);
   assert.match(motion, /data-plan-glide/);
   assert.match(motion, /requestAnimationFrame/);
   assert.match(motion, /prefers-reduced-motion/);
-  assert.match(css, /\.motion-enhanced \[data-reveal\]/);
+  assert.match(css, /\.motion-enhanced \[data-reveal\]\.is-reveal-pending\s*\{[^}]*opacity:\s*0/s);
+  assert.doesNotMatch(css, /\.motion-enhanced \[data-reveal\]\s*\{[^}]*opacity:\s*0/s);
   assert.match(homeCss, /@keyframes v5Scan/);
   assert.match(home26Css, /@media \(min-width: 901px\)[\s\S]*?\.home26-artists \.home26-section-heading\s*\{[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}text-align:\s*center;/);
   assert.match(home26Css, /V56: a continuous artist marquee[\s\S]{0,650}width:\s*100vw;[\s\S]{0,180}overflow:\s*hidden/);
@@ -914,6 +922,47 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(cozyCss, /animation:\s*none\s*!important/);
   assert.doesNotMatch(packageJson, /framer-motion|gsap/);
+});
+
+test("keeps category and banner copy above artwork and visible by default", async () => {
+  const [page, cataloguePage, creatorsPage, homeCss, catalogueCss, offerCss, workspaceCss] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/catalog/page.tsx"),
+    source("app/creators/page.tsx"),
+    source("app/home-v26.css"),
+    source("app/catalog-v26.css"),
+    source("app/offer-pages.css"),
+    source("app/workspace-music.css"),
+  ]);
+
+  assert.match(page, /className="home26-collection-copy"[\s\S]{0,180}<strong>\{collection\.title\}<\/strong>/);
+  assert.match(cataloguePage, /className="music-playlist-copy"[\s\S]{0,180}<strong>\{playlist\.title\}<\/strong>/);
+  assert.match(creatorsPage, /className="offer-use-grid"[\s\S]{0,260}<h3>\{title\}<\/h3><p>\{copy\}<\/p>/);
+
+  assert.match(homeCss, /\.home26-collection-card\s*\{[^}]*isolation:\s*isolate/s);
+  assert.match(homeCss, /\.home26-collection-card img\s*\{[^}]*z-index:\s*0;[^}]*inset:\s*0/s);
+  assert.match(homeCss, /\.home26-collection-overlay\s*\{[^}]*z-index:\s*1/s);
+  assert.match(homeCss, /\.home26-collection-copy\s*\{[^}]*z-index:\s*2;[^}]*opacity:\s*1;[^}]*visibility:\s*visible/s);
+
+  assert.match(catalogueCss, /\.catalogue-v26-use\s*\{[^}]*isolation:\s*isolate/s);
+  assert.match(catalogueCss, /\.catalogue-v26-use::after\s*\{[^}]*z-index:\s*1/s);
+  assert.match(catalogueCss, /\.catalogue-v26-use img\s*\{[^}]*z-index:\s*0/s);
+  assert.match(catalogueCss, /\.catalogue-v26-use > span\s*\{[^}]*z-index:\s*2;[^}]*opacity:\s*1;[^}]*visibility:\s*visible/s);
+
+  assert.match(catalogueCss, /\.music-playlist-card\s*\{[^}]*isolation:\s*isolate/s);
+  assert.match(catalogueCss, /\.music-playlist-card::after\s*\{[^}]*z-index:\s*1/s);
+  assert.match(catalogueCss, /\.music-playlist-card > img\s*\{[^}]*z-index:\s*0/s);
+  assert.match(catalogueCss, /\.music-playlist-copy\s*\{[^}]*z-index:\s*3/s);
+
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article\s*\{[^}]*isolation:\s*isolate/s);
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article::after\s*\{[^}]*z-index:\s*1/s);
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article > img\s*\{[^}]*z-index:\s*0/s);
+  assert.match(offerCss, /\.creators-landing \.offer-use-grid article > div\s*\{[^}]*z-index:\s*2/s);
+
+  assert.match(workspaceCss, /\.workspace-playlist\s*\{[^}]*isolation:isolate/s);
+  assert.match(workspaceCss, /\.workspace-playlist-photo\s*\{[^}]*z-index:\s*0/s);
+  assert.match(workspaceCss, /\.workspace-playlist-shade\s*\{[^}]*z-index:\s*1/s);
+  assert.match(workspaceCss, /\.workspace-playlist-copy\s*\{[^}]*z-index:\s*2;[^}]*opacity:\s*1;[^}]*visibility:\s*visible/s);
 });
 
 test("ships the cozy Lofi Girl identity, focused navigation and real artist profiles", async () => {
