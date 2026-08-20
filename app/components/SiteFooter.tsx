@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 
@@ -31,8 +32,8 @@ export function SiteFooter() {
           <div>
             <p className="footer-label">Help</p>
             <Link href="/help">Help Center</Link>
-            <Link href="/create-account?mode=login">Log in</Link>
-            <Link href="/create-account">Create account</Link>
+            <a href={publicAccountSignOutHref("login")}>Log in</a>
+            <a href={publicAccountSignOutHref("create")}>Create account</a>
           </div>
           <div>
             <p className="footer-label">About</p>

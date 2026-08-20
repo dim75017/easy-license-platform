@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PublicShell } from "../components/PublicShell";
 import { AccountSetup } from "../components/AccountSetup";
 
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
 export default function CreateAccountPage() {
   return (
     <PublicShell>
-      <AccountSetup />
+      <Suspense fallback={null}>
+        <AccountSetup />
+      </Suspense>
     </PublicShell>
   );
 }

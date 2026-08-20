@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 
 type Plan = "creator" | "pro";
 type Platform =
@@ -27,23 +29,48 @@ type LoadState = "checking" | "signed-out" | "ready" | "complete" | "demo";
 const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
 
 export function AccountSetup() {
-  const [state, setState] = useState<LoadState>(isStaticDemo ? "demo" : "checking");
+  const searchParams = useSearchParams();
+  const requestedPlan: Plan = searchParams.get("plan") === "pro" ? "pro" : "creator";
+  const mode = searchParams.get("mode") === "login" ? "login" : "create";
+  const resumeAuthentication = searchParams.get("auth") === "resume";
+  return (
+    <AccountSetupFlow
+      key={`${mode}:${requestedPlan}:${resumeAuthentication ? "resume" : "signed-out"}`}
+      requestedPlan={requestedPlan}
+      mode={mode}
+      resumeAuthentication={resumeAuthentication}
+    />
+  );
+}
+
+function AccountSetupFlow({
+  requestedPlan,
+  mode,
+  resumeAuthentication,
+}: {
+  requestedPlan: Plan;
+  mode: "login" | "create";
+  resumeAuthentication: boolean;
+}) {
+  const [state, setState] = useState<LoadState>(
+    isStaticDemo ? "demo" : resumeAuthentication ? "checking" : "signed-out",
+  );
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [company, setCompany] = useState("");
-  const [plan, setPlan] = useState<Plan>("creator");
+  const [plan, setPlan] = useState<Plan>(requestedPlan);
   const [platform, setPlatform] = useState<Platform>("youtube");
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const signInReturnTo = `/create-account?plan=${plan}`;
+  const signInParams = new URLSearchParams({ auth: "resume", plan });
+  if (mode === "login") signInParams.set("mode", "login");
+  const signInReturnTo = `/create-account?${signInParams.toString()}`;
 
   useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get("plan");
-    if (requested === "pro" || requested === "creator") setPlan(requested);
-    if (isStaticDemo) return;
+    if (isStaticDemo || !resumeAuthentication) return;
 
     const controller = new AbortController();
     fetch("/api/account/profile", {
@@ -84,7 +111,7 @@ export function AccountSetup() {
         }
       });
     return () => controller.abort();
-  }, []);
+  }, [resumeAuthentication]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,16 +188,17 @@ export function AccountSetup() {
           {state === "demo" && (
             <div className="account-state">
               <span className="account-state-index">01 / 03</span>
-              <h2>Create your account.</h2>
+              <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
-                Account creation is available on the secure Symbiome app. The
-                public catalogue remains open for browsing.
+                {mode === "login"
+                  ? "Log in is available on the secure Symbiome app. The public catalogue remains open for browsing."
+                  : "Account creation is available on the secure Symbiome app. The public catalogue remains open for browsing."}
               </p>
               <a
                 className="button button-primary button-full cta-swipe"
-                href="https://easy-license.dsomoguy.chatgpt.site/create-account"
+                href={publicAccountSignOutHref(mode)}
               >
-                Open the secure app
+                {mode === "login" ? "Open secure login" : "Open the secure app"}
               </a>
               <Link className="account-secondary-link" href="/app">
                 Browse music first
@@ -181,16 +209,17 @@ export function AccountSetup() {
           {state === "signed-out" && (
             <div className="account-state">
               <span className="account-state-index">01 / 03</span>
-              <h2>Create your account.</h2>
+              <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
-                Continue securely with ChatGPT. Symbiome never receives or
-                stores your password.
+                {mode === "login"
+                  ? "Log in securely with ChatGPT to return to your Symbiome workspace."
+                  : "Continue securely with ChatGPT. Symbiome never receives or stores your password."}
               </p>
               <a
                 className="button button-primary button-full cta-swipe"
                 href={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
               >
-                Continue with ChatGPT
+                {mode === "login" ? "Log in with ChatGPT" : "Continue with ChatGPT"}
               </a>
               <div className="account-trust-note">
                 <span aria-hidden="true">✓</span>

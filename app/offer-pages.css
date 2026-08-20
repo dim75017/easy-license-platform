@@ -3670,3 +3670,71 @@
 
   .public-shell .creator-editorial-library-link { width: 100%; }
 }
+
+/* V75: the Business workspace choice remains available without changing the public page layout. */
+.public-shell .business-profile-access {
+  --wm-clay: #e06343;
+  --wm-cream: #fff9f1;
+  --wm-ink: #292832;
+  position: fixed;
+  z-index: 130;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 18px;
+  width: 248px;
+  border: 1px solid rgba(255, 249, 241, .14);
+  border-radius: 16px;
+  padding: 6px 8px;
+  background: rgba(35, 34, 43, .96);
+  box-shadow: 0 20px 54px rgba(41, 40, 50, .25);
+  backdrop-filter: blur(18px);
+}
+
+.public-shell .business-profile-access .music-profile-switcher { width: 100%; }
+
+.public-shell .business-profile-access button.music-app-account {
+  border-top: 0;
+  border-radius: 10px;
+  padding: 6px 4px;
+}
+
+@media (max-width: 900px) {
+  .public-shell .business-profile-access {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    padding: 4px;
+  }
+
+  .public-shell .business-profile-access button.music-app-account {
+    display: grid;
+    width: 44px;
+    min-height: 44px;
+    grid-template-columns: 1fr;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    background: #292832;
+  }
+
+  .public-shell .business-profile-access button.music-app-account > span {
+    width: 34px;
+    height: 34px;
+    font-size: 10px;
+  }
+
+  .public-shell .business-profile-access button.music-app-account > div,
+  .public-shell .business-profile-access button.music-app-account > i { display: none; }
+
+  .public-shell .business-profile-access .music-profile-menu {
+    position: fixed;
+    right: auto;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    left: 16px;
+    width: min(242px, calc(100vw - 32px));
+  }
+}
+
+@media (forced-colors: active) {
+  .public-shell .business-profile-access { border: 1px solid ButtonText; }
+}

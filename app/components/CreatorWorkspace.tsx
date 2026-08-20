@@ -14,6 +14,7 @@ import {
   type WorkspaceTrack,
 } from "../data/catalog";
 import { trackMatchesMood } from "../lib/catalog-moods";
+import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
 import "../workspace-music.css";
 
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences";
@@ -1156,7 +1157,7 @@ export function CreatorWorkspace() {
         </nav>
 
         <div className="music-app-sidebar-bottom">
-          <div className="music-app-account"><span>DM</span><div><strong>Demo creator</strong><small>Creator plan</small></div></div>
+          <WorkspaceProfileSwitcher activeRole="creator" />
         </div>
       </aside>
 
@@ -1176,6 +1177,7 @@ export function CreatorWorkspace() {
             />
           </label>
           <button className="music-topbar-action" type="button" onClick={() => navigateToView("downloads")}>Downloads</button>
+          <WorkspaceProfileSwitcher activeRole="creator" compact />
         </header>
 
         {view === "discover" && (

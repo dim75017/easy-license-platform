@@ -199,7 +199,7 @@ export default function Home() {
             ))}
           </div>
           <div className="home26-catalogue-action" data-reveal="group">
-            <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Explore the full music library</Link>
+            <Link className="home26-button home26-button-primary cta-swipe" href="/app">Explore the full music library</Link>
           </div>
         </section>
 

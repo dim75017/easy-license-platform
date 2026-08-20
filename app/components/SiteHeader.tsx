@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 import { Brand } from "./Brand";
 
 const navItems = [
@@ -57,8 +58,8 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="site-header-actions">
-            <Link className="header-login" href="/create-account?mode=login" onClick={() => setOpen(false)}>Log in</Link>
-            <Link className="button button-small button-primary cta-swipe" href="/create-account" onClick={() => setOpen(false)}>Create account</Link>
+            <a className="header-login" href={publicAccountSignOutHref("login")} onClick={() => setOpen(false)}>Log in</a>
+            <a className="button button-small button-primary cta-swipe" href={publicAccountSignOutHref("create")} onClick={() => setOpen(false)}>Create account</a>
           </div>
         </div>
       </div>
