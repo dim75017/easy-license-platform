@@ -2379,7 +2379,10 @@ article.music-track-row[role="listitem"]:focus-visible {
   border-radius: 24px;
   background: var(--wm-ink);
   color: #fff9f1;
+  scroll-margin-top: 106px;
 }
+
+.music-playlist-detail-hero:focus { outline: none; }
 
 .music-playlist-detail-hero::before {
   position: absolute;
@@ -2547,8 +2550,14 @@ article.music-track-row[role="listitem"]:focus-visible {
 }
 
 .music-playlist-detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin: 0 0 18px;
 }
+
+.music-playlist-detail-status > button { flex: 0 0 auto; }
 
 @media (hover: hover) and (pointer: fine) {
   .music-playlist-detail-back:hover {
@@ -2614,6 +2623,8 @@ article.music-track-row[role="listitem"]:focus-visible {
   .music-playlist-detail-copy > p { font-size: 15px; line-height: 1.45; }
   .music-playlist-detail-tracks { margin-top: 26px; }
   .music-playlist-detail-track-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .music-playlist-detail-status { align-items: stretch; flex-direction: column; }
+  .music-playlist-detail-status > button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
