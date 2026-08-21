@@ -1321,6 +1321,20 @@ class SpotifyMergeTests(unittest.TestCase):
 
 
 class CliSafetyTests(unittest.TestCase):
+    def test_owner_direct_batch_keeps_going_after_record_bad_request(self):
+        self.assertFalse(
+            process.should_abort_batch(process.ApiHttpError(400, "invalid_record"), direct=True)
+        )
+        self.assertTrue(
+            process.should_abort_batch(process.ApiHttpError(400, "invalid_record"), direct=False)
+        )
+        self.assertTrue(
+            process.should_abort_batch(process.ApiHttpError(401, "unauthorized"), direct=True)
+        )
+        self.assertTrue(
+            process.should_abort_batch(process.ApiHttpError(503, "unavailable"), direct=True)
+        )
+
     def test_dry_run_is_aggregate_only_and_needs_no_clearance(self):
         record = exact_record()
         with tempfile.TemporaryDirectory() as temporary:

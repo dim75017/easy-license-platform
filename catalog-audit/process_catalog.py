@@ -89,6 +89,17 @@ class ApiHttpError(PipelineError):
         self.status = status
 
 
+def should_abort_batch(error: PipelineError, *, direct: bool) -> bool:
+    """Stop only for API failures that invalidate the whole publication run."""
+
+    if isinstance(error, ApiHttpError):
+        if error.status in {401, 403, 404, 405}:
+            return True
+        if error.status == 400 and not direct:
+            return True
+    return error.retryable and error.code.startswith("api_")
+
+
 def sanitize_error_code(value: object) -> str:
     normalized = SAFE_ERROR_CODE_PATTERN.sub("_", str(value).strip().lower()).strip("_")
     return (normalized or "pipeline_failed")[:120]
@@ -2412,10 +2423,7 @@ def process_exact_catalog(arguments: argparse.Namespace) -> int:
                     counts[outcome] = counts.get(outcome, 0) + 1
                 except PipelineError as error:
                     counts["failed"] += 1
-                    if (
-                        isinstance(error, ApiHttpError)
-                        and error.status in {400, 401, 403, 404, 405}
-                    ) or (error.retryable and error.code.startswith("api_")):
+                    if should_abort_batch(error, direct=direct):
                         raise
                 if not direct and index % 25 == 0:
                     emit_aggregate({"mode": "apply", "step": "process", "progress": index, "counts": counts})
