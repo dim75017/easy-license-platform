@@ -120,7 +120,6 @@ export function AdminWorkspace() {
       items={items}
       active={active}
       onChange={(id) => setActive(id as AdminView)}
-      sidebarFooter={<WorkspaceProfileSwitcher activeRole="admin" />}
     >
       <header className="dashboard-topbar">
         <div>

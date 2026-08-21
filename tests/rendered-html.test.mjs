@@ -1448,11 +1448,11 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,300}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;[^}]*max-height:\s*calc\(100vh - 84px\);/s);
 });
 
-test("keeps the Business profile switcher persistent and closes the 861–900px admin gap", async () => {
-  const [business, offerCss, globalCss] = await Promise.all([
+test("keeps the Business profile switcher persistent and the Admin profile in the topbar", async () => {
+  const [business, offerCss, workspaceV2] = await Promise.all([
     source("app/business/page.tsx"),
     source("app/offer-pages.css"),
-    source("app/globals.css"),
+    source("app/workspace-v2.css"),
   ]);
 
   assert.match(business, /import \{ WorkspaceProfileSwitcher \} from "\.\.\/components\/WorkspaceProfileSwitcher"/);
@@ -1461,15 +1461,18 @@ test("keeps the Business profile switcher persistent and closes the 861–900px 
   assert.match(offerCss, /\.public-shell \.business-profile-access\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*max\(18px, env\(safe-area-inset-bottom\)\);[^}]*left:\s*18px;[^}]*width:\s*248px;/s);
   assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,520}\.public-shell \.business-profile-access button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
   assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,1100}\.public-shell \.business-profile-access \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*left:\s*16px;[^}]*width:\s*min\(242px, calc\(100vw - 32px\)\);/s);
-  assert.match(globalCss, /@media \(min-width: 861px\) and \(max-width: 900px\)[\s\S]{0,180}\.admin-shell \.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
-  assert.match(globalCss, /@media \(min-width: 861px\) and \(max-width: 900px\)[\s\S]{0,520}\.admin-shell \.music-profile-switcher\.is-compact button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
+  assert.match(workspaceV2, /\.admin-shell \.dashboard-topbar\s*\{\s*z-index:\s*100;/);
+  assert.match(workspaceV2, /\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact\s*\{[^}]*display:\s*block;/s);
+  assert.match(workspaceV2, /\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*min-height:\s*44px;[^}]*border-radius:\s*50%;/s);
+  assert.match(workspaceV2, /\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;[^}]*bottom:\s*auto;[^}]*left:\s*auto;/s);
 });
 
-test("renders real fail-closed admin analytics without legacy demo records", async () => {
-  const [adminPage, admin, dashboardShell] = await Promise.all([
+test("renders real fail-closed and legible admin analytics", async () => {
+  const [adminPage, admin, dashboardShell, workspaceV2] = await Promise.all([
     source("app/admin/page.tsx"),
     source("app/components/AdminWorkspace.tsx"),
     source("app/components/DashboardShell.tsx"),
+    source("app/workspace-v2.css"),
   ]);
 
   assert.match(adminPage, /robots:\s*\{ index: false, follow: false \}/);
@@ -1503,11 +1506,22 @@ test("renders real fail-closed admin analytics without legacy demo records", asy
     /€2\.85k|€124k|6,560|1,040/,
   ]) assert.doesNotMatch(admin, legacy, "legacy admin demo data must not return");
 
-  assert.match(admin, /sidebarFooter=\{<WorkspaceProfileSwitcher activeRole="admin" \/>\}/);
-  assert.match(admin, /<WorkspaceProfileSwitcher activeRole="admin" compact \/>/);
+  assert.equal((admin.match(/<WorkspaceProfileSwitcher activeRole="admin"/g) ?? []).length, 1, "Admin should expose one profile control");
+  assert.doesNotMatch(admin, /sidebarFooter=\{<WorkspaceProfileSwitcher activeRole="admin" \/>\}/);
+  assert.match(admin, /className="dashboard-top-actions"[\s\S]{0,220}<WorkspaceProfileSwitcher activeRole="admin" compact \/>/);
   assert.match(dashboardShell, /sidebarFooter\?: ReactNode/);
   assert.match(dashboardShell, /aria-pressed=\{active === item\.id\}/);
   assert.match(dashboardShell, /\{sidebarFooter \?\? <Link href="\/">← Back to website<\/Link>\}/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-access-state p,[\s\S]{0,120}\.admin-shell \.admin-live-section > header p\s*\{[^}]*font-size:\s*clamp\(14px,/s);
+  assert.match(workspaceV2, /\.admin-shell \.admin-live-summary-grid article p\s*\{\s*font-size:\s*clamp\(12px,/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-live-summary-grid article > small\s*\{[^}]*font-size:\s*clamp\(12px,/s);
+  assert.match(workspaceV2, /\.admin-shell \.admin-live-grid \.panel-heading h3\s*\{\s*font-size:\s*clamp\(24px,/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-breakdown > div strong\s*\{\s*font-size:\s*clamp\(12px,/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-breakdown > div small\s*\{\s*font-size:\s*clamp\(11px,/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-daily-bars small\s*\{\s*font-size:\s*10px;/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-status-grid span\s*\{\s*font-size:\s*13px;/);
+  assert.match(workspaceV2, /\.admin-shell \.admin-generated-at\s*\{\s*font-size:\s*12px;/);
+  assert.match(workspaceV2, /@media \(max-width: 480px\)[\s\S]{0,900}\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;[^}]*max-height:\s*calc\(100vh - 104px\);/s);
 });
 
 test("uses one calm plan-card hover across Home and Pricing", async () => {
