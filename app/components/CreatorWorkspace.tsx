@@ -834,6 +834,7 @@ function PlaylistComposerDialog({
   onCreate: (draft: PersonalPlaylistDraft) => Promise<void>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<Blob | null>(null);
@@ -842,6 +843,7 @@ function PlaylistComposerDialog({
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const previewUrl = useBlobPreviewUrl(image);
+  const imageActionLabel = image ? "Change image" : "Choose image";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -902,12 +904,19 @@ function PlaylistComposerDialog({
         </header>
 
         <div className="music-playlist-composer-body">
-          <div className="music-playlist-composer-preview">
+          <button
+            className="music-playlist-composer-preview"
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isProcessingImage || isSubmitting}
+            aria-label={imageActionLabel}
+          >
             {previewUrl
-              ? <img src={previewUrl} alt="Selected playlist artwork preview" />
-              : <span className="music-personal-playlist-default-art" aria-label="Default Symbiome playlist artwork"><SymbiomeMark /></span>}
-            <small>{imageName || "Default Symbiome artwork"}</small>
-          </div>
+              ? <img src={previewUrl} alt="" />
+              : <span className="music-personal-playlist-default-art" aria-hidden="true"><SymbiomeMark /></span>}
+            <span className="music-playlist-composer-preview-action" aria-hidden="true">{imageActionLabel}</span>
+            <small aria-hidden="true">{imageName || "Default Symbiome artwork"}</small>
+          </button>
 
           <div className="music-playlist-composer-fields">
             <label>
@@ -922,8 +931,8 @@ function PlaylistComposerDialog({
               <span>Image <small>Optional · JPEG, PNG or WebP</small></span>
               <div>
                 <label className="music-playlist-image-picker">
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void handleImageChange(event)} disabled={isProcessingImage || isSubmitting} />
-                  <span>{isProcessingImage ? "Preparing image…" : image ? "Replace image" : "Choose image"}</span>
+                  <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void handleImageChange(event)} disabled={isProcessingImage || isSubmitting} />
+                  <span>{isProcessingImage ? "Preparing image…" : imageActionLabel}</span>
                 </label>
                 {image && <button type="button" onClick={() => { setImage(null); setImageName(""); setImageError(""); }} disabled={isSubmitting}>Use default</button>}
               </div>
