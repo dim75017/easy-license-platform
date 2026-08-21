@@ -1942,12 +1942,18 @@ article.music-track-row[role="listitem"] {
   flex-wrap: wrap;
 }
 
+.music-app-main > .music-track-browser.music-workspace-view {
+  margin-top: 0;
+  padding-top: 22px;
+}
+
 .music-library-search {
-  width: min(520px, 100%);
+  width: min(420px, 100%);
+  max-width: 420px;
   min-width: 260px;
   min-height: var(--music-library-control-height);
   height: var(--music-library-control-height);
-  flex: 1 1 360px;
+  flex: 0 1 420px;
   grid-template-columns: 24px minmax(0, 1fr);
   border-radius: 9px;
   box-shadow: none;
@@ -1979,6 +1985,8 @@ article.music-track-row[role="listitem"] {
 .music-track-browser-controls + .music-track-results-status { margin: -7px 0 18px; }
 
 @media (max-width: 860px) {
+  .music-app-main > .music-track-browser.music-workspace-view { padding-top: 16px; }
+
   .music-library-search {
     width: 100%;
     max-width: none;
