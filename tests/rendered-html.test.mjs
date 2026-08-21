@@ -1666,7 +1666,7 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
   assert.match(creators, /offer-lofi-signature[\s\S]{0,180}offer-powered-lockup[\s\S]{0,120}<LofiGirlWordmark \/>/);
   assert.match(business, /offer-lofi-signature[\s\S]{0,180}offer-powered-lockup[\s\S]{0,120}<LofiGirlWordmark \/>/);
   assert.match(workspace, /workspace-lofi-credit[\s\S]{0,100}<LofiGirlWordmark \/>/);
-  assert.equal((workspace.match(/workspace-lofi-kicker/g) ?? []).length, 2);
+  assert.equal((workspace.match(/workspace-lofi-kicker/g) ?? []).length, 1);
   assert.match(booth, /v5-lofi-signature">Symbiome · by<LofiGirlWordmark \/>/);
   assert.match(about, /tocTitle:\s*<>Powered by <LofiGirlWordmark[\s\S]{0,160}title:\s*<>Powered by <LofiGirlWordmark/);
   assert.match(press, /tocTitle:\s*<>Powered by <LofiGirlWordmark[\s\S]{0,160}title:\s*<>Powered by <LofiGirlWordmark/);
@@ -1784,6 +1784,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
   assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,180}className="music-secondary-view music-playlists-view music-workspace-view"/);
+  const playlistLibraryBlock = musicWorkspace.match(/function PlaylistLibrary[\s\S]*?\n\}/);
+  assert.ok(playlistLibraryBlock, "the Playlists view should keep its dedicated component");
+  assert.doesNotMatch(playlistLibraryBlock[0], /<header>|LISTENING WORLDS|Twelve distinct directions/, "the redundant Playlists introduction should be removed");
   for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
   }
@@ -1990,7 +1993,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /\.music-app-main\s*\{\s*--music-view-gutter:\s*28px;/);
   assert.match(musicWorkspaceV13, /\.music-app-topbar\.is-wide\s*\{\s*padding-inline:\s*var\(--music-view-gutter\);/);
   assert.match(musicWorkspaceV13, /\.music-app-main > \.music-workspace-view\s*\{[^}]*width:\s*auto;[^}]*max-width:\s*none;[^}]*margin:\s*0 var\(--music-view-gutter\);[^}]*padding:\s*40px 0 58px/s);
-  assert.match(musicWorkspaceV13, /\.music-app-main > \.music-playlists-view > header\s*\{\s*padding-top:\s*0;/);
+  assert.doesNotMatch(musicWorkspaceV13, /\.music-app-main > \.music-playlists-view > header/, "removed Playlists markup should not keep dead header styling");
   assert.doesNotMatch(musicWorkspaceV13, /\.music-app-main > \.music-workspace-view\s*\{[^}]*(?:100vw|1310px|1440px)/s, "primary library views should fill the main canvas without a legacy width cap");
   assert.match(musicWorkspaceV13, /@media \(min-width:\s*1600px\)\s*\{[^}]*\.music-discovery-grid\s*\{\s*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV13, /@media \(min-width:\s*2200px\)\s*\{[^}]*\.music-playlists-view \.music-secondary-playlists\s*\{\s*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
