@@ -46,11 +46,12 @@ export default function CataloguePage() {
               >
                 <span className="music-playlist-number">{String(index + 1).padStart(2, "0")}</span>
                 <img
-                  src={playlist.image}
+                  src={playlist.thumbnail}
                   alt=""
-                  width={1600}
-                  height={1200}
-                  loading="lazy"
+                  width={640}
+                  height={480}
+                  loading={index < 4 ? "eager" : "lazy"}
+                  fetchPriority={index < 4 ? "high" : "auto"}
                   decoding="async"
                   style={{ objectPosition: playlist.imagePosition ?? "center" }}
                 />

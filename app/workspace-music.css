@@ -2403,6 +2403,23 @@ article.music-track-row[role="listitem"]:focus-visible {
   object-position: var(--playlist-position, center);
 }
 
+.music-playlist-detail-photo.is-full {
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+
+.music-playlist-detail-photo.is-full.is-loaded { opacity: 1; }
+
+.music-track-identity > img,
+.workspace-player-main > img,
+.music-download-list img {
+  background: linear-gradient(135deg, rgba(224, 99, 67, .16), rgba(41, 40, 50, .12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-playlist-detail-photo.is-full { transition: none; }
+}
+
 .music-playlist-detail-shade {
   position: absolute;
   z-index: 1;

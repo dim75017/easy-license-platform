@@ -93,6 +93,7 @@ export type LofiGirlPlaylist = {
   accent?: PlaylistAccent;
   moods: readonly string[];
   image: `/images/unsplash/playlists/${string}.jpg`;
+  thumbnail: `/images/unsplash/playlists/thumbnails/${string}.webp`;
   imagePosition?: string;
 };
 
@@ -111,6 +112,7 @@ export const lofiGirlPlaylists = [
     genre: "Lofi",
     moods: ["Warm", "Calm", "Focused"],
     image: "/images/unsplash/playlists/lofi-study-laptop-dwZlYC-6-9c.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/lofi-study-laptop-dwZlYC-6-9c.webp",
     imagePosition: "66% 44%",
   },
   {
@@ -123,6 +125,7 @@ export const lofiGirlPlaylists = [
     genre: "Synthwave",
     moods: ["Neon", "Driving", "Focused"],
     image: "/images/unsplash/playlists/synthwave-console-p0j-mE6mGo4.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/synthwave-console-p0j-mE6mGo4.webp",
     imagePosition: "50% 50%",
   },
   {
@@ -135,6 +138,7 @@ export const lofiGirlPlaylists = [
     genre: "Piano",
     moods: ["Peaceful", "Reflective", "Soft"],
     image: "/images/unsplash/playlists/peaceful-piano-hands-5P1-Bemnb0c.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/peaceful-piano-hands-5P1-Bemnb0c.webp",
     imagePosition: "52% 50%",
   },
   {
@@ -147,6 +151,7 @@ export const lofiGirlPlaylists = [
     genre: "Ambient",
     moods: ["Dark", "Dreamy", "Cinematic"],
     image: "/images/unsplash/playlists/dark-ambient-fog.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/dark-ambient-fog.webp",
     imagePosition: "60% center",
   },
   {
@@ -159,6 +164,7 @@ export const lofiGirlPlaylists = [
     genre: "Jazz Lofi",
     moods: ["Cozy", "Late night", "Easygoing"],
     image: "/images/unsplash/playlists/jazz-lofi-saxophone.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/jazz-lofi-saxophone.webp",
     imagePosition: "58% center",
   },
   {
@@ -171,6 +177,7 @@ export const lofiGirlPlaylists = [
     genre: "Chill House",
     moods: ["Bright", "Sunny", "Free"],
     image: "/images/unsplash/playlists/chill-house.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/chill-house.webp",
     imagePosition: "center 58%",
   },
   {
@@ -183,6 +190,7 @@ export const lofiGirlPlaylists = [
     genre: "Ambient",
     moods: ["Restful", "Gentle", "Weightless"],
     image: "/images/unsplash/playlists/sleep-ambient-bedside.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/sleep-ambient-bedside.webp",
     imagePosition: "64% center",
   },
   {
@@ -195,6 +203,7 @@ export const lofiGirlPlaylists = [
     genre: "Acoustic",
     moods: ["Organic", "Intimate", "Easygoing"],
     image: "/images/unsplash/playlists/chill-guitar-couch-KEtvAfDlpWI.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/chill-guitar-couch-KEtvAfDlpWI.webp",
     imagePosition: "46% 47%",
   },
   {
@@ -207,6 +216,7 @@ export const lofiGirlPlaylists = [
     genre: "Classical",
     moods: ["Elegant", "Peaceful", "Reflective"],
     image: "/images/unsplash/playlists/classical-quartet-__2fmv-P4eA.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/classical-quartet-__2fmv-P4eA.webp",
     imagePosition: "center",
   },
   {
@@ -219,6 +229,7 @@ export const lofiGirlPlaylists = [
     genre: "Bossa Lofi",
     moods: ["Sunny", "Easygoing", "Warm"],
     image: "/images/unsplash/playlists/bossa-trees-KttgjNw5Iqo.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/bossa-trees-KttgjNw5Iqo.webp",
     imagePosition: "center",
   },
   {
@@ -232,6 +243,7 @@ export const lofiGirlPlaylists = [
     accent: { color: "#a63336", ink: "#fff9f1" },
     moods: ["Festive", "Cozy", "Warm"],
     image: "/images/unsplash/playlists/christmas-tree-Kf8ko_oGN20.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/christmas-tree-Kf8ko_oGN20.webp",
     imagePosition: "center",
   },
   {
@@ -245,6 +257,7 @@ export const lofiGirlPlaylists = [
     accent: { color: "#df7428", ink: "#292832" },
     moods: ["Spooky", "Dark", "Playful"],
     image: "/images/unsplash/playlists/halloween-pumpkin-MYRG0ptGh50.jpg",
+    thumbnail: "/images/unsplash/playlists/thumbnails/halloween-pumpkin-MYRG0ptGh50.webp",
     imagePosition: "center",
   },
 ] satisfies readonly LofiGirlPlaylist[];

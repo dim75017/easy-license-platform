@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { preload } from "react-dom";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
 import { SymbiomeMark } from "./SymbiomeMark";
@@ -183,6 +184,44 @@ const CATALOG_PAGE_SIZE = 40;
 const RECENT_RELEASE_LIMIT = 8;
 const RECENT_RELEASE_BUFFER = 24;
 const PERSONAL_PLAYLIST_DESCRIPTION_LIMIT = 280;
+const VISIBLE_COVER_PRELOAD_LIMIT = 8;
+
+const personalPlaylistImageUrlCache = new Map<string, string>();
+const personalPlaylistImagePromiseCache = new Map<string, Promise<string | null>>();
+const warmedPlaylistArtwork = new Set<string>();
+
+function cachedPersonalPlaylistImageUrl(imageKey: string): Promise<string | null> {
+  const cached = personalPlaylistImageUrlCache.get(imageKey);
+  if (cached) return Promise.resolve(cached);
+  const pending = personalPlaylistImagePromiseCache.get(imageKey);
+  if (pending) return pending;
+  const request = loadPersonalPlaylistImage(imageKey)
+    .then((image) => {
+      if (!image) return null;
+      const objectUrl = URL.createObjectURL(image);
+      personalPlaylistImageUrlCache.set(imageKey, objectUrl);
+      return objectUrl;
+    })
+    .catch(() => null)
+    .finally(() => personalPlaylistImagePromiseCache.delete(imageKey));
+  personalPlaylistImagePromiseCache.set(imageKey, request);
+  return request;
+}
+
+function forgetCachedPersonalPlaylistImage(imageKey: string) {
+  const objectUrl = personalPlaylistImageUrlCache.get(imageKey);
+  if (objectUrl) URL.revokeObjectURL(objectUrl);
+  personalPlaylistImageUrlCache.delete(imageKey);
+  personalPlaylistImagePromiseCache.delete(imageKey);
+}
+
+function warmPlaylistArtwork(source: string) {
+  if (warmedPlaylistArtwork.has(source)) return;
+  warmedPlaylistArtwork.add(source);
+  const image = new Image();
+  image.decoding = "async";
+  image.src = source;
+}
 
 type CatalogFilters = {
   query: string;
@@ -561,7 +600,62 @@ function copyTextFallback(value: string) {
   }
 }
 
-function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen: (playlist: LofiGirlPlaylist) => void }) {
+function TrackCover({
+  src,
+  width,
+  height,
+  priority = false,
+  className,
+  fallbackClassName = "music-track-cover-placeholder",
+}: {
+  src: string | null;
+  width: number;
+  height: number;
+  priority?: boolean;
+  className?: string;
+  fallbackClassName?: string;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  if (src && failedSrc !== src && priority) {
+    preload(src, { as: "image", fetchPriority: "high" });
+  }
+  if (!src || failedSrc === src) {
+    return <span className={fallbackClassName} aria-hidden="true">♪</span>;
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      width={width}
+      height={height}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
+      decoding="async"
+      onError={() => setFailedSrc(src)}
+    />
+  );
+}
+
+function PlaylistHeroArtwork({ playlist }: { playlist: LofiGirlPlaylist }) {
+  const [decodedSource, setDecodedSource] = useState<string | null>(null);
+  return (
+    <>
+      <img className="music-playlist-detail-photo is-thumbnail" src={playlist.thumbnail} alt="" width={640} height={480} loading="eager" fetchPriority="high" decoding="async" />
+      <img className={`music-playlist-detail-photo is-full${decodedSource === playlist.image ? " is-loaded" : ""}`} src={playlist.image} alt="" width={1600} height={1200} loading="eager" fetchPriority="high" decoding="async" onLoad={() => setDecodedSource(playlist.image)} />
+    </>
+  );
+}
+
+function PlaylistCard({
+  playlist,
+  onOpen,
+  priority = false,
+}: {
+  playlist: LofiGirlPlaylist;
+  onOpen: (playlist: LofiGirlPlaylist) => void;
+  priority?: boolean;
+}) {
   const accent = getPlaylistAccent(playlist);
   const style = {
     "--playlist-accent": accent.color,
@@ -570,14 +664,26 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
   } as CSSProperties;
 
   return (
-    <button className="workspace-playlist" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.title}>
+    <button
+      className="workspace-playlist"
+      style={style}
+      type="button"
+      onClick={() => {
+        warmPlaylistArtwork(playlist.image);
+        onOpen(playlist);
+      }}
+      onPointerEnter={() => warmPlaylistArtwork(playlist.image)}
+      onFocus={() => warmPlaylistArtwork(playlist.image)}
+      title={playlist.title}
+    >
       <img
         className="workspace-playlist-photo"
-        src={playlist.image}
+        src={playlist.thumbnail}
         alt=""
-        width={1600}
-        height={1200}
-        loading="lazy"
+        width={640}
+        height={480}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
       />
       <span className="workspace-playlist-shade" aria-hidden="true" />
@@ -592,24 +698,24 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
 }
 
 function usePersonalPlaylistImageUrl(imageKey: string | null): string | null {
-  const [loadedImage, setLoadedImage] = useState<{ key: string; url: string } | null>(null);
+  const [loadedImage, setLoadedImage] = useState<{ key: string; url: string } | null>(() => {
+    const cached = imageKey ? personalPlaylistImageUrlCache.get(imageKey) : null;
+    return imageKey && cached ? { key: imageKey, url: cached } : null;
+  });
 
   useEffect(() => {
     let cancelled = false;
-    let objectUrl: string | null = null;
     if (!imageKey) return;
 
-    void loadPersonalPlaylistImage(imageKey)
-      .then((image) => {
-        if (!image || cancelled) return;
-        objectUrl = URL.createObjectURL(image);
-        setLoadedImage({ key: imageKey, url: objectUrl });
+    void cachedPersonalPlaylistImageUrl(imageKey)
+      .then((url) => {
+        if (!url || cancelled) return;
+        setLoadedImage({ key: imageKey, url });
       })
       .catch(() => undefined);
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [imageKey]);
 
@@ -645,7 +751,7 @@ function PersonalPlaylistArtwork({
   eager?: boolean;
 }) {
   const imageUrl = usePersonalPlaylistImageUrl(playlist.imageKey);
-  if (imageUrl) return <img className={className} src={imageUrl} alt="" width={1600} height={1200} loading={eager ? "eager" : "lazy"} decoding="async" />;
+  if (imageUrl) return <img className={className} src={imageUrl} alt="" width={640} height={480} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" />;
   return <span className={`${className} music-personal-playlist-default-art`} aria-hidden="true"><SymbiomeMark /></span>;
 }
 
@@ -1002,7 +1108,6 @@ export function CreatorWorkspace() {
   const [recentCatalogTracks, setRecentCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
   const [recentCatalogTotal, setRecentCatalogTotal] = useState(0);
   const [recentCatalogRequestFailed, setRecentCatalogRequestFailed] = useState(false);
-  const [recentCoverFailures, setRecentCoverFailures] = useState<Set<string>>(() => new Set());
   const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
   const [catalogBusy, setCatalogBusy] = useState(true);
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
@@ -1036,10 +1141,10 @@ export function CreatorWorkspace() {
   const recentTracks = useMemo(
     () => (recentCatalogTracks ?? [])
       .filter((track): track is WorkspaceTrack & { cover: string } => (
-        typeof track.cover === "string" && !recentCoverFailures.has(track.id)
+        typeof track.cover === "string"
       ))
       .slice(0, RECENT_RELEASE_LIMIT),
-    [recentCatalogTracks, recentCoverFailures],
+    [recentCatalogTracks],
   );
   const activePlaylist = useMemo(
     () => lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId) ?? null,
@@ -1726,6 +1831,7 @@ export function CreatorWorkspace() {
     setActionStatus(`${playlist.name} deleted. Its tracks remain in the catalogue.`);
 
     if (currentPlaylist.imageKey && !nextPlaylists.some((item) => item.imageKey === currentPlaylist.imageKey)) {
+      forgetCachedPersonalPlaylistImage(currentPlaylist.imageKey);
       try { await deletePersonalPlaylistImage(currentPlaylist.imageKey); } catch { /* Metadata deletion stays authoritative if local image cleanup is unavailable. */ }
     }
   }
@@ -1812,7 +1918,7 @@ export function CreatorWorkspace() {
         <div className="music-track-table-head" aria-hidden="true">
           <span>Track</span><span>Player</span><span>Genre</span><span>Mood</span><span>Actions</span>
         </div>
-        {source.map((track) => {
+        {source.map((track, index) => {
           const isActive = preview.activeTrackId === track.id;
           const isPlaying = isActive && preview.isPlaying;
           const hasError = preview.errorTrackId === track.id;
@@ -1849,7 +1955,7 @@ export function CreatorWorkspace() {
               key={track.id}
             >
               <div className="music-track-identity">
-                {track.cover ? <img src={track.cover} alt="" width={64} height={64} loading="lazy" decoding="async" /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}
+                <TrackCover src={track.cover} width={64} height={64} priority={index < VISIBLE_COVER_PRELOAD_LIMIT} />
                 <span><strong>{track.title}</strong><small>{track.artist}</small></span>
               </div>
               <div className="music-track-inline-player" role="group" aria-label={`Preview player for ${track.title}`}>
@@ -1998,29 +2104,13 @@ export function CreatorWorkspace() {
                 </button>
               </div>
               <div className="music-recent-grid" role="list" aria-label="Recent catalogue releases">
-                {recentTracks.map((track) => {
+                {recentTracks.map((track, index) => {
                   const isActive = preview.activeTrackId === track.id;
                   const isPlaying = isActive && preview.isPlaying;
                   return (
                     <article className={isActive ? "is-active" : ""} role="listitem" key={track.release?.id ?? track.id}>
                       <button className="music-recent-cover" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title} from ${track.release?.title ?? track.title} by ${track.artist}`} aria-pressed={isPlaying}>
-                        <img
-                          src={track.cover}
-                          alt=""
-                          width={420}
-                          height={420}
-                          loading="lazy"
-                          decoding="async"
-                          onError={(event) => {
-                            event.currentTarget.hidden = true;
-                            setRecentCoverFailures((current) => {
-                              if (current.has(track.id)) return current;
-                              const next = new Set(current);
-                              next.add(track.id);
-                              return next;
-                            });
-                          }}
-                        />
+                        <TrackCover src={track.cover} width={420} height={420} priority={index < 4} fallbackClassName="music-recent-cover-placeholder" />
                         <span className="music-recent-play"><PlaybackGlyph playing={isPlaying} /></span>
                       </button>
                       <div className="music-recent-copy"><strong>{track.release?.title ?? track.title}</strong><span>{track.artist}</span><small>{releaseMeta(track)}</small></div>
@@ -2041,7 +2131,7 @@ export function CreatorWorkspace() {
             <section className="music-shelf" aria-labelledby="project-playlists-title">
               <div className="music-shelf-head"><div><span className="workspace-lofi-kicker">PUBLIC PLAYLISTS FROM <LofiGirlWordmark /></span><h3 id="project-playlists-title">Start with a playlist.</h3><p>Twelve listening directions using the original playlist photography and a genre colour code.</p></div><button type="button" onClick={() => navigateToView("playlists")}>View all playlists</button></div>
               <div className="music-playlist-shelf">
-                {lofiGirlPlaylists.slice(0, 8).map((playlist) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} key={playlist.id} />)}
+                {lofiGirlPlaylists.slice(0, 8).map((playlist, index) => <PlaylistCard playlist={playlist} onOpen={openPlaylist} priority={index < 4} key={playlist.id} />)}
               </div>
             </section>
           </div>
@@ -2158,7 +2248,7 @@ export function CreatorWorkspace() {
       {selectedTrack && (
         <section className="workspace-audio-player is-open" aria-label="Track preview player">
           <div className="workspace-player-main">
-            {selectedTrack.cover ? <img src={selectedTrack.cover} alt="" width={52} height={52} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}
+            <TrackCover src={selectedTrack.cover} width={52} height={52} priority />
             <span><strong>{selectedTrack.title}</strong><small>{selectedTrack.artist}</small></span>
           </div>
           <div className="music-player-transport" aria-label="Playback controls">
@@ -2293,7 +2383,7 @@ function PlaylistLibrary({
       {activePlaylist ? (
         <>
           <section id="music-playlist-detail-hero" className="music-playlist-detail-hero" style={style} aria-labelledby="music-playlist-detail-title" tabIndex={-1}>
-            <img className="music-playlist-detail-photo" src={activePlaylist.image} alt="" width={1600} height={1200} loading="eager" fetchPriority="high" decoding="async" />
+            <PlaylistHeroArtwork playlist={activePlaylist} />
             <span className="music-playlist-detail-shade" aria-hidden="true" />
             <button className="music-playlist-detail-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> All playlists</button>
             <div className="music-playlist-detail-copy">
@@ -2359,7 +2449,7 @@ function PlaylistLibrary({
           </section>
           <section className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title">
             <div className="music-playlist-category-head"><div><span>CURATED BY SYMBIOME</span><h2 id="symbiome-playlists-title">Symbiome playlists</h2><p>Official listening directions curated from the catalogue.</p></div></div>
-            <div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div>
+            <div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist, index) => <PlaylistCard playlist={playlist} onOpen={onOpen} priority={index < 3} key={playlist.id} />)}</div>
           </section>
         </>
       )}
@@ -2368,7 +2458,7 @@ function PlaylistLibrary({
 }
 
 function DownloadsLibrary({ tracks, savedCount }: { tracks: readonly WorkspaceTrack[]; savedCount: number }) {
-  return <div className="music-secondary-view music-track-browser music-workspace-view">{savedCount > tracks.length && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</p>}{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
+  return <div className="music-secondary-view music-track-browser music-workspace-view">{savedCount > tracks.length && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</p>}{tracks.length ? <div className="music-download-list">{tracks.map((track, index) => <article key={track.id}><TrackActionIcon kind="download" /><TrackCover src={track.cover} width={45} height={45} priority={index < VISIBLE_COVER_PRELOAD_LIMIT} /><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
 }
 
 function ChannelsView() {
