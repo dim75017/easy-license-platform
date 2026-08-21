@@ -1772,10 +1772,15 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 4, "Discover, Music, Playlists and Liked tracks should share one full-width canvas");
   assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked";/);
   assert.match(musicWorkspace, /<header className=\{`music-app-topbar\$\{usesWideCanvas \? " is-wide" : ""\}`\}>/);
+  const musicTopbar = musicWorkspace.match(/<header className=\{`music-app-topbar[\s\S]*?<\/header>/);
+  assert.ok(musicTopbar, "the connected workspace should keep one top bar");
+  assert.doesNotMatch(musicTopbar[0], /music-topbar-action|>Downloads</, "the upper-right Downloads shortcut should be removed");
   assert.match(musicWorkspace, /view === "discover"[\s\S]{0,100}className="music-library-view music-workspace-view"/);
   assert.match(musicWorkspace, /view === "music"[\s\S]{0,100}className="music-track-browser music-workspace-view"/);
   assert.match(musicWorkspace, /view === "music"[\s\S]{0,160}className="music-track-browser music-workspace-view" aria-label="Music catalogue"/);
-  assert.match(musicWorkspace, /className="music-track-browser-head music-track-browser-controls"[\s\S]{0,220}className="music-track-results-status" role="status" aria-live="polite"/);
+  assert.match(musicWorkspace, /className="music-track-browser-head music-track-browser-controls"[\s\S]{0,900}className="music-global-search music-library-search"[\s\S]{0,900}className="music-filter-row"/, "the Library search should sit to the left of the filters");
+  assert.doesNotMatch(musicWorkspace, /loaded from \$\{catalogPagination|matching tracks loaded/, "steady-state catalogue counters should stay out of the Library UI");
+  assert.match(musicWorkspace, /catalogLoadState !== "live" \|\| !catalogViewIsCurrent \|\| catalogRequestFailed[\s\S]{0,180}className="music-track-results-status"/, "loading and failure notices should remain available");
   assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
   assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,180}className="music-secondary-view music-playlists-view music-workspace-view"/);
@@ -2037,7 +2042,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v13TabletCss, /\.workspace-player-timeline\s*\{[^}]*grid-template-columns:\s*28px minmax\(60px, 1fr\) 28px 80px/s);
   assert.match(v13TabletCss, /\.workspace-player-volume\s*\{[^}]*grid-template-columns:\s*30px minmax\(35px, 1fr\);[^}]*gap:\s*4px/s);
   assert.match(v13TopbarCss, /\.music-app-topbar\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;[^}]*gap:\s*16px/s);
-  assert.match(v13TopbarCss, /\.music-app-topbar > div:first-child\s*\{\s*display:\s*none;/);
+  assert.match(v13TopbarCss, /\.music-app-topbar > div:first-child\s*\{\s*display:\s*flex;/, "the title should keep the compact top bar from becoming empty");
   assert.match(v13TopbarCss, /\.music-global-search\s*\{\s*min-width:\s*0;/);
   assert.match(v13PlayerStackCss, /\.workspace-audio-player\s*\{[^}]*grid-template-areas:[\s\S]{0,140}"main transport actions"[\s\S]{0,80}"timeline timeline timeline"/s);
   assert.match(v13PlayerStackCss, /\.workspace-player-timeline\s*\{\s*grid-area:\s*timeline/);
@@ -2077,7 +2082,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV15, /\.music-action-icon svg\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*height:\s*100%/s);
   assert.match(musicWorkspaceV15, /\.music-action-icon::before,[\s\S]{0,180}\.music-action-icon > b\s*\{[^}]*display:\s*none !important;[^}]*content:\s*none !important/s);
   assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*32px;/s);
-  assert.match(musicWorkspaceV15, /\.music-track-browser-controls > \.music-track-results-status\s*\{\s*margin:\s*0;/s);
+  assert.match(musicWorkspaceV15, /\.music-track-browser-controls\s*\{[^}]*--music-library-control-height:\s*42px;[^}]*align-items:\s*flex-end;[^}]*flex-wrap:\s*wrap/s);
+  assert.match(musicWorkspaceV15, /\.music-library-search\s*\{[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\);[^}]*flex:\s*1 1 360px/s);
+  assert.match(musicWorkspaceV15, /\.music-track-browser-controls \.music-filter-row select,[\s\S]{0,120}\.music-track-browser-controls \.music-filter-row > button\s*\{[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\)/s);
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);

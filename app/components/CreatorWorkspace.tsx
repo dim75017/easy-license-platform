@@ -1164,19 +1164,6 @@ export function CreatorWorkspace() {
       <main className="music-app-main">
         <header className={`music-app-topbar${usesWideCanvas ? " is-wide" : ""}`}>
           <div><span>Symbiome</span><h1>{viewLabels[view]}</h1></div>
-          <label className="music-global-search">
-            <span aria-hidden="true">⌕</span>
-            <input
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setActiveUse(null);
-                navigateToView("music");
-              }}
-              placeholder="Search by track, artist, genre, mood or theme"
-            />
-          </label>
-          <button className="music-topbar-action" type="button" onClick={() => navigateToView("downloads")}>Downloads</button>
           <WorkspaceProfileSwitcher activeRole="creator" compact />
         </header>
 
@@ -1246,6 +1233,27 @@ export function CreatorWorkspace() {
         {view === "music" && (
           <section className="music-track-browser music-workspace-view" aria-label="Music catalogue">
             <div className="music-track-browser-head music-track-browser-controls">
+              <label className="music-global-search music-library-search">
+                <span aria-hidden="true">⌕</span>
+                <input
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setActiveUse(null);
+                  }}
+                  aria-label="Search the music library"
+                  placeholder="Search by track, artist, genre, mood or theme"
+                />
+              </label>
+              <div className="music-filter-row">
+                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
+                {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
+                {catalogRequestFailed && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
+              </div>
+            </div>
+            {(catalogLoadState !== "live" || !catalogViewIsCurrent || catalogRequestFailed) && (
               <p className="music-track-results-status" role="status" aria-live="polite">
                 {catalogLoadState === "loading"
                   ? "Loading the live catalogue..."
@@ -1256,17 +1264,10 @@ export function CreatorWorkspace() {
                         : catalogRequestFailed
                           ? "The current catalogue filters could not be loaded. Retry when you are ready."
                           : "Preparing the current catalogue filters..."
-                      : `${visibleTracks.length} loaded from ${catalogPagination?.total ?? visibleTracks.length} matching ${(catalogPagination?.total ?? visibleTracks.length) === 1 ? "track" : "tracks"}${catalogBusy ? " · Updating..." : catalogRequestFailed ? " · Update failed, previous results kept" : ""}`
+                      : "Update failed, previous results kept."
                     : "The live catalogue is temporarily unavailable. Retry to load it."}
               </p>
-              <div className="music-filter-row">
-                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
-                {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
-                {catalogRequestFailed && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
-              </div>
-            </div>
+            )}
             {renderTrackTable(visibleTracks, "Matching music tracks")}
             {catalogLoadState === "live" && catalogViewIsCurrent && catalogPagination?.hasNextPage && (
               <div className="music-catalogue-load-more" ref={catalogLoadMoreSentinelRef}>
@@ -1279,13 +1280,11 @@ export function CreatorWorkspace() {
                         : `Load ${Math.min(CATALOG_PAGE_SIZE, Math.max(1, catalogPagination.total - (catalogPagination.page * catalogPagination.pageSize)))} more tracks`}
                   </button>
                 )}
-                <span role="status" aria-live="polite">
-                  {catalogLoadingMore
-                    ? `Loading more tracks · ${visibleTracks.length} of ${catalogPagination.total} currently loaded`
-                    : catalogLoadMoreFailed
-                      ? `Automatic loading paused · ${visibleTracks.length} of ${catalogPagination.total} matching tracks loaded`
-                      : `${visibleTracks.length} of ${catalogPagination.total} matching tracks loaded`}
-                </span>
+                {(catalogLoadingMore || catalogLoadMoreFailed) && (
+                  <span role="status" aria-live="polite">
+                    {catalogLoadingMore ? "Loading more tracks..." : "Automatic loading paused. Retry to continue."}
+                  </span>
+                )}
               </div>
             )}
           </section>

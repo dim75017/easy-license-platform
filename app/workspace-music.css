@@ -1389,7 +1389,7 @@ article.music-track-row[role="listitem"] {
     gap: 16px;
   }
 
-  .music-app-topbar > div:first-child { display: none; }
+  .music-app-topbar > div:first-child { display: flex; }
   .music-global-search { min-width: 0; }
 }
 
@@ -1930,7 +1930,51 @@ article.music-track-row[role="listitem"] {
   article.music-track-row[role="listitem"] .music-track-genre { padding-left: 32px; }
 }
 
-.music-track-browser-controls > .music-track-results-status { margin: 0; }
+.music-app-topbar { grid-template-columns: minmax(0, 1fr) auto; }
+
+.music-app-topbar > .music-profile-switcher.is-compact {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.music-track-browser-controls {
+  --music-library-control-height: 42px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.music-library-search {
+  width: min(520px, 100%);
+  min-width: 260px;
+  min-height: var(--music-library-control-height);
+  height: var(--music-library-control-height);
+  flex: 1 1 360px;
+  grid-template-columns: 24px minmax(0, 1fr);
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.music-library-search > span { font-size: 21px; }
+
+.music-track-browser-controls > .music-filter-row { margin-left: auto; }
+
+.music-track-browser-controls .music-filter-row select,
+.music-track-browser-controls .music-filter-row > button {
+  min-height: var(--music-library-control-height);
+  height: var(--music-library-control-height);
+}
+
+.music-track-browser-controls + .music-track-results-status { margin: -7px 0 18px; }
+
+@media (max-width: 860px) {
+  .music-library-search {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .music-track-browser-controls > .music-filter-row { margin-left: 0; }
+}
 
 .music-catalogue-load-more {
   display: flex;
@@ -2093,7 +2137,7 @@ button.music-app-account:focus-visible,
 .music-profile-switcher.is-compact { display: none; }
 
 @media (max-width: 860px) {
-  .music-app-topbar { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .music-app-topbar { grid-template-columns: minmax(0, 1fr) auto; }
   .music-profile-switcher.is-compact { display: block; }
   .music-profile-switcher.is-compact button.music-app-account {
     display: grid;
