@@ -38,11 +38,35 @@ const catalogueMoodAliases: Record<CatalogueMood, readonly string[]> = {
   Floating: ["Floating", "Open", "Dreamy", "Weightless"],
 };
 
+const catalogueMoodGenreFallbacks: Record<CatalogueMood, readonly string[]> = {
+  Dreamy: ["Ambient", "Dark Ambient", "Piano", "Lofi"],
+  "Laid Back": ["Lofi", "Jazz", "Guitar"],
+  Relaxing: ["Ambient", "Piano", "Classical", "Lofi"],
+  Peaceful: ["Piano", "Classical", "Ambient"],
+  Smooth: ["Jazz", "Lofi", "Guitar"],
+  Hopeful: ["Piano", "Classical", "Lofi"],
+  Dark: ["Dark Ambient", "Synthwave"],
+  Mysterious: ["Dark Ambient", "Ambient", "Synthwave"],
+  Romantic: ["Piano", "Classical", "Guitar", "Jazz"],
+  Sad: ["Piano", "Classical", "Dark Ambient"],
+  Sentimental: ["Piano", "Guitar", "Classical", "Lofi"],
+  Warm: ["Lofi", "Jazz", "Guitar"],
+  Cozy: ["Lofi", "Jazz", "Piano"],
+  Reflective: ["Piano", "Classical", "Ambient", "Lofi"],
+  Happy: ["Lofi", "Jazz", "Guitar", "Synthwave"],
+  Floating: ["Ambient", "Dark Ambient", "Piano"],
+};
+
 const canonicalMoodByLabel = new Map(catalogueMoodFilters.map((mood) => [mood.toLocaleLowerCase(), mood]));
 
 export function moodFilterAliases(value: string): readonly string[] {
   const canonicalMood = canonicalMoodByLabel.get(value.trim().toLocaleLowerCase());
   return canonicalMood ? catalogueMoodAliases[canonicalMood] : [value.trim()];
+}
+
+export function moodFilterGenreFallbacks(value: string): readonly string[] {
+  const canonicalMood = canonicalMoodByLabel.get(value.trim().toLocaleLowerCase());
+  return canonicalMood ? catalogueMoodGenreFallbacks[canonicalMood] : [];
 }
 
 export function trackMatchesMood(trackMoods: readonly string[], selectedMood: string): boolean {

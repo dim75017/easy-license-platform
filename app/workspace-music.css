@@ -1957,6 +1957,19 @@ article.music-track-row[role="listitem"] {
 
 .music-track-browser-controls > .music-filter-row { margin-left: auto; }
 
+.music-active-playlist-filter {
+  display: inline-flex;
+  min-height: var(--music-library-control-height);
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--wm-ink);
+  color: var(--wm-cream);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
 .music-track-browser-controls .music-filter-row select,
 .music-track-browser-controls .music-filter-row > button {
   min-height: var(--music-library-control-height);

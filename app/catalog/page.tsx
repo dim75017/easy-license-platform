@@ -37,10 +37,10 @@ export default function CataloguePage() {
           <div className="music-playlist-grid" data-reveal="group">
             {lofiGirlPlaylists.map((playlist, index) => {
               const accent = getPlaylistAccent(playlist);
-              return <a
-                aria-label={`Open ${playlist.title} playlist on Spotify`}
+              return <Link
+                aria-label={`Open ${playlist.title} in the Symbiome library`}
                 className="music-playlist-card"
-                href={`https://open.spotify.com/playlist/${playlist.spotifyId}`}
+                href={`/app?view=music&playlist=${encodeURIComponent(playlist.id)}`}
                 key={playlist.id}
                 style={{ "--playlist-accent": accent.color, "--playlist-accent-ink": accent.ink } as CSSProperties}
               >
@@ -55,10 +55,10 @@ export default function CataloguePage() {
                   style={{ objectPosition: playlist.imagePosition ?? "center" }}
                 />
                 <span className="music-playlist-copy"><small>{playlist.genre} · {playlist.moods.slice(0, 2).join(" · ")}</small><strong>{playlist.title}</strong><em>{playlist.description}</em></span>
-              </a>;
+              </Link>;
             })}
           </div>
-          <a className="music-playlists-all cta-swipe" href="https://open.spotify.com/user/chilledcow?si=be0806a4d0fd44ca">Explore all playlists</a>
+          <Link className="music-playlists-all cta-swipe" href="/app?view=playlists">Explore all playlists</Link>
         </section>
 
         <section className="catalogue-moods" aria-labelledby="music-moods-title">
@@ -72,7 +72,7 @@ export default function CataloguePage() {
           <ul className="catalogue-moods-grid" data-reveal="group">
             {featuredMoods.map((mood, index) => (
               <li key={mood}>
-                <Link className="catalogue-mood-card" href={`/catalog?mood=${encodeURIComponent(mood)}#music-library`}>
+                <Link className="catalogue-mood-card" href={`/app?view=music&mood=${encodeURIComponent(mood)}`}>
                   <span className="catalogue-mood-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <strong>{mood}</strong>
                   <span className="catalogue-mood-action">Browse tracks</span>

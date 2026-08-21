@@ -9,7 +9,8 @@ import {
   publicCatalogOptionsResponse,
   publicCatalogResponse,
 } from "../_lib/public-read";
-import { moodFilterAliases } from "../../../lib/catalog-moods";
+import { moodFilterAliases, moodFilterGenreFallbacks } from "../../../lib/catalog-moods";
+import { catalogPlaylistRule } from "../../../lib/catalog-playlists";
 
 const DEFAULT_PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
@@ -53,9 +54,14 @@ export async function GET(request: Request): Promise<Response> {
     const genre = queryText(url, "genre", 120);
     const mood = queryText(url, "mood", 120);
     const theme = queryText(url, "theme", 120);
+    const playlist = queryText(url, "playlist", 80);
+    const playlistRule = playlist ? catalogPlaylistRule(playlist) : null;
+    if (playlist && !playlistRule) {
+      throw new CatalogApiError("playlist is invalid.");
+    }
     const trackId = queryOptionalInteger(url, "trackId", 1, MAX_TRACK_ID);
     const onePerRelease = queryBoolean(url, "onePerRelease", false);
-    const releaseTrackCountIsComplete = !search && !genre && !mood && !theme && trackId === null;
+    const releaseTrackCountIsComplete = !search && !genre && !mood && !theme && !playlist && trackId === null;
     if (trackId !== null && onePerRelease) {
       throw new CatalogApiError(
         "trackId and onePerRelease cannot be used together.",
@@ -90,12 +96,24 @@ export async function GET(request: Request): Promise<Response> {
     }
     if (mood) {
       const acceptedMoods = moodFilterAliases(mood);
-      filters.push(`t.mood IN (${acceptedMoods.map(() => "?").join(", ")})`);
-      parameters.push(...acceptedMoods);
+      const fallbackGenres = moodFilterGenreFallbacks(mood);
+      const moodPlaceholders = acceptedMoods.map(() => "?").join(", ");
+      if (fallbackGenres.length) {
+        const genrePlaceholders = fallbackGenres.map(() => "?").join(", ");
+        filters.push(`(t.mood IN (${moodPlaceholders}) OR (t.mood IS NULL AND t.genre IN (${genrePlaceholders})))`);
+        parameters.push(...acceptedMoods, ...fallbackGenres);
+      } else {
+        filters.push(`t.mood IN (${moodPlaceholders})`);
+        parameters.push(...acceptedMoods);
+      }
     }
     if (theme) {
       filters.push("t.theme = ?");
       parameters.push(theme);
+    }
+    if (playlistRule) {
+      filters.push(`t.genre IN (${playlistRule.genres.map(() => "?").join(", ")})`);
+      parameters.push(...playlistRule.genres);
     }
     if (trackId !== null) {
       filters.push("t.id = ?");
@@ -215,7 +233,7 @@ export async function GET(request: Request): Promise<Response> {
         nextPage: hasNextPage ? page + 1 : null,
       },
       view: onePerRelease ? "releases" : "tracks",
-      filters: { q: search, genre, mood, theme, trackId },
+      filters: { q: search, genre, mood, theme, playlist, trackId },
     }));
   } catch (error) {
     return publicCatalogResponse(catalogErrorResponse(error));
