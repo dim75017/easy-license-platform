@@ -1806,6 +1806,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const playlistLibraryBlock = musicWorkspace.slice(playlistLibraryStart, downloadsLibraryStart);
   assert.doesNotMatch(playlistLibraryBlock, /<header>|LISTENING WORLDS|Twelve distinct directions/, "the redundant Playlists introduction should be removed");
   assert.match(playlistLibraryBlock, /activePlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero"[\s\S]{0,220}src=\{activePlaylist\.image\}/);
+  assert.match(playlistLibraryBlock, /id="music-playlist-detail-hero"[\s\S]{0,180}tabIndex=\{-1\}/);
   assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePlaylist\.title\}<\/h2>[\s\S]{0,100}<p>\{activePlaylist\.description\}<\/p>/);
   assert.match(playlistLibraryBlock, /className="music-playlist-detail-back"[\s\S]{0,80}onClick=\{onBack\}/);
   assert.match(playlistLibraryBlock, /\{catalogueStatus\}[\s\S]{0,80}\{trackList\}[\s\S]{0,80}\{cataloguePager\}/);
@@ -2123,11 +2124,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-hero\s*\{[^}]*min-height:\s*clamp\(420px, 58vh, 640px\);[^}]*overflow:\s*hidden;[^}]*isolation:\s*isolate/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-hero\s*\{[^}]*scroll-margin-top:\s*106px/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-photo\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*object-fit:\s*cover;[^}]*object-position:\s*var\(--playlist-position, center\)/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-copy h2\s*\{[^}]*font-size:\s*clamp\(54px, 7\.2vw, 108px\);[^}]*text-wrap:\s*balance/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-copy > p\s*\{[^}]*max-width:\s*62ch;[^}]*font-size:\s*clamp\(16px, 1\.35vw, 19px\)/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-back::before\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*transform:\s*translate3d\(-101%, 0, 0\)/s);
   assert.match(musicWorkspaceV23, /\.music-playlist-detail-back:focus-visible::before\s*\{\s*transform:\s*translate3d\(0, 0, 0\)/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-status\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*space-between/s);
   assert.match(musicWorkspaceV23, /@media \(max-width:\s*600px\)[\s\S]{0,180}\.music-playlist-detail-hero\s*\{[^}]*min-height:\s*390px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button\s*\{[^}]*min-height:\s*44px/s);

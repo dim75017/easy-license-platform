@@ -39,6 +39,8 @@ test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites 
   assert.match(workspace, /"IntersectionObserver" in window/u);
   assert.match(workspace, /new IntersectionObserver\(\(\[entry\]\)[\s\S]{0,120}entry\?\.isIntersecting[\s\S]{0,80}loadMoreCatalog\(\)/u);
   assert.match(workspace, /const catalogueIsVisible = view === "music" \|\| \(view === "playlists" && activePlaylistId !== null\)/u);
+  assert.match(workspace, /activePlaylistId \|\| view !== "playlists"[\s\S]{0,380}getElementById\("music-playlist-detail-hero"\)[\s\S]{0,240}hero\.focus\(\{ preventScroll: true \}\)[\s\S]{0,160}hero\.scrollIntoView/u);
+  assert.match(workspace, /catalogRequestFailed && <button className="cta-swipe"[\s\S]{0,140}setCatalogRetryNonce[\s\S]{0,80}Retry playlist/u);
   assert.match(workspace, /rootMargin: "720px 0px", threshold: 0/u);
   assert.match(workspace, /ref=\{catalogLoadMoreSentinelRef\}/u);
   assert.match(workspace, /catalogInfiniteScrollSupported === false \|\| catalogLoadMoreFailed/u);
