@@ -1909,12 +1909,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /onClick=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*togglePreview\(track\);\s*\}\}/);
   assert.match(musicWorkspace, /onKeyDown=\{\(event\) => \{[\s\S]{0,160}event\.target !== event\.currentTarget[\s\S]{0,260}event\.key === "ContextMenu" \|\| \(event\.shiftKey && event\.key === "F10"\)[\s\S]{0,420}event\.key !== "Enter" && event\.key !== " "[\s\S]{0,120}togglePreview\(track\)/);
   const rowActions = musicWorkspace.match(/<div className="music-track-actions">([\s\S]*?)<\/div>/);
-  assert.ok(rowActions, "every music row should expose its four primary actions");
-  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 4, "track rows should expose Like, Add, Download and Share");
+  assert.ok(rowActions, "every music row should expose its primary actions and the personal-playlist removal when applicable");
+  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 5, "track rows should expose Like, Add, Download, Share and a conditional playlist removal");
   assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
   assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
   assert.match(rowActions[1], /disabled=\{track\.previewDownloadUrl === null\}[\s\S]{0,260}onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,420}Licensed download unavailable for \$\{track\.title\}[\s\S]{0,260}<TrackActionIcon kind="download"/);
   assert.match(rowActions[1], /onClick=\{\(\) => void shareTrack\(track\)\}[\s\S]{0,100}aria-label=\{`Copy link to \$\{track\.title\}`\}>\s*<TrackActionIcon kind="share" \/>/);
+  assert.match(rowActions[1], /personalPlaylist && <button className="music-track-remove-from-playlist"[\s\S]{0,220}removeTrackFromPersonalPlaylist\(track, personalPlaylist\.id\)[\s\S]{0,180}<TrackActionIcon kind="delete" \/>/);
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
   const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
   assert.ok(fixedPlayerActions, "the fixed player should mirror the four primary actions");
@@ -1922,19 +1923,20 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(fixedPlayerActions[1], /shareTrack\(selectedTrack\)[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
   assert.doesNotMatch(musicWorkspace, /More options for|music-track-more|>\s*(?:â€¢â€¢â€¢|•••)\s*<\/button>/, "the obsolete More action should not return");
   const actionIcon = musicWorkspace.match(/function TrackActionIcon\([\s\S]*?\n\}/);
-  assert.ok(actionIcon, "the four actions should share one icon component");
-  assert.match(actionIcon[0], /kind: "like" \| "playlist" \| "download" \| "share"/);
+  assert.ok(actionIcon, "the actions should share one icon component");
+  assert.match(actionIcon[0], /kind: "like" \| "playlist" \| "download" \| "share" \| "delete"/);
   assert.match(actionIcon[0], /<svg viewBox="0 0 24 24"[\s\S]{0,160}stroke="currentColor"/);
-  for (const kind of ["like", "playlist", "download", "share"]) {
+  for (const kind of ["like", "playlist", "download", "share", "delete"]) {
     assert.match(actionIcon[0], new RegExp(`kind === "${kind}"`), `${kind} should have an SVG glyph`);
   }
 
   assert.match(musicWorkspace, /const trackControlSelector = "button, a, input, select, textarea, \[role='menu'\], \[role='dialog'\]"/);
-  assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions", event\.currentTarget\);/);
+  assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions", event\.currentTarget, personalPlaylist\?\.id \?\? null\);/);
   assert.match(musicWorkspace, /id="music-track-context-menu"\s*className="music-track-context-menu"\s*role=\{state\.mode === "actions" \? "menu" : "dialog"\}\s*aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : `Add \$\{track\.title\} to a playlist`\}/);
   const contextActions = musicWorkspace.match(/state\.mode === "actions" \? \(\s*<div className="music-track-context-options">([\s\S]*?)<\/div>\s*\) : \(/);
   assert.ok(contextActions, "the track context menu should expose one primary action group");
-  assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 4, "the context menu should expose Like, Add, Download and Share");
+  assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 5, "the context menu should expose the four primary actions plus conditional removal from the open playlist");
+  assert.match(contextActions[1], /removeFromPlaylistName && <button className="is-destructive"[\s\S]{0,220}<TrackActionIcon kind="delete" \/>[\s\S]{0,100}Remove from \{removeFromPlaylistName\}/);
   assert.match(contextActions[1], /role="menuitemcheckbox" aria-checked=\{liked\}/);
   assert.match(contextActions[1], /<TrackActionIcon kind="playlist" \/>[\s\S]{0,80}Add to playlist/);
   assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,140}Download listening copy[\s\S]{0,80}Download unavailable/);
@@ -1983,6 +1985,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /typeof record\.description === "string"[\s\S]{0,160}PERSONAL_PLAYLIST_DESCRIPTION_LIMIT[\s\S]{0,180}isPersonalPlaylistImageKey\(record\.imageKey\) \? record\.imageKey : null/);
   assert.match(musicWorkspace, /return \[\{ id: record\.id, name: record\.name\.trim\(\)\.slice\(0, 48\), description, imageKey, trackIds:/, "legacy name-only playlists should migrate with empty optional fields");
   assert.match(musicWorkspace, /record\.trackIds\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /const storedPlaylistsValue = window\.localStorage\.getItem\("symbiome-personal-playlists-v1"\)[\s\S]{0,180}storedPlaylistsValue === null \? null : JSON\.parse\(storedPlaylistsValue\)/);
+  assert.match(musicWorkspace, /if \(Array\.isArray\(storedPlaylists\)\)[\s\S]{0,1300}setPersonalPlaylists\(validPlaylists\)/, "an explicitly empty saved list must remain empty after F5");
+  assert.doesNotMatch(musicWorkspace, /if \(validPlaylists\.length\) setPersonalPlaylists/, "deleting the last playlist must not resurrect the default playlist");
   assert.match(musicWorkspace, /storedDownloads\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /async function createPersonalPlaylist\(draft: PersonalPlaylistDraft\)[\s\S]{0,420}personalPlaylistImageKey\(id\)[\s\S]{0,120}savePersonalPlaylistImage\(imageKey, draft\.image\)[\s\S]{0,360}description: draft\.description,[\s\S]{0,80}imageKey,[\s\S]{0,80}trackIds: track \? \[track\.id\] : \[\]/);
@@ -1993,16 +1998,43 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistComposerBlock[0], /Description <small>Optional<\/small>[\s\S]{0,180}<textarea[\s\S]{0,220}maxLength=\{PERSONAL_PLAYLIST_DESCRIPTION_LIMIT\}/);
   assert.match(playlistComposerBlock[0], /Image <small>Optional · JPEG, PNG or WebP<\/small>[\s\S]{0,220}<input type="file" accept="image\/jpeg,image\/png,image\/webp"/);
   assert.match(playlistComposerBlock[0], /aria-label="Default Symbiome playlist artwork"><SymbiomeMark \/>/);
-  assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,420}loadPersonalPlaylistImage\(imageKey\)[\s\S]{0,280}URL\.revokeObjectURL\(objectUrl\)/);
-  assert.match(musicWorkspace, /function PersonalPlaylistArtwork[\s\S]{0,360}usePersonalPlaylistImageUrl\(playlist\.imageKey\)[\s\S]{0,180}music-personal-playlist-default-art[\s\S]{0,80}<SymbiomeMark \/>/);
-  assert.match(musicWorkspace, /function PersonalPlaylistCard[\s\S]{0,420}className="workspace-playlist music-personal-playlist-card"[\s\S]{0,160}<PersonalPlaylistArtwork playlist=\{playlist\} className="workspace-playlist-photo"/);
+  assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,720}loadPersonalPlaylistImage\(imageKey\)[\s\S]{0,480}URL\.revokeObjectURL\(objectUrl\)/);
+  assert.match(musicWorkspace, /function PersonalPlaylistArtwork[\s\S]{0,680}usePersonalPlaylistImageUrl\(playlist\.imageKey\)[\s\S]{0,360}music-personal-playlist-default-art[\s\S]{0,120}<SymbiomeMark \/>/);
+  const personalPlaylistCard = musicWorkspace.match(/function PersonalPlaylistCard[\s\S]*?(?=\nfunction PersonalPlaylistContextMenu)/);
+  assert.ok(personalPlaylistCard, "personal playlists should use a two-control card shell");
+  assert.match(personalPlaylistCard[0], /<article[\s\S]{0,120}className="music-personal-playlist-card-shell"[\s\S]{0,220}onContextMenu=\{\(event\) => \{[\s\S]{0,100}event\.preventDefault\(\)[\s\S]{0,160}onOpenMenu\(playlist, event\.clientX, event\.clientY, event\.currentTarget\)/);
+  assert.match(personalPlaylistCard[0], /className="workspace-playlist music-personal-playlist-card"[\s\S]*?<PersonalPlaylistArtwork playlist=\{playlist\} className="workspace-playlist-photo"/);
+  assert.match(personalPlaylistCard[0], /className="music-personal-playlist-delete"[\s\S]{0,160}aria-label=\{`Delete playlist \$\{playlist\.name\}`\}[\s\S]{0,120}<TrackActionIcon kind="delete" \/>/);
+  assert.match(personalPlaylistCard[0], /event\.key !== "ContextMenu"[\s\S]{0,120}event\.shiftKey && event\.key === "F10"[\s\S]{0,220}onOpenMenu\(playlist/);
+  assert.match(musicWorkspace, /function PersonalPlaylistContextMenu[\s\S]{0,3000}role="menu"[\s\S]{0,500}role="menuitem"[\s\S]{0,220}Delete playlist/);
+  const playlistDeleteDialog = musicWorkspace.match(
+    /function PlaylistDeleteDialog[\s\S]*?(?=\nfunction PlaylistComposerDialog)/,
+  );
+  assert.ok(playlistDeleteDialog, "playlist delete confirmation dialog should be present");
+  assert.match(
+    playlistDeleteDialog[0],
+    /<dialog[\s\S]*?aria-labelledby="music-playlist-delete-title"[\s\S]*?aria-describedby="music-playlist-delete-description"/,
+  );
+  assert.match(
+    playlistDeleteDialog[0],
+    /className="is-destructive"[\s\S]*?\{busy \? "Deleting…" : "Delete playlist"\}<\/button>/,
+  );
   assert.match(personalPlaylistImages, /allowedImageTypes = new Set\(\["image\/jpeg", "image\/png", "image\/webp"\]\)/);
   assert.match(personalPlaylistImages, /MAX_SOURCE_IMAGE_BYTES = 8 \* 1024 \* 1024[\s\S]{0,100}MAX_STORED_IMAGE_BYTES = 1024 \* 1024/);
   assert.match(personalPlaylistImages, /bitmap = await createImageBitmap\(file\)/);
   assert.match(personalPlaylistImages, /const attempts = \[[\s\S]{0,120}\{ width: 1200, quality: \.82 \}[\s\S]{0,120}\{ width: 720, quality: \.66 \}/);
   assert.match(personalPlaylistImages, /indexedDB\.open\(PERSONAL_PLAYLIST_DB_NAME, PERSONAL_PLAYLIST_DB_VERSION\)[\s\S]{0,220}createObjectStore\(PERSONAL_PLAYLIST_IMAGE_STORE\)/);
+  assert.match(personalPlaylistImages, /export async function deletePersonalPlaylistImage\(key: string\)[\s\S]{0,220}transactionComplete\(database, "readwrite", \(store\) => store\.delete\(key\)\)/);
+  assert.match(musicWorkspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)[\s\S]{0,420}setPersonalPlaylists\(nextPlaylists\)/);
+  const deletePersonalPlaylistBlock = musicWorkspace.match(
+    /async function deletePersonalPlaylist\(playlist: PersonalPlaylist\)[\s\S]*?(?=\n  async function createPersonalPlaylist)/,
+  );
+  assert.ok(deletePersonalPlaylistBlock, "personal playlist deletion should be implemented");
+  assert.match(deletePersonalPlaylistBlock[0], /personalPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)/);
+  assert.match(deletePersonalPlaylistBlock[0], /writePersonalPlaylistSelectionToLocation\(null, "replace"\)/);
+  assert.match(deletePersonalPlaylistBlock[0], /deletePersonalPlaylistImage\(currentPlaylist\.imageKey\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
-  assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,100}activePersonalPlaylist=\{activePersonalPlaylist\}[\s\S]{0,720}personalTrackList=\{activePersonalPlaylist && activePersonalPlaylistTracks\.length \? renderTrackTable\(activePersonalPlaylistTracks, `\$\{activePersonalPlaylist\.name\} tracks`\) : null\}[\s\S]{0,240}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
+  assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,100}activePersonalPlaylist=\{activePersonalPlaylist\}[\s\S]{0,900}personalTrackList=\{activePersonalPlaylist && activePersonalPlaylistTracks\.length \? renderTrackTable\(activePersonalPlaylistTracks, `\$\{activePersonalPlaylist\.name\} tracks`, activePersonalPlaylist\) : null\}[\s\S]{0,240}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
   assert.match(musicWorkspace, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"/);
@@ -2069,13 +2101,16 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v24Start > v23Start, "personal playlist cards and the composer should follow the playlist detail block");
   const v25Start = musicWorkspaceCss.indexOf("/* V25");
   assert.ok(v25Start > v24Start, "the selected editorial navigation icons should follow the playlist composer styles");
+  const v26Start = musicWorkspaceCss.indexOf("/* V26");
+  assert.ok(v26Start > v25Start, "playlist deletion and exact card framing should follow the selected navigation icons");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
   const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
   const musicWorkspaceV15 = musicWorkspaceCss.slice(v15Start, v23Start);
   const musicWorkspaceV23 = musicWorkspaceCss.slice(v23Start, v24Start);
   const musicWorkspaceV24 = musicWorkspaceCss.slice(v24Start, v25Start);
-  const musicWorkspaceV25 = musicWorkspaceCss.slice(v25Start);
+  const musicWorkspaceV25 = musicWorkspaceCss.slice(v25Start, v26Start);
+  const musicWorkspaceV26 = musicWorkspaceCss.slice(v26Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -2223,6 +2258,12 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV25, /direction A gives Discover, Playlists and Downloads an editorial icon language/);
   assert.match(musicWorkspaceV25, /\.music-nav-icon\s*\{[^}]*width:\s*22px;[^}]*height:\s*22px/s);
   assert.match(musicWorkspaceV25, /@media \(max-width:\s*860px\)[\s\S]{0,180}\.music-nav-icon\s*\{\s*width:\s*20px;\s*height:\s*20px;/s);
+  assert.match(musicWorkspaceV26, /personal playlist deletion and one shared 4:3 card frame/);
+  assert.match(musicWorkspaceV26, /\.music-personal-playlist-card-shell > \.workspace-playlist,\s*\.music-symbiome-playlists > \.music-secondary-playlists > \.workspace-playlist\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*min-height:\s*0;[^}]*aspect-ratio:\s*4 \/ 3;/s);
+  assert.match(musicWorkspaceV26, /\.music-personal-playlist-delete\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*6;[^}]*width:\s*42px;[^}]*height:\s*42px;/s);
+  assert.match(musicWorkspaceV26, /\.music-personal-playlist-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*150;[^}]*width:\s*min\(230px, calc\(100vw - 24px\)\)/s);
+  assert.match(musicWorkspaceV26, /\.music-playlist-delete-dialog\s*\{[^}]*width:\s*min\(520px, calc\(100vw - 28px\)\);[^}]*border-radius:\s*22px/s);
+  assert.match(musicWorkspaceV26, /@media \(forced-colors:\s*active\)[\s\S]{0,420}\.music-playlist-delete-dialog footer > button\s*\{\s*border:\s*1px solid ButtonText;/s);
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);

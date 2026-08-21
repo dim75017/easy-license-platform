@@ -100,6 +100,12 @@ export async function loadPersonalPlaylistImage(key: string): Promise<Blob | nul
   });
 }
 
+export async function deletePersonalPlaylistImage(key: string): Promise<void> {
+  if (!isPersonalPlaylistImageKey(key)) throw new Error("The playlist image key is invalid.");
+  const database = await openPersonalPlaylistDatabase();
+  await transactionComplete(database, "readwrite", (store) => store.delete(key));
+}
+
 function openPersonalPlaylistDatabase(): Promise<IDBDatabase> {
   if (databasePromise) return databasePromise;
   if (typeof indexedDB === "undefined") return Promise.reject(new Error("Local image storage is unavailable."));
