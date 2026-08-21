@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 
 type WorkspaceRole = "creator" | "business" | "admin";
+type ProfileLibraryView = "channels" | "licences";
 type ProfileState = "loading" | "guest" | "authenticated";
 
 type WorkspaceProfile = {
@@ -20,9 +27,13 @@ const signOutHref = publicAccountSignOutHref("login");
 export function WorkspaceProfileSwitcher({
   activeRole = "creator",
   compact = false,
+  activeLibraryView,
+  onOpenLibraryView,
 }: {
   activeRole?: WorkspaceRole;
   compact?: boolean;
+  activeLibraryView?: ProfileLibraryView;
+  onOpenLibraryView?: (view: ProfileLibraryView) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [profileState, setProfileState] = useState<ProfileState>(isStaticDemo ? "guest" : "loading");
@@ -126,12 +137,28 @@ export function WorkspaceProfileSwitcher({
     items[nextIndex]?.focus();
   }
 
+  function handleLibraryMenuClick(event: ReactMouseEvent<HTMLAnchorElement>, nextView: ProfileLibraryView) {
+    closeMenu();
+    if (
+      !onOpenLibraryView
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) return;
+    const shouldRestoreFocus = event.detail === 0;
+    event.preventDefault();
+    onOpenLibraryView(nextView);
+    if (shouldRestoreFocus) window.requestAnimationFrame(() => buttonRef.current?.focus());
+  }
+
   return (
     <div className={`music-profile-switcher${compact ? " is-compact" : ""}`} ref={rootRef}>
       <button
         className="music-app-account"
         type="button"
-        aria-label={`Open profile menu for ${displayName}`}
+        aria-label={`Open profile and help for ${displayName}`}
         aria-haspopup="menu"
         aria-controls={compact ? "music-profile-menu-mobile" : "music-profile-menu-desktop"}
         aria-expanded={open}
@@ -148,10 +175,14 @@ export function WorkspaceProfileSwitcher({
           className="music-profile-menu"
           id={compact ? "music-profile-menu-mobile" : "music-profile-menu-desktop"}
           role="menu"
-          aria-label="Choose workspace view"
+          aria-label="Profile, account tools and workspace views"
           onKeyDown={handleMenuKeyDown}
           ref={menuRef}
         >
+          <div className="music-profile-menu-account" role="none">
+            <span aria-hidden="true">{initials || "ME"}</span>
+            <div><strong>{displayName}</strong><small>{profile?.email || accountLabel}</small></div>
+          </div>
           <span className="music-profile-menu-label">CHOOSE A VIEW</span>
           <Link className={activeRole === "creator" ? "is-active" : ""} href="/app" role="menuitem" aria-current={activeRole === "creator" ? "page" : undefined} onClick={closeMenu}>
             <i aria-hidden="true">♫</i><span><strong>Creator</strong><small>Music library and licences</small></span>
@@ -161,6 +192,17 @@ export function WorkspaceProfileSwitcher({
           </Link>
           <Link className={activeRole === "admin" ? "is-active" : ""} href="/admin" role="menuitem" aria-current={activeRole === "admin" ? "page" : undefined} onClick={closeMenu}>
             <i aria-hidden="true">◎</i><span><strong>Admin</strong><small>{profile?.admin ? "Analytics access enabled" : "Secure sign-in required"}</small></span>
+          </Link>
+          <span className="music-profile-menu-divider" aria-hidden="true" />
+          <span className="music-profile-menu-label">ACCOUNT &amp; HELP</span>
+          <Link className={activeLibraryView === "licences" ? "is-active" : ""} href="/app?view=licences" role="menuitem" aria-current={activeLibraryView === "licences" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "licences")}>
+            <i aria-hidden="true">◇</i><span><strong>Licences</strong><small>Usage rights and coverage</small></span>
+          </Link>
+          <Link className={activeLibraryView === "channels" ? "is-active" : ""} href="/app?view=channels" role="menuitem" aria-current={activeLibraryView === "channels" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "channels")}>
+            <i aria-hidden="true">◉</i><span><strong>Channels</strong><small>Connected creator accounts</small></span>
+          </Link>
+          <Link href="/help" role="menuitem" onClick={closeMenu}>
+            <i aria-hidden="true">?</i><span><strong>Help centre</strong><small>Guides, licensing and support</small></span>
           </Link>
           <span className="music-profile-menu-divider" aria-hidden="true" />
           {profileState === "authenticated" ? (

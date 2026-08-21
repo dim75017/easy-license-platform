@@ -158,13 +158,19 @@ const navGroups: ReadonlyArray<{
     items: [
       { id: "liked", label: "Liked tracks", icon: "♡" },
       { id: "downloads", label: "Downloads", icon: "↓" },
-      { id: "licences", label: "Licences", icon: "◇", mobileSecondary: true },
-      { id: "channels", label: "Channels", icon: "◉", mobileSecondary: true },
     ],
   },
 ];
 
-const viewLabels = Object.fromEntries(navGroups.flatMap((group) => group.items.map((item) => [item.id, item.label]))) as Record<LibraryView, string>;
+const viewLabels: Record<LibraryView, string> = {
+  discover: "Discover",
+  music: "Music",
+  playlists: "Playlists",
+  liked: "Liked tracks",
+  downloads: "Downloads",
+  channels: "Channels",
+  licences: "Licences",
+};
 
 const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1156,15 +1162,17 @@ export function CreatorWorkspace() {
           ))}
         </nav>
 
-        <div className="music-app-sidebar-bottom">
-          <WorkspaceProfileSwitcher activeRole="creator" />
-        </div>
       </aside>
 
       <main className="music-app-main">
         <header className={`music-app-topbar${usesWideCanvas ? " is-wide" : ""}`}>
           <div><span>Symbiome</span><h1>{viewLabels[view]}</h1></div>
-          <WorkspaceProfileSwitcher activeRole="creator" compact />
+          <WorkspaceProfileSwitcher
+            activeRole="creator"
+            compact
+            activeLibraryView={view === "channels" || view === "licences" ? view : undefined}
+            onOpenLibraryView={navigateToView}
+          />
         </header>
 
         {view === "discover" && (

@@ -2072,7 +2072,9 @@ button.music-app-account[aria-expanded="true"] > i { transform: rotate(180deg); 
   left: 0;
   display: grid;
   width: 242px;
+  max-height: calc(100vh - 24px);
   gap: 4px;
+  overflow-y: auto;
   border: 1px solid rgba(255, 249, 241, .14);
   border-radius: 16px;
   padding: 10px;
@@ -2088,6 +2090,34 @@ button.music-app-account[aria-expanded="true"] > i { transform: rotate(180deg); 
   font-weight: 850;
   letter-spacing: .12em;
 }
+
+.music-profile-menu-account {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 3px;
+  border-radius: 11px;
+  padding: 8px;
+  background: rgba(255, 249, 241, .06);
+}
+
+.music-profile-menu-account > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--wm-clay);
+  color: #fff9f1;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.music-profile-menu-account > div { display: grid; min-width: 0; gap: 2px; }
+.music-profile-menu-account strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.music-profile-menu-account small { overflow: hidden; color: rgba(255, 249, 241, .48); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 
 .music-profile-menu > a {
   display: grid;
@@ -2135,6 +2165,24 @@ button.music-app-account:focus-visible,
 
 .music-profile-switcher.is-compact { display: none; }
 
+.creator-music-app .music-app-topbar > .music-profile-switcher.is-compact { display: block; }
+
+.creator-music-app .music-app-topbar > .music-profile-switcher.is-compact button.music-app-account {
+  display: grid;
+  width: 44px;
+  min-height: 44px;
+  grid-template-columns: 1fr;
+  place-items: center;
+  border: 1px solid rgba(41, 40, 50, .18);
+  border-radius: 50%;
+  padding: 0;
+  background: var(--wm-ink);
+}
+
+.creator-music-app .music-app-topbar > .music-profile-switcher.is-compact button.music-app-account > span { width: 32px; height: 32px; font-size: 10px; }
+.creator-music-app .music-app-topbar > .music-profile-switcher.is-compact button.music-app-account > i { display: none; }
+.creator-music-app .music-app-topbar > .music-profile-switcher.is-compact .music-profile-menu { top: calc(100% + 10px); right: 0; bottom: auto; left: auto; max-height: calc(100vh - 102px); }
+
 @media (max-width: 860px) {
   .music-app-topbar { grid-template-columns: minmax(0, 1fr) auto; }
   .music-profile-switcher.is-compact { display: block; }
@@ -2156,7 +2204,7 @@ button.music-app-account:focus-visible,
 
 @media (max-width: 480px) {
   .music-app-topbar { gap: 7px; padding-inline: 12px; }
-  .music-profile-switcher.is-compact .music-profile-menu { position: fixed; top: 72px; right: 12px; left: 12px; width: auto; }
+  .music-profile-switcher.is-compact .music-profile-menu { position: fixed; top: 72px; right: 12px; left: 12px; width: auto; max-height: calc(100vh - 84px); }
 }
 
 @media (forced-colors: active) {

@@ -1397,8 +1397,9 @@ test("offers an accessible server-backed profile switcher across workspace views
   ]);
 
   assert.match(workspace, /import \{ WorkspaceProfileSwitcher \} from "\.\/WorkspaceProfileSwitcher"/);
-  assert.match(workspace, /<WorkspaceProfileSwitcher activeRole="creator" \/>/);
-  assert.match(workspace, /<WorkspaceProfileSwitcher activeRole="creator" compact \/>/);
+  assert.doesNotMatch(workspace, /music-app-sidebar-bottom/, "the profile control should no longer live at the bottom of the sidebar");
+  assert.equal((workspace.match(/<WorkspaceProfileSwitcher/g) ?? []).length, 1, "the Creator workspace should expose one profile control");
+  assert.match(workspace, /<WorkspaceProfileSwitcher\s+activeRole="creator"\s+compact[\s\S]{0,220}activeLibraryView=\{view === "channels" \|\| view === "licences" \? view : undefined\}[\s\S]{0,120}onOpenLibraryView=\{navigateToView\}/);
   assert.match(switcher, /type WorkspaceRole = "creator" \| "business" \| "admin"/);
   for (const [role, href] of [["Creator", "/app"], ["Business", "/business"], ["Admin", "/admin"]]) {
     assert.match(
@@ -1410,6 +1411,13 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(switcher, /aria-current=\{activeRole === "creator" \? "page" : undefined\}/);
   assert.match(switcher, /aria-current=\{activeRole === "business" \? "page" : undefined\}/);
   assert.match(switcher, /aria-current=\{activeRole === "admin" \? "page" : undefined\}/);
+  assert.match(switcher, /className="music-profile-menu-account" role="none"[\s\S]{0,220}\{profile\?\.email \|\| accountLabel\}/);
+  assert.match(switcher, /<span className="music-profile-menu-label">ACCOUNT &amp; HELP<\/span>/);
+  assert.match(switcher, /href="\/app\?view=licences" role="menuitem"[\s\S]{0,260}<strong>Licences<\/strong>/);
+  assert.match(switcher, /href="\/app\?view=channels" role="menuitem"[\s\S]{0,260}<strong>Channels<\/strong>/);
+  assert.match(switcher, /href="\/help" role="menuitem"[\s\S]{0,180}<strong>Help centre<\/strong>/);
+  assert.match(switcher, /handleLibraryMenuClick[\s\S]{0,520}event\.metaKey[\s\S]{0,180}event\.preventDefault\(\)[\s\S]{0,120}onOpenLibraryView\(nextView\)/);
+  assert.match(switcher, /shouldRestoreFocus[\s\S]{0,180}requestAnimationFrame\(\(\) => buttonRef\.current\?\.focus\(\)\)/);
 
   assert.match(switcher, /const signOutHref = publicAccountSignOutHref\("login"\)/);
   assert.match(switcher, /profileState === "authenticated" \? \([\s\S]{0,180}<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem">Log out<\/a>/);
@@ -1430,8 +1438,10 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(switcher, /document\.addEventListener\("pointerdown", handlePointerDown\)[\s\S]{0,500}document\.removeEventListener\("pointerdown", handlePointerDown\)/);
 
   assert.match(workspaceCss, /\.music-profile-switcher\.is-compact\s*\{\s*display:\s*none;/);
+  assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
+  assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;[^}]*bottom:\s*auto;[^}]*max-height:\s*calc\(100vh - 102px\);/s);
   assert.match(workspaceCss, /@media \(max-width: 860px\)[\s\S]{0,220}\.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
-  assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,260}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;/s);
+  assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,300}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;[^}]*max-height:\s*calc\(100vh - 84px\);/s);
 });
 
 test("keeps the Business profile switcher persistent and closes the 861–900px admin gap", async () => {
@@ -1764,7 +1774,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const navBlock = musicWorkspace.match(/const navGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const viewLabels/);
   assert.ok(navBlock, "the connected workspace should keep one canonical grouped navigation");
   const workspaceNavLabels = [...navBlock[1].matchAll(/\{\s*id:\s*"[^"]+",\s*label:\s*"([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads", "Licences", "Channels"]);
+  assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads"]);
   assert.match(navBlock[1], /label:\s*"DISCOVER MUSIC"/);
   assert.match(navBlock[1], /label:\s*"YOUR LIBRARY"/);
   assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
