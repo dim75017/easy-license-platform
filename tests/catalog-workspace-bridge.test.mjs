@@ -15,6 +15,7 @@ test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites 
   assert.match(workspace, /params\.set\("mood", filters\.mood\)/u);
   assert.match(workspace, /params\.set\("theme", filters\.theme\)/u);
   assert.match(workspace, /params\.set\("playlist", filters\.playlist\)/u);
+  assert.match(workspace, /if \(requireCover\) params\.set\("requireCover", "true"\)/u);
   assert.match(workspace, /readLibrarySelectionFromLocation/u);
   assert.match(workspace, /requestedPlaylist && isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"/u);
   assert.match(workspace, /function writePlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,180}url\.searchParams\.set\("playlist", playlist\)/u);
@@ -98,6 +99,9 @@ test("saved actions are never purged just because a track is outside the visible
 test("Discover requests distinct releases and deep links can resolve a track outside page one", async () => {
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
+  assert.match(workspace, /const RECENT_RELEASE_BUFFER = 24/u);
+  assert.match(workspace, /pageSize:\s*RECENT_RELEASE_BUFFER,[\s\S]{0,100}onePerRelease:\s*true,[\s\S]{0,100}requireCover:\s*true/u);
+  assert.match(workspace, /recentCatalogTracks \?\? \[\][\s\S]{0,180}typeof track\.cover === "string" && !recentCoverFailures\.has\(track\.id\)[\s\S]{0,120}slice\(0, RECENT_RELEASE_LIMIT\)/u);
   assert.match(workspace, /onePerRelease:\s*true/u);
   assert.match(workspace, /setRecentCatalogRequestFailed\(true\)/u);
   assert.match(workspace, /\}, \[catalogRetryNonce\]\);/u);
@@ -107,6 +111,7 @@ test("Discover requests distinct releases and deep links can resolve a track out
   assert.match(workspace, /key=\{track\.release\?\.id \?\? track\.id\}/u);
   assert.match(workspace, /track\.release\?\.title \?\? track\.title/u);
   assert.match(workspace, /releaseMeta\(track\)/u);
+  assert.match(workspace, /onError=\{\(event\) => \{[\s\S]{0,100}event\.currentTarget\.hidden = true;[\s\S]{0,260}next\.add\(track\.id\)/u);
   assert.match(workspace, /catalogNumericTrackId\(trackId\)/u);
   assert.match(workspace, /catalogRequestUrl\(\{ page: 1, pageSize: 1, trackId: numericTrackId \}\)/u);
   const resolver = workspace.slice(
@@ -145,6 +150,8 @@ test("catalog response mapper exposes only safe routes plus release and paginati
 test("catalog API uses deterministic release-first ordering and complete pagination metadata", async () => {
   const route = await source("app/api/catalog/tracks/route.ts");
 
+  assert.match(route, /const requireCover = queryBoolean\(url, "requireCover", false\)/u);
+  assert.match(route, /if \(requireCover\) filters\.push\("r\.cover_storage_key IS NOT NULL"\)/u);
   assert.match(route, /COUNT\(\$\{onePerRelease \? "DISTINCT r\.id" : "\*"\}\)/u);
   assert.match(route, /ROW_NUMBER\(\) OVER \([\s\S]{0,220}PARTITION BY r\.id/u);
   assert.match(route, /CASE WHEN release_date IS NULL THEN 1 ELSE 0 END ASC,[\s\S]{0,100}release_date DESC,[\s\S]{0,100}published_at DESC,[\s\S]{0,100}release_id DESC/u);
@@ -161,5 +168,5 @@ test("catalog API uses deterministic release-first ordering and complete paginat
   assert.match(route, /t\.mood IS NULL AND t\.genre IN \(\$\{genrePlaceholders\}\)/u);
   assert.match(route, /const playlistRule = playlist \? catalogPlaylistRule\(playlist\) : null/u);
   assert.match(route, /t\.genre IN \(\$\{playlistRule\.genres\.map\(\(\) => "\?"\)\.join\(", "\)\}\)/u);
-  assert.match(route, /filters: \{ q: search, genre, mood, theme, playlist, trackId \}/u);
+  assert.match(route, /filters: \{ q: search, genre, mood, theme, playlist, trackId, requireCover \}/u);
 });

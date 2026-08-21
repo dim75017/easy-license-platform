@@ -1819,7 +1819,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
   assert.match(musicWorkspace, /recentCatalogTracks !== null[\s\S]{0,260}recentCatalogRequestFailed[\s\S]{0,220}Loading the latest releases from the live catalogue\./);
   assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track\)/);
-  assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,520}<PlaybackGlyph playing=\{isPlaying\} \/>/);
+  assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,1200}<PlaybackGlyph playing=\{isPlaying\} \/>/);
+  const recentReleaseBlock = musicWorkspace.slice(
+    musicWorkspace.indexOf('<section className="music-recent-releases"'),
+    musicWorkspace.indexOf('<div className="music-discovery-grid">'),
+  );
+  assert.match(recentReleaseBlock, /src=\{track\.cover\}[\s\S]{0,360}onError=\{\(event\) => \{[\s\S]{0,100}event\.currentTarget\.hidden = true/);
+  assert.doesNotMatch(recentReleaseBlock, /music-recent-cover-placeholder|>♪</, "Recent releases should replace coverless or broken artwork with the next valid release");
   assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
 
   assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
