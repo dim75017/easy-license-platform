@@ -45,7 +45,7 @@ const categories: HelpCategory[] = [
       },
       {
         question: "Is the full catalogue available on this website?",
-        answer: <>The public site currently presents selected playlists and tracks from the wider catalogue. It is a catalogue preview rather than the complete production library.</>,
+        answer: <>The public library lists every published track whose full-length listening copy has completed the technical import. The total continues to grow while the remaining catalogue audio finishes that process.</>,
       },
       {
         question: "Where should I begin if I do not know which licence I need?",
@@ -152,7 +152,7 @@ const categories: HelpCategory[] = [
       },
       {
         question: "Why do some previews open a Spotify player?",
-        answer: <>Spotify is currently used to provide listening previews for selected tracks and public playlists. Loading or following a Spotify player connects you to a third-party service governed by Spotify&apos;s own terms and privacy practices.</>,
+        answer: <>Spotify is used only for a small number of legacy track previews that do not yet have an internal listening copy. Playlists and every available catalogue track otherwise open and play directly inside Symbiome.</>,
       },
     ],
   },

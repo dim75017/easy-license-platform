@@ -47,7 +47,7 @@ export default function CookiesPage() {
           content: (
             <>
               <p>Symbiome can load an embedded Spotify player after a visitor selects a track. The player is provided by Spotify and may use cookies or similar technologies according to Spotify&apos;s own settings and policies.</p>
-              <p>Visitors can review the <a href="https://www.spotify.com/legal/cookies-policy/" target="_blank" rel="noreferrer">Spotify Cookie Policy</a>. External playlist links also leave Symbiome and open Spotify directly.</p>
+              <p>Visitors can review the <a href="https://www.spotify.com/legal/cookies-policy/" target="_blank" rel="noreferrer">Spotify Cookie Policy</a>. Symbiome playlist browsing stays on the platform; only an explicitly selected legacy Spotify player leaves the internal listening experience.</p>
             </>
           ),
         },
