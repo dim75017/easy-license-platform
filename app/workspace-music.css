@@ -2838,10 +2838,31 @@ article.music-track-row[role="listitem"]:focus-visible {
 .music-playlist-composer-preview {
   position: relative;
   align-self: start;
+  isolation: isolate;
+  width: 100%;
   overflow: hidden;
   aspect-ratio: 4 / 3;
+  border: 0;
   border-radius: 18px;
+  padding: 0;
   background: var(--wm-ink);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: inherit;
+  box-shadow: 0 0 0 1px rgba(41, 40, 50, .12);
+  transition: box-shadow .2s ease;
+}
+
+.music-playlist-composer-preview::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: rgba(25, 25, 32, .48);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
 }
 
 .music-playlist-composer-preview > img,
@@ -2866,6 +2887,43 @@ article.music-track-row[role="listitem"]:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.music-playlist-composer-preview-action {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--wm-cream);
+  color: var(--wm-ink);
+  font-size: 12px;
+  font-weight: 750;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -42%);
+  transition: opacity .2s ease, transform .2s ease;
+  white-space: nowrap;
+}
+
+.music-playlist-composer-preview:is(:hover, :focus-visible)::before,
+.music-playlist-composer-preview:is(:hover, :focus-visible) .music-playlist-composer-preview-action {
+  opacity: 1;
+}
+
+.music-playlist-composer-preview:is(:hover, :focus-visible) .music-playlist-composer-preview-action {
+  transform: translate(-50%, -50%);
+}
+
+.music-playlist-composer-preview:focus-visible {
+  outline: 3px solid var(--wm-clay);
+  outline-offset: 3px;
+}
+
+.music-playlist-composer-preview:disabled { cursor: not-allowed; }
 
 .music-playlist-composer-fields { display: grid; gap: 17px; }
 .music-playlist-composer-fields > label { display: grid; gap: 7px; }
@@ -2982,6 +3040,12 @@ article.music-track-row[role="listitem"]:focus-visible {
   .music-playlist-composer textarea,
   .music-playlist-image-picker > span,
   .music-playlist-composer button { border: 1px solid ButtonText; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-playlist-composer-preview,
+  .music-playlist-composer-preview::before,
+  .music-playlist-composer-preview-action { transition: none; }
 }
 
 /* V25: direction A gives Discover, Playlists and Downloads an editorial icon language. */
