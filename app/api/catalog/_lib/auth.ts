@@ -24,7 +24,7 @@ export async function requireCatalogIdentity(
 
   if (!identity) {
     throw new CatalogApiError(
-      "Sign in with ChatGPT to access the catalogue.",
+      "Sign in to Symbiome to access the catalogue.",
       401,
       "authentication_required",
     );

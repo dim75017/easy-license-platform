@@ -161,7 +161,7 @@ function AdminAccessState({ state, onRetry }: { state: AdminState; onRetry: () =
   const content = state === "demo"
     ? { eyebrow: "SECURE ADMIN", title: "Open Admin on the live app.", copy: "GitHub Pages never embeds member analytics. Continue to the secure Symbiome app to authenticate and view live aggregates." }
     : state === "signed-out"
-      ? { eyebrow: "SIGN IN REQUIRED", title: "Admin analytics are protected.", copy: "Sign in with the catalogue-owner account. Identity is checked by Sites and the server allowlist before any database query runs." }
+      ? { eyebrow: "SIGN IN REQUIRED", title: "Admin analytics are protected.", copy: "Sign in with the catalogue-owner account. Secure authentication and the server allowlist are checked before any database query runs." }
       : state === "forbidden"
         ? { eyebrow: "ACCESS DENIED", title: "This account is not an administrator.", copy: "The selected workspace view never grants access. Only the explicit server-side administrator allowlist can unlock these analytics." }
         : state === "unconfigured"
@@ -177,7 +177,7 @@ function AdminAccessState({ state, onRetry }: { state: AdminState; onRetry: () =
       <p>{content.copy}</p>
       <div>
         {state === "demo" && <a className="button button-primary cta-swipe" href={secureAdminUrl}>Open secure Admin</a>}
-        {state === "signed-out" && <a className="button button-primary cta-swipe" href={adminSignInHref}>Sign in with ChatGPT</a>}
+        {state === "signed-out" && <a className="button button-primary cta-swipe" href={adminSignInHref}>Choose a sign-in method</a>}
         {state === "error" && <button className="button button-primary cta-swipe" type="button" onClick={onRetry}>Retry analytics</button>}
         {(state === "forbidden" || state === "unconfigured") && <Link className="button button-ghost" href="/app">Return to Creator view</Link>}
       </div>

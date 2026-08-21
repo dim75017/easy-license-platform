@@ -1282,7 +1282,13 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(page, /title:\s*"Create your account"/);
   assert.match(page, /robots:\s*\{ index: false, follow: false \}/);
   assert.match(setup, /<h1 id="account-title">Music ready for/);
-  assert.match(setup, /Continue with ChatGPT/);
+  for (const method of ["Google", "Apple", "Microsoft", "Email"]) {
+    assert.match(setup, new RegExp(`id: "${method.toLowerCase()}"[\\s\\S]{0,80}label: "${method}"`));
+  }
+  assert.match(setup, /<AccountSignInMethods[\s\S]{0,220}actionLabel="Continue securely"/);
+  assert.match(setup, /Available sign-in methods/);
+  assert.match(setup, /Use the same sign-in method each time to return to the same workspace/);
+  assert.doesNotMatch(setup, /Log in with ChatGPT|Continue with ChatGPT|Sign in with ChatGPT/);
   assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
   assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
   assert.match(setup, /useSearchParams\(\)/);
@@ -1296,7 +1302,8 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /if \(isStaticDemo \|\| !resumeAuthentication\) return;[\s\S]{0,160}fetch\("\/api\/account\/profile"/);
   assert.doesNotMatch(setup, /useEffect\(\(\) => \{[\s\S]{0,200}setState\("checking"\)/, "the keyed flow should initialise loading without a synchronous effect state change");
   assert.match(setup, /mode === "login" \? "Welcome back\." : "Create your account\."/);
-  assert.match(setup, /mode === "login" \? "Log in with ChatGPT" : "Continue with ChatGPT"/);
+  assert.match(setup, /Choose Google, Apple, Microsoft or email on the secure sign-in screen/);
+  assert.match(setup, /Your password stays with the sign-in method you choose/);
   assert.match(setup, /fetch\("\/api\/account\/profile"/);
   assert.match(setup, /method:\s*"POST"/);
   assert.match(setup, /type="radio"[\s\S]*value="creator"/);
@@ -1304,6 +1311,14 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
   assert.match(setup, /No payment is taken today/);
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
+  assert.match(setup, /<ul className="account-auth-methods" aria-label="Available secure sign-in methods">/);
+  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>/);
+  assert.match(setup, /className="button button-primary button-full cta-swipe" href=\{actionHref\}/);
+  assert.match(setup, /actionHref=\{publicAccountSignOutHref\(mode, plan\)\}/);
+  const providerList = setup.match(/<ul className="account-auth-methods"[\s\S]*?<\/ul>/u)?.[0] ?? "";
+  assert.ok(providerList, "the sign-in method list should be rendered");
+  assert.doesNotMatch(providerList, /<(?:a|button)\b/u, "provider names must not masquerade as direct provider buttons");
+  assert.equal((setup.match(/\/signin-with-chatgpt\?return_to=/gu) ?? []).length, 1, "the flow should keep one neutral secure sign-in gateway");
   assert.match(setup, /className="account-secondary-link" href="\/app"[\s\S]{0,80}Browse music first/);
   assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
   assert.equal((pricing.match(/href=\{publicAccountSignOutHref\("create", "(?:creator|pro)"\)\}/g) ?? []).length, 2);
@@ -1329,10 +1344,16 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   );
 
   assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
+  assert.match(css, /\.account-auth-methods\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[^}]*gap:\s*10px/s);
+  assert.match(css, /\.account-auth-methods li\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
+  assert.match(css, /\.account-auth-choice-label\s*\{[^}]*rgba\(41, 40, 50, \.74\)/s);
+  assert.match(css, /\.account-auth-method-note\s*\{[^}]*rgba\(41, 40, 50, \.7\)/s);
+  assert.match(css, /\.account-auth-choice > \.button\s*\{[^}]*min-height:\s*56px/s);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-auth-methods\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css, /@media \(forced-colors: active\)/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods li\s*\{\s*border-color:\s*ButtonText;/);
 });
 
 test("public account entry points clear the Sites session before showing login or creation", async () => {
@@ -1360,7 +1381,7 @@ test("public account entry points clear the Sites session before showing login o
   assert.match(switcher, /const signOutHref = publicAccountSignOutHref\("login"\)/);
   assert.match(switcher, /profileState === "authenticated" \? \([\s\S]{0,180}<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem">Log out<\/a>/);
   assert.match(switcher, /<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem" onClick=\{closeMenu\}>Log in<\/a>/);
-  assert.match(setup, /href=\{publicAccountSignOutHref\(mode\)\}/);
+  assert.match(setup, /actionHref=\{publicAccountSignOutHref\(mode, plan\)\}/);
   assert.doesNotMatch(header, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
   assert.doesNotMatch(footer, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
   assert.doesNotMatch(pricing, /<Link[^>]+publicAccountSignOutHref/, "sign-out navigation must not be prefetched");
@@ -1448,7 +1469,9 @@ test("renders real fail-closed admin analytics without legacy demo records", asy
   assert.match(admin, /name\?: string \}\)\.name !== "AbortError"\) setState\("error"\)/);
   assert.match(admin, /const secureAdminUrl = "https:\/\/easy-license\.dsomoguy\.chatgpt\.site\/admin"/);
   assert.match(admin, /state === "demo"[\s\S]{0,180}href=\{secureAdminUrl\}>Open secure Admin<\/a>/);
-  assert.match(admin, /state === "signed-out"[\s\S]{0,180}href=\{adminSignInHref\}>Sign in with ChatGPT<\/a>/);
+  assert.match(admin, /const adminSignInHref = "\/signin-with-chatgpt\?return_to=%2Fadmin"/);
+  assert.match(admin, /state === "signed-out"[\s\S]{0,180}href=\{adminSignInHref\}>Choose a sign-in method<\/a>/);
+  assert.doesNotMatch(admin, /Sign in with ChatGPT/);
   assert.match(admin, /state === "error"[\s\S]{0,180}onClick=\{onRetry\}>Retry analytics<\/button>/);
   assert.match(admin, /state === "forbidden" \|\| state === "unconfigured"[\s\S]{0,180}href="\/app">Return to Creator view<\/Link>/);
 
