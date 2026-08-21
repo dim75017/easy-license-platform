@@ -2104,7 +2104,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV15, /\.music-action-icon::before,[\s\S]{0,180}\.music-action-icon > b\s*\{[^}]*display:\s*none !important;[^}]*content:\s*none !important/s);
   assert.match(musicWorkspaceV15, /@media \(min-width:\s*1281px\)\s*\{[^}]*\.music-track-table-head > span:nth-child\(3\),\s*article\.music-track-row\[role="listitem"\] \.music-track-genre\s*\{\s*padding-left:\s*32px;/s);
   assert.match(musicWorkspaceV15, /\.music-track-browser-controls\s*\{[^}]*--music-library-control-height:\s*42px;[^}]*align-items:\s*flex-end;[^}]*flex-wrap:\s*wrap/s);
-  assert.match(musicWorkspaceV15, /\.music-library-search\s*\{[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\);[^}]*flex:\s*1 1 360px/s);
+  assert.match(musicWorkspaceV15, /\.music-app-main > \.music-track-browser\.music-workspace-view\s*\{[^}]*margin-top:\s*0;[^}]*padding-top:\s*22px/s);
+  assert.match(musicWorkspaceV15, /\.music-library-search\s*\{[^}]*width:\s*min\(420px, 100%\);[^}]*max-width:\s*420px;[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\);[^}]*flex:\s*0 1 420px/s);
+  assert.match(musicWorkspaceV15, /@media \(max-width:\s*860px\)\s*\{[^}]*\.music-app-main > \.music-track-browser\.music-workspace-view\s*\{\s*padding-top:\s*16px;[^}]*\}[\s\S]{0,180}\.music-library-search\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none/s);
   assert.match(musicWorkspaceV15, /\.music-track-browser-controls \.music-filter-row select,[\s\S]{0,120}\.music-track-browser-controls \.music-filter-row > button\s*\{[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\)/s);
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
