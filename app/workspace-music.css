@@ -3013,3 +3013,181 @@ article.music-track-row[role="listitem"]:focus-visible {
   .music-app-nav button:hover .music-nav-icon,
   .music-app-nav button.is-active .music-nav-icon { filter: none; }
 }
+
+/* V26: personal playlist deletion and one shared 4:3 card frame. */
+.music-personal-playlists article.music-personal-playlist-card-shell {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  padding: 0;
+  background: transparent;
+}
+
+.music-personal-playlist-card-shell > .workspace-playlist,
+.music-symbiome-playlists > .music-secondary-playlists > .workspace-playlist {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.music-personal-playlist-delete,
+.music-playlist-detail-delete {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 249, 241, .42);
+  border-radius: 50%;
+  background: rgba(25, 25, 32, .72);
+  color: #fff9f1;
+  backdrop-filter: blur(10px);
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.music-personal-playlist-delete {
+  position: absolute;
+  z-index: 6;
+  top: 13px;
+  right: 13px;
+  width: 42px;
+  height: 42px;
+}
+
+.music-personal-playlist-delete .music-action-icon,
+.music-playlist-detail-delete .music-action-icon,
+.music-track-remove-from-playlist .music-action-icon,
+.music-personal-playlist-context-menu .music-action-icon { width: 19px; height: 19px; }
+
+.music-personal-playlist-delete:hover,
+.music-playlist-detail-delete:hover,
+.music-personal-playlist-delete:focus-visible,
+.music-playlist-detail-delete:focus-visible {
+  border-color: #fff9f1;
+  outline: none;
+  background: #e06343;
+  color: #fff9f1;
+  transform: scale(1.06);
+}
+
+.music-personal-playlist-context-menu {
+  position: fixed;
+  z-index: 150;
+  width: min(230px, calc(100vw - 24px));
+  overflow: hidden;
+  border: 1px solid rgba(255, 249, 241, .16);
+  border-radius: 14px;
+  padding: 6px;
+  background: #292832;
+  box-shadow: 0 24px 70px rgba(22, 21, 28, .34);
+  color: #fff9f1;
+}
+
+.music-personal-playlist-context-menu > button {
+  display: grid;
+  width: 100%;
+  min-height: 46px;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 11px;
+  background: transparent;
+  color: #fff9f1;
+  text-align: left;
+}
+
+.music-personal-playlist-context-menu > button:hover,
+.music-personal-playlist-context-menu > button:focus-visible {
+  outline: none;
+  background: rgba(224, 99, 67, .2);
+  color: #ff8a6b;
+}
+
+.music-playlist-detail-delete {
+  position: absolute;
+  z-index: 5;
+  top: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+}
+
+.music-track-actions .music-track-remove-from-playlist {
+  display: grid;
+  border-color: rgba(224, 99, 67, .36);
+  color: #b64a32;
+}
+
+.music-track-actions .music-track-remove-from-playlist:hover,
+.music-track-actions .music-track-remove-from-playlist:focus-visible,
+.music-track-context-options > button.is-destructive:hover,
+.music-track-context-options > button.is-destructive:focus-visible {
+  border-color: var(--wm-clay);
+  outline: none;
+  background: rgba(224, 99, 67, .14);
+  color: #a23c28;
+}
+
+.music-personal-playlists-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  min-height: 170px;
+  place-content: center;
+  border: 1px dashed rgba(41, 40, 50, .22);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+}
+
+.music-personal-playlists-empty strong { font-family: var(--font-display); font-size: 28px; font-weight: 560; }
+.music-personal-playlists-empty p { margin: 7px 0 0; color: rgba(41, 40, 50, .58); font-size: 13px; }
+
+.music-playlist-delete-dialog {
+  width: min(520px, calc(100vw - 28px));
+  max-width: none;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  padding: 0;
+  background: #fff9f1;
+  box-shadow: 0 34px 100px rgba(18, 18, 24, .42);
+  color: var(--wm-ink);
+}
+
+.music-playlist-delete-dialog::backdrop { background: rgba(20, 20, 27, .68); backdrop-filter: blur(8px); }
+.music-playlist-delete-dialog > section { display: grid; gap: 20px; padding: 30px; }
+.music-playlist-delete-dialog header { display: grid; gap: 7px; }
+.music-playlist-delete-dialog header > span { color: var(--wm-clay-deep); font-size: 10px; font-weight: 850; letter-spacing: .11em; }
+.music-playlist-delete-dialog h2 { margin: 0; font-family: var(--font-display); font-size: clamp(34px, 7vw, 48px); font-weight: 540; letter-spacing: -.055em; line-height: .95; }
+.music-playlist-delete-dialog > section > p { margin: 0; color: rgba(41, 40, 50, .68); font-size: 14px; line-height: 1.55; }
+.music-playlist-delete-dialog .music-playlist-delete-error { color: #a23c28; font-weight: 700; }
+.music-playlist-delete-dialog footer { display: flex; justify-content: flex-end; gap: 9px; }
+.music-playlist-delete-dialog footer > button { min-height: 44px; border: 1px solid rgba(41, 40, 50, .18); border-radius: 999px; padding: 0 17px; background: transparent; color: var(--wm-ink); font-weight: 760; }
+.music-playlist-delete-dialog footer > button.is-destructive { border-color: #e06343; background: #e06343; color: #fff9f1; }
+.music-playlist-delete-dialog footer > button:focus-visible { outline: 3px solid rgba(224, 99, 67, .28); outline-offset: 2px; }
+.music-playlist-delete-dialog footer > button:disabled { cursor: not-allowed; opacity: .55; }
+
+@media (max-width: 600px) {
+  .music-playlist-detail-delete { top: 20px; right: 20px; }
+  .music-playlist-delete-dialog > section { padding: 24px 22px; }
+  .music-playlist-delete-dialog footer { align-items: stretch; flex-direction: column-reverse; }
+  .music-playlist-delete-dialog footer > button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-personal-playlist-delete,
+  .music-playlist-detail-delete { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .music-personal-playlist-delete,
+  .music-playlist-detail-delete,
+  .music-personal-playlist-context-menu,
+  .music-personal-playlist-context-menu > button,
+  .music-playlist-delete-dialog,
+  .music-playlist-delete-dialog footer > button { border: 1px solid ButtonText; }
+}

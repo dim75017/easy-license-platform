@@ -106,6 +106,26 @@ test("saved actions are never purged just because a track is outside the visible
   assert.match(workspace, /Other saved IDs remain intact while catalogue pages load/u);
 });
 
+test("personal playlists can be deleted cleanly and tracks can be removed without touching the catalogue", async () => {
+  const [workspace, images, css] = await Promise.all([
+    source("app/components/CreatorWorkspace.tsx"),
+    source("app/lib/personal-playlist-images.ts"),
+    source("app/workspace-music.css"),
+  ]);
+
+  assert.match(workspace, /const storedPlaylistsValue = window\.localStorage\.getItem\("symbiome-personal-playlists-v1"\)[\s\S]{0,1500}setPersonalPlaylists\(validPlaylists\)/u);
+  assert.doesNotMatch(workspace, /if \(validPlaylists\.length\) setPersonalPlaylists/u);
+  assert.match(workspace, /async function deletePersonalPlaylist\(playlist: PersonalPlaylist\)[\s\S]{0,720}personalPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)[\s\S]{0,520}writePersonalPlaylistSelectionToLocation\(null, "replace"\)/u);
+  assert.match(workspace, /currentPlaylist\.imageKey && !nextPlaylists\.some[\s\S]{0,180}deletePersonalPlaylistImage\(currentPlaylist\.imageKey\)/u);
+  assert.match(images, /export async function deletePersonalPlaylistImage\(key: string\)[\s\S]{0,420}store\.delete\(key\)/u);
+  assert.match(workspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)/u);
+  assert.match(workspace, /className="music-track-remove-from-playlist"[\s\S]{0,260}Remove \$\{track\.title\} from \$\{personalPlaylist\.name\}/u);
+  assert.match(workspace, /className="music-personal-playlist-delete"[\s\S]{0,180}Delete playlist \$\{playlist\.name\}/u);
+  assert.match(workspace, /function PersonalPlaylistContextMenu[\s\S]{0,3000}role="menu"[\s\S]{0,500}>Delete playlist<\/span>/u);
+  assert.match(workspace, /function PlaylistDeleteDialog[\s\S]{0,1600}aria-labelledby="music-playlist-delete-title"[\s\S]{0,900}The tracks remain available in the Symbiome catalogue/u);
+  assert.match(css, /\.music-personal-playlist-card-shell > \.workspace-playlist,\s*\.music-symbiome-playlists > \.music-secondary-playlists > \.workspace-playlist\s*\{[^}]*aspect-ratio:\s*4 \/ 3;/su);
+});
+
 test("Discover requests distinct releases and deep links can resolve a track outside page one", async () => {
   const workspace = await source("app/components/CreatorWorkspace.tsx");
 
