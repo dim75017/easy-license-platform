@@ -60,7 +60,9 @@ export function parseCatalogPage(payload: unknown): CatalogPage | null {
     const coverPathname = cleanPath(value.release && isRecord(value.release) ? value.release.coverUrl : null, coverPath);
     if (coverPathname && `CATALOG-RELEASE-${coverPathname.match(coverPath)?.[1]}` !== release.id) return [];
     const playbackUrl = catalogAssetUrl(playbackPathname);
-    const cover = coverPathname ? catalogAssetUrl(coverPathname) : null;
+    const cover = coverPathname
+      ? catalogAssetUrl(`${coverPathname}?variant=thumbnail`)
+      : null;
 
     const durationMs = Number.isSafeInteger(value.durationMs) && (value.durationMs as number) > 0
       ? value.durationMs as number

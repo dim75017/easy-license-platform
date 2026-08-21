@@ -11,6 +11,12 @@ import {
   publicCatalogOptionsResponse,
   publicCatalogResponse,
 } from "../../../_lib/public-read";
+import {
+  COVER_CACHE_CONTROL,
+  COVER_THUMBNAIL_FALLBACK_CACHE_CONTROL,
+  coverThumbnailStorageKey,
+  ifNoneMatchMatches,
+} from "../../../_lib/cover-artwork";
 
 type RouteContext = { params: Promise<{ releaseId: string }> };
 
@@ -44,20 +50,38 @@ export async function GET(
       throw new CatalogApiError("Cover artwork is unavailable.", 404, "cover_not_found");
     }
 
-    const object = await requireCatalogAudioBucket().get(
-      release.cover_storage_key,
-    );
+    const url = new URL(request.url);
+    const variant = url.searchParams.get("variant");
+    if (variant !== null && variant !== "thumbnail") {
+      throw new CatalogApiError("Unknown cover variant.", 400, "cover_variant_invalid");
+    }
+    const bucket = requireCatalogAudioBucket();
+    const thumbnailStorageKey = variant === "thumbnail"
+      ? coverThumbnailStorageKey(releaseId, release.cover_storage_key)
+      : null;
+    let object = thumbnailStorageKey ? await bucket.get(thumbnailStorageKey) : null;
+    const thumbnailFallback = variant === "thumbnail" && !object;
+    object ??= await bucket.get(release.cover_storage_key);
     if (!object) {
       throw new CatalogApiError("Cover artwork is unavailable.", 404, "cover_not_found");
     }
 
     const headers = new Headers();
     object.writeHttpMetadata(headers);
-    headers.set("Content-Length", String(object.size));
     headers.set("ETag", object.httpEtag);
-    headers.set("Cache-Control", "no-store");
+    headers.set(
+      "Cache-Control",
+      thumbnailFallback
+        ? COVER_THUMBNAIL_FALLBACK_CACHE_CONTROL
+        : COVER_CACHE_CONTROL,
+    );
+    headers.set("X-Cover-Variant", thumbnailFallback ? "original-fallback" : variant ?? "original");
     headers.set("X-Content-Type-Options", "nosniff");
-    return publicCatalogResponse(new Response(object.body, { headers }));
+    if (ifNoneMatchMatches(request.headers.get("if-none-match"), object.httpEtag)) {
+      return publicCatalogResponse(new Response(null, { status: 304, headers }));
+    }
+    headers.set("Content-Length", String(object.size));
+    return publicCatalogResponse(new Response(object.body, { status: 200, headers }));
   } catch (error) {
     return publicCatalogResponse(catalogErrorResponse(error));
   }

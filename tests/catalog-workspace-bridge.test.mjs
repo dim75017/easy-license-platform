@@ -131,7 +131,7 @@ test("Discover requests distinct releases and deep links can resolve a track out
 
   assert.match(workspace, /const RECENT_RELEASE_BUFFER = 24/u);
   assert.match(workspace, /pageSize:\s*RECENT_RELEASE_BUFFER,[\s\S]{0,100}onePerRelease:\s*true,[\s\S]{0,100}requireCover:\s*true/u);
-  assert.match(workspace, /recentCatalogTracks \?\? \[\][\s\S]{0,180}typeof track\.cover === "string" && !recentCoverFailures\.has\(track\.id\)[\s\S]{0,120}slice\(0, RECENT_RELEASE_LIMIT\)/u);
+  assert.match(workspace, /recentCatalogTracks \?\? \[\][\s\S]{0,180}typeof track\.cover === "string"[\s\S]{0,120}slice\(0, RECENT_RELEASE_LIMIT\)/u);
   assert.match(workspace, /onePerRelease:\s*true/u);
   assert.match(workspace, /setRecentCatalogRequestFailed\(true\)/u);
   assert.match(workspace, /\}, \[catalogRetryNonce\]\);/u);
@@ -141,7 +141,8 @@ test("Discover requests distinct releases and deep links can resolve a track out
   assert.match(workspace, /key=\{track\.release\?\.id \?\? track\.id\}/u);
   assert.match(workspace, /track\.release\?\.title \?\? track\.title/u);
   assert.match(workspace, /releaseMeta\(track\)/u);
-  assert.match(workspace, /onError=\{\(event\) => \{[\s\S]{0,100}event\.currentTarget\.hidden = true;[\s\S]{0,260}next\.add\(track\.id\)/u);
+  assert.match(workspace, /<TrackCover src=\{track\.cover\} width=\{420\} height=\{420\} priority=\{index < 4\} fallbackClassName="music-recent-cover-placeholder" \/>/u);
+  assert.doesNotMatch(workspace, /recentCoverFailures/u);
   assert.match(workspace, /catalogNumericTrackId\(trackId\)/u);
   assert.match(workspace, /catalogRequestUrl\(\{ page: 1, pageSize: 1, trackId: numericTrackId \}\)/u);
   const resolver = workspace.slice(
@@ -172,8 +173,8 @@ test("catalog response mapper exposes only safe routes plus release and paginati
   assert.match(client, /hasNextPage:\s*boolean/u);
   assert.match(client, /release,\s*\n\s*publishedAt/u);
   assert.match(client, /value\.trackCount === null \? null : safeInteger\(value\.trackCount, 1\)/u);
-  assert.match(client, /const cover = coverPathname \? catalogAssetUrl\(coverPathname\) : null/u);
-  assert.match(workspace, /track\.cover \? <img[\s\S]{0,180}music-track-cover-placeholder/u);
+  assert.match(client, /const cover = coverPathname[\s\S]{0,100}catalogAssetUrl\(`\$\{coverPathname\}\?variant=thumbnail`\)[\s\S]{0,40}: null/u);
+  assert.match(workspace, /function TrackCover[\s\S]{0,900}fallbackClassName = "music-track-cover-placeholder"[\s\S]{0,900}onError=\{\(\) => setFailedSrc\(src\)\}/u);
   assert.doesNotMatch(client, /storageKey|sourceKey|driveFileId|googleDriveId/u);
 });
 

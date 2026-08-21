@@ -1829,7 +1829,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(playlistLibraryStart >= 0 && downloadsLibraryStart > playlistLibraryStart, "the Playlists view should keep its dedicated component");
   const playlistLibraryBlock = musicWorkspace.slice(playlistLibraryStart, downloadsLibraryStart);
   assert.doesNotMatch(playlistLibraryBlock, /<header>|LISTENING WORLDS|Twelve distinct directions/, "the redundant Playlists introduction should be removed");
-  assert.match(playlistLibraryBlock, /activePlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero"[\s\S]{0,220}src=\{activePlaylist\.image\}/);
+  assert.match(playlistLibraryBlock, /activePlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero"[\s\S]{0,220}<PlaylistHeroArtwork playlist=\{activePlaylist\} \/>/);
   assert.match(playlistLibraryBlock, /id="music-playlist-detail-hero"[\s\S]{0,180}tabIndex=\{-1\}/);
   assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePlaylist\.title\}<\/h2>[\s\S]{0,100}<p>\{activePlaylist\.description\}<\/p>/);
   assert.match(playlistLibraryBlock, /activePersonalPlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero is-personal"[\s\S]{0,220}<PersonalPlaylistArtwork playlist=\{activePersonalPlaylist\} className="music-playlist-detail-photo" eager/);
@@ -1848,14 +1848,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /className="music-recent-releases" aria-labelledby="recent-releases-title"/);
   assert.match(musicWorkspace, /<h3 id="recent-releases-title">Recent releases<\/h3>/);
   assert.match(musicWorkspace, /recentCatalogTracks !== null[\s\S]{0,260}recentCatalogRequestFailed[\s\S]{0,220}Loading the latest releases from the live catalogue\./);
-  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track\)/);
+  assert.match(musicWorkspace, /className="music-recent-grid" role="list" aria-label="Recent catalogue releases"[\s\S]{0,180}recentTracks\.map\(\(track, index\)/);
   assert.match(musicWorkspace, /className="music-recent-cover"[\s\S]{0,240}onClick=\{\(\) => togglePreview\(track\)\}[\s\S]{0,1200}<PlaybackGlyph playing=\{isPlaying\} \/>/);
   const recentReleaseBlock = musicWorkspace.slice(
     musicWorkspace.indexOf('<section className="music-recent-releases"'),
     musicWorkspace.indexOf('<div className="music-discovery-grid">'),
   );
-  assert.match(recentReleaseBlock, /src=\{track\.cover\}[\s\S]{0,360}onError=\{\(event\) => \{[\s\S]{0,100}event\.currentTarget\.hidden = true/);
-  assert.doesNotMatch(recentReleaseBlock, /music-recent-cover-placeholder|>♪</, "Recent releases should replace coverless or broken artwork with the next valid release");
+  assert.match(recentReleaseBlock, /<TrackCover src=\{track\.cover\} width=\{420\} height=\{420\} priority=\{index < 4\} fallbackClassName="music-recent-cover-placeholder" \/>/);
+  assert.doesNotMatch(recentReleaseBlock, /setRecentCoverFailures|event\.currentTarget\.hidden/, "Recent releases should keep stable cards and use the local artwork fallback");
   assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
 
   assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
@@ -1879,7 +1879,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(musicWorkspace, /\bAudience\b/);
   assert.match(musicWorkspace, /className="music-track-inline-player" role="group" aria-label=\{`Preview player for \$\{track\.title\}`\}/);
   assert.doesNotMatch(musicWorkspace, /music-track-cover-play/);
-  assert.match(musicWorkspace, /src=\{track\.cover\}[\s\S]{0,100}width=\{64\}[\s\S]{0,80}height=\{64\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
+  assert.match(musicWorkspace, /<TrackCover src=\{track\.cover\} width=\{64\} height=\{64\} priority=\{index < VISIBLE_COVER_PRELOAD_LIMIT\} \/>/);
   const waveComponent = musicWorkspace.match(/const Wave = memo\(function Wave\([\s\S]*?\n\}\);/);
   assert.ok(waveComponent, "the waveform should stay isolated in one memoized component");
   assert.match(waveComponent[0], /const canvasRef = useRef<HTMLCanvasElement>\(null\)/);
@@ -2007,7 +2007,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistComposerBlock[0], /<span>\{isProcessingImage \? "Preparing image…" : imageActionLabel\}<\/span>/);
   assert.doesNotMatch(playlistComposerBlock[0], /<div className="music-playlist-composer-preview"/, "the artwork thumbnail must stay an interactive control");
   assert.match(playlistComposerBlock[0], /className="music-personal-playlist-default-art" aria-hidden="true"><SymbiomeMark \/>/);
-  assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,720}loadPersonalPlaylistImage\(imageKey\)[\s\S]{0,480}URL\.revokeObjectURL\(objectUrl\)/);
+  assert.match(musicWorkspace, /const personalPlaylistImageUrlCache = new Map<string, string>\(\)[\s\S]{0,1100}cachedPersonalPlaylistImageUrl[\s\S]{0,900}personalPlaylistImageUrlCache\.set\(imageKey, objectUrl\)/);
+  assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,900}cachedPersonalPlaylistImageUrl\(imageKey\)[\s\S]{0,360}setLoadedImage\(\{ key: imageKey, url \}\)/);
   assert.match(musicWorkspace, /function PersonalPlaylistArtwork[\s\S]{0,680}usePersonalPlaylistImageUrl\(playlist\.imageKey\)[\s\S]{0,360}music-personal-playlist-default-art[\s\S]{0,120}<SymbiomeMark \/>/);
   const personalPlaylistCard = musicWorkspace.match(/function PersonalPlaylistCard[\s\S]*?(?=\nfunction PersonalPlaylistContextMenu)/);
   assert.ok(personalPlaylistCard, "personal playlists should use a two-control card shell");
@@ -2029,9 +2030,9 @@ test("keeps the connected workspace readable and artist-led", async () => {
     /className="is-destructive"[\s\S]*?\{busy \? "Deleting…" : "Delete playlist"\}<\/button>/,
   );
   assert.match(personalPlaylistImages, /allowedImageTypes = new Set\(\["image\/jpeg", "image\/png", "image\/webp"\]\)/);
-  assert.match(personalPlaylistImages, /MAX_SOURCE_IMAGE_BYTES = 8 \* 1024 \* 1024[\s\S]{0,100}MAX_STORED_IMAGE_BYTES = 1024 \* 1024/);
+  assert.match(personalPlaylistImages, /MAX_SOURCE_IMAGE_BYTES = 8 \* 1024 \* 1024[\s\S]{0,100}MAX_STORED_IMAGE_BYTES = 384 \* 1024/);
   assert.match(personalPlaylistImages, /bitmap = await createImageBitmap\(file\)/);
-  assert.match(personalPlaylistImages, /const attempts = \[[\s\S]{0,120}\{ width: 1200, quality: \.82 \}[\s\S]{0,120}\{ width: 720, quality: \.66 \}/);
+  assert.match(personalPlaylistImages, /const attempts = \[[\s\S]{0,120}\{ width: 640, quality: \.8 \}[\s\S]{0,120}\{ width: 480, quality: \.64 \}/);
   assert.match(personalPlaylistImages, /indexedDB\.open\(PERSONAL_PLAYLIST_DB_NAME, PERSONAL_PLAYLIST_DB_VERSION\)[\s\S]{0,220}createObjectStore\(PERSONAL_PLAYLIST_IMAGE_STORE\)/);
   assert.match(personalPlaylistImages, /export async function deletePersonalPlaylistImage\(key: string\)[\s\S]{0,220}transactionComplete\(database, "readwrite", \(store\) => store\.delete\(key\)\)/);
   assert.match(musicWorkspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)[\s\S]{0,420}setPersonalPlaylists\(nextPlaylists\)/);
@@ -2285,10 +2286,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceCss, /\.workspace-playlist\s*\{[^}]*border:\s*0;/s);
   assert.match(musicWorkspaceCss, /\.workspace-playlist::before\s*\{[^}]*width:\s*10px;[^}]*background:\s*var\(--playlist-accent/s);
   assert.match(musicWorkspaceCss, /\.workspace-playlist-photo\s*\{[^}]*object-fit:cover/s);
-  assert.match(cataloguePage, /width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"[\s\S]{0,80}decoding="async"/);
-  assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}width=\{1600\}[\s\S]{0,100}height=\{1200\}[\s\S]{0,100}loading="lazy"/);
+  assert.match(cataloguePage, /src=\{playlist\.thumbnail\}[\s\S]{0,100}width=\{640\}[\s\S]{0,100}height=\{480\}[\s\S]{0,140}loading=\{index < 4 \? "eager" : "lazy"\}/);
+  assert.match(musicWorkspace, /className="workspace-playlist-photo"[\s\S]{0,180}src=\{playlist\.thumbnail\}[\s\S]{0,100}width=\{640\}[\s\S]{0,100}height=\{480\}/);
+  assert.match(musicWorkspace, /function PlaylistHeroArtwork[\s\S]{0,900}src=\{playlist\.thumbnail\}/);
+  assert.match(musicWorkspace, /music-playlist-detail-photo is-full[\s\S]{0,160}is-loaded[\s\S]{0,180}src=\{playlist\.image\}/);
+  assert.match(musicWorkspaceCss, /\.music-playlist-detail-photo\.is-full\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity \.22s ease;[\s\S]{0,120}\.music-playlist-detail-photo\.is-full\.is-loaded\s*\{\s*opacity:\s*1;/s);
 
   let refreshedPlaylistBytes = 0;
+  let playlistThumbnailBytes = 0;
   for (const [title, spotifyId, image, sourceId] of [
     ["Lofi Study", "0vvXsWCC9xrXsKd4FyS8kM", "lofi-study-laptop-dwZlYC-6-9c.jpg", "dwZlYC-6-9c"],
     ["Synthwave Night", "1YIe34rcmLjCYpY9wJoM2p", "synthwave-console-p0j-mE6mGo4.jpg", "p0j-mE6mGo4"],
@@ -2306,7 +2311,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
     assert.match(catalogueData, new RegExp(title), title);
     assert.match(catalogueData, new RegExp(spotifyId), spotifyId);
     const imageFile = new URL(`public/images/unsplash/playlists/${image}`, root);
+    const thumbnailName = image.replace(/\.jpg$/u, ".webp");
+    const thumbnailFile = new URL(`public/images/unsplash/playlists/thumbnails/${thumbnailName}`, root);
     await access(imageFile);
+    await access(thumbnailFile);
+    assert.match(catalogueData, new RegExp(`thumbnails/${thumbnailName.replace(".", "\\.")}`), `${title} thumbnail`);
+    const thumbnailMetadata = await stat(thumbnailFile);
+    assert.ok(thumbnailMetadata.size <= 100_000, `${title} playlist thumbnail should stay below 100 KB`);
+    playlistThumbnailBytes += thumbnailMetadata.size;
     if (sourceId) {
       assert.match(catalogueData, new RegExp(sourceId), `${title} source ID`);
       assert.match(playlistSources, new RegExp(sourceId), `${title} source attribution`);
@@ -2316,6 +2328,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
     }
   }
   assert.ok(refreshedPlaylistBytes <= 1_400_000, "the refreshed playlist images should stay lightweight");
+  assert.ok(playlistThumbnailBytes <= 500_000, "all playlist card thumbnails should stay lightweight together");
   assert.equal([...playlistSources.matchAll(/original download without watermark/g)].length, 3, "all Unsplash+ originals should be documented as watermark-free downloads");
   for (const retiredImage of ["lofi-study.jpg", "synthwave-night.jpg", "peaceful-piano.jpg", "chill-guitar.jpg"]) {
     assert.doesNotMatch(catalogueData, new RegExp(`playlists/${retiredImage.replace(".", "\\.")}`), retiredImage);

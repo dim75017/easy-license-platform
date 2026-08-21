@@ -11,10 +11,13 @@ const files = {
   batch: "app/api/catalog/ingest/batch/route.ts",
   asset: "app/api/catalog/ingest/asset/route.ts",
   pipelineAsset: "app/api/catalog/pipeline/assets/route.ts",
+  pipelineCoverThumbnail: "app/api/catalog/pipeline/releases/[releaseId]/thumbnail/route.ts",
   promote: "app/api/catalog/pipeline/promote/route.ts",
   list: "app/api/catalog/tracks/route.ts",
   stream: "app/api/catalog/tracks/[trackId]/stream/route.ts",
   cover: "app/api/catalog/releases/[releaseId]/cover/route.ts",
+  coverArtwork: "app/api/catalog/_lib/cover-artwork.ts",
+  publicRead: "app/api/catalog/_lib/public-read.ts",
   download: "app/api/catalog/tracks/[trackId]/download/route.ts",
   storage: "worker/catalog-storage.ts",
   metadata: "app/api/catalog/_lib/metadata.ts",
@@ -53,7 +56,7 @@ test("catalogue listening is public while downloads and writes remain protected"
   for (const name of ["batch", "asset"]) {
     assert.match(await source(name), /await requireCatalogWrite\(request\)/u);
   }
-  for (const name of ["pipelineAsset", "promote"]) {
+  for (const name of ["pipelineAsset", "pipelineCoverThumbnail", "promote"]) {
     assert.match(await source(name), /await requireCatalogPipeline\(request\)/u);
   }
   assert.match(await source("auth"), /allowedEmails\.size === 0/u);
@@ -290,6 +293,36 @@ test("promotion rechecks every publication gate and commits one D1 batch", async
   ]) {
     assert.match(text, gate);
   }
+});
+
+test("published covers use lightweight variants, bounded caching and ETag revalidation", async () => {
+  const [cover, helper, publicRead] = await Promise.all([
+    source("cover"),
+    source("coverArtwork"),
+    source("publicRead"),
+  ]);
+  assert.match(helper, /COVER_CACHE_CONTROL[\s\S]{0,120}public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800/u);
+  assert.match(helper, /coverThumbnailStorageKey[\s\S]{0,420}cover_thumbnail\/\$\{sourceSha256\}\.webp/u);
+  assert.match(helper, /ifNoneMatchMatches[\s\S]{0,420}candidate\.trim\(\) === "\*"[\s\S]{0,120}normalizedEtag\(candidate\) === normalizedEtag\(etag\)/u);
+  assert.match(cover, /variant !== null && variant !== "thumbnail"/u);
+  assert.match(cover, /thumbnailStorageKey \? await bucket\.get\(thumbnailStorageKey\) : null/u);
+  assert.match(cover, /X-Cover-Variant/u);
+  assert.match(cover, /request\.headers\.get\("if-none-match"\)[\s\S]{0,180}new Response\(null, \{ status: 304, headers \}\)/u);
+  assert.doesNotMatch(cover, /headers\.set\("Cache-Control", "no-store"\)/u);
+  assert.match(publicRead, /"Access-Control-Allow-Headers": "Accept, If-None-Match, Range"/u);
+  assert.match(publicRead, /Access-Control-Expose-Headers[\s\S]{0,160}X-Cover-Variant/u);
+});
+
+test("the pipeline stores only content-addressed WebP thumbnails for current published covers", async () => {
+  const thumbnail = await source("pipelineCoverThumbnail");
+  assert.match(thumbnail, /await requireCatalogPipeline\(request\)/u);
+  assert.match(thumbnail, /MAX_COVER_THUMBNAIL_BYTES = 512 \* 1024/u);
+  assert.match(thumbnail, /release\?\.status !== "published" \|\| !release\.cover_storage_key/u);
+  assert.match(thumbnail, /coverSourceSha256\(releaseId, release\.cover_storage_key\)/u);
+  assert.match(thumbnail, /coverThumbnailStorageKey\(releaseId, release\.cover_storage_key\)/u);
+  assert.match(thumbnail, /contentType: "image\/webp"/u);
+  assert.match(thumbnail, /stored_cover_thumbnail_integrity_mismatch/u);
+  assert.doesNotMatch(thumbnail, /bucket\.delete|\.delete\(storageKey\)/u);
 });
 
 test("owner-direct promotion requires an explicit fail-closed missing-artwork opt-in", async () => {

@@ -2,7 +2,7 @@ const PERSONAL_PLAYLIST_DB_NAME = "symbiome-personal-library-v1";
 const PERSONAL_PLAYLIST_IMAGE_STORE = "playlist-images";
 const PERSONAL_PLAYLIST_DB_VERSION = 1;
 const MAX_SOURCE_IMAGE_BYTES = 8 * 1024 * 1024;
-const MAX_STORED_IMAGE_BYTES = 1024 * 1024;
+const MAX_STORED_IMAGE_BYTES = 384 * 1024;
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const imageKeyPattern = /^playlist-cover:[a-z0-9-]{1,120}$/iu;
 
@@ -54,9 +54,9 @@ export async function preparePersonalPlaylistImage(file: File): Promise<Blob> {
     }
 
     const attempts = [
-      { width: 1200, quality: .82 },
-      { width: 960, quality: .74 },
-      { width: 720, quality: .66 },
+      { width: 640, quality: .8 },
+      { width: 560, quality: .72 },
+      { width: 480, quality: .64 },
     ] as const;
     let lastBlob: Blob | null = null;
 
