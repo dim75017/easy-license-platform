@@ -1921,7 +1921,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
-  assert.match(musicWorkspace, /Full-length compressed listening copies are listed here\. WAV masters stay reserved for licensed downloads\./);
+  const downloadsLibraryBlock = musicWorkspace.match(/function DownloadsLibrary[\s\S]*?\n\}/);
+  assert.ok(downloadsLibraryBlock, "the Downloads view should keep its dedicated component");
+  assert.doesNotMatch(downloadsLibraryBlock[0], /<header>|<h2>Downloads<\/h2>|Full-length compressed listening copies/, "the redundant Downloads introduction should be removed");
+  assert.match(downloadsLibraryBlock[0], /savedCount > tracks\.length[\s\S]{0,160}className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite"/, "partial saved-download loading should keep a compact status");
+  assert.match(musicWorkspaceCss, /\.music-downloads-sync-status\s*\{\s*margin:\s*0 0 18px;/);
   assert.match(musicWorkspace, /className="music-action-status" role="status" aria-live="polite" aria-atomic="true"/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/);
   assert.match(musicWorkspace, /workspace-lofi-kicker[\s\S]{0,100}PUBLIC PLAYLISTS FROM <LofiGirlWordmark \/>/);

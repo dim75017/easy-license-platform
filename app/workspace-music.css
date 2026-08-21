@@ -1712,6 +1712,7 @@ article.music-track-row[role="listitem"]:focus-within { z-index: 2; }
 
 .music-download-list article { grid-template-columns: 32px 50px minmax(180px, 1fr) 100px 100px; }
 .music-download-list article > .music-action-icon { justify-self: center; color: var(--wm-clay-deep); }
+.music-downloads-sync-status { margin: 0 0 18px; }
 
 @media (max-width: 1280px) {
   article.music-track-row[role="listitem"] {
