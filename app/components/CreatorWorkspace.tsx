@@ -1916,7 +1916,7 @@ export function CreatorWorkspace() {
     </div>
   ) : null;
 
-  const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked";
+  const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked" || view === "downloads";
 
   return (
     <div className="creator-music-app">
@@ -2359,7 +2359,7 @@ function PlaylistLibrary({
 }
 
 function DownloadsLibrary({ tracks, savedCount }: { tracks: readonly WorkspaceTrack[]; savedCount: number }) {
-  return <div className="music-secondary-view">{savedCount > tracks.length && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</p>}{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
+  return <div className="music-secondary-view music-track-browser music-workspace-view">{savedCount > tracks.length && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</p>}{tracks.length ? <div className="music-download-list">{tracks.map((track) => <article key={track.id}><TrackActionIcon kind="download" />{track.cover ? <img src={track.cover} alt="" width={45} height={45} /> : <span className="music-track-cover-placeholder" aria-hidden="true">♪</span>}<span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
 }
 
 function ChannelsView() {

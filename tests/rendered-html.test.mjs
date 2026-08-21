@@ -1808,8 +1808,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /<i aria-hidden="true"><WorkspaceNavIcon kind=\{item\.icon\} \/><\/i>/);
   assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
   assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
-  assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 4, "Discover, Music, Playlists and Liked tracks should share one full-width canvas");
-  assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked";/);
+  assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 5, "Discover, Music, Playlists, Liked tracks and Downloads should share one full-width canvas");
+  assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked" \|\| view === "downloads";/);
   assert.match(musicWorkspace, /<header className=\{`music-app-topbar\$\{usesWideCanvas \? " is-wide" : ""\}`\}>/);
   const musicTopbar = musicWorkspace.match(/<header className=\{`music-app-topbar[\s\S]*?<\/header>/);
   assert.ok(musicTopbar, "the connected workspace should keep one top bar");
@@ -1822,6 +1822,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /catalogLoadState !== "live" \|\| !catalogViewIsCurrent \|\| catalogRequestFailed[\s\S]{0,180}className="music-track-results-status"/, "loading and failure notices should remain available");
   assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
+  assert.match(musicWorkspace, /function DownloadsLibrary[\s\S]{0,180}className="music-secondary-view music-track-browser music-workspace-view"/, "Downloads should use the same full-width canvas and vertical rhythm as Music");
   assert.match(musicWorkspace, /const isPlaylistDetail = Boolean\(activePlaylist \|\| activePersonalPlaylist\)[\s\S]{0,220}className=\{`music-secondary-view music-playlists-view music-workspace-view\$\{isPlaylistDetail \? " is-playlist-detail" : ""\}`\}/);
   const playlistLibraryStart = musicWorkspace.indexOf("function PlaylistLibrary");
   const downloadsLibraryStart = musicWorkspace.indexOf("function DownloadsLibrary");
@@ -1840,7 +1841,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistLibraryBlock, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"[\s\S]{0,220}<h2 id="symbiome-playlists-title">Symbiome playlists<\/h2>/);
   assert.match(playlistLibraryBlock, /personalPlaylists\.map\(\(playlist\) => <PersonalPlaylistCard playlist=\{playlist\} onOpen=\{onOpenPersonal\}/);
   assert.doesNotMatch(playlistLibraryBlock, /open\.spotify\.com|Spotify/);
-  for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
+  for (const secondaryView of ["ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
   }
 
