@@ -61,6 +61,7 @@ export async function GET(request: Request): Promise<Response> {
     }
     const trackId = queryOptionalInteger(url, "trackId", 1, MAX_TRACK_ID);
     const onePerRelease = queryBoolean(url, "onePerRelease", false);
+    const requireCover = queryBoolean(url, "requireCover", false);
     const releaseTrackCountIsComplete = !search && !genre && !mood && !theme && !playlist && trackId === null;
     if (trackId !== null && onePerRelease) {
       throw new CatalogApiError(
@@ -82,6 +83,8 @@ export async function GET(request: Request): Promise<Response> {
       )`,
     ];
     const parameters: unknown[] = [];
+
+    if (requireCover) filters.push("r.cover_storage_key IS NOT NULL");
 
     if (search) {
       filters.push(
@@ -233,7 +236,7 @@ export async function GET(request: Request): Promise<Response> {
         nextPage: hasNextPage ? page + 1 : null,
       },
       view: onePerRelease ? "releases" : "tracks",
-      filters: { q: search, genre, mood, theme, playlist, trackId },
+      filters: { q: search, genre, mood, theme, playlist, trackId, requireCover },
     }));
   } catch (error) {
     return publicCatalogResponse(catalogErrorResponse(error));

@@ -126,6 +126,7 @@ const trackControlSelector = "button, a, input, select, textarea, [role='menu'],
 const catalogFetchCredentials: RequestCredentials = catalogApiOrigin ? "omit" : "same-origin";
 const CATALOG_PAGE_SIZE = 40;
 const RECENT_RELEASE_LIMIT = 8;
+const RECENT_RELEASE_BUFFER = 24;
 
 type CatalogFilters = {
   query: string;
@@ -150,12 +151,14 @@ function catalogRequestUrl({
   pageSize = CATALOG_PAGE_SIZE,
   filters,
   onePerRelease = false,
+  requireCover = false,
   trackId = null,
 }: {
   page: number;
   pageSize?: number;
   filters?: CatalogFilters;
   onePerRelease?: boolean;
+  requireCover?: boolean;
   trackId?: number | null;
 }): string {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
@@ -165,6 +168,7 @@ function catalogRequestUrl({
   if (filters?.theme) params.set("theme", filters.theme);
   if (filters?.playlist) params.set("playlist", filters.playlist);
   if (onePerRelease) params.set("onePerRelease", "true");
+  if (requireCover) params.set("requireCover", "true");
   if (trackId !== null) params.set("trackId", String(trackId));
   return `${catalogApiOrigin}/api/catalog/tracks?${params.toString()}`;
 }
@@ -562,6 +566,7 @@ export function CreatorWorkspace() {
   const [recentCatalogTracks, setRecentCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
   const [recentCatalogTotal, setRecentCatalogTotal] = useState(0);
   const [recentCatalogRequestFailed, setRecentCatalogRequestFailed] = useState(false);
+  const [recentCoverFailures, setRecentCoverFailures] = useState<Set<string>>(() => new Set());
   const [catalogLoadState, setCatalogLoadState] = useState<CatalogLoadState>("loading");
   const [catalogBusy, setCatalogBusy] = useState(true);
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
@@ -591,7 +596,14 @@ export function CreatorWorkspace() {
   const knownTracks = catalogLoadState === "live" ? catalogKnownTracks : [];
   const knownTracksRef = useRef(knownTracks);
   knownTracksRef.current = knownTracks;
-  const recentTracks = recentCatalogTracks ?? [];
+  const recentTracks = useMemo(
+    () => (recentCatalogTracks ?? [])
+      .filter((track): track is WorkspaceTrack & { cover: string } => (
+        typeof track.cover === "string" && !recentCoverFailures.has(track.id)
+      ))
+      .slice(0, RECENT_RELEASE_LIMIT),
+    [recentCatalogTracks, recentCoverFailures],
+  );
   const activePlaylist = useMemo(
     () => lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId) ?? null,
     [activePlaylistId],
@@ -713,8 +725,9 @@ export function CreatorWorkspace() {
       try {
         const response = await fetch(catalogRequestUrl({
           page: 1,
-          pageSize: RECENT_RELEASE_LIMIT,
+          pageSize: RECENT_RELEASE_BUFFER,
           onePerRelease: true,
+          requireCover: true,
         }), {
           cache: "no-store",
           credentials: catalogFetchCredentials,
@@ -727,6 +740,7 @@ export function CreatorWorkspace() {
         setRecentCatalogTracks(page.tracks);
         setRecentCatalogTotal(page.pagination.total);
         setRecentCatalogRequestFailed(false);
+        setRecentCoverFailures(new Set());
         setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -1339,7 +1353,7 @@ export function CreatorWorkspace() {
                   <h3 id="recent-releases-title">Recent releases</h3>
                   <p role="status" aria-live="polite">
                     {recentCatalogTracks !== null
-                      ? `${recentTracks.length} latest ${recentTracks.length === 1 ? "release" : "releases"} from ${recentCatalogTotal} published ${recentCatalogTotal === 1 ? "release" : "releases"}.`
+                      ? `${recentTracks.length} latest ${recentTracks.length === 1 ? "release" : "releases"} from ${recentCatalogTotal} published ${recentCatalogTotal === 1 ? "release" : "releases"} with artwork.`
                       : recentCatalogRequestFailed
                         ? "The live catalogue is temporarily unavailable. Retry to load it."
                         : "Loading the latest releases from the live catalogue."}
@@ -1361,7 +1375,23 @@ export function CreatorWorkspace() {
                   return (
                     <article className={isActive ? "is-active" : ""} role="listitem" key={track.release?.id ?? track.id}>
                       <button className="music-recent-cover" type="button" onClick={() => togglePreview(track)} aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title} from ${track.release?.title ?? track.title} by ${track.artist}`} aria-pressed={isPlaying}>
-                        {track.cover ? <img src={track.cover} alt="" width={420} height={420} loading="lazy" decoding="async" /> : <span className="music-recent-cover-placeholder" aria-hidden="true">♪</span>}
+                        <img
+                          src={track.cover}
+                          alt=""
+                          width={420}
+                          height={420}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.hidden = true;
+                            setRecentCoverFailures((current) => {
+                              if (current.has(track.id)) return current;
+                              const next = new Set(current);
+                              next.add(track.id);
+                              return next;
+                            });
+                          }}
+                        />
                         <span className="music-recent-play"><PlaybackGlyph playing={isPlaying} /></span>
                       </button>
                       <div className="music-recent-copy"><strong>{track.release?.title ?? track.title}</strong><span>{track.artist}</span><small>{releaseMeta(track)}</small></div>
