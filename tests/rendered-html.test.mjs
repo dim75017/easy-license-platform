@@ -1438,6 +1438,7 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(switcher, /document\.addEventListener\("pointerdown", handlePointerDown\)[\s\S]{0,500}document\.removeEventListener\("pointerdown", handlePointerDown\)/);
 
   assert.match(workspaceCss, /\.music-profile-switcher\.is-compact\s*\{\s*display:\s*none;/);
+  assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar\s*\{\s*z-index:\s*100;/, "the open profile menu should stay above the fixed player and mobile navigation");
   assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
   assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;[^}]*bottom:\s*auto;[^}]*max-height:\s*calc\(100vh - 102px\);/s);
   assert.match(workspaceCss, /@media \(max-width: 860px\)[\s\S]{0,220}\.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);

@@ -2023,6 +2023,8 @@ article.music-track-row[role="listitem"] {
 }
 
 /* V19: accessible account switcher for Creator, Business and Admin views. */
+.creator-music-app .music-app-topbar { z-index: 100; }
+
 .music-profile-switcher { position: relative; min-width: 0; }
 
 button.music-app-account {
