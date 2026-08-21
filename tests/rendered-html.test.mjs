@@ -1712,7 +1712,7 @@ test("uses the official Lofi Girl wordmark everywhere the brand name is visible"
 });
 
 test("keeps the connected workspace readable and artist-led", async () => {
-  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources] = await Promise.all([
+  const [layout, workspaceCss, symbioseBrandCss, brand, mark, icon, heroMockup, ogScript, dashboardShell, musicWorkspace, musicWorkspaceCss, catalogueData, cataloguePage, playlistSources, personalPlaylistImages] = await Promise.all([
     source("app/layout.tsx"),
     source("app/workspace-v2.css"),
     source("app/symbiose-brand.css"),
@@ -1727,6 +1727,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
     source("app/data/catalog.ts"),
     source("app/catalog/page.tsx"),
     source("public/images/unsplash/playlists/SOURCES.md"),
+    source("app/lib/personal-playlist-images.ts"),
   ]);
 
   assert.match(layout, /workspace-v2\.css/);
@@ -1780,13 +1781,16 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
   assert.match(musicWorkspace, /const libraryViewIds: readonly LibraryView\[\] = \["discover", "music", "playlists", "liked", "downloads", "channels", "licences"\]/);
   assert.match(musicWorkspace, /function isLibraryView\(value: string \| null\): value is LibraryView[\s\S]{0,160}libraryViewIds\.includes\(value as LibraryView\)/);
-  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,200}isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
+  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,200}isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"[\s\S]{0,120}params\.get\("myPlaylist"\)[\s\S]{0,60}return "playlists"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
+  assert.match(musicWorkspace, /const requestedPersonalPlaylist = params\.get\("myPlaylist"\)\?\.trim\(\) \?\? ""/);
+  assert.match(musicWorkspace, /isStoredTrackId\(requestedPersonalPlaylist\)[\s\S]{0,160}personalPlaylist: requestedPersonalPlaylist/);
   assert.match(musicWorkspace, /function writeLibraryViewToLocation\(view: LibraryView, mode: "push" \| "replace"\)[\s\S]{0,180}url\.searchParams\.set\("view", view\)[\s\S]{0,120}view !== "music"[\s\S]{0,80}url\.searchParams\.delete\("track"\)/);
-  assert.match(musicWorkspace, /if \(view !== "playlists"\) url\.searchParams\.delete\("playlist"\)/);
+  assert.match(musicWorkspace, /if \(view !== "playlists"\) \{[\s\S]{0,100}url\.searchParams\.delete\("playlist"\)[\s\S]{0,100}url\.searchParams\.delete\("myPlaylist"\)/);
   assert.match(musicWorkspace, /function writePlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,180}url\.searchParams\.set\("playlist", playlist\)/);
+  assert.match(musicWorkspace, /function writePersonalPlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,240}url\.searchParams\.set\("myPlaylist", playlist\)/);
   assert.match(musicWorkspace, /mode === "push"[\s\S]{0,100}window\.history\.pushState[\s\S]{0,100}window\.history\.replaceState/);
   assert.match(musicWorkspace, /syncViewFromLocation\(\)[\s\S]{0,180}window\.addEventListener\("popstate", handlePopState\)[\s\S]{0,120}window\.removeEventListener\("popstate", handlePopState\)/);
-  assert.match(musicWorkspace, /function navigateToView\(nextView: LibraryView\)[\s\S]{0,220}setView\(nextView\)[\s\S]{0,100}writeLibraryViewToLocation\(nextView, historyMode\)/);
+  assert.match(musicWorkspace, /function navigateToView\(nextView: LibraryView\)[\s\S]{0,420}setView\(nextView\)[\s\S]{0,100}writeLibraryViewToLocation\(nextView, historyMode\)/);
   assert.doesNotMatch(musicWorkspace, /ProductNavigation|music-product-nav/);
   assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/, "Discover should open directly without the retired tuning setup");
@@ -1797,6 +1801,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads"]);
   assert.match(navBlock[1], /label:\s*"DISCOVER MUSIC"/);
   assert.match(navBlock[1], /label:\s*"YOUR LIBRARY"/);
+  assert.doesNotMatch(navBlock[1], /icon:\s*"(?:◎|♫|▦|♡|↓)"/, "navigation should use the selected editorial SVG system instead of text glyphs");
+  assert.match(musicWorkspace, /function WorkspaceNavIcon\(\{ kind \}: \{ kind: WorkspaceNavigationIcon \}\)[\s\S]{0,360}kind === "discover"[\s\S]{0,180}M12 3\.5 14\.1 9\.9 20\.5 12l-6\.4 2\.1L12 20\.5/);
+  assert.match(musicWorkspace, /kind === "playlists"[\s\S]{0,220}<rect x="4" y="4\.5" width="14" height="12" rx="2\.5"[\s\S]{0,180}m9\.5 8\.2 4\.2 2\.4-4\.2 2\.4V8\.2Z/);
+  assert.match(musicWorkspace, /kind === "downloads"[\s\S]{0,180}<path d="M12 4v10"[\s\S]{0,160}M5 17\.5v1A1\.5 1\.5 0 0 0 6\.5 20h11/);
+  assert.match(musicWorkspace, /<i aria-hidden="true"><WorkspaceNavIcon kind=\{item\.icon\} \/><\/i>/);
   assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
   assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
   assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 4, "Discover, Music, Playlists and Liked tracks should share one full-width canvas");
@@ -1813,7 +1822,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /catalogLoadState !== "live" \|\| !catalogViewIsCurrent \|\| catalogRequestFailed[\s\S]{0,180}className="music-track-results-status"/, "loading and failure notices should remain available");
   assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
-  assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,900}className=\{`music-secondary-view music-playlists-view music-workspace-view\$\{activePlaylist \? " is-playlist-detail" : ""\}`\}/);
+  assert.match(musicWorkspace, /const isPlaylistDetail = Boolean\(activePlaylist \|\| activePersonalPlaylist\)[\s\S]{0,220}className=\{`music-secondary-view music-playlists-view music-workspace-view\$\{isPlaylistDetail \? " is-playlist-detail" : ""\}`\}/);
   const playlistLibraryStart = musicWorkspace.indexOf("function PlaylistLibrary");
   const downloadsLibraryStart = musicWorkspace.indexOf("function DownloadsLibrary");
   assert.ok(playlistLibraryStart >= 0 && downloadsLibraryStart > playlistLibraryStart, "the Playlists view should keep its dedicated component");
@@ -1822,8 +1831,14 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistLibraryBlock, /activePlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero"[\s\S]{0,220}src=\{activePlaylist\.image\}/);
   assert.match(playlistLibraryBlock, /id="music-playlist-detail-hero"[\s\S]{0,180}tabIndex=\{-1\}/);
   assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePlaylist\.title\}<\/h2>[\s\S]{0,100}<p>\{activePlaylist\.description\}<\/p>/);
+  assert.match(playlistLibraryBlock, /activePersonalPlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero is-personal"[\s\S]{0,220}<PersonalPlaylistArtwork playlist=\{activePersonalPlaylist\} className="music-playlist-detail-photo" eager/);
+  assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePersonalPlaylist\.name\}<\/h2>[\s\S]{0,140}activePersonalPlaylist\.description && <p>\{activePersonalPlaylist\.description\}<\/p>/);
+  assert.match(playlistLibraryBlock, /personalPlaylistLoadState === "loading"[\s\S]{0,220}Loading saved tracks…[\s\S]{0,260}personalPlaylistLoadState === "error"[\s\S]{0,360}Retry playlist/);
   assert.match(playlistLibraryBlock, /className="music-playlist-detail-back"[\s\S]{0,80}onClick=\{onBack\}/);
   assert.match(playlistLibraryBlock, /\{catalogueStatus\}[\s\S]{0,80}\{trackList\}[\s\S]{0,80}\{cataloguePager\}/);
+  assert.match(playlistLibraryBlock, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"[\s\S]{0,220}<h2 id="personal-playlists-title">My playlists<\/h2>[\s\S]{0,220}onClick=\{onCreatePlaylist\}>Create playlist/);
+  assert.match(playlistLibraryBlock, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"[\s\S]{0,220}<h2 id="symbiome-playlists-title">Symbiome playlists<\/h2>/);
+  assert.match(playlistLibraryBlock, /personalPlaylists\.map\(\(playlist\) => <PersonalPlaylistCard playlist=\{playlist\} onOpen=\{onOpenPersonal\}/);
   assert.doesNotMatch(playlistLibraryBlock, /open\.spotify\.com|Spotify/);
   for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
@@ -1927,6 +1942,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,200}window\.location\.pathname\.replace\(\/\\\/app\\\/\?\$\/u, "\/app"\)[\s\S]{0,120}new URL\(appPath, window\.location\.origin\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
   assert.match(musicWorkspace, /navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,180}window\.prompt\("Copy this track link", shareUrl\)/);
   assert.match(musicWorkspace, /aria-pressed=\{containsTrack\}[\s\S]{0,260}Remove from playlist/);
+  assert.match(musicWorkspace, /className="music-track-new-playlist"[\s\S]{0,120}<button type="button" onClick=\{onOpenPlaylistCreator\}>Create a new playlist<\/button>/);
+  assert.doesNotMatch(musicWorkspace.match(/function TrackActionPopover[\s\S]*?\n\}/)?.[0] ?? "", /placeholder="Playlist name"|Create & add<\/button>/, "the old inline name-only creator should stay removed");
   assert.match(musicWorkspace, /popover\.querySelector<HTMLButtonElement>\("button:not\(\[disabled\]\)"\)\?\.focus\(\)/);
   assert.match(musicWorkspace, /if \(event\.key === "Escape"\)[\s\S]{0,100}onClose\(true\)[\s\S]{0,180}\["ArrowDown", "ArrowUp", "Home", "End"\]/);
   assert.match(musicWorkspace, /document\.addEventListener\("pointerdown", handlePointerDown, true\)[\s\S]{0,180}window\.addEventListener\("scroll", handleViewportChange, true\)/);
@@ -1955,16 +1972,40 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /symbiome-liked-tracks/);
   assert.match(musicWorkspace, /symbiome-personal-playlists-v1/);
   assert.match(musicWorkspace, /symbiome-preview-downloads-v1/);
+  const personalPlaylistType = musicWorkspace.match(/type PersonalPlaylist = \{([\s\S]*?)\n\};/);
+  assert.ok(personalPlaylistType, "personal playlists should keep one durable local model");
+  for (const field of ["id", "name", "description", "imageKey", "trackIds"]) {
+    assert.match(personalPlaylistType[1], new RegExp(`\\b${field}\\s*:`), `personal playlists should persist ${field}`);
+  }
+  assert.match(musicWorkspace, /const defaultPersonalPlaylist: PersonalPlaylist = \{ id: "my-playlist", name: "My playlist", description: "", imageKey: null, trackIds: \[\] \}/);
   assert.doesNotMatch(musicWorkspace, /knownTrackIds\.has\(id\)/, "saved actions must not be purged by a partial catalogue page");
   assert.match(musicWorkspace, /storedLiked\.filter\(isStoredTrackId\)/);
+  assert.match(musicWorkspace, /typeof record\.description === "string"[\s\S]{0,160}PERSONAL_PLAYLIST_DESCRIPTION_LIMIT[\s\S]{0,180}isPersonalPlaylistImageKey\(record\.imageKey\) \? record\.imageKey : null/);
+  assert.match(musicWorkspace, /return \[\{ id: record\.id, name: record\.name\.trim\(\)\.slice\(0, 48\), description, imageKey, trackIds:/, "legacy name-only playlists should migrate with empty optional fields");
   assert.match(musicWorkspace, /record\.trackIds\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /storedDownloads\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
-  assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
+  assert.match(musicWorkspace, /async function createPersonalPlaylist\(draft: PersonalPlaylistDraft\)[\s\S]{0,420}personalPlaylistImageKey\(id\)[\s\S]{0,120}savePersonalPlaylistImage\(imageKey, draft\.image\)[\s\S]{0,360}description: draft\.description,[\s\S]{0,80}imageKey,[\s\S]{0,80}trackIds: track \? \[track\.id\] : \[\]/);
+  const playlistComposerBlock = musicWorkspace.match(/function PlaylistComposerDialog[\s\S]*?(?=\nfunction DiscoveryFacet)/);
+  assert.ok(playlistComposerBlock, "the playlist creator should remain a dedicated component");
+  assert.match(playlistComposerBlock[0], /<dialog[\s\S]{0,120}className="music-playlist-composer"[\s\S]{0,120}aria-labelledby="music-playlist-composer-title"/);
+  assert.match(playlistComposerBlock[0], /<input type="text" autoFocus[\s\S]{0,180}placeholder="Name your playlist" maxLength=\{48\} required/);
+  assert.match(playlistComposerBlock[0], /Description <small>Optional<\/small>[\s\S]{0,180}<textarea[\s\S]{0,220}maxLength=\{PERSONAL_PLAYLIST_DESCRIPTION_LIMIT\}/);
+  assert.match(playlistComposerBlock[0], /Image <small>Optional · JPEG, PNG or WebP<\/small>[\s\S]{0,220}<input type="file" accept="image\/jpeg,image\/png,image\/webp"/);
+  assert.match(playlistComposerBlock[0], /aria-label="Default Symbiome playlist artwork"><SymbiomeMark \/>/);
+  assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,420}loadPersonalPlaylistImage\(imageKey\)[\s\S]{0,280}URL\.revokeObjectURL\(objectUrl\)/);
+  assert.match(musicWorkspace, /function PersonalPlaylistArtwork[\s\S]{0,360}usePersonalPlaylistImageUrl\(playlist\.imageKey\)[\s\S]{0,180}music-personal-playlist-default-art[\s\S]{0,80}<SymbiomeMark \/>/);
+  assert.match(musicWorkspace, /function PersonalPlaylistCard[\s\S]{0,420}className="workspace-playlist music-personal-playlist-card"[\s\S]{0,160}<PersonalPlaylistArtwork playlist=\{playlist\} className="workspace-playlist-photo"/);
+  assert.match(personalPlaylistImages, /allowedImageTypes = new Set\(\["image\/jpeg", "image\/png", "image\/webp"\]\)/);
+  assert.match(personalPlaylistImages, /MAX_SOURCE_IMAGE_BYTES = 8 \* 1024 \* 1024[\s\S]{0,100}MAX_STORED_IMAGE_BYTES = 1024 \* 1024/);
+  assert.match(personalPlaylistImages, /bitmap = await createImageBitmap\(file\)/);
+  assert.match(personalPlaylistImages, /const attempts = \[[\s\S]{0,120}\{ width: 1200, quality: \.82 \}[\s\S]{0,120}\{ width: 720, quality: \.66 \}/);
+  assert.match(personalPlaylistImages, /indexedDB\.open\(PERSONAL_PLAYLIST_DB_NAME, PERSONAL_PLAYLIST_DB_VERSION\)[\s\S]{0,220}createObjectStore\(PERSONAL_PLAYLIST_IMAGE_STORE\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
-  assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,520}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
+  assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,100}activePersonalPlaylist=\{activePersonalPlaylist\}[\s\S]{0,720}personalTrackList=\{activePersonalPlaylist && activePersonalPlaylistTracks\.length \? renderTrackTable\(activePersonalPlaylistTracks, `\$\{activePersonalPlaylist\.name\} tracks`\) : null\}[\s\S]{0,240}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
+  assert.match(musicWorkspace, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"/);
   const downloadsLibraryBlock = musicWorkspace.match(/function DownloadsLibrary[\s\S]*?\n\}/);
   assert.ok(downloadsLibraryBlock, "the Downloads view should keep its dedicated component");
   assert.doesNotMatch(downloadsLibraryBlock[0], /<header>|<h2>Downloads<\/h2>|Full-length compressed listening copies/, "the redundant Downloads introduction should be removed");
@@ -2024,11 +2065,17 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v15Start > v14Start, "recent releases, clickable rows and share actions should follow the V14 taxonomy block");
   const v23Start = musicWorkspaceCss.indexOf("/* V23");
   assert.ok(v23Start > v15Start, "the internal playlist detail page should follow the existing workspace overrides");
+  const v24Start = musicWorkspaceCss.indexOf("/* V24");
+  assert.ok(v24Start > v23Start, "personal playlist cards and the composer should follow the playlist detail block");
+  const v25Start = musicWorkspaceCss.indexOf("/* V25");
+  assert.ok(v25Start > v24Start, "the selected editorial navigation icons should follow the playlist composer styles");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
   const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
   const musicWorkspaceV15 = musicWorkspaceCss.slice(v15Start, v23Start);
-  const musicWorkspaceV23 = musicWorkspaceCss.slice(v23Start);
+  const musicWorkspaceV23 = musicWorkspaceCss.slice(v23Start, v24Start);
+  const musicWorkspaceV24 = musicWorkspaceCss.slice(v24Start, v25Start);
+  const musicWorkspaceV25 = musicWorkspaceCss.slice(v25Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -2155,15 +2202,27 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button\s*\{[^}]*min-height:\s*44px/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--wm-clay\);[^}]*outline-offset:\s*1px/s);
-  assert.match(v14BaseCss, /\.music-personal-playlists > div:last-child\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/s);
   assert.match(v14TabletCss, /grid-template-columns:\s*minmax\(190px, 1fr\) minmax\(90px, \.44fr\) minmax\(110px, \.5fr\) 140px;[\s\S]{0,180}"identity genre mood actions"[\s\S]{0,100}"player player player player"/);
   assert.match(v14TabletCss, /\.music-track-taxonomy-label\s*\{\s*display:\s*block;/);
   assert.match(v14CompactCss, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\) auto;[\s\S]{0,180}"identity identity actions"[\s\S]{0,100}"genre mood mood"/);
   assert.match(v14CompactCss, /\.music-track-actions button,\s*\.music-track-actions button:not\(:first-child\)\s*\{\s*display:\s*grid;/);
-  assert.match(v14CompactCss, /\.music-personal-playlists > div:last-child\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(v14PhoneCss, /grid-template-columns:\s*minmax\(0, 1fr\) auto;[\s\S]{0,180}"identity actions"[\s\S]{0,100}"genre genre"[\s\S]{0,80}"mood mood"/);
   assert.match(v14PhoneCss, /\.music-track-context-menu\s*\{\s*width:\s*calc\(100vw - 24px\);/);
-  assert.match(v14ForcedColoursCss, /\.music-track-context-menu,[\s\S]{0,100}\.music-track-new-playlist input\s*\{\s*border:\s*1px solid ButtonText;/);
+  assert.match(v14ForcedColoursCss, /\.music-track-context-menu,[\s\S]{0,160}border:\s*1px solid ButtonText/);
+
+  assert.match(musicWorkspaceV24, /\.music-personal-playlists > \.music-secondary-playlists,\s*\.music-symbiome-playlists > \.music-secondary-playlists\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV24, /@media \(min-width:\s*2200px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV24, /@media \(max-width:\s*1150px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV24, /@media \(max-width:\s*600px\)[\s\S]{0,220}grid-template-columns:\s*1fr/s);
+  assert.match(musicWorkspaceV24, /\.music-personal-playlist-default-art\s*\{[^}]*place-items:\s*center;[^}]*linear-gradient/s);
+  assert.match(musicWorkspaceV24, /\.music-personal-playlist-default-art \.brand-groove-warm\s*\{\s*fill:\s*#e06343;[\s\S]{0,100}\.brand-groove-base\s*\{\s*fill:\s*#f7ebdd;/s);
+  assert.match(musicWorkspaceV24, /\.music-playlist-composer\s*\{[^}]*width:\s*min\(760px, calc\(100vw - 32px\)\);[^}]*max-height:\s*min\(860px, calc\(100dvh - 32px\)\);[^}]*overflow:\s*auto;[^}]*border-radius:\s*24px/s);
+  assert.match(musicWorkspaceV24, /\.music-playlist-composer::backdrop\s*\{[^}]*background:\s*rgba\(20, 20, 27, \.68\);[^}]*backdrop-filter:\s*blur\(8px\)/s);
+  assert.match(musicWorkspaceV24, /@media \(max-width:\s*760px\)[\s\S]{0,260}\.music-playlist-composer-body\s*\{\s*grid-template-columns:\s*1fr/s);
+  assert.match(musicWorkspaceV24, /@media \(forced-colors: active\)[\s\S]{0,260}\.music-playlist-composer button\s*\{\s*border:\s*1px solid ButtonText/s);
+  assert.match(musicWorkspaceV25, /direction A gives Discover, Playlists and Downloads an editorial icon language/);
+  assert.match(musicWorkspaceV25, /\.music-nav-icon\s*\{[^}]*width:\s*22px;[^}]*height:\s*22px/s);
+  assert.match(musicWorkspaceV25, /@media \(max-width:\s*860px\)[\s\S]{0,180}\.music-nav-icon\s*\{\s*width:\s*20px;\s*height:\s*20px;/s);
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);

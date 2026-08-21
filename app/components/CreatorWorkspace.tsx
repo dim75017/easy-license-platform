@@ -1,10 +1,18 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Brand } from "./Brand";
 import { LofiGirlWordmark } from "./LofiGirlWordmark";
+import { SymbiomeMark } from "./SymbiomeMark";
 import { useTrackPreview } from "../hooks/useTrackPreview";
 import { catalogApiOrigin, parseCatalogPage, type CatalogPagination } from "../lib/catalog-client";
+import {
+  isPersonalPlaylistImageKey,
+  loadPersonalPlaylistImage,
+  personalPlaylistImageKey,
+  preparePersonalPlaylistImage,
+  savePersonalPlaylistImage,
+} from "../lib/personal-playlist-images";
 import {
   lofiGirlPlaylists,
   musicSearchTaxonomy,
@@ -22,6 +30,7 @@ type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | 
 type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
 type CatalogLoadState = "loading" | "live" | "fallback";
+type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "downloads";
 
 const libraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked", "downloads", "channels", "licences"];
 
@@ -34,6 +43,7 @@ function readLibraryViewFromLocation(): LibraryView {
   if (params.get("track")?.trim()) return "music";
   const requestedPlaylist = params.get("playlist")?.trim() ?? "";
   if (requestedPlaylist && isCatalogPlaylistId(requestedPlaylist)) return "playlists";
+  if (isStoredTrackId(params.get("myPlaylist")?.trim())) return "playlists";
 
   const requestedView = params.get("view");
   if (isLibraryView(requestedView)) return requestedView;
@@ -41,16 +51,20 @@ function readLibraryViewFromLocation(): LibraryView {
   return "discover";
 }
 
-function readLibrarySelectionFromLocation(): { mood: string | null; playlist: CatalogPlaylistId | null } {
+function readLibrarySelectionFromLocation(): { mood: string | null; playlist: CatalogPlaylistId | null; personalPlaylist: string | null } {
   const params = new URLSearchParams(window.location.search);
   const requestedPlaylist = params.get("playlist")?.trim() ?? "";
   if (requestedPlaylist && isCatalogPlaylistId(requestedPlaylist)) {
-    return { mood: null, playlist: requestedPlaylist };
+    return { mood: null, playlist: requestedPlaylist, personalPlaylist: null };
+  }
+  const requestedPersonalPlaylist = params.get("myPlaylist")?.trim() ?? "";
+  if (isStoredTrackId(requestedPersonalPlaylist)) {
+    return { mood: null, playlist: null, personalPlaylist: requestedPersonalPlaylist };
   }
 
   const requestedMood = params.get("mood")?.trim() ?? "";
   const mood = musicSearchTaxonomy.moods.find((item) => item.toLocaleLowerCase() === requestedMood.toLocaleLowerCase()) ?? null;
-  return { mood, playlist: null };
+  return { mood, playlist: null, personalPlaylist: null };
 }
 
 function writeLibraryViewToLocation(view: LibraryView, mode: "push" | "replace") {
@@ -60,7 +74,10 @@ function writeLibraryViewToLocation(view: LibraryView, mode: "push" | "replace")
     url.searchParams.delete("track");
     url.searchParams.delete("mood");
   }
-  if (view !== "playlists") url.searchParams.delete("playlist");
+  if (view !== "playlists") {
+    url.searchParams.delete("playlist");
+    url.searchParams.delete("myPlaylist");
+  }
 
   const destination = `${url.pathname}${url.search}${url.hash}`;
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -79,6 +96,7 @@ function writeLibrarySelectionToLocation(
   url.searchParams.delete("track");
   url.searchParams.delete("mood");
   url.searchParams.delete("playlist");
+  url.searchParams.delete("myPlaylist");
   if (selection.mood) url.searchParams.set("mood", selection.mood);
 
   const destination = `${url.pathname}${url.search}${url.hash}`;
@@ -98,7 +116,28 @@ function writePlaylistSelectionToLocation(
   url.searchParams.delete("track");
   url.searchParams.delete("mood");
   url.searchParams.delete("playlist");
+  url.searchParams.delete("myPlaylist");
   if (playlist) url.searchParams.set("playlist", playlist);
+
+  const destination = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (destination === current) return;
+
+  if (mode === "push") window.history.pushState(window.history.state, "", destination);
+  else window.history.replaceState(window.history.state, "", destination);
+}
+
+function writePersonalPlaylistSelectionToLocation(
+  playlist: string | null,
+  mode: "push" | "replace" = "replace",
+) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", "playlists");
+  url.searchParams.delete("track");
+  url.searchParams.delete("mood");
+  url.searchParams.delete("playlist");
+  url.searchParams.delete("myPlaylist");
+  if (playlist) url.searchParams.set("myPlaylist", playlist);
 
   const destination = `${url.pathname}${url.search}${url.hash}`;
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -111,7 +150,15 @@ function writePlaylistSelectionToLocation(
 type PersonalPlaylist = {
   id: string;
   name: string;
+  description: string;
+  imageKey: string | null;
   trackIds: string[];
+};
+
+type PersonalPlaylistDraft = {
+  name: string;
+  description: string;
+  image: Blob | null;
 };
 
 type TrackMenuState = {
@@ -121,12 +168,13 @@ type TrackMenuState = {
   mode: TrackMenuMode;
 };
 
-const defaultPersonalPlaylist: PersonalPlaylist = { id: "my-playlist", name: "My playlist", trackIds: [] };
+const defaultPersonalPlaylist: PersonalPlaylist = { id: "my-playlist", name: "My playlist", description: "", imageKey: null, trackIds: [] };
 const trackControlSelector = "button, a, input, select, textarea, [role='menu'], [role='dialog']";
 const catalogFetchCredentials: RequestCredentials = catalogApiOrigin ? "omit" : "same-origin";
 const CATALOG_PAGE_SIZE = 40;
 const RECENT_RELEASE_LIMIT = 8;
 const RECENT_RELEASE_BUFFER = 24;
+const PERSONAL_PLAYLIST_DESCRIPTION_LIMIT = 280;
 
 type CatalogFilters = {
   query: string;
@@ -207,21 +255,21 @@ function releaseMeta(track: WorkspaceTrack): string {
 
 const navGroups: ReadonlyArray<{
   label: string;
-  items: ReadonlyArray<{ id: LibraryView; label: string; icon: string; mobileSecondary?: boolean }>;
+  items: ReadonlyArray<{ id: LibraryView; label: string; icon: WorkspaceNavigationIcon; mobileSecondary?: boolean }>;
 }> = [
   {
     label: "DISCOVER MUSIC",
     items: [
-      { id: "discover", label: "Discover", icon: "◎" },
-      { id: "music", label: "Music", icon: "♫" },
-      { id: "playlists", label: "Playlists", icon: "▦" },
+      { id: "discover", label: "Discover", icon: "discover" },
+      { id: "music", label: "Music", icon: "music" },
+      { id: "playlists", label: "Playlists", icon: "playlists" },
     ],
   },
   {
     label: "YOUR LIBRARY",
     items: [
-      { id: "liked", label: "Liked tracks", icon: "♡" },
-      { id: "downloads", label: "Downloads", icon: "↓" },
+      { id: "liked", label: "Liked tracks", icon: "liked" },
+      { id: "downloads", label: "Downloads", icon: "downloads" },
     ],
   },
 ];
@@ -321,6 +369,18 @@ function VolumeGlyph({ muted }: { muted: boolean }) {
   return <span className="music-volume-icon" data-muted={muted ? "true" : "false"} aria-hidden="true" />;
 }
 
+function WorkspaceNavIcon({ kind }: { kind: WorkspaceNavigationIcon }) {
+  return (
+    <svg className="music-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" focusable="false">
+      {kind === "discover" && <><path d="M12 3.5 14.1 9.9 20.5 12l-6.4 2.1L12 20.5l-2.1-6.4L3.5 12l6.4-2.1L12 3.5Z" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></>}
+      {kind === "music" && <><path d="M9 17.5V6.8L18 5v10.5" /><path d="M9 9.5 18 7.8" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="15.5" r="2.5" /></>}
+      {kind === "playlists" && <><rect x="4" y="4.5" width="14" height="12" rx="2.5" /><path d="m9.5 8.2 4.2 2.4-4.2 2.4V8.2Z" fill="currentColor" stroke="none" /><path d="M7 20h11.5a2 2 0 0 0 2-2V8" /></>}
+      {kind === "liked" && <path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.4 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />}
+      {kind === "downloads" && <><path d="M12 4v10" /><path d="m8 10 4 4 4-4" /><path d="M5 17.5v1A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-1" /></>}
+    </svg>
+  );
+}
+
 function TrackActionIcon({ kind, active = false }: { kind: "like" | "playlist" | "download" | "share"; active?: boolean }) {
   return (
     <span className={`music-action-icon music-action-${kind}`} data-active={active ? "true" : "false"} aria-hidden="true">
@@ -343,7 +403,7 @@ function TrackActionPopover({
   onToggleLike,
   onShowPlaylists,
   onAddToPlaylist,
-  onCreatePlaylist,
+  onOpenPlaylistCreator,
   onDownload,
   onShare,
   canDownload,
@@ -356,14 +416,13 @@ function TrackActionPopover({
   onToggleLike: () => void;
   onShowPlaylists: () => void;
   onAddToPlaylist: (playlistId: string) => void;
-  onCreatePlaylist: (name: string) => void;
+  onOpenPlaylistCreator: () => void;
   onDownload: () => void;
   onShare: () => void;
   canDownload: boolean;
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: state.x, y: state.y });
-  const [newPlaylistName, setNewPlaylistName] = useState("");
 
   useEffect(() => {
     const popover = popoverRef.current;
@@ -440,10 +499,9 @@ function TrackActionPopover({
               return <button aria-pressed={containsTrack} type="button" onClick={() => { onAddToPlaylist(playlist.id); onClose(true); }} key={playlist.id}><TrackActionIcon kind="playlist" active={containsTrack} /><span><strong>{playlist.name}</strong><small>{containsTrack ? "Remove from playlist" : `${playlist.trackIds.length} ${playlist.trackIds.length === 1 ? "track" : "tracks"}`}</small></span></button>;
             })}
           </div>
-          <form className="music-track-new-playlist" onSubmit={(event) => { event.preventDefault(); const name = newPlaylistName.trim(); if (name) { onCreatePlaylist(name); onClose(true); } }}>
-            <label><span>New playlist</span><input value={newPlaylistName} onChange={(event) => setNewPlaylistName(event.target.value)} placeholder="Playlist name" maxLength={48} /></label>
-            <button type="submit" disabled={!newPlaylistName.trim()}>Create & add</button>
-          </form>
+          <div className="music-track-new-playlist">
+            <button type="button" onClick={onOpenPlaylistCreator}>Create a new playlist</button>
+          </div>
         </>
       )}
     </div>
@@ -519,6 +577,203 @@ function PlaylistCard({ playlist, onOpen }: { playlist: LofiGirlPlaylist; onOpen
   );
 }
 
+function usePersonalPlaylistImageUrl(imageKey: string | null): string | null {
+  const [loadedImage, setLoadedImage] = useState<{ key: string; url: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    if (!imageKey) return;
+
+    void loadPersonalPlaylistImage(imageKey)
+      .then((image) => {
+        if (!image || cancelled) return;
+        objectUrl = URL.createObjectURL(image);
+        setLoadedImage({ key: imageKey, url: objectUrl });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [imageKey]);
+
+  return loadedImage?.key === imageKey ? loadedImage.url : null;
+}
+
+function useBlobPreviewUrl(image: Blob | null): string | null {
+  const [loadedImage, setLoadedImage] = useState<{ image: Blob; url: string } | null>(null);
+
+  useEffect(() => {
+    if (!image) return;
+    let cancelled = false;
+    const objectUrl = URL.createObjectURL(image);
+    queueMicrotask(() => {
+      if (!cancelled) setLoadedImage({ image, url: objectUrl });
+    });
+    return () => {
+      cancelled = true;
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [image]);
+
+  return loadedImage?.image === image ? loadedImage.url : null;
+}
+
+function PersonalPlaylistArtwork({
+  playlist,
+  className,
+  eager = false,
+}: {
+  playlist: PersonalPlaylist;
+  className: string;
+  eager?: boolean;
+}) {
+  const imageUrl = usePersonalPlaylistImageUrl(playlist.imageKey);
+  if (imageUrl) return <img className={className} src={imageUrl} alt="" loading={eager ? "eager" : "lazy"} decoding="async" />;
+  return <span className={`${className} music-personal-playlist-default-art`} aria-hidden="true"><SymbiomeMark /></span>;
+}
+
+function PersonalPlaylistCard({ playlist, onOpen }: { playlist: PersonalPlaylist; onOpen: (playlist: PersonalPlaylist) => void }) {
+  const style = {
+    "--playlist-accent": "#e06343",
+    "--playlist-accent-ink": "#292832",
+    "--playlist-position": "center",
+  } as CSSProperties;
+  const trackLabel = `${playlist.trackIds.length} ${playlist.trackIds.length === 1 ? "track" : "tracks"}`;
+
+  return (
+    <button className="workspace-playlist music-personal-playlist-card" style={style} type="button" onClick={() => onOpen(playlist)} title={playlist.name}>
+      <PersonalPlaylistArtwork playlist={playlist} className="workspace-playlist-photo" />
+      <span className="workspace-playlist-shade" aria-hidden="true" />
+      <span className="workspace-playlist-copy">
+        <small>My playlist · {trackLabel}</small>
+        <strong>{playlist.name}</strong>
+        {playlist.description && <em>{playlist.description}</em>}
+        <b>Personal playlist</b>
+      </span>
+    </button>
+  );
+}
+
+function PlaylistComposerDialog({
+  trackTitle,
+  onClose,
+  onCreate,
+}: {
+  trackTitle: string | null;
+  onClose: () => void;
+  onCreate: (draft: PersonalPlaylistDraft) => Promise<void>;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState<Blob | null>(null);
+  const [imageName, setImageName] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const previewUrl = useBlobPreviewUrl(image);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || dialog.open) return;
+    dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, []);
+
+  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0] ?? null;
+    setImageError("");
+    if (!file) return;
+    setIsProcessingImage(true);
+    try {
+      const preparedImage = await preparePersonalPlaylistImage(file);
+      setImage(preparedImage);
+      setImageName(file.name);
+    } catch (error) {
+      setImage(null);
+      setImageName("");
+      setImageError(error instanceof Error ? error.message : "This image could not be prepared.");
+    } finally {
+      setIsProcessingImage(false);
+      input.value = "";
+    }
+  }
+
+  return (
+    <dialog
+      className="music-playlist-composer"
+      ref={dialogRef}
+      aria-labelledby="music-playlist-composer-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!isSubmitting) onClose();
+      }}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget && !isSubmitting) onClose();
+      }}
+    >
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        const playlistName = name.trim();
+        if (!playlistName || isProcessingImage || isSubmitting) return;
+        setIsSubmitting(true);
+        void onCreate({ name: playlistName, description: description.trim(), image })
+          .catch(() => setImageError("The playlist could not be created."))
+          .finally(() => setIsSubmitting(false));
+      }}>
+        <header>
+          <span>YOUR LIBRARY</span>
+          <h2 id="music-playlist-composer-title">Create a playlist</h2>
+          <p>{trackTitle ? `${trackTitle} will be added when the playlist is created.` : "Start with a name, then add artwork or a short description if you want."}</p>
+          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label="Close playlist creator">×</button>
+        </header>
+
+        <div className="music-playlist-composer-body">
+          <div className="music-playlist-composer-preview">
+            {previewUrl
+              ? <img src={previewUrl} alt="Selected playlist artwork preview" />
+              : <span className="music-personal-playlist-default-art" aria-label="Default Symbiome playlist artwork"><SymbiomeMark /></span>}
+            <small>{imageName || "Default Symbiome artwork"}</small>
+          </div>
+
+          <div className="music-playlist-composer-fields">
+            <label>
+              <span>Playlist name</span>
+              <input type="text" autoFocus value={name} onChange={(event) => setName(event.currentTarget.value)} placeholder="Name your playlist" maxLength={48} required />
+            </label>
+            <label>
+              <span>Description <small>Optional</small></span>
+              <textarea value={description} onChange={(event) => setDescription(event.currentTarget.value)} placeholder="What is this playlist for?" maxLength={PERSONAL_PLAYLIST_DESCRIPTION_LIMIT} rows={4} />
+            </label>
+            <div className="music-playlist-composer-image">
+              <span>Image <small>Optional · JPEG, PNG or WebP</small></span>
+              <div>
+                <label className="music-playlist-image-picker">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void handleImageChange(event)} disabled={isProcessingImage || isSubmitting} />
+                  <span>{isProcessingImage ? "Preparing image…" : image ? "Replace image" : "Choose image"}</span>
+                </label>
+                {image && <button type="button" onClick={() => { setImage(null); setImageName(""); setImageError(""); }} disabled={isSubmitting}>Use default</button>}
+              </div>
+              {imageError && <p role="alert">{imageError}</p>}
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <button type="button" onClick={onClose} disabled={isSubmitting}>Cancel</button>
+          <button className="cta-swipe" type="submit" disabled={!name.trim() || isProcessingImage || isSubmitting}>{isSubmitting ? "Creating…" : trackTitle ? "Create & add track" : "Create playlist"}</button>
+        </footer>
+      </form>
+    </dialog>
+  );
+}
+
 function DiscoveryFacet({
   eyebrow,
   title,
@@ -552,12 +807,15 @@ export function CreatorWorkspace() {
   const [mood, setMood] = useState("All moods");
   const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
   const [activePlaylistId, setActivePlaylistId] = useState<CatalogPlaylistId | null>(null);
+  const [activePersonalPlaylistId, setActivePersonalPlaylistId] = useState<string | null>(null);
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
   const [likedReady, setLikedReady] = useState(false);
   const [personalPlaylists, setPersonalPlaylists] = useState<PersonalPlaylist[]>(() => [defaultPersonalPlaylist]);
   const [downloadedTrackIds, setDownloadedTrackIds] = useState<Set<string>>(() => new Set());
   const [libraryActionsReady, setLibraryActionsReady] = useState(false);
   const [trackMenu, setTrackMenu] = useState<TrackMenuState | null>(null);
+  const [playlistComposerTrackId, setPlaylistComposerTrackId] = useState<string | null | undefined>(undefined);
+  const [personalPlaylistLoadState, setPersonalPlaylistLoadState] = useState<"idle" | "loading" | "error">("idle");
   const [actionStatus, setActionStatus] = useState("");
   const [catalogTracks, setCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
   const [catalogKnownTracks, setCatalogKnownTracks] = useState<readonly WorkspaceTrack[]>([]);
@@ -608,6 +866,18 @@ export function CreatorWorkspace() {
     () => lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId) ?? null,
     [activePlaylistId],
   );
+  const activePersonalPlaylist = useMemo(
+    () => personalPlaylists.find((playlist) => playlist.id === activePersonalPlaylistId) ?? null,
+    [activePersonalPlaylistId, personalPlaylists],
+  );
+  const activePersonalPlaylistTracks = useMemo(() => {
+    if (!activePersonalPlaylist) return [];
+    const tracksById = new Map(catalogKnownTracks.map((track) => [track.id, track]));
+    return activePersonalPlaylist.trackIds.flatMap((trackId) => {
+      const track = tracksById.get(trackId);
+      return track ? [track] : [];
+    });
+  }, [activePersonalPlaylist, catalogKnownTracks]);
   const availableGenres = useMemo(
     () => ["All genres", ...new Set([...musicSearchTaxonomy.genres, ...knownTracks.map((track) => track.genre)])],
     [knownTracks],
@@ -624,8 +894,9 @@ export function CreatorWorkspace() {
       activeViewRef.current = nextView;
       setView(nextView);
       setActivePlaylistId(selection.playlist);
+      setActivePersonalPlaylistId(selection.personalPlaylist);
       setMood(selection.mood ?? "All moods");
-      if (selection.playlist || selection.mood) {
+      if (selection.playlist || selection.personalPlaylist || selection.mood) {
         setGenre("All genres");
         setActiveUse(null);
         setQuery("");
@@ -841,7 +1112,7 @@ export function CreatorWorkspace() {
   }, [highlightedTrackId, view]);
 
   useEffect(() => {
-    if (!activePlaylistId || view !== "playlists") return;
+    if ((!activePlaylistId && !activePersonalPlaylistId) || view !== "playlists") return;
     let secondFrame = 0;
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
@@ -856,7 +1127,7 @@ export function CreatorWorkspace() {
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
-  }, [activePlaylistId, view]);
+  }, [activePersonalPlaylistId, activePlaylistId, view]);
 
   useEffect(() => {
     try {
@@ -870,7 +1141,11 @@ export function CreatorWorkspace() {
           if (!item || typeof item !== "object") return [];
           const record = item as Record<string, unknown>;
           if (!isStoredTrackId(record.id) || typeof record.name !== "string" || !record.name.trim() || !Array.isArray(record.trackIds)) return [];
-          return [{ id: record.id, name: record.name.trim().slice(0, 48), trackIds: [...new Set(record.trackIds.filter(isStoredTrackId))] }];
+          const description = typeof record.description === "string"
+            ? record.description.trim().slice(0, PERSONAL_PLAYLIST_DESCRIPTION_LIMIT)
+            : "";
+          const imageKey = isPersonalPlaylistImageKey(record.imageKey) ? record.imageKey : null;
+          return [{ id: record.id, name: record.name.trim().slice(0, 48), description, imageKey, trackIds: [...new Set(record.trackIds.filter(isStoredTrackId))] }];
         });
         if (validPlaylists.length) setPersonalPlaylists(validPlaylists);
       }
@@ -896,6 +1171,67 @@ export function CreatorWorkspace() {
     } catch { /* Storage can be unavailable in previews. */ }
   }, [downloadedTrackIds, libraryActionsReady, personalPlaylists]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const settleIdle = () => queueMicrotask(() => {
+      if (!cancelled) setPersonalPlaylistLoadState("idle");
+    });
+    if (!activePersonalPlaylist || !libraryActionsReady) {
+      settleIdle();
+      return () => { cancelled = true; };
+    }
+    const knownIds = new Set(catalogKnownTracks.map((track) => track.id));
+    const missingTrackIds = activePersonalPlaylist.trackIds
+      .filter((trackId) => !knownIds.has(trackId))
+      .map(catalogNumericTrackId)
+      .filter((trackId): trackId is number => trackId !== null);
+    if (!missingTrackIds.length) {
+      settleIdle();
+      return () => { cancelled = true; };
+    }
+
+    const controller = new AbortController();
+
+    async function loadPersonalPlaylistTracks() {
+      setPersonalPlaylistLoadState("loading");
+      const loadedTracks: WorkspaceTrack[] = [];
+      let failed = false;
+      for (let index = 0; index < missingTrackIds.length; index += 6) {
+        const chunk = missingTrackIds.slice(index, index + 6);
+        const results = await Promise.allSettled(chunk.map(async (trackId) => {
+          const response = await fetch(catalogRequestUrl({ page: 1, pageSize: 1, trackId }), {
+            cache: "no-store",
+            credentials: catalogFetchCredentials,
+            headers: { accept: "application/json" },
+            signal: controller.signal,
+          });
+          if (!response.ok) throw new Error("Personal playlist track request failed");
+          const page = parseCatalogPage(await response.json());
+          if (!page || page.view !== "tracks") throw new Error("Personal playlist track response was invalid");
+          return page.tracks[0] ?? null;
+        }));
+        if (cancelled) return;
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value) loadedTracks.push(result.value);
+          else if (result.status === "rejected" && !(result.reason instanceof DOMException && result.reason.name === "AbortError")) failed = true;
+        }
+      }
+      if (cancelled) return;
+      if (loadedTracks.length) setCatalogKnownTracks((current) => mergeTrackPages(current, loadedTracks));
+      setPersonalPlaylistLoadState(failed ? "error" : "idle");
+    }
+
+    void loadPersonalPlaylistTracks().catch((error) => {
+      if (cancelled || (error instanceof DOMException && error.name === "AbortError")) return;
+      setPersonalPlaylistLoadState("error");
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [activePersonalPlaylist, catalogKnownTracks, catalogRetryNonce, libraryActionsReady]);
+
   const closeTrackMenu = useCallback((restoreFocus = false) => {
     setTrackMenu(null);
     if (restoreFocus && trackMenuOpenerRef.current) requestAnimationFrame(() => trackMenuOpenerRef.current?.focus());
@@ -903,7 +1239,7 @@ export function CreatorWorkspace() {
 
   useEffect(() => {
     closeTrackMenu(false);
-  }, [activePlaylistId, activeUse, closeTrackMenu, genre, mood, query, view]);
+  }, [activePersonalPlaylistId, activePlaylistId, activeUse, closeTrackMenu, genre, mood, query, view]);
 
   useEffect(() => {
     if (!actionStatus) return;
@@ -930,6 +1266,7 @@ export function CreatorWorkspace() {
   const downloadedTracks = useMemo(() => knownTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, knownTracks]);
   const selectedTrack = knownTracks.find((track) => track.id === preview.activeTrackId);
   const menuTrack = trackMenu ? knownTracks.find((track) => track.id === trackMenu.trackId) : undefined;
+  const playlistComposerTrack = playlistComposerTrackId ? knownTracks.find((track) => track.id === playlistComposerTrackId) ?? null : null;
   useEffect(() => {
     if (preview.activeTrackId && !knownTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
   }, [knownTracks, preview.activeTrackId, preview.stop]);
@@ -1043,6 +1380,7 @@ export function CreatorWorkspace() {
     setMood("All moods");
     setActiveUse(null);
     setActivePlaylistId(null);
+    setActivePersonalPlaylistId(null);
     setQuery("");
     if (activeViewRef.current === "music") writeLibrarySelectionToLocation({});
   }
@@ -1051,6 +1389,7 @@ export function CreatorWorkspace() {
     const historyMode = activeViewRef.current === nextView ? "replace" : "push";
     activeViewRef.current = nextView;
     if (nextView !== "playlists" && activePlaylistId !== null) setActivePlaylistId(null);
+    if (nextView !== "playlists" && activePersonalPlaylistId !== null) setActivePersonalPlaylistId(null);
     setView(nextView);
     writeLibraryViewToLocation(nextView, historyMode);
   }
@@ -1064,6 +1403,7 @@ export function CreatorWorkspace() {
     activeViewRef.current = "playlists";
     setView("playlists");
     setActivePlaylistId(playlist.id);
+    setActivePersonalPlaylistId(null);
     setActiveUse(null);
     setGenre("All genres");
     setMood("All moods");
@@ -1071,8 +1411,21 @@ export function CreatorWorkspace() {
     writePlaylistSelectionToLocation(playlist.id, "push");
   }
 
+  function openPersonalPlaylist(playlist: PersonalPlaylist) {
+    activeViewRef.current = "playlists";
+    setView("playlists");
+    setActivePlaylistId(null);
+    setActivePersonalPlaylistId(playlist.id);
+    setActiveUse(null);
+    setGenre("All genres");
+    setMood("All moods");
+    setQuery("");
+    writePersonalPlaylistSelectionToLocation(playlist.id, "push");
+  }
+
   function closePlaylist() {
     setActivePlaylistId(null);
+    setActivePersonalPlaylistId(null);
     writePlaylistSelectionToLocation(null, "push");
   }
 
@@ -1081,6 +1434,7 @@ export function CreatorWorkspace() {
     setMood("All moods");
     setActiveUse(null);
     setActivePlaylistId(null);
+    setActivePersonalPlaylistId(null);
     setQuery("");
     if (kind === "genre") setGenre(value);
     if (kind === "mood") setMood(value);
@@ -1124,10 +1478,32 @@ export function CreatorWorkspace() {
     setActionStatus(removing ? `${track.title} removed from ${target?.name ?? "playlist"}.` : `${track.title} added to ${target?.name ?? "playlist"}.`);
   }
 
-  function createPlaylistWithTrack(track: WorkspaceTrack, name: string) {
+  async function createPersonalPlaylist(draft: PersonalPlaylistDraft) {
     const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `playlist-${Date.now()}`;
-    setPersonalPlaylists((current) => [...current, { id, name, trackIds: [track.id] }]);
-    setActionStatus(`${name} created with ${track.title}.`);
+    const track = playlistComposerTrackId ? knownTracksRef.current.find((item) => item.id === playlistComposerTrackId) ?? null : null;
+    let imageKey: string | null = null;
+    if (draft.image) {
+      try {
+        imageKey = personalPlaylistImageKey(id);
+        await savePersonalPlaylistImage(imageKey, draft.image);
+      } catch {
+        imageKey = null;
+      }
+    }
+    const playlist: PersonalPlaylist = {
+      id,
+      name: draft.name,
+      description: draft.description,
+      imageKey,
+      trackIds: track ? [track.id] : [],
+    };
+    setPersonalPlaylists((current) => [...current, playlist]);
+    setPlaylistComposerTrackId(undefined);
+    setActionStatus(track
+      ? `${draft.name} created with ${track.title}.`
+      : imageKey || !draft.image
+        ? `${draft.name} created.`
+        : `${draft.name} created with the default Symbiome artwork because the image could not be saved.`);
   }
 
   async function downloadTrackPreview(track: WorkspaceTrack) {
@@ -1308,7 +1684,7 @@ export function CreatorWorkspace() {
             <div className="music-app-nav-section" key={group.label}>
               <span className="music-app-nav-label">{group.label}</span>
               {group.items.map((item) => {
-                const badge = item.id === "playlists" ? String(lofiGirlPlaylists.length) : item.id === "liked" && liked.size ? String(liked.size) : undefined;
+                const badge = item.id === "playlists" ? String(lofiGirlPlaylists.length + personalPlaylists.length) : item.id === "liked" && liked.size ? String(liked.size) : undefined;
                 return (
                   <button
                     className={view === item.id ? "is-active" : ""}
@@ -1318,7 +1694,7 @@ export function CreatorWorkspace() {
                     aria-current={view === item.id ? "page" : undefined}
                     key={item.id}
                   >
-                    <i aria-hidden="true">{item.icon}</i><strong>{item.label}</strong>{badge && <small>{badge}</small>}
+                    <i aria-hidden="true"><WorkspaceNavIcon kind={item.icon} /></i><strong>{item.label}</strong>{badge && <small>{badge}</small>}
                   </button>
                 );
               })}
@@ -1491,11 +1867,17 @@ export function CreatorWorkspace() {
         {view === "playlists" && (
           <PlaylistLibrary
             activePlaylist={activePlaylist}
+            activePersonalPlaylist={activePersonalPlaylist}
             cataloguePager={playlistCataloguePager}
             catalogueStatus={playlistCatalogueStatus}
+            onCreatePlaylist={() => setPlaylistComposerTrackId(null)}
             onBack={closePlaylist}
             onOpen={openPlaylist}
+            onOpenPersonal={openPersonalPlaylist}
+            onRetryPersonal={() => setCatalogRetryNonce((value) => value + 1)}
             personalPlaylists={personalPlaylists}
+            personalPlaylistLoadState={personalPlaylistLoadState}
+            personalTrackList={activePersonalPlaylist && activePersonalPlaylistTracks.length ? renderTrackTable(activePersonalPlaylistTracks, `${activePersonalPlaylist.name} tracks`) : null}
             trackCount={activePlaylist && catalogViewIsCurrent ? catalogPagination?.total ?? visibleTracks.length : null}
             trackList={activePlaylist && catalogViewIsCurrent ? renderTrackTable(visibleTracks, `${activePlaylist.title} tracks`) : null}
           />
@@ -1559,10 +1941,21 @@ export function CreatorWorkspace() {
           onToggleLike={() => toggleLiked(menuTrack.id)}
           onShowPlaylists={() => setTrackMenu((current) => current ? { ...current, mode: "playlists" } : current)}
           onAddToPlaylist={(playlistId) => addTrackToPlaylist(menuTrack, playlistId)}
-          onCreatePlaylist={(name) => createPlaylistWithTrack(menuTrack, name)}
+          onOpenPlaylistCreator={() => {
+            setPlaylistComposerTrackId(menuTrack.id);
+            closeTrackMenu(false);
+          }}
           onDownload={() => void downloadTrackPreview(menuTrack)}
           onShare={() => void shareTrack(menuTrack)}
           canDownload={menuTrack.previewDownloadUrl !== null}
+        />
+      )}
+
+      {playlistComposerTrackId !== undefined && (
+        <PlaylistComposerDialog
+          trackTitle={playlistComposerTrack?.title ?? null}
+          onClose={() => setPlaylistComposerTrackId(undefined)}
+          onCreate={createPersonalPlaylist}
         />
       )}
 
@@ -1573,20 +1966,32 @@ export function CreatorWorkspace() {
 
 function PlaylistLibrary({
   activePlaylist,
+  activePersonalPlaylist,
   cataloguePager,
   catalogueStatus,
+  onCreatePlaylist,
   onBack,
   onOpen,
+  onOpenPersonal,
+  onRetryPersonal,
   personalPlaylists,
+  personalPlaylistLoadState,
+  personalTrackList,
   trackCount,
   trackList,
 }: {
   activePlaylist: LofiGirlPlaylist | null;
+  activePersonalPlaylist: PersonalPlaylist | null;
   cataloguePager: ReactNode;
   catalogueStatus: ReactNode;
+  onCreatePlaylist: () => void;
   onBack: () => void;
   onOpen: (playlist: LofiGirlPlaylist) => void;
+  onOpenPersonal: (playlist: PersonalPlaylist) => void;
+  onRetryPersonal: () => void;
   personalPlaylists: readonly PersonalPlaylist[];
+  personalPlaylistLoadState: "idle" | "loading" | "error";
+  personalTrackList: ReactNode;
   trackCount: number | null;
   trackList: ReactNode;
 }) {
@@ -1596,9 +2001,15 @@ function PlaylistLibrary({
     "--playlist-accent-ink": accent.ink,
     "--playlist-position": activePlaylist.imagePosition ?? "center",
   } as CSSProperties : undefined;
+  const personalStyle = activePersonalPlaylist ? {
+    "--playlist-accent": "#e06343",
+    "--playlist-accent-ink": "#292832",
+    "--playlist-position": "center",
+  } as CSSProperties : undefined;
+  const isPlaylistDetail = Boolean(activePlaylist || activePersonalPlaylist);
 
   return (
-    <div className={`music-secondary-view music-playlists-view music-workspace-view${activePlaylist ? " is-playlist-detail" : ""}`}>
+    <div className={`music-secondary-view music-playlists-view music-workspace-view${isPlaylistDetail ? " is-playlist-detail" : ""}`}>
       {activePlaylist ? (
         <>
           <section id="music-playlist-detail-hero" className="music-playlist-detail-hero" style={style} aria-labelledby="music-playlist-detail-title" tabIndex={-1}>
@@ -1622,13 +2033,49 @@ function PlaylistLibrary({
             {cataloguePager}
           </section>
         </>
+      ) : activePersonalPlaylist ? (
+        <>
+          <section id="music-playlist-detail-hero" className="music-playlist-detail-hero is-personal" style={personalStyle} aria-labelledby="music-playlist-detail-title" tabIndex={-1}>
+            <PersonalPlaylistArtwork playlist={activePersonalPlaylist} className="music-playlist-detail-photo" eager />
+            <span className="music-playlist-detail-shade" aria-hidden="true" />
+            <button className="music-playlist-detail-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> All playlists</button>
+            <div className="music-playlist-detail-copy">
+              <span className="music-playlist-detail-kicker">MY PLAYLIST</span>
+              <h2 id="music-playlist-detail-title">{activePersonalPlaylist.name}</h2>
+              {activePersonalPlaylist.description && <p>{activePersonalPlaylist.description}</p>}
+              <div className="music-playlist-detail-meta" aria-label="Playlist details">
+                <span>Created by you</span>
+                <strong>{activePersonalPlaylist.trackIds.length} {activePersonalPlaylist.trackIds.length === 1 ? "track" : "tracks"}</strong>
+              </div>
+            </div>
+          </section>
+          <section className="music-playlist-detail-tracks" aria-labelledby="music-playlist-tracks-title">
+            <div className="music-playlist-detail-track-head"><span>IN THIS PLAYLIST</span><h3 id="music-playlist-tracks-title">Tracks</h3></div>
+            {personalPlaylistLoadState === "loading" && <p className="music-track-results-status music-playlist-detail-status" role="status" aria-live="polite">Loading saved tracks…</p>}
+            {personalPlaylistLoadState === "error" && (
+              <p className="music-track-results-status music-playlist-detail-status" role="status" aria-live="polite">
+                Some saved tracks could not be loaded right now.
+                <button className="cta-swipe" type="button" onClick={onRetryPersonal}>Retry playlist</button>
+              </p>
+            )}
+            {personalTrackList ?? (
+              <div className="music-empty-library"><strong>No tracks yet.</strong><p>Add tracks from Music and they will appear here.</p></div>
+            )}
+          </section>
+        </>
       ) : (
         <>
           <section className="music-personal-playlists" aria-labelledby="personal-playlists-title">
-            <div><span>YOUR PLAYLISTS</span><h3 id="personal-playlists-title">Saved directions</h3></div>
-            <div>{personalPlaylists.map((playlist) => <article key={playlist.id}><TrackActionIcon kind="playlist" /><span><strong>{playlist.name}</strong><small>{playlist.trackIds.length} {playlist.trackIds.length === 1 ? "track" : "tracks"}</small></span></article>)}</div>
+            <div className="music-playlist-category-head">
+              <div><span>YOUR LIBRARY</span><h2 id="personal-playlists-title">My playlists</h2><p>Your own collections, with optional artwork and notes.</p></div>
+              <button className="cta-swipe" type="button" onClick={onCreatePlaylist}>Create playlist</button>
+            </div>
+            <div className="music-secondary-playlists">{personalPlaylists.map((playlist) => <PersonalPlaylistCard playlist={playlist} onOpen={onOpenPersonal} key={playlist.id} />)}</div>
           </section>
-          <div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div>
+          <section className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title">
+            <div className="music-playlist-category-head"><div><span>CURATED BY SYMBIOME</span><h2 id="symbiome-playlists-title">Symbiome playlists</h2><p>Official listening directions curated from the catalogue.</p></div></div>
+            <div className="music-secondary-playlists">{lofiGirlPlaylists.map((playlist) => <PlaylistCard playlist={playlist} onOpen={onOpen} key={playlist.id} />)}</div>
+          </section>
         </>
       )}
     </div>

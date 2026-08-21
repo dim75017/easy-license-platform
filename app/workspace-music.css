@@ -2638,3 +2638,378 @@ article.music-track-row[role="listitem"]:focus-visible {
   .music-playlist-detail-meta > span,
   .music-playlist-detail-meta > strong { border: 1px solid ButtonText; }
 }
+
+/* V24: personal playlists share the official card system and support optional artwork. */
+.music-personal-playlists,
+.music-symbiome-playlists {
+  display: grid;
+  gap: 22px;
+}
+
+.music-personal-playlists {
+  margin: 0 0 62px;
+  border: 0;
+  border-bottom: 1px solid rgba(41, 40, 50, .15);
+  border-radius: 0;
+  padding: 0 0 62px;
+  background: transparent;
+}
+
+.music-playlist-category-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.music-playlist-category-head > div { display: grid; gap: 6px; }
+.music-playlist-category-head > div > span {
+  color: var(--wm-clay-deep);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .11em;
+}
+
+.music-playlist-category-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(38px, 4.2vw, 58px);
+  font-weight: 520;
+  letter-spacing: -.055em;
+  line-height: .95;
+}
+
+.music-playlist-category-head p {
+  margin: 2px 0 0;
+  color: rgba(41, 40, 50, .62);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.music-playlist-category-head > button {
+  flex: 0 0 auto;
+  min-height: 48px;
+  border: 1px solid rgba(41, 40, 50, .18);
+  border-radius: 999px;
+  padding: 0 20px;
+  background: transparent;
+  color: var(--wm-ink);
+  font-weight: 750;
+}
+
+.music-personal-playlists > .music-secondary-playlists,
+.music-symbiome-playlists > .music-secondary-playlists {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.music-personal-playlist-card .workspace-playlist-copy b { color: rgba(255, 249, 241, .72); }
+
+.music-personal-playlist-default-art {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 68% 24%, rgba(224, 99, 67, .34), transparent 32%),
+    linear-gradient(145deg, #34323e, #202029 68%);
+}
+
+.music-personal-playlist-default-art::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(247, 235, 221, .06), transparent 54%);
+  content: "";
+}
+
+.music-personal-playlist-default-art > svg {
+  position: relative;
+  z-index: 1;
+  width: min(42%, 150px);
+  height: auto;
+  filter: drop-shadow(0 18px 35px rgba(0, 0, 0, .28));
+}
+
+.music-personal-playlist-default-art .brand-groove-warm { fill: #e06343; }
+.music-personal-playlist-default-art .brand-groove-base { fill: #f7ebdd; }
+
+.music-playlist-detail-hero.is-personal .music-personal-playlist-default-art > svg {
+  width: min(28%, 260px);
+}
+
+.music-track-new-playlist > button {
+  position: relative;
+  overflow: hidden;
+  min-height: 42px;
+  border: 1px solid rgba(41, 40, 50, .16);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--wm-ink);
+  font-weight: 750;
+}
+
+.music-track-new-playlist > button:hover,
+.music-track-new-playlist > button:focus-visible {
+  border-color: var(--wm-clay);
+  background: var(--wm-clay);
+  color: #fff9f1;
+}
+
+.music-track-new-playlist > button:focus-visible {
+  outline: 2px solid var(--wm-ink);
+  outline-offset: 2px;
+}
+
+.music-playlist-composer {
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(860px, calc(100dvh - 32px));
+  overflow: auto;
+  border: 0;
+  border-radius: 24px;
+  padding: 0;
+  background: var(--wm-cream);
+  box-shadow: 0 30px 90px rgba(18, 18, 24, .42);
+  color: var(--wm-ink);
+}
+
+.music-playlist-composer::backdrop {
+  background: rgba(20, 20, 27, .68);
+  backdrop-filter: blur(8px);
+}
+
+.music-playlist-composer > form { display: grid; }
+
+.music-playlist-composer header {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  padding: 28px 74px 24px 30px;
+  background: var(--wm-ink);
+  color: var(--wm-cream);
+}
+
+.music-playlist-composer header > span {
+  color: var(--wm-clay);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.music-playlist-composer header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 52px);
+  font-weight: 520;
+  letter-spacing: -.06em;
+  line-height: .95;
+}
+
+.music-playlist-composer header p {
+  max-width: 58ch;
+  margin: 2px 0 0;
+  color: rgba(255, 249, 241, .68);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.music-playlist-composer header > button {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 249, 241, .26);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wm-cream);
+  font-size: 25px;
+  line-height: 1;
+}
+
+.music-playlist-composer-body {
+  display: grid;
+  grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+  gap: 26px;
+  padding: 28px 30px;
+}
+
+.music-playlist-composer-preview {
+  position: relative;
+  align-self: start;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  background: var(--wm-ink);
+}
+
+.music-playlist-composer-preview > img,
+.music-playlist-composer-preview > .music-personal-playlist-default-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.music-playlist-composer-preview > small {
+  position: absolute;
+  z-index: 3;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: rgba(18, 18, 24, .72);
+  color: var(--wm-cream);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-playlist-composer-fields { display: grid; gap: 17px; }
+.music-playlist-composer-fields > label { display: grid; gap: 7px; }
+.music-playlist-composer-fields > label > span,
+.music-playlist-composer-image > span {
+  color: rgba(41, 40, 50, .72);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.music-playlist-composer-fields label small,
+.music-playlist-composer-image > span small { color: rgba(41, 40, 50, .48); font-weight: 650; }
+
+.music-playlist-composer input[type="text"],
+.music-playlist-composer textarea {
+  width: 100%;
+  border: 1px solid rgba(41, 40, 50, .18);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fffdf9;
+  color: var(--wm-ink);
+  font: inherit;
+}
+
+.music-playlist-composer input[type="text"] { min-height: 46px; }
+.music-playlist-composer textarea { min-height: 104px; resize: vertical; }
+.music-playlist-composer input:focus,
+.music-playlist-composer textarea:focus { border-color: var(--wm-clay); outline: 3px solid rgba(224, 99, 67, .18); }
+
+.music-playlist-composer-image { display: grid; gap: 8px; }
+.music-playlist-composer-image > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.music-playlist-image-picker { position: relative; display: inline-flex; }
+.music-playlist-image-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.music-playlist-image-picker > span,
+.music-playlist-composer-image button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  border: 1px solid rgba(41, 40, 50, .17);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--wm-ink);
+  font-weight: 720;
+}
+
+.music-playlist-image-picker:focus-within > span { outline: 3px solid var(--wm-clay); outline-offset: 2px; }
+.music-playlist-composer-image > p { margin: 0; color: #a23c28; font-size: 11px; }
+
+.music-playlist-composer footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid rgba(41, 40, 50, .12);
+  padding: 18px 30px 22px;
+}
+
+.music-playlist-composer footer > button {
+  min-height: 46px;
+  border: 1px solid rgba(41, 40, 50, .17);
+  border-radius: 999px;
+  padding: 0 18px;
+  background: transparent;
+  color: var(--wm-ink);
+  font-weight: 750;
+}
+
+.music-playlist-composer footer > .cta-swipe { min-width: 160px; }
+.music-playlist-composer button:disabled { cursor: not-allowed; opacity: .48; }
+
+@media (min-width: 2200px) {
+  .music-personal-playlists > .music-secondary-playlists,
+  .music-symbiome-playlists > .music-secondary-playlists { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1150px) {
+  .music-personal-playlists > .music-secondary-playlists,
+  .music-symbiome-playlists > .music-secondary-playlists { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .music-personal-playlists { margin-bottom: 46px; padding-bottom: 46px; }
+  .music-playlist-category-head { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .music-playlist-category-head > button { width: 100%; }
+  .music-playlist-composer-body { grid-template-columns: 1fr; }
+  .music-playlist-composer-preview { width: min(100%, 340px); }
+}
+
+@media (max-width: 600px) {
+  .music-personal-playlists > .music-secondary-playlists,
+  .music-symbiome-playlists > .music-secondary-playlists { grid-template-columns: 1fr; }
+  .music-playlist-composer { width: calc(100vw - 18px); max-height: calc(100dvh - 18px); border-radius: 18px; }
+  .music-playlist-composer header { padding: 24px 64px 21px 22px; }
+  .music-playlist-composer header > button { top: 17px; right: 17px; }
+  .music-playlist-composer-body { gap: 20px; padding: 22px; }
+  .music-playlist-composer footer { align-items: stretch; flex-direction: column-reverse; padding: 16px 22px 20px; }
+  .music-playlist-composer footer > button { width: 100%; }
+}
+
+@media (forced-colors: active) {
+  .music-playlist-composer,
+  .music-playlist-composer input,
+  .music-playlist-composer textarea,
+  .music-playlist-image-picker > span,
+  .music-playlist-composer button { border: 1px solid ButtonText; }
+}
+
+/* V25: direction A gives Discover, Playlists and Downloads an editorial icon language. */
+.music-app-nav button i {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+}
+
+.music-nav-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  overflow: visible;
+}
+
+.music-app-nav button:hover .music-nav-icon,
+.music-app-nav button.is-active .music-nav-icon {
+  filter: drop-shadow(0 3px 9px rgba(224, 99, 67, .2));
+}
+
+@media (max-width: 860px) {
+  .music-app-nav button i { width: 24px; height: 24px; }
+  .music-nav-icon { width: 20px; height: 20px; }
+}
+
+@media (forced-colors: active) {
+  .music-app-nav button:hover .music-nav-icon,
+  .music-app-nav button.is-active .music-nav-icon { filter: none; }
+}
