@@ -1014,8 +1014,6 @@ article.music-track-row[role="listitem"] > .music-wave i.is-played {
   padding: 40px 0 58px;
 }
 
-.music-app-main > .music-playlists-view > header { padding-top: 0; }
-
 .workspace-playlist:focus-visible,
 .music-shelf-head > button:focus-visible,
 .music-topbar-action:focus-visible,
