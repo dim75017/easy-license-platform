@@ -827,6 +827,24 @@ export function CreatorWorkspace() {
   }, [highlightedTrackId, view]);
 
   useEffect(() => {
+    if (!activePlaylistId || view !== "playlists") return;
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const hero = document.getElementById("music-playlist-detail-hero");
+        if (!hero) return;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        hero.focus({ preventScroll: true });
+        hero.scrollIntoView({ block: "start", behavior: reducedMotion ? "auto" : "smooth" });
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [activePlaylistId, view]);
+
+  useEffect(() => {
     try {
       const storedLiked = JSON.parse(window.localStorage.getItem("symbiome-liked-tracks") ?? "[]") as unknown;
       if (Array.isArray(storedLiked)) setLiked(new Set(storedLiked.filter(isStoredTrackId)));
@@ -1228,17 +1246,20 @@ export function CreatorWorkspace() {
 
   const playlistCatalogueStatus = activePlaylist && (catalogLoadState !== "live" || !catalogViewIsCurrent || catalogRequestFailed) ? (
     <p className="music-track-results-status music-playlist-detail-status" role="status" aria-live="polite">
-      {catalogLoadState === "loading"
-        ? `Loading ${activePlaylist.title}...`
-        : catalogLoadState === "live"
-          ? !catalogViewIsCurrent
-            ? catalogBusy
-              ? `Loading tracks from ${activePlaylist.title}...`
-              : catalogRequestFailed
-                ? "This playlist could not be loaded. Retry when you are ready."
-                : "Preparing this playlist..."
-            : "Update failed, previous results kept."
-          : "This playlist is temporarily unavailable. Retry to load it."}
+      <span>
+        {catalogLoadState === "loading"
+          ? `Loading ${activePlaylist.title}...`
+          : catalogLoadState === "live"
+            ? !catalogViewIsCurrent
+              ? catalogBusy
+                ? `Loading tracks from ${activePlaylist.title}...`
+                : catalogRequestFailed
+                  ? "This playlist could not be loaded. Retry when you are ready."
+                  : "Preparing this playlist..."
+              : "Update failed, previous results kept."
+            : "This playlist is temporarily unavailable. Retry to load it."}
+      </span>
+      {catalogRequestFailed && <button className="cta-swipe" type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry playlist</button>}
     </p>
   ) : null;
 
@@ -1550,7 +1571,7 @@ function PlaylistLibrary({
     <div className={`music-secondary-view music-playlists-view music-workspace-view${activePlaylist ? " is-playlist-detail" : ""}`}>
       {activePlaylist ? (
         <>
-          <section className="music-playlist-detail-hero" style={style} aria-labelledby="music-playlist-detail-title">
+          <section id="music-playlist-detail-hero" className="music-playlist-detail-hero" style={style} aria-labelledby="music-playlist-detail-title" tabIndex={-1}>
             <img className="music-playlist-detail-photo" src={activePlaylist.image} alt="" width={1600} height={1200} loading="eager" fetchPriority="high" decoding="async" />
             <span className="music-playlist-detail-shade" aria-hidden="true" />
             <button className="music-playlist-detail-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> All playlists</button>
