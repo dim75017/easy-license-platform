@@ -14,6 +14,10 @@ test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites 
   assert.match(workspace, /params\.set\("genre", filters\.genre\)/u);
   assert.match(workspace, /params\.set\("mood", filters\.mood\)/u);
   assert.match(workspace, /params\.set\("theme", filters\.theme\)/u);
+  assert.match(workspace, /params\.set\("playlist", filters\.playlist\)/u);
+  assert.match(workspace, /readLibrarySelectionFromLocation/u);
+  assert.match(workspace, /writeLibrarySelectionToLocation\(\{ playlist: playlist\.id \}\)/u);
+  assert.match(workspace, /writeLibrarySelectionToLocation\(\{ mood: kind === "mood" \? value : null \}\)/u);
   assert.match(workspace, /catalogFetchCredentials: RequestCredentials = catalogApiOrigin \? "omit" : "same-origin"/u);
   assert.match(workspace, /return `\$\{catalogApiOrigin\}\/api\/catalog\/tracks\?\$\{params\.toString\(\)\}`/u);
   assert.match(workspace, /credentials:\s*catalogFetchCredentials/u);
@@ -142,9 +146,13 @@ test("catalog API uses deterministic release-first ordering and complete paginat
   assert.match(route, /hasNextPage/u);
   assert.match(route, /previousPage:\s*hasPreviousPage \? page - 1 : null/u);
   assert.match(route, /nextPage:\s*hasNextPage \? page \+ 1 : null/u);
-  assert.match(route, /releaseTrackCountIsComplete = !search && !genre && !mood && !theme && trackId === null/u);
+  assert.match(route, /releaseTrackCountIsComplete = !search && !genre && !mood && !theme && !playlist && trackId === null/u);
   assert.match(route, /trackCount:\s*releaseTrackCountIsComplete[\s\S]{0,80}\? row\.release_track_count[\s\S]{0,40}: null/u);
   assert.match(route, /publishedAt:\s*row\.published_at/u);
   assert.match(route, /const acceptedMoods = moodFilterAliases\(mood\)/u);
-  assert.match(route, /t\.mood IN \(\$\{acceptedMoods\.map\(\(\) => "\?"\)\.join\(", "\)\}\)/u);
+  assert.match(route, /const fallbackGenres = moodFilterGenreFallbacks\(mood\)/u);
+  assert.match(route, /t\.mood IS NULL AND t\.genre IN \(\$\{genrePlaceholders\}\)/u);
+  assert.match(route, /const playlistRule = playlist \? catalogPlaylistRule\(playlist\) : null/u);
+  assert.match(route, /t\.genre IN \(\$\{playlistRule\.genres\.map\(\(\) => "\?"\)\.join\(", "\)\}\)/u);
+  assert.match(route, /filters: \{ q: search, genre, mood, theme, playlist, trackId \}/u);
 });

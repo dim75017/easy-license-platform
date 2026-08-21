@@ -14,6 +14,7 @@ import {
   type WorkspaceTrack,
 } from "../data/catalog";
 import { trackMatchesMood } from "../lib/catalog-moods";
+import { isCatalogPlaylistId, type CatalogPlaylistId } from "../lib/catalog-playlists";
 import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
 import "../workspace-music.css";
 
@@ -38,10 +39,46 @@ function readLibraryViewFromLocation(): LibraryView {
   return "discover";
 }
 
+function readLibrarySelectionFromLocation(): { mood: string | null; playlist: CatalogPlaylistId | null } {
+  const params = new URLSearchParams(window.location.search);
+  const requestedPlaylist = params.get("playlist")?.trim() ?? "";
+  if (requestedPlaylist && isCatalogPlaylistId(requestedPlaylist)) {
+    return { mood: null, playlist: requestedPlaylist };
+  }
+
+  const requestedMood = params.get("mood")?.trim() ?? "";
+  const mood = musicSearchTaxonomy.moods.find((item) => item.toLocaleLowerCase() === requestedMood.toLocaleLowerCase()) ?? null;
+  return { mood, playlist: null };
+}
+
 function writeLibraryViewToLocation(view: LibraryView, mode: "push" | "replace") {
   const url = new URL(window.location.href);
   url.searchParams.set("view", view);
-  if (view !== "music") url.searchParams.delete("track");
+  if (view !== "music") {
+    url.searchParams.delete("track");
+    url.searchParams.delete("mood");
+    url.searchParams.delete("playlist");
+  }
+
+  const destination = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (destination === current) return;
+
+  if (mode === "push") window.history.pushState(window.history.state, "", destination);
+  else window.history.replaceState(window.history.state, "", destination);
+}
+
+function writeLibrarySelectionToLocation(
+  selection: { mood?: string | null; playlist?: CatalogPlaylistId | null },
+  mode: "push" | "replace" = "replace",
+) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", "music");
+  url.searchParams.delete("track");
+  url.searchParams.delete("mood");
+  url.searchParams.delete("playlist");
+  if (selection.playlist) url.searchParams.set("playlist", selection.playlist);
+  else if (selection.mood) url.searchParams.set("mood", selection.mood);
 
   const destination = `${url.pathname}${url.search}${url.hash}`;
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -75,6 +112,7 @@ type CatalogFilters = {
   genre: string;
   mood: string;
   theme: MusicUseSlug | null;
+  playlist: CatalogPlaylistId | null;
 };
 
 function catalogFilterSignature(filters: CatalogFilters): string {
@@ -83,6 +121,7 @@ function catalogFilterSignature(filters: CatalogFilters): string {
     genre: filters.genre,
     mood: filters.mood,
     theme: filters.theme,
+    playlist: filters.playlist,
   });
 }
 
@@ -104,6 +143,7 @@ function catalogRequestUrl({
   if (filters && filters.genre !== "All genres") params.set("genre", filters.genre);
   if (filters && filters.mood !== "All moods") params.set("mood", filters.mood);
   if (filters?.theme) params.set("theme", filters.theme);
+  if (filters?.playlist) params.set("playlist", filters.playlist);
   if (onePerRelease) params.set("onePerRelease", "true");
   if (trackId !== null) params.set("trackId", String(trackId));
   return `${catalogApiOrigin}/api/catalog/tracks?${params.toString()}`;
@@ -487,6 +527,7 @@ export function CreatorWorkspace() {
   const [genre, setGenre] = useState("All genres");
   const [mood, setMood] = useState("All moods");
   const [activeUse, setActiveUse] = useState<MusicUseSlug | null>(null);
+  const [activePlaylistId, setActivePlaylistId] = useState<CatalogPlaylistId | null>(null);
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
   const [likedReady, setLikedReady] = useState(false);
   const [personalPlaylists, setPersonalPlaylists] = useState<PersonalPlaylist[]>(() => [defaultPersonalPlaylist]);
@@ -518,7 +559,10 @@ export function CreatorWorkspace() {
   const catalogRequestGenerationRef = useRef(0);
   const catalogResolvedSignatureRef = useRef<string | null>(null);
   const preview = useTrackPreview();
-  const catalogFilters = useMemo<CatalogFilters>(() => ({ query, genre, mood, theme: activeUse }), [activeUse, genre, mood, query]);
+  const catalogFilters = useMemo<CatalogFilters>(
+    () => ({ query, genre, mood, theme: activeUse, playlist: activePlaylistId }),
+    [activePlaylistId, activeUse, genre, mood, query],
+  );
   const catalogQuerySignature = useMemo(() => catalogFilterSignature(catalogFilters), [catalogFilters]);
   const catalogQuerySignatureRef = useRef(catalogQuerySignature);
   catalogQuerySignatureRef.current = catalogQuerySignature;
@@ -528,6 +572,10 @@ export function CreatorWorkspace() {
   const knownTracksRef = useRef(knownTracks);
   knownTracksRef.current = knownTracks;
   const recentTracks = recentCatalogTracks ?? [];
+  const activePlaylist = useMemo(
+    () => lofiGirlPlaylists.find((playlist) => playlist.id === activePlaylistId) ?? null,
+    [activePlaylistId],
+  );
   const availableGenres = useMemo(
     () => ["All genres", ...new Set([...musicSearchTaxonomy.genres, ...knownTracks.map((track) => track.genre)])],
     [knownTracks],
@@ -540,8 +588,16 @@ export function CreatorWorkspace() {
   useEffect(() => {
     const syncViewFromLocation = () => {
       const nextView = readLibraryViewFromLocation();
+      const selection = readLibrarySelectionFromLocation();
       activeViewRef.current = nextView;
       setView(nextView);
+      setActivePlaylistId(selection.playlist);
+      setMood(selection.mood ?? "All moods");
+      if (selection.playlist || selection.mood) {
+        setGenre("All genres");
+        setActiveUse(null);
+        setQuery("");
+      }
       writeLibraryViewToLocation(nextView, "replace");
     };
 
@@ -674,6 +730,7 @@ export function CreatorWorkspace() {
       setGenre("All genres");
       setMood("All moods");
       setActiveUse(null);
+      setActivePlaylistId(null);
       setQuery("");
       setCatalogTracks((current) => current === null ? current : [track, ...current.filter((item) => item.id !== track.id)]);
       setHighlightedTrackId(track.id);
@@ -794,7 +851,7 @@ export function CreatorWorkspace() {
 
   useEffect(() => {
     closeTrackMenu(false);
-  }, [activeUse, closeTrackMenu, genre, mood, query, view]);
+  }, [activePlaylistId, activeUse, closeTrackMenu, genre, mood, query, view]);
 
   useEffect(() => {
     if (!actionStatus) return;
@@ -931,7 +988,9 @@ export function CreatorWorkspace() {
     setGenre("All genres");
     setMood("All moods");
     setActiveUse(null);
+    setActivePlaylistId(null);
     setQuery("");
+    if (activeViewRef.current === "music") writeLibrarySelectionToLocation({});
   }
 
   function navigateToView(nextView: LibraryView) {
@@ -946,16 +1005,21 @@ export function CreatorWorkspace() {
   }
 
   function openPlaylist(playlist: LofiGirlPlaylist) {
-    setActiveUse(playlist.use);
+    if (!isCatalogPlaylistId(playlist.id)) return;
+    setActivePlaylistId(playlist.id);
+    setActiveUse(null);
     setGenre("All genres");
     setMood("All moods");
+    setQuery("");
     showMusic();
+    writeLibrarySelectionToLocation({ playlist: playlist.id });
   }
 
   function openFacet(kind: FacetKind, value: string) {
     setGenre("All genres");
     setMood("All moods");
     setActiveUse(null);
+    setActivePlaylistId(null);
     setQuery("");
     if (kind === "genre") setGenre(value);
     if (kind === "mood") setMood(value);
@@ -965,6 +1029,7 @@ export function CreatorWorkspace() {
       if (theme) setActiveUse(theme.slug);
     }
     showMusic();
+    writeLibrarySelectionToLocation({ mood: kind === "mood" ? value : null });
   }
 
   function togglePreview(track: WorkspaceTrack) {
@@ -1248,16 +1313,19 @@ export function CreatorWorkspace() {
                   onChange={(event) => {
                     setQuery(event.target.value);
                     setActiveUse(null);
+                    setActivePlaylistId(null);
+                    writeLibrarySelectionToLocation({});
                   }}
                   aria-label="Search the music library"
                   placeholder="Search by track, artist, genre, mood or theme"
                 />
               </label>
               <div className="music-filter-row">
-                <label><span>Genre</span><select value={genre} onChange={(event) => setGenre(event.target.value)}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label><span>Mood</span><select value={mood} onChange={(event) => setMood(event.target.value)}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => setActiveUse((event.target.value || null) as MusicUseSlug | null)}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
-                {(genre !== "All genres" || mood !== "All moods" || activeUse || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
+                {activePlaylist && <span className="music-active-playlist-filter">Playlist · {activePlaylist.title}</span>}
+                <label><span>Genre</span><select value={genre} onChange={(event) => { setGenre(event.target.value); setActivePlaylistId(null); writeLibrarySelectionToLocation({}); }}>{availableGenres.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Mood</span><select value={mood} onChange={(event) => { const value = event.target.value; setMood(value); setActivePlaylistId(null); writeLibrarySelectionToLocation({ mood: value === "All moods" ? null : value }); }}>{availableMoods.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label><span>Theme</span><select value={activeUse ?? ""} onChange={(event) => { setActiveUse((event.target.value || null) as MusicUseSlug | null); setActivePlaylistId(null); writeLibrarySelectionToLocation({}); }}><option value="">All themes</option>{musicSearchTaxonomy.themes.map((theme) => <option value={theme.slug} key={theme.slug}>{theme.label}</option>)}</select></label>
+                {(genre !== "All genres" || mood !== "All moods" || activeUse || activePlaylist || query) && <button type="button" onClick={resetFilters}>Clear filters</button>}
                 {catalogRequestFailed && <button type="button" onClick={() => setCatalogRetryNonce((value) => value + 1)}>Retry live catalogue</button>}
               </div>
             </div>

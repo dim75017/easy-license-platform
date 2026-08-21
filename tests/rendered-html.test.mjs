@@ -197,7 +197,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search by mood,<br \/>style or use\./);
   assert.match(cataloguePage, /<Suspense fallback=\{<CreatorTrackShowcase \/>\}>[\s\S]{0,120}<FilteredCreatorTrackShowcase \/>/);
   assert.doesNotMatch(cataloguePage, /CatalogueExplorer|catalogue-v26-search-row|Search the catalogue/i);
-  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/catalog\?mood=\$\{encodeURIComponent\(mood\)\}#music-library`\}/);
+  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/app\?view=music&mood=\$\{encodeURIComponent\(mood\)\}`\}/);
   assert.match(page, /href=\{`\/catalog\?use=\$\{collection\.slug\}#music-library`\}/);
   assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
   assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
@@ -231,7 +231,10 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(catalogueCss, /\.music-playlist-card:hover\s*\{[^}]*box-shadow:\s*none;[^}]*transform:\s*none;/);
   assert.match(cataloguePage, /const accent = getPlaylistAccent\(playlist\)/);
   assert.match(cataloguePage, /--playlist-accent":\s*accent\.color,\s*"--playlist-accent-ink":\s*accent\.ink/);
-  assert.match(cataloguePage, /aria-label=\{`Open \$\{playlist\.title\} playlist on Spotify`\}/);
+  assert.match(cataloguePage, /aria-label=\{`Open \$\{playlist\.title\} in the Symbiome library`\}/);
+  assert.match(cataloguePage, /href=\{`\/app\?view=music&playlist=\$\{encodeURIComponent\(playlist\.id\)\}`\}/);
+  assert.match(cataloguePage, /className="music-playlists-all cta-swipe" href="\/app\?view=playlists">Explore all playlists<\/Link>/);
+  assert.doesNotMatch(cataloguePage, /open\.spotify\.com\/(?:playlist|user)|playlist on Spotify/);
   assert.doesNotMatch(cataloguePage, /<b>\s*Open on Spotify\s*<\/b>/);
   assert.match(catalogueCss, /\.music-playlist-card::before\s*\{[^}]*width:\s*14px;[^}]*background:\s*var\(--playlist-accent\)/s);
   assert.match(catalogueCss, /\.music-playlist-number\s*\{[^}]*position:\s*absolute;[^}]*background:\s*var\(--playlist-accent\);[^}]*color:\s*var\(--playlist-accent-ink, var\(--music-cream\)\)/s);
