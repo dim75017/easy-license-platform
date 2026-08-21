@@ -26,6 +26,13 @@ type Profile = {
 type Identity = { email: string; displayName: string };
 type LoadState = "checking" | "signed-out" | "ready" | "complete" | "demo";
 
+const accountSignInMethods = [
+  { id: "google", label: "Google", mark: "G" },
+  { id: "apple", label: "Apple", mark: "A" },
+  { id: "microsoft", label: "Microsoft", mark: "M" },
+  { id: "email", label: "Email", mark: "@" },
+] as const;
+
 const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
 
 export function AccountSetup() {
@@ -191,15 +198,13 @@ function AccountSetupFlow({
               <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
                 {mode === "login"
-                  ? "Log in is available on the secure Symbiome app. The public catalogue remains open for browsing."
-                  : "Account creation is available on the secure Symbiome app. The public catalogue remains open for browsing."}
+                  ? "Secure login is available on the live Symbiome app. Choose Google, Apple, Microsoft or email there."
+                  : "Secure account creation is available on the live Symbiome app. Choose Google, Apple, Microsoft or email there."}
               </p>
-              <a
-                className="button button-primary button-full cta-swipe"
-                href={publicAccountSignOutHref(mode)}
-              >
-                {mode === "login" ? "Open secure login" : "Open the secure app"}
-              </a>
+              <AccountSignInMethods
+                actionHref={publicAccountSignOutHref(mode, plan)}
+                actionLabel={mode === "login" ? "Open secure login" : "Open secure account creation"}
+              />
               <Link className="account-secondary-link" href="/app">
                 Browse music first
               </Link>
@@ -212,18 +217,16 @@ function AccountSetupFlow({
               <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
                 {mode === "login"
-                  ? "Log in securely with ChatGPT to return to your Symbiome workspace."
-                  : "Continue securely with ChatGPT. Symbiome never receives or stores your password."}
+                  ? "Choose Google, Apple, Microsoft or email on the secure sign-in screen to return to your workspace."
+                  : "Choose Google, Apple, Microsoft or email on the secure sign-in screen to create your workspace."}
               </p>
-              <a
-                className="button button-primary button-full cta-swipe"
-                href={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
-              >
-                {mode === "login" ? "Log in with ChatGPT" : "Continue with ChatGPT"}
-              </a>
+              <AccountSignInMethods
+                actionHref={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
+                actionLabel="Continue securely"
+              />
               <div className="account-trust-note">
                 <span aria-hidden="true">✓</span>
-                <p>Your identity is used only to create and protect your workspace.</p>
+                <p>Your password stays with the sign-in method you choose. Symbiome receives only the identity needed to protect your workspace.</p>
               </div>
               <p className="account-legal-copy">
                 By continuing, you acknowledge our <Link href="/legal">Legal information</Link>
@@ -357,6 +360,36 @@ function AccountSetupFlow({
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+function AccountSignInMethods({
+  actionHref,
+  actionLabel,
+}: {
+  actionHref: string;
+  actionLabel: string;
+}) {
+  return (
+    <div className="account-auth-choice">
+      <span className="account-auth-choice-label">Available sign-in methods</span>
+      <ul className="account-auth-methods" aria-label="Available secure sign-in methods">
+        {accountSignInMethods.map((method) => (
+          <li key={method.id}>
+            <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
+              {method.mark}
+            </span>
+            <strong>{method.label}</strong>
+          </li>
+        ))}
+      </ul>
+      <a className="button button-primary button-full cta-swipe" href={actionHref}>
+        {actionLabel}
+      </a>
+      <p className="account-auth-method-note">
+        Use the same sign-in method each time to return to the same workspace.
+      </p>
     </div>
   );
 }
