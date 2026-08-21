@@ -232,7 +232,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /const accent = getPlaylistAccent\(playlist\)/);
   assert.match(cataloguePage, /--playlist-accent":\s*accent\.color,\s*"--playlist-accent-ink":\s*accent\.ink/);
   assert.match(cataloguePage, /aria-label=\{`Open \$\{playlist\.title\} in the Symbiome library`\}/);
-  assert.match(cataloguePage, /href=\{`\/app\?view=music&playlist=\$\{encodeURIComponent\(playlist\.id\)\}`\}/);
+  assert.match(cataloguePage, /href=\{`\/app\?view=playlists&playlist=\$\{encodeURIComponent\(playlist\.id\)\}`\}/);
   assert.match(cataloguePage, /className="music-playlists-all cta-swipe" href="\/app\?view=playlists">Explore all playlists<\/Link>/);
   assert.doesNotMatch(cataloguePage, /open\.spotify\.com\/(?:playlist|user)|playlist on Spotify/);
   assert.doesNotMatch(cataloguePage, /<b>\s*Open on Spotify\s*<\/b>/);
@@ -1766,8 +1766,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
   assert.match(musicWorkspace, /const libraryViewIds: readonly LibraryView\[\] = \["discover", "music", "playlists", "liked", "downloads", "channels", "licences"\]/);
   assert.match(musicWorkspace, /function isLibraryView\(value: string \| null\): value is LibraryView[\s\S]{0,160}libraryViewIds\.includes\(value as LibraryView\)/);
-  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
+  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,200}isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
   assert.match(musicWorkspace, /function writeLibraryViewToLocation\(view: LibraryView, mode: "push" \| "replace"\)[\s\S]{0,180}url\.searchParams\.set\("view", view\)[\s\S]{0,120}view !== "music"[\s\S]{0,80}url\.searchParams\.delete\("track"\)/);
+  assert.match(musicWorkspace, /if \(view !== "playlists"\) url\.searchParams\.delete\("playlist"\)/);
+  assert.match(musicWorkspace, /function writePlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,180}url\.searchParams\.set\("playlist", playlist\)/);
   assert.match(musicWorkspace, /mode === "push"[\s\S]{0,100}window\.history\.pushState[\s\S]{0,100}window\.history\.replaceState/);
   assert.match(musicWorkspace, /syncViewFromLocation\(\)[\s\S]{0,180}window\.addEventListener\("popstate", handlePopState\)[\s\S]{0,120}window\.removeEventListener\("popstate", handlePopState\)/);
   assert.match(musicWorkspace, /function navigateToView\(nextView: LibraryView\)[\s\S]{0,220}setView\(nextView\)[\s\S]{0,100}writeLibraryViewToLocation\(nextView, historyMode\)/);
@@ -1797,10 +1799,17 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /catalogLoadState !== "live" \|\| !catalogViewIsCurrent \|\| catalogRequestFailed[\s\S]{0,180}className="music-track-results-status"/, "loading and failure notices should remain available");
   assert.doesNotMatch(musicWorkspace, /MUSIC SEARCH|id="tracks-title"|:\s*"All music"/);
   assert.match(musicWorkspace, /view === "liked"[\s\S]{0,100}className="music-track-browser music-liked-view music-workspace-view"/);
-  assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,180}className="music-secondary-view music-playlists-view music-workspace-view"/);
-  const playlistLibraryBlock = musicWorkspace.match(/function PlaylistLibrary[\s\S]*?\n\}/);
-  assert.ok(playlistLibraryBlock, "the Playlists view should keep its dedicated component");
-  assert.doesNotMatch(playlistLibraryBlock[0], /<header>|LISTENING WORLDS|Twelve distinct directions/, "the redundant Playlists introduction should be removed");
+  assert.match(musicWorkspace, /function PlaylistLibrary[\s\S]{0,900}className=\{`music-secondary-view music-playlists-view music-workspace-view\$\{activePlaylist \? " is-playlist-detail" : ""\}`\}/);
+  const playlistLibraryStart = musicWorkspace.indexOf("function PlaylistLibrary");
+  const downloadsLibraryStart = musicWorkspace.indexOf("function DownloadsLibrary");
+  assert.ok(playlistLibraryStart >= 0 && downloadsLibraryStart > playlistLibraryStart, "the Playlists view should keep its dedicated component");
+  const playlistLibraryBlock = musicWorkspace.slice(playlistLibraryStart, downloadsLibraryStart);
+  assert.doesNotMatch(playlistLibraryBlock, /<header>|LISTENING WORLDS|Twelve distinct directions/, "the redundant Playlists introduction should be removed");
+  assert.match(playlistLibraryBlock, /activePlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero"[\s\S]{0,220}src=\{activePlaylist\.image\}/);
+  assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePlaylist\.title\}<\/h2>[\s\S]{0,100}<p>\{activePlaylist\.description\}<\/p>/);
+  assert.match(playlistLibraryBlock, /className="music-playlist-detail-back"[\s\S]{0,80}onClick=\{onBack\}/);
+  assert.match(playlistLibraryBlock, /\{catalogueStatus\}[\s\S]{0,80}\{trackList\}[\s\S]{0,80}\{cataloguePager\}/);
+  assert.doesNotMatch(playlistLibraryBlock, /open\.spotify\.com|Spotify/);
   for (const secondaryView of ["DownloadsLibrary", "ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
   }
@@ -1932,7 +1941,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => \[\.\.\.current, \{ id, name, trackIds: \[track\.id\] \}\]\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
-  assert.match(musicWorkspace, /view === "playlists" && <PlaylistLibrary onOpen=\{openPlaylist\} personalPlaylists=\{personalPlaylists\} \/>/);
+  assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,520}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
   const downloadsLibraryBlock = musicWorkspace.match(/function DownloadsLibrary[\s\S]*?\n\}/);
@@ -1992,10 +2001,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v14Start > v13Start, "the taxonomy and track action overrides should follow the functional player block");
   const v15Start = musicWorkspaceCss.indexOf("/* V15");
   assert.ok(v15Start > v14Start, "recent releases, clickable rows and share actions should follow the V14 taxonomy block");
+  const v23Start = musicWorkspaceCss.indexOf("/* V23");
+  assert.ok(v23Start > v15Start, "the internal playlist detail page should follow the existing workspace overrides");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
   const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
-  const musicWorkspaceV15 = musicWorkspaceCss.slice(v15Start);
+  const musicWorkspaceV15 = musicWorkspaceCss.slice(v15Start, v23Start);
+  const musicWorkspaceV23 = musicWorkspaceCss.slice(v23Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -2110,6 +2122,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV15, /\.music-track-browser-controls \.music-filter-row select,[\s\S]{0,120}\.music-track-browser-controls \.music-filter-row > button\s*\{[^}]*min-height:\s*var\(--music-library-control-height\);[^}]*height:\s*var\(--music-library-control-height\)/s);
   assert.match(musicWorkspaceV15, /\.music-recent-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV15, /article\.music-track-row\[role="listitem"\]:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*2px/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-hero\s*\{[^}]*min-height:\s*clamp\(420px, 58vh, 640px\);[^}]*overflow:\s*hidden;[^}]*isolation:\s*isolate/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-photo\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*object-fit:\s*cover;[^}]*object-position:\s*var\(--playlist-position, center\)/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-copy h2\s*\{[^}]*font-size:\s*clamp\(54px, 7\.2vw, 108px\);[^}]*text-wrap:\s*balance/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-copy > p\s*\{[^}]*max-width:\s*62ch;[^}]*font-size:\s*clamp\(16px, 1\.35vw, 19px\)/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-back::before\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*transform:\s*translate3d\(-101%, 0, 0\)/s);
+  assert.match(musicWorkspaceV23, /\.music-playlist-detail-back:focus-visible::before\s*\{\s*transform:\s*translate3d\(0, 0, 0\)/s);
+  assert.match(musicWorkspaceV23, /@media \(max-width:\s*600px\)[\s\S]{0,180}\.music-playlist-detail-hero\s*\{[^}]*min-height:\s*390px/s);
   assert.match(v14BaseCss, /\.music-track-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*130;[^}]*max-height:\s*min\(390px, calc\(100dvh - 24px\)\);[^}]*overflow:\s*auto/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button\s*\{[^}]*min-height:\s*44px/s);
   assert.match(v14BaseCss, /\.music-track-context-options > button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--wm-clay\);[^}]*outline-offset:\s*1px/s);

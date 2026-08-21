@@ -16,7 +16,11 @@ test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites 
   assert.match(workspace, /params\.set\("theme", filters\.theme\)/u);
   assert.match(workspace, /params\.set\("playlist", filters\.playlist\)/u);
   assert.match(workspace, /readLibrarySelectionFromLocation/u);
-  assert.match(workspace, /writeLibrarySelectionToLocation\(\{ playlist: playlist\.id \}\)/u);
+  assert.match(workspace, /requestedPlaylist && isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"/u);
+  assert.match(workspace, /function writePlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,180}url\.searchParams\.set\("playlist", playlist\)/u);
+  assert.match(workspace, /function openPlaylist[\s\S]{0,260}activeViewRef\.current = "playlists"[\s\S]{0,100}setView\("playlists"\)[\s\S]{0,260}writePlaylistSelectionToLocation\(playlist\.id, "push"\)/u);
+  assert.doesNotMatch(workspace.match(/function openPlaylist[\s\S]*?\n  \}/u)?.[0] ?? "", /showMusic\(\)/u);
+  assert.match(workspace, /nextView !== "playlists" && activePlaylistId !== null[\s\S]{0,60}setActivePlaylistId\(null\)/u);
   assert.match(workspace, /writeLibrarySelectionToLocation\(\{ mood: kind === "mood" \? value : null \}\)/u);
   assert.match(workspace, /catalogFetchCredentials: RequestCredentials = catalogApiOrigin \? "omit" : "same-origin"/u);
   assert.match(workspace, /return `\$\{catalogApiOrigin\}\/api\/catalog\/tracks\?\$\{params\.toString\(\)\}`/u);
@@ -34,6 +38,7 @@ test("CreatorWorkspace filters and infinitely pages the live catalogue on Sites 
   assert.match(workspace, /const catalogLoadMoreSentinelRef = useRef<HTMLDivElement \| null>\(null\)/u);
   assert.match(workspace, /"IntersectionObserver" in window/u);
   assert.match(workspace, /new IntersectionObserver\(\(\[entry\]\)[\s\S]{0,120}entry\?\.isIntersecting[\s\S]{0,80}loadMoreCatalog\(\)/u);
+  assert.match(workspace, /const catalogueIsVisible = view === "music" \|\| \(view === "playlists" && activePlaylistId !== null\)/u);
   assert.match(workspace, /rootMargin: "720px 0px", threshold: 0/u);
   assert.match(workspace, /ref=\{catalogLoadMoreSentinelRef\}/u);
   assert.match(workspace, /catalogInfiniteScrollSupported === false \|\| catalogLoadMoreFailed/u);

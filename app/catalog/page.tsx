@@ -40,7 +40,7 @@ export default function CataloguePage() {
               return <Link
                 aria-label={`Open ${playlist.title} in the Symbiome library`}
                 className="music-playlist-card"
-                href={`/app?view=music&playlist=${encodeURIComponent(playlist.id)}`}
+                href={`/app?view=playlists&playlist=${encodeURIComponent(playlist.id)}`}
                 key={playlist.id}
                 style={{ "--playlist-accent": accent.color, "--playlist-accent-ink": accent.ink } as CSSProperties}
               >

@@ -2363,3 +2363,267 @@ article.music-track-row[role="listitem"]:focus-visible {
   .music-recent-head > button,
   .music-recent-share { border: 1px solid ButtonText; }
 }
+
+/* V23: playlist cards open as full internal playlist pages. */
+.music-app-main > .music-playlists-view.is-playlist-detail {
+  padding-top: 22px;
+}
+
+.music-playlist-detail-hero {
+  position: relative;
+  display: flex;
+  min-height: clamp(420px, 58vh, 640px);
+  align-items: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 24px;
+  background: var(--wm-ink);
+  color: #fff9f1;
+}
+
+.music-playlist-detail-hero::before {
+  position: absolute;
+  z-index: 3;
+  inset: 0 auto 0 0;
+  width: 12px;
+  background: var(--playlist-accent);
+  content: "";
+}
+
+.music-playlist-detail-photo {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--playlist-position, center);
+}
+
+.music-playlist-detail-shade {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(18, 18, 24, .28) 0%, rgba(18, 18, 24, .08) 26%, rgba(18, 18, 24, .88) 100%),
+    linear-gradient(90deg, rgba(18, 18, 24, .76) 0%, rgba(18, 18, 24, .16) 72%);
+}
+
+.music-playlist-detail-shade::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--playlist-accent) 28%, transparent), transparent 50%);
+  content: "";
+}
+
+.music-playlist-detail-back {
+  position: absolute;
+  z-index: 4;
+  top: 24px;
+  left: 28px;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(255, 249, 241, .44);
+  border-radius: 999px;
+  padding: 0 18px;
+  background: rgba(22, 22, 29, .58);
+  color: #fff9f1;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 820;
+  letter-spacing: .02em;
+  backdrop-filter: blur(12px);
+  transition: border-color 220ms ease, color 220ms ease;
+}
+
+.music-playlist-detail-back::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--wm-clay);
+  content: "";
+  transform: translate3d(-101%, 0, 0);
+  transition: transform 260ms cubic-bezier(.2, .75, .25, 1);
+}
+
+.music-playlist-detail-back > span {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.music-playlist-detail-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: min(100%, 980px);
+  gap: 14px;
+  padding: clamp(36px, 5vw, 72px);
+}
+
+.music-playlist-detail-kicker,
+.music-playlist-detail-track-head > span {
+  color: color-mix(in srgb, var(--playlist-accent) 72%, #fff9f1);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.music-playlist-detail-copy h2 {
+  max-width: 10ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(54px, 7.2vw, 108px);
+  font-weight: 520;
+  letter-spacing: -.065em;
+  line-height: .88;
+  text-wrap: balance;
+}
+
+.music-playlist-detail-copy > p {
+  max-width: 62ch;
+  margin: 2px 0 0;
+  color: rgba(255, 249, 241, .84);
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.music-playlist-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.music-playlist-detail-meta > span,
+.music-playlist-detail-meta > strong {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid rgba(255, 249, 241, .28);
+  border-radius: 999px;
+  padding: 0 11px;
+  background: rgba(22, 22, 29, .38);
+  color: #fff9f1;
+  font-size: 10px;
+  font-weight: 780;
+}
+
+.music-playlist-detail-meta > strong {
+  border-color: transparent;
+  background: var(--playlist-accent);
+  color: var(--playlist-accent-ink, var(--wm-ink));
+}
+
+.music-playlist-detail-tracks {
+  margin-top: 34px;
+}
+
+.music-playlist-detail-track-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.music-playlist-detail-track-head > span {
+  color: var(--wm-clay-deep);
+}
+
+.music-playlist-detail-track-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 58px);
+  font-weight: 520;
+  letter-spacing: -.055em;
+  line-height: .9;
+}
+
+.music-playlist-detail-status {
+  margin: 0 0 18px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .music-playlist-detail-back:hover {
+    border-color: var(--wm-clay);
+    color: #fff9f1;
+  }
+
+  .music-playlist-detail-back:hover::before {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.music-playlist-detail-back:focus-visible {
+  border-color: var(--wm-clay);
+  outline: 3px solid #fff9f1;
+  outline-offset: 3px;
+}
+
+.music-playlist-detail-back:focus-visible::before {
+  transform: translate3d(0, 0, 0);
+}
+
+@media (max-width: 860px) {
+  .music-app-main > .music-playlists-view.is-playlist-detail { padding-top: 16px; }
+
+  .music-playlist-detail-hero {
+    min-height: 500px;
+    border-radius: 20px;
+  }
+
+  .music-playlist-detail-back {
+    top: 18px;
+    left: 20px;
+  }
+
+  .music-playlist-detail-copy {
+    gap: 12px;
+    padding: 34px 30px;
+  }
+}
+
+@media (max-width: 600px) {
+  .music-playlist-detail-hero {
+    min-height: 390px;
+    border-radius: 18px;
+  }
+
+  .music-playlist-detail-hero::before { width: 8px; }
+
+  .music-playlist-detail-back {
+    top: 14px;
+    left: 14px;
+    min-height: 40px;
+    padding-inline: 14px;
+  }
+
+  .music-playlist-detail-copy {
+    gap: 10px;
+    padding: 26px 22px;
+  }
+
+  .music-playlist-detail-copy h2 { font-size: clamp(46px, 15vw, 68px); }
+  .music-playlist-detail-copy > p { font-size: 15px; line-height: 1.45; }
+  .music-playlist-detail-tracks { margin-top: 26px; }
+  .music-playlist-detail-track-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-playlist-detail-back,
+  .music-playlist-detail-back::before { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .music-playlist-detail-hero,
+  .music-playlist-detail-back,
+  .music-playlist-detail-meta > span,
+  .music-playlist-detail-meta > strong { border: 1px solid ButtonText; }
+}
