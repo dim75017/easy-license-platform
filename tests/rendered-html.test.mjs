@@ -2388,6 +2388,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(v14ForcedColoursCss, /\.music-track-context-menu,[\s\S]{0,160}border:\s*1px solid ButtonText/);
 
   assert.match(musicWorkspaceV24, /\.music-personal-playlists > \.music-secondary-playlists,\s*\.music-symbiome-playlists > \.music-secondary-playlists\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/s);
+  assert.doesNotMatch(musicWorkspaceCss, /\.music-personal-playlists > div:last-child/, "legacy personal-playlist columns must not override the shared editorial grid");
+  assert.doesNotMatch(musicWorkspaceCss, /\.music-personal-playlists article small/, "legacy compact-list typography must not override the shared playlist-card typography");
   assert.match(musicWorkspaceV24, /@media \(min-width:\s*2200px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV24, /@media \(max-width:\s*1150px\)[\s\S]{0,220}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV24, /@media \(max-width:\s*600px\)[\s\S]{0,220}grid-template-columns:\s*1fr/s);

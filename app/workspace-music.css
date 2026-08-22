@@ -1701,15 +1701,6 @@ article.music-track-row[role="listitem"]:focus-within { z-index: 2; }
   font-size: 13px;
 }
 
-.music-personal-playlists { display: grid; gap: 16px; margin: 0 0 34px; border: 1px solid rgba(41, 40, 50, .1); border-radius: 18px; padding: 20px; background: rgba(255, 249, 241, .7); }
-.music-personal-playlists > div:first-child > span { color: var(--wm-clay-deep); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
-.music-personal-playlists h3 { margin: 4px 0 0; font-size: 24px; }
-.music-personal-playlists > div:last-child { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.music-personal-playlists article { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; gap: 10px; border-radius: 12px; padding: 12px; background: var(--wm-cream); }
-.music-personal-playlists article > .music-action-icon { width: 18px; height: 18px; margin: 10px; color: var(--wm-clay-deep); }
-.music-personal-playlists article > span { display: grid; gap: 2px; }
-.music-personal-playlists article small { color: rgba(41, 40, 50, .55); }
-
 .music-download-list article { grid-template-columns: 32px 50px minmax(180px, 1fr) 100px 100px; }
 .music-download-list article > .music-action-icon { justify-self: center; color: var(--wm-clay-deep); }
 .music-downloads-sync-status { margin: 0 0 18px; }
@@ -1738,7 +1729,6 @@ article.music-track-row[role="listitem"]:focus-within { z-index: 2; }
   }
   .music-track-actions button,
   .music-track-actions button:not(:first-child) { display: grid; }
-  .music-personal-playlists > div:last-child { grid-template-columns: 1fr; }
   .music-action-status:not(:empty) { right: 12px; bottom: 198px; left: 12px; max-width: none; }
 }
 
