@@ -11,7 +11,7 @@ import {
 import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 
 type WorkspaceRole = "creator" | "business" | "admin";
-type ProfileLibraryView = "channels" | "licences";
+type ProfileLibraryView = "channels" | "licences" | "license-song" | "custom-song";
 type ProfileState = "loading" | "guest" | "authenticated";
 
 type WorkspaceProfile = {
@@ -187,7 +187,7 @@ export function WorkspaceProfileSwitcher({
           <Link className={activeRole === "creator" ? "is-active" : ""} href="/app" role="menuitem" aria-current={activeRole === "creator" ? "page" : undefined} onClick={closeMenu}>
             <i aria-hidden="true">♫</i><span><strong>Creator</strong><small>Music library and licences</small></span>
           </Link>
-          <Link className={activeRole === "business" ? "is-active" : ""} href="/business" role="menuitem" aria-current={activeRole === "business" ? "page" : undefined} onClick={closeMenu}>
+          <Link className={activeRole === "business" ? "is-active" : ""} href="/app/business?view=music" role="menuitem" aria-current={activeRole === "business" ? "page" : undefined} onClick={closeMenu}>
             <i aria-hidden="true">◇</i><span><strong>Business</strong><small>Sync, custom music and retail</small></span>
           </Link>
           <Link className={activeRole === "admin" ? "is-active" : ""} href="/admin" role="menuitem" aria-current={activeRole === "admin" ? "page" : undefined} onClick={closeMenu}>
@@ -195,12 +195,25 @@ export function WorkspaceProfileSwitcher({
           </Link>
           <span className="music-profile-menu-divider" aria-hidden="true" />
           <span className="music-profile-menu-label">ACCOUNT &amp; HELP</span>
-          <Link className={activeLibraryView === "licences" ? "is-active" : ""} href="/app?view=licences" role="menuitem" aria-current={activeLibraryView === "licences" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "licences")}>
-            <i aria-hidden="true">◇</i><span><strong>Licences</strong><small>Usage rights and coverage</small></span>
-          </Link>
-          <Link className={activeLibraryView === "channels" ? "is-active" : ""} href="/app?view=channels" role="menuitem" aria-current={activeLibraryView === "channels" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "channels")}>
-            <i aria-hidden="true">◉</i><span><strong>Channels</strong><small>Connected creator accounts</small></span>
-          </Link>
+          {activeRole === "business" ? (
+            <>
+              <Link className={activeLibraryView === "license-song" ? "is-active" : ""} href="/app/business?view=license-song" role="menuitem" aria-current={activeLibraryView === "license-song" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "license-song")}>
+                <i aria-hidden="true">◇</i><span><strong>License a song</strong><small>Usage rights and quote</small></span>
+              </Link>
+              <Link className={activeLibraryView === "custom-song" ? "is-active" : ""} href="/app/business?view=custom-song" role="menuitem" aria-current={activeLibraryView === "custom-song" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "custom-song")}>
+                <i aria-hidden="true">♫</i><span><strong>Request custom song</strong><small>Original music brief</small></span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link className={activeLibraryView === "licences" ? "is-active" : ""} href="/app?view=licences" role="menuitem" aria-current={activeLibraryView === "licences" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "licences")}>
+                <i aria-hidden="true">◇</i><span><strong>Licences</strong><small>Usage rights and coverage</small></span>
+              </Link>
+              <Link className={activeLibraryView === "channels" ? "is-active" : ""} href="/app?view=channels" role="menuitem" aria-current={activeLibraryView === "channels" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "channels")}>
+                <i aria-hidden="true">◉</i><span><strong>Channels</strong><small>Connected creator accounts</small></span>
+              </Link>
+            </>
+          )}
           <Link href="/help" role="menuitem" onClick={closeMenu}>
             <i aria-hidden="true">?</i><span><strong>Help centre</strong><small>Guides, licensing and support</small></span>
           </Link>

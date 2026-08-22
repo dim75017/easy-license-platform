@@ -35,7 +35,16 @@ export async function PUT(
         "cover_thumbnail_type_invalid",
       );
     }
-    const expectedSha256 = requiredSha256(request.headers.get("x-content-sha256"));
+    const expectedSha256 = requiredSha256(
+      request.headers.get("x-content-sha256"),
+      "X-Content-Sha256",
+      "cover_thumbnail_sha256_invalid",
+    );
+    const expectedSourceSha256 = requiredSha256(
+      request.headers.get("x-source-sha256"),
+      "X-Source-Sha256",
+      "cover_thumbnail_source_sha256_invalid",
+    );
     const body = await readBodyWithLimit(request, contentLength);
     if (body.byteLength !== contentLength) {
       throw new CatalogApiError(
@@ -70,9 +79,13 @@ export async function PUT(
       )
       .bind(releaseId)
       .first<{ status: string; cover_storage_key: string | null }>();
-    if (release?.status !== "published" || !release.cover_storage_key) {
+    if (
+      !release
+      || !["ready", "published"].includes(release.status)
+      || !release.cover_storage_key
+    ) {
       throw new CatalogApiError(
-        "A published release cover is required.",
+        "A ready or published release cover is required.",
         409,
         "published_release_cover_required",
       );
@@ -88,12 +101,33 @@ export async function PUT(
     }
 
     const bucket = requireCatalogAudioBucket();
+    const sourceCover = await bucket.head(release.cover_storage_key);
+    if (
+      !sourceCover
+      || sourceCover.size < 1
+      || !sourceCover.httpMetadata?.contentType?.startsWith("image/")
+      || sourceCover.customMetadata?.sha256 !== sourceSha256
+    ) {
+      throw new CatalogApiError(
+        "The release cover is unavailable in private storage.",
+        409,
+        "release_cover_unavailable",
+      );
+    }
+    if (expectedSourceSha256 !== sourceSha256) {
+      throw new CatalogApiError(
+        "The thumbnail source checksum does not match the immutable release cover.",
+        409,
+        "cover_thumbnail_source_checksum_mismatch",
+      );
+    }
     const existing = await bucket.head(storageKey);
     if (
       existing
-      && existing.size === contentLength
+      && existing.size > 0
+      && existing.size <= MAX_COVER_THUMBNAIL_BYTES
       && existing.httpMetadata?.contentType === "image/webp"
-      && existing.customMetadata?.sha256 === expectedSha256
+      && sha256Pattern.test(existing.customMetadata?.sha256 ?? "")
       && existing.customMetadata?.sourceSha256 === sourceSha256
     ) {
       return noStoreJson({ stored: true, idempotent: true });
@@ -153,10 +187,10 @@ function requiredContentLength(request: Request): number {
   return contentLength;
 }
 
-function requiredSha256(value: string | null): string {
+function requiredSha256(value: string | null, headerName: string, code: string): string {
   const normalized = value?.trim().toLowerCase() ?? "";
   if (!sha256Pattern.test(normalized)) {
-    throw new CatalogApiError("X-Content-Sha256 is invalid.", 400, "cover_thumbnail_sha256_invalid");
+    throw new CatalogApiError(`${headerName} is invalid.`, 400, code);
   }
   return normalized;
 }

@@ -26,31 +26,39 @@ import {
 import { trackMatchesMood } from "../lib/catalog-moods";
 import { isCatalogPlaylistId, type CatalogPlaylistId } from "../lib/catalog-playlists";
 import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
+import { BusinessWorkspaceRequest } from "./BusinessWorkspaceRequest";
 import "../workspace-music.css";
 
-type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences";
+type WorkspaceRole = "creator" | "business";
+type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences" | "license-song" | "custom-song";
 type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
 type CatalogLoadState = "loading" | "live" | "fallback";
-type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "downloads";
+type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "downloads" | "license" | "custom";
 
-const libraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked", "downloads", "channels", "licences"];
+const creatorLibraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked", "downloads", "channels", "licences"];
+const businessLibraryViewIds: readonly LibraryView[] = ["music", "playlists", "liked", "license-song", "custom-song"];
+const libraryViewIds: readonly LibraryView[] = [...creatorLibraryViewIds, "license-song", "custom-song"];
 
 function isLibraryView(value: string | null): value is LibraryView {
   return value !== null && libraryViewIds.includes(value as LibraryView);
 }
 
-function readLibraryViewFromLocation(): LibraryView {
+function readLibraryViewFromLocation(fallbackView: LibraryView = "discover", allowedViews: readonly LibraryView[] = libraryViewIds): LibraryView {
   const params = new URLSearchParams(window.location.search);
+  const requestedView = params.get("view");
+  if (
+    (requestedView === "license-song" || requestedView === "custom-song")
+    && allowedViews.includes(requestedView)
+  ) return requestedView;
   if (params.get("track")?.trim()) return "music";
   const requestedPlaylist = params.get("playlist")?.trim() ?? "";
   if (requestedPlaylist && isCatalogPlaylistId(requestedPlaylist)) return "playlists";
   if (isStoredTrackId(params.get("myPlaylist")?.trim())) return "playlists";
 
-  const requestedView = params.get("view");
-  if (isLibraryView(requestedView)) return requestedView;
+  if (isLibraryView(requestedView) && allowedViews.includes(requestedView)) return requestedView;
 
-  return "discover";
+  return fallbackView;
 }
 
 function readLibrarySelectionFromLocation(): { mood: string | null; playlist: CatalogPlaylistId | null; personalPlaylist: string | null } {
@@ -69,11 +77,17 @@ function readLibrarySelectionFromLocation(): { mood: string | null; playlist: Ca
   return { mood, playlist: null, personalPlaylist: null };
 }
 
-function writeLibraryViewToLocation(view: LibraryView, mode: "push" | "replace") {
+function writeLibraryViewToLocation(
+  view: LibraryView,
+  mode: "push" | "replace",
+  preserveTrack = view === "music" || view === "license-song",
+) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", view);
-  if (view !== "music") {
+  if (!preserveTrack) {
     url.searchParams.delete("track");
+  }
+  if (view !== "music") {
     url.searchParams.delete("mood");
   }
   if (view !== "playlists") {
@@ -190,6 +204,17 @@ const personalPlaylistImageUrlCache = new Map<string, string>();
 const personalPlaylistImagePromiseCache = new Map<string, Promise<string | null>>();
 const warmedPlaylistArtwork = new Set<string>();
 
+function rememberPersonalPlaylistImage(imageKey: string, image: Blob) {
+  try {
+    const previousUrl = personalPlaylistImageUrlCache.get(imageKey);
+    if (previousUrl) URL.revokeObjectURL(previousUrl);
+    personalPlaylistImageUrlCache.set(imageKey, URL.createObjectURL(image));
+    personalPlaylistImagePromiseCache.delete(imageKey);
+  } catch {
+    // The persisted image remains available through IndexedDB on the next render.
+  }
+}
+
 function cachedPersonalPlaylistImageUrl(imageKey: string): Promise<string | null> {
   const cached = personalPlaylistImageUrlCache.get(imageKey);
   if (cached) return Promise.resolve(cached);
@@ -300,10 +325,12 @@ function releaseMeta(track: WorkspaceTrack): string {
   return parts.join(" · ");
 }
 
-const navGroups: ReadonlyArray<{
+type WorkspaceNavGroup = {
   label: string;
   items: ReadonlyArray<{ id: LibraryView; label: string; icon: WorkspaceNavigationIcon; mobileSecondary?: boolean }>;
-}> = [
+};
+
+const creatorNavGroups: ReadonlyArray<WorkspaceNavGroup> = [
   {
     label: "DISCOVER MUSIC",
     items: [
@@ -321,6 +348,24 @@ const navGroups: ReadonlyArray<{
   },
 ];
 
+const businessNavGroups: ReadonlyArray<WorkspaceNavGroup> = [
+  {
+    label: "BUSINESS LIBRARY",
+    items: [
+      { id: "music", label: "Music", icon: "music" },
+      { id: "playlists", label: "Playlists", icon: "playlists" },
+      { id: "liked", label: "Liked tracks", icon: "liked" },
+    ],
+  },
+  {
+    label: "START A PROJECT",
+    items: [
+      { id: "license-song", label: "License a song", icon: "license" },
+      { id: "custom-song", label: "Custom song", icon: "custom" },
+    ],
+  },
+];
+
 const viewLabels: Record<LibraryView, string> = {
   discover: "Discover",
   music: "Music",
@@ -329,6 +374,8 @@ const viewLabels: Record<LibraryView, string> = {
   downloads: "Downloads",
   channels: "Channels",
   licences: "Licences",
+  "license-song": "License a song",
+  "custom-song": "Request custom song",
 };
 
 const Wave = memo(function Wave({ seed, dense = false, progress = 0 }: { seed: string; dense?: boolean; progress?: number }) {
@@ -424,11 +471,33 @@ function WorkspaceNavIcon({ kind }: { kind: WorkspaceNavigationIcon }) {
       {kind === "playlists" && <><rect x="4" y="4.5" width="14" height="12" rx="2.5" /><path d="m9.5 8.2 4.2 2.4-4.2 2.4V8.2Z" fill="currentColor" stroke="none" /><path d="M7 20h11.5a2 2 0 0 0 2-2V8" /></>}
       {kind === "liked" && <path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.4 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />}
       {kind === "downloads" && <><path d="M12 4v10" /><path d="m8 10 4 4 4-4" /><path d="M5 17.5v1A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-1" /></>}
+      {kind === "license" && <><path d="M6.5 4.5h8l3 3v12h-11z" /><path d="M14.5 4.5v3h3M9.5 12h5M9.5 15.5h3" /><path d="m4 11 2 2 3.5-4" /></>}
+      {kind === "custom" && <><path d="M9 17.5V7l9-2v10.5" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="15.5" r="2.5" /><path d="m5 4 .7 1.8L7.5 6.5l-1.8.7L5 9l-.7-1.8-1.8-.7 1.8-.7L5 4Z" /></>}
     </svg>
   );
 }
 
-function TrackActionIcon({ kind, active = false }: { kind: "like" | "playlist" | "download" | "share" | "delete"; active?: boolean }) {
+function writeBusinessLicenseSelectionToLocation(trackId: string | null, mode: "push" | "replace" = "push") {
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", "license-song");
+  url.searchParams.delete("mood");
+  url.searchParams.delete("playlist");
+  url.searchParams.delete("myPlaylist");
+  if (trackId) url.searchParams.set("track", trackId);
+  else url.searchParams.delete("track");
+
+  const destination = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (destination === current) return;
+  if (mode === "push") window.history.pushState(window.history.state, "", destination);
+  else window.history.replaceState(window.history.state, "", destination);
+}
+
+function scrollWorkspaceToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
+function TrackActionIcon({ kind, active = false }: { kind: "like" | "playlist" | "download" | "share" | "delete" | "license"; active?: boolean }) {
   return (
     <span className={`music-action-icon music-action-${kind}`} data-active={active ? "true" : "false"} aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" focusable="false">
@@ -437,6 +506,7 @@ function TrackActionIcon({ kind, active = false }: { kind: "like" | "playlist" |
         {kind === "download" && <><path d="M12 3v12M8 11l4 4 4-4" /><path d="M5 18v2h14v-2" /></>}
         {kind === "share" && <><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4" /></>}
         {kind === "delete" && <><path d="M4 7h16" /><path d="m9 7 .8-2h4.4l.8 2" /><path d="m6.5 7 .8 13h9.4l.8-13" /><path d="M10 11v5M14 11v5" /></>}
+        {kind === "license" && <><path d="M6.5 4.5h8l3 3v12h-11z" /><path d="M14.5 4.5v3h3M9.5 12h5M9.5 15.5h3" /><path d="m4 11 2 2 3.5-4" /></>}
       </svg>
     </span>
   );
@@ -454,6 +524,7 @@ function TrackActionPopover({
   onOpenPlaylistCreator,
   onDownload,
   onShare,
+  onLicense,
   removeFromPlaylistName,
   onRemoveFromPlaylist,
   canDownload,
@@ -469,6 +540,7 @@ function TrackActionPopover({
   onOpenPlaylistCreator: () => void;
   onDownload: () => void;
   onShare: () => void;
+  onLicense?: () => void;
   removeFromPlaylistName: string | null;
   onRemoveFromPlaylist: () => void;
   canDownload: boolean;
@@ -543,6 +615,7 @@ function TrackActionPopover({
           <button role="menuitem" type="button" onClick={onShowPlaylists}><TrackActionIcon kind="playlist" /><span>Add to playlist</span></button>
           <button role="menuitem" type="button" disabled={!canDownload} title={canDownload ? undefined : "Listening copy unavailable"} onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>{canDownload ? "Download listening copy" : "Download unavailable"}</span></button>
           <button role="menuitem" type="button" onClick={() => { onShare(); onClose(true); }}><TrackActionIcon kind="share" /><span>Copy track link</span></button>
+          {onLicense && <button role="menuitem" type="button" onClick={() => { onLicense(); onClose(false); }}><TrackActionIcon kind="license" /><span>License this song</span></button>}
         </div>
       ) : (
         <>
@@ -760,11 +833,13 @@ function PersonalPlaylistCard({
   onOpen,
   onDelete,
   onOpenMenu,
+  priority = false,
 }: {
   playlist: PersonalPlaylist;
   onOpen: (playlist: PersonalPlaylist) => void;
   onDelete: (playlist: PersonalPlaylist) => void;
   onOpenMenu: (playlist: PersonalPlaylist, x: number, y: number, opener: HTMLElement) => void;
+  priority?: boolean;
 }) {
   const style = {
     "--playlist-accent": "#e06343",
@@ -794,7 +869,7 @@ function PersonalPlaylistCard({
         }}
         title={playlist.name}
       >
-        <PersonalPlaylistArtwork playlist={playlist} className="workspace-playlist-photo" />
+        <PersonalPlaylistArtwork playlist={playlist} className="workspace-playlist-photo" eager={priority} />
         <span className="workspace-playlist-shade" aria-hidden="true" />
         <span className="workspace-playlist-copy">
           <small>My playlist · {trackLabel}</small>
@@ -1082,8 +1157,28 @@ function DiscoveryFacet({
   );
 }
 
-export function CreatorWorkspace() {
-  const [view, setView] = useState<LibraryView>("discover");
+function BusinessLibraryIntro({ onLicense, onCustom }: { onLicense: () => void; onCustom: () => void }) {
+  return (
+    <section className="business-library-intro" aria-labelledby="business-library-title">
+      <div>
+        <span>BUSINESS MUSIC LIBRARY</span>
+        <h2 id="business-library-title">Find the sound.<br />Clear the rights.</h2>
+        <p>Search the full Symbiome catalogue, then send the usage scope for a licence quote — or brief an original song made for your project.</p>
+      </div>
+      <div className="business-library-actions">
+        <button className="business-workspace-cta" type="button" onClick={onLicense}>License a song</button>
+        <button className="business-workspace-cta is-secondary" type="button" onClick={onCustom}>Request custom song</button>
+      </div>
+    </section>
+  );
+}
+
+export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?: WorkspaceRole }) {
+  const defaultView: LibraryView = workspaceRole === "business" ? "music" : "discover";
+  const allowedViews = workspaceRole === "business" ? businessLibraryViewIds : creatorLibraryViewIds;
+  const activeNavGroups = workspaceRole === "business" ? businessNavGroups : creatorNavGroups;
+  const isBusinessWorkspace = workspaceRole === "business";
+  const [view, setView] = useState<LibraryView>(defaultView);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All genres");
   const [mood, setMood] = useState("All moods");
@@ -1116,10 +1211,11 @@ export function CreatorWorkspace() {
   const [catalogRequestFailed, setCatalogRequestFailed] = useState(false);
   const [catalogRetryNonce, setCatalogRetryNonce] = useState(0);
   const [highlightedTrackId, setHighlightedTrackId] = useState<string | null>(null);
+  const [businessLicenseTrackId, setBusinessLicenseTrackId] = useState<string | null>(null);
   const trackMenuOpenerRef = useRef<HTMLElement | null>(null);
   const personalPlaylistMenuOpenerRef = useRef<HTMLElement | null>(null);
   const sharedTrackHandledRef = useRef<string | null>(null);
-  const activeViewRef = useRef<LibraryView>("discover");
+  const activeViewRef = useRef<LibraryView>(defaultView);
   const loadMoreControllerRef = useRef<AbortController | null>(null);
   const catalogLoadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
   const catalogHasLoadedRef = useRef(false);
@@ -1173,10 +1269,15 @@ export function CreatorWorkspace() {
 
   useEffect(() => {
     const syncViewFromLocation = () => {
-      const nextView = readLibraryViewFromLocation();
+      const nextView = readLibraryViewFromLocation(defaultView, allowedViews);
       const selection = readLibrarySelectionFromLocation();
+      const requestedTrackId = new URLSearchParams(window.location.search).get("track")?.trim() ?? "";
+      if (activeViewRef.current !== nextView) scrollWorkspaceToTop();
       activeViewRef.current = nextView;
       setView(nextView);
+      setBusinessLicenseTrackId(
+        nextView === "license-song" && isStoredTrackId(requestedTrackId) ? requestedTrackId : null,
+      );
       setActivePlaylistId(selection.playlist);
       setActivePersonalPlaylistId(selection.personalPlaylist);
       setMood(selection.mood ?? "All moods");
@@ -1192,7 +1293,7 @@ export function CreatorWorkspace() {
     const handlePopState = () => syncViewFromLocation();
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [allowedViews, defaultView]);
 
   useEffect(() => () => loadMoreControllerRef.current?.abort(), []);
 
@@ -1295,7 +1396,6 @@ export function CreatorWorkspace() {
         setRecentCatalogTracks(page.tracks);
         setRecentCatalogTotal(page.pagination.total);
         setRecentCatalogRequestFailed(false);
-        setRecentCoverFailures(new Set());
         setCatalogKnownTracks((current) => mergeTrackPages(current, page.tracks));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -1315,7 +1415,17 @@ export function CreatorWorkspace() {
     if (!trackId || sharedTrackHandledRef.current === trackId) return;
 
     const controller = new AbortController();
+    const requestedView = readLibraryViewFromLocation(defaultView, allowedViews);
+    const opensBusinessLicense = isBusinessWorkspace && requestedView === "license-song";
     const openSharedTrack = (track: WorkspaceTrack) => {
+      if (opensBusinessLicense) {
+        setCatalogKnownTracks((current) => mergeTrackPages(current, [track]));
+        setBusinessLicenseTrackId(track.id);
+        activeViewRef.current = "license-song";
+        setView("license-song");
+        setActionStatus(`${track.title} selected for a licence request.`);
+        return;
+      }
       setGenre("All genres");
       setMood("All moods");
       setActiveUse(null);
@@ -1362,6 +1472,13 @@ export function CreatorWorkspace() {
           setActionStatus("This shared track is not available in the active catalogue.");
           return;
         }
+        const currentParams = new URLSearchParams(window.location.search);
+        const currentView = readLibraryViewFromLocation(defaultView, allowedViews);
+        if (
+          currentView !== requestedView
+          || activeViewRef.current !== requestedView
+          || currentParams.get("track")?.trim() !== trackId
+        ) return;
         sharedTrackHandledRef.current = trackId;
         setCatalogKnownTracks((current) => mergeTrackPages(current, [sharedTrack]));
         openSharedTrack(sharedTrack);
@@ -1374,7 +1491,7 @@ export function CreatorWorkspace() {
 
     void resolveSharedTrack();
     return () => controller.abort();
-  }, [catalogLoadState, catalogRetryNonce]);
+  }, [allowedViews, catalogLoadState, catalogRetryNonce, defaultView, isBusinessWorkspace, view]);
 
   useEffect(() => {
     if (!highlightedTrackId || view !== "music") return;
@@ -1564,6 +1681,9 @@ export function CreatorWorkspace() {
   const likedTracks = useMemo(() => knownTracks.filter((track) => liked.has(track.id)), [knownTracks, liked]);
   const downloadedTracks = useMemo(() => knownTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, knownTracks]);
   const selectedTrack = knownTracks.find((track) => track.id === preview.activeTrackId);
+  const selectedBusinessLicenseTrack = businessLicenseTrackId
+    ? knownTracks.find((track) => track.id === businessLicenseTrackId) ?? null
+    : null;
   const menuTrack = trackMenu ? knownTracks.find((track) => track.id === trackMenu.trackId) : undefined;
   const menuTrackPersonalPlaylist = trackMenu?.personalPlaylistId ? personalPlaylists.find((playlist) => playlist.id === trackMenu.personalPlaylistId) ?? null : null;
   const menuPersonalPlaylist = personalPlaylistMenu ? personalPlaylists.find((playlist) => playlist.id === personalPlaylistMenu.playlistId) ?? null : null;
@@ -1687,16 +1807,36 @@ export function CreatorWorkspace() {
   }
 
   function navigateToView(nextView: LibraryView) {
+    const changesView = activeViewRef.current !== nextView;
+    const leavesBusinessLicense = isBusinessWorkspace && activeViewRef.current === "license-song" && nextView !== "license-song";
     const historyMode = activeViewRef.current === nextView ? "replace" : "push";
+    if (nextView === "license-song") {
+      const requestedTrackId = new URLSearchParams(window.location.search).get("track")?.trim() ?? "";
+      setBusinessLicenseTrackId(isStoredTrackId(requestedTrackId) ? requestedTrackId : null);
+    } else {
+      setBusinessLicenseTrackId(null);
+    }
     activeViewRef.current = nextView;
     if (nextView !== "playlists" && activePlaylistId !== null) setActivePlaylistId(null);
     if (nextView !== "playlists" && activePersonalPlaylistId !== null) setActivePersonalPlaylistId(null);
     setView(nextView);
-    writeLibraryViewToLocation(nextView, historyMode);
+    const preserveTrack = (nextView === "music" || nextView === "license-song") && !leavesBusinessLicense;
+    writeLibraryViewToLocation(nextView, historyMode, preserveTrack);
+    if (changesView) scrollWorkspaceToTop();
   }
 
   function showMusic() {
     navigateToView("music");
+  }
+
+  function openBusinessLicenseRequest(track: WorkspaceTrack | null) {
+    const historyMode = activeViewRef.current === "license-song" && businessLicenseTrackId === (track?.id ?? null) ? "replace" : "push";
+    activeViewRef.current = "license-song";
+    setBusinessLicenseTrackId(track?.id ?? null);
+    setView("license-song");
+    writeBusinessLicenseSelectionToLocation(track?.id ?? null, historyMode);
+    scrollWorkspaceToTop();
+    if (track) setActionStatus(`${track.title} selected for a licence request.`);
   }
 
   function openPlaylist(playlist: LofiGirlPlaylist) {
@@ -1844,6 +1984,7 @@ export function CreatorWorkspace() {
       try {
         imageKey = personalPlaylistImageKey(id);
         await savePersonalPlaylistImage(imageKey, draft.image);
+        rememberPersonalPlaylistImage(imageKey, draft.image);
       } catch {
         imageKey = null;
       }
@@ -1972,6 +2113,7 @@ export function CreatorWorkspace() {
               <div className="music-track-taxonomy music-track-genre"><small className="music-track-taxonomy-label">Genre</small><span>{track.genre}</span></div>
               <div className="music-track-taxonomy music-track-mood"><small className="music-track-taxonomy-label">Mood</small><span>{track.moods.slice(0, 2).join(" · ")}</span></div>
               <div className="music-track-actions">
+                {isBusinessWorkspace && !personalPlaylist && <button className="music-track-license" type="button" onClick={() => openBusinessLicenseRequest(track)} aria-label={`License ${track.title}`} title="License this song"><TrackActionIcon kind="license" /></button>}
                 <button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`${liked.has(track.id) ? "Unlike" : "Like"} ${track.title}`} aria-pressed={liked.has(track.id)}><TrackActionIcon kind="like" active={liked.has(track.id)} /></button>
                 <button type="button" onClick={(event) => openPlaylistChooser(track, event.currentTarget)} aria-label={`Add ${track.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === track.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
                 <button className={downloadedTrackIds.has(track.id) ? "is-downloaded" : ""} type="button" disabled={track.previewDownloadUrl === null} title={track.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(track)} aria-label={track.previewDownloadUrl === null ? `Licensed download unavailable for ${track.title}` : `Download preview of ${track.title}${downloadedTrackIds.has(track.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
@@ -2031,15 +2173,15 @@ export function CreatorWorkspace() {
     </div>
   ) : null;
 
-  const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked" || view === "downloads";
+  const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked" || view === "downloads" || view === "license-song" || view === "custom-song";
 
   return (
-    <div className="creator-music-app">
+    <div className={`creator-music-app${isBusinessWorkspace ? " business-music-app" : ""}`}>
       <aside className="music-app-sidebar">
-        <div className="music-app-brand"><Brand compact /><span>Creator</span></div>
+        <div className="music-app-brand"><Brand compact /><span>{isBusinessWorkspace ? "Business" : "Creator"}</span></div>
 
-        <nav className="music-app-nav" aria-label="Creator music navigation">
-          {navGroups.map((group) => (
+        <nav className="music-app-nav" aria-label={`${isBusinessWorkspace ? "Business" : "Creator"} music navigation`}>
+          {activeNavGroups.map((group) => (
             <div className="music-app-nav-section" key={group.label}>
               <span className="music-app-nav-label">{group.label}</span>
               {group.items.map((item) => {
@@ -2067,9 +2209,9 @@ export function CreatorWorkspace() {
         <header className={`music-app-topbar${usesWideCanvas ? " is-wide" : ""}`}>
           <div><span>Symbiome</span><h1>{viewLabels[view]}</h1></div>
           <WorkspaceProfileSwitcher
-            activeRole="creator"
+            activeRole={workspaceRole}
             compact
-            activeLibraryView={view === "channels" || view === "licences" ? view : undefined}
+            activeLibraryView={view === "channels" || view === "licences" || view === "license-song" || view === "custom-song" ? view : undefined}
             onOpenLibraryView={navigateToView}
           />
         </header>
@@ -2139,6 +2281,7 @@ export function CreatorWorkspace() {
 
         {view === "music" && (
           <section className="music-track-browser music-workspace-view" aria-label="Music catalogue">
+            {isBusinessWorkspace && <BusinessLibraryIntro onLicense={() => openBusinessLicenseRequest(null)} onCustom={() => navigateToView("custom-song")} />}
             <div className="music-track-browser-head music-track-browser-controls">
               <label className="music-global-search music-library-search">
                 <span aria-hidden="true">⌕</span>
@@ -2230,6 +2373,8 @@ export function CreatorWorkspace() {
         {view === "downloads" && <DownloadsLibrary tracks={downloadedTracks} savedCount={downloadedTrackIds.size} />}
         {view === "channels" && <ChannelsView />}
         {view === "licences" && <LicencesView />}
+        {view === "license-song" && <BusinessWorkspaceRequest kind="license" selectedTrack={selectedBusinessLicenseTrack} onBrowseLibrary={showMusic} />}
+        {view === "custom-song" && <BusinessWorkspaceRequest kind="custom" onBrowseLibrary={showMusic} />}
       </main>
 
       <audio
@@ -2267,6 +2412,7 @@ export function CreatorWorkspace() {
             </div>
           </div>
           <div className="workspace-player-actions">
+            {isBusinessWorkspace && <button type="button" onClick={() => openBusinessLicenseRequest(selectedTrack)} aria-label={`License ${selectedTrack.title}`} title="License this song"><TrackActionIcon kind="license" /></button>}
             <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}><TrackActionIcon kind="like" active={liked.has(selectedTrack.id)} /></button>
             <button type="button" onClick={(event) => openPlaylistChooser(selectedTrack, event.currentTarget)} aria-label={`Add ${selectedTrack.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === selectedTrack.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
             <button className={downloadedTrackIds.has(selectedTrack.id) ? "is-downloaded" : ""} type="button" disabled={selectedTrack.previewDownloadUrl === null} title={selectedTrack.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(selectedTrack)} aria-label={selectedTrack.previewDownloadUrl === null ? `Licensed download unavailable for ${selectedTrack.title}` : `Download preview of ${selectedTrack.title}${downloadedTrackIds.has(selectedTrack.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
@@ -2292,6 +2438,7 @@ export function CreatorWorkspace() {
           }}
           onDownload={() => void downloadTrackPreview(menuTrack)}
           onShare={() => void shareTrack(menuTrack)}
+          onLicense={isBusinessWorkspace ? () => openBusinessLicenseRequest(menuTrack) : undefined}
           removeFromPlaylistName={menuTrackPersonalPlaylist?.name ?? null}
           onRemoveFromPlaylist={() => {
             if (menuTrackPersonalPlaylist) removeTrackFromPersonalPlaylist(menuTrack, menuTrackPersonalPlaylist.id);
@@ -2443,7 +2590,7 @@ function PlaylistLibrary({
             </div>
             <div className="music-secondary-playlists">
               {personalPlaylists.length
-                ? personalPlaylists.map((playlist) => <PersonalPlaylistCard playlist={playlist} onOpen={onOpenPersonal} onDelete={onDeletePersonal} onOpenMenu={onOpenPersonalMenu} key={playlist.id} />)
+                ? personalPlaylists.map((playlist, index) => <PersonalPlaylistCard playlist={playlist} onOpen={onOpenPersonal} onDelete={onDeletePersonal} onOpenMenu={onOpenPersonalMenu} priority={index < 3} key={playlist.id} />)
                 : <div className="music-personal-playlists-empty"><strong>No personal playlists yet.</strong><p>Create one to collect tracks from the catalogue.</p></div>}
             </div>
           </section>
