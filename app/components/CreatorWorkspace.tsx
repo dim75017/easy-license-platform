@@ -1347,6 +1347,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
   const [playlistPendingDeletion, setPlaylistPendingDeletion] = useState<PersonalPlaylist | null>(null);
   const [playlistComposerTrackId, setPlaylistComposerTrackId] = useState<string | null | undefined>(undefined);
   const [personalPlaylistLoadState, setPersonalPlaylistLoadState] = useState<"idle" | "loading" | "error">("idle");
+  const [downloadsLoadState, setDownloadsLoadState] = useState<"idle" | "loading" | "error">("idle");
   const [actionStatus, setActionStatus] = useState("");
   const [catalogTracks, setCatalogTracks] = useState<readonly WorkspaceTrack[] | null>(null);
   const [catalogKnownTracks, setCatalogKnownTracks] = useState<readonly WorkspaceTrack[]>([]);
@@ -1794,6 +1795,75 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     };
   }, [activePersonalPlaylist, catalogKnownTracks, catalogRetryNonce, libraryActionsReady]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const settleState = (state: "idle" | "error") => queueMicrotask(() => {
+      if (!cancelled) setDownloadsLoadState(state);
+    });
+    if (view !== "downloads" || !libraryActionsReady || downloadedTrackIds.size === 0) {
+      settleState("idle");
+      return () => { cancelled = true; };
+    }
+
+    const knownIds = new Set(catalogKnownTracks.map((track) => track.id));
+    const missingSavedIds = [...downloadedTrackIds].filter((trackId) => !knownIds.has(trackId));
+    if (!missingSavedIds.length) {
+      settleState("idle");
+      return () => { cancelled = true; };
+    }
+
+    const missingTrackRequests = missingSavedIds.flatMap((savedId) => {
+      const trackId = catalogNumericTrackId(savedId);
+      return trackId === null ? [] : [{ savedId, trackId }];
+    });
+    if (!missingTrackRequests.length) {
+      settleState("error");
+      return () => { cancelled = true; };
+    }
+
+    const controller = new AbortController();
+
+    async function loadDownloadedTracks() {
+      setDownloadsLoadState("loading");
+      const loadedTracks: WorkspaceTrack[] = [];
+      let failed = missingTrackRequests.length !== missingSavedIds.length;
+      for (let index = 0; index < missingTrackRequests.length; index += 6) {
+        const chunk = missingTrackRequests.slice(index, index + 6);
+        const results = await Promise.allSettled(chunk.map(async ({ savedId, trackId }) => {
+          const response = await fetch(catalogRequestUrl({ page: 1, pageSize: 1, trackId }), {
+            cache: "no-store",
+            credentials: catalogFetchCredentials,
+            headers: { accept: "application/json" },
+            signal: controller.signal,
+          });
+          if (!response.ok) throw new Error("Downloaded track request failed");
+          const page = parseCatalogPage(await response.json());
+          if (!page || page.view !== "tracks") throw new Error("Downloaded track response was invalid");
+          const track = page.tracks[0] ?? null;
+          return track?.id === savedId ? track : null;
+        }));
+        if (cancelled) return;
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value) loadedTracks.push(result.value);
+          else if (result.status === "fulfilled" || !(result.reason instanceof DOMException && result.reason.name === "AbortError")) failed = true;
+        }
+      }
+      if (cancelled) return;
+      if (loadedTracks.length) setCatalogKnownTracks((current) => mergeTrackPages(current, loadedTracks));
+      setDownloadsLoadState(failed ? "error" : "idle");
+    }
+
+    void loadDownloadedTracks().catch((error) => {
+      if (cancelled || (error instanceof DOMException && error.name === "AbortError")) return;
+      setDownloadsLoadState("error");
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [catalogKnownTracks, catalogRetryNonce, downloadedTrackIds, libraryActionsReady, view]);
+
   const closeTrackMenu = useCallback((restoreFocus = false) => {
     setTrackMenu(null);
     if (restoreFocus && trackMenuOpenerRef.current) requestAnimationFrame(() => trackMenuOpenerRef.current?.focus());
@@ -1831,18 +1901,18 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
   }, [activeUse, catalogLoadState, catalogTracks, catalogViewIsCurrent, genre, libraryTracks, mood, query]);
 
   const likedTracks = useMemo(() => knownTracks.filter((track) => liked.has(track.id)), [knownTracks, liked]);
-  const downloadedTracks = useMemo(() => knownTracks.filter((track) => downloadedTrackIds.has(track.id)), [downloadedTrackIds, knownTracks]);
-  const selectedTrack = knownTracks.find((track) => track.id === preview.activeTrackId);
+  const downloadedTracks = useMemo(() => catalogKnownTracks.filter((track) => downloadedTrackIds.has(track.id)), [catalogKnownTracks, downloadedTrackIds]);
+  const selectedTrack = catalogKnownTracks.find((track) => track.id === preview.activeTrackId);
   const selectedBusinessLicenseTrack = businessLicenseTrackId
     ? knownTracks.find((track) => track.id === businessLicenseTrackId) ?? null
     : null;
-  const menuTrack = trackMenu ? knownTracks.find((track) => track.id === trackMenu.trackId) : undefined;
+  const menuTrack = trackMenu ? catalogKnownTracks.find((track) => track.id === trackMenu.trackId) : undefined;
   const menuTrackPersonalPlaylist = trackMenu?.personalPlaylistId ? personalPlaylists.find((playlist) => playlist.id === trackMenu.personalPlaylistId) ?? null : null;
   const menuPersonalPlaylist = personalPlaylistMenu ? personalPlaylists.find((playlist) => playlist.id === personalPlaylistMenu.playlistId) ?? null : null;
-  const playlistComposerTrack = playlistComposerTrackId ? knownTracks.find((track) => track.id === playlistComposerTrackId) ?? null : null;
+  const playlistComposerTrack = playlistComposerTrackId ? catalogKnownTracks.find((track) => track.id === playlistComposerTrackId) ?? null : null;
   useEffect(() => {
-    if (preview.activeTrackId && !knownTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
-  }, [knownTracks, preview.activeTrackId, preview.stop]);
+    if (preview.activeTrackId && !catalogKnownTracks.some((track) => track.id === preview.activeTrackId)) preview.stop();
+  }, [catalogKnownTracks, preview.activeTrackId, preview.stop]);
 
   const loadMoreCatalog = useCallback(async () => {
     const nextPage = catalogPagination?.nextPage;
@@ -2597,7 +2667,15 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
             trackList={activePlaylist && catalogViewIsCurrent ? renderTrackTable(visibleTracks, `${activePlaylist.title} tracks`) : null}
           />
         )}
-        {view === "downloads" && <DownloadsLibrary tracks={downloadedTracks} savedCount={downloadedTrackIds.size} />}
+        {view === "downloads" && (
+          <DownloadsLibrary
+            loadState={downloadsLoadState}
+            loadedCount={downloadedTracks.length}
+            onRetry={() => setCatalogRetryNonce((value) => value + 1)}
+            savedCount={downloadedTrackIds.size}
+            trackList={downloadedTracks.length ? renderTrackTable(downloadedTracks, "Downloaded tracks") : null}
+          />
+        )}
         {view === "channels" && <ChannelsView />}
         {view === "licences" && <LicencesView />}
         {view === "license-song" && <BusinessWorkspaceRequest kind="license" selectedTrack={selectedBusinessLicenseTrack} onBrowseLibrary={showMusic} />}
@@ -2836,8 +2914,20 @@ function PlaylistLibrary({
   );
 }
 
-function DownloadsLibrary({ tracks, savedCount }: { tracks: readonly WorkspaceTrack[]; savedCount: number }) {
-  return <div className="music-secondary-view music-track-browser music-workspace-view">{savedCount > tracks.length && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{tracks.length} loaded of {savedCount} saved downloads. Other saved IDs remain intact while catalogue pages load.</p>}{tracks.length ? <div className="music-download-list">{tracks.map((track, index) => <article key={track.id}><TrackActionIcon kind="download" /><TrackCover src={track.cover} width={45} height={45} priority={index < VISIBLE_COVER_PRELOAD_LIMIT} /><span><strong>{track.title}</strong><small>{track.artist}</small></span><span>{track.genre}</span><strong>Listening copy</strong></article>)}</div> : <div className="music-empty-library"><strong>{savedCount ? "Saved downloads are outside the loaded pages." : "No downloads yet."}</strong><p>{savedCount ? "Browse or search the catalogue to load their track details without losing the saved IDs." : "Download a track from Music and it will appear here."}</p></div>}</div>;
+function DownloadsLibrary({ loadState, loadedCount, onRetry, savedCount, trackList }: { loadState: "idle" | "loading" | "error"; loadedCount: number; onRetry: () => void; savedCount: number; trackList: ReactNode | null }) {
+  return (
+    <div className="music-secondary-view music-track-browser music-workspace-view">
+      {loadState === "loading" && savedCount > loadedCount && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">Loading {savedCount - loadedCount} saved {savedCount - loadedCount === 1 ? "download" : "downloads"}…</p>}
+      {loadState === "error" && savedCount > loadedCount && (
+        <p className="music-track-results-status music-playlist-detail-status music-downloads-sync-status" role="status" aria-live="polite">
+          Some saved downloads could not be loaded right now.
+          <button className="cta-swipe" type="button" onClick={onRetry}>Retry downloads</button>
+        </p>
+      )}
+      {loadState === "idle" && savedCount > loadedCount && <p className="music-track-results-status music-downloads-sync-status" role="status" aria-live="polite">{loadedCount} loaded of {savedCount} saved downloads.</p>}
+      {trackList ?? (savedCount === 0 ? <div className="music-empty-library"><strong>No downloads yet.</strong><p>Download a track from Music and it will appear here.</p></div> : null)}
+    </div>
+  );
 }
 
 function ChannelsView() {

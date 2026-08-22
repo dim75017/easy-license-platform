@@ -103,7 +103,8 @@ test("saved actions are never purged just because a track is outside the visible
   assert.match(workspace, /storedDownloads\.filter\(isStoredTrackId\)/u);
   assert.doesNotMatch(workspace, /knownTrackIds\.has\(id\)/u);
   assert.match(workspace, /\{likedTracks\.length\} loaded of \{liked\.size\} saved/u);
-  assert.match(workspace, /Other saved IDs remain intact while catalogue pages load/u);
+  assert.match(workspace, /const missingSavedIds = \[\.\.\.downloadedTrackIds\]\.filter/u);
+  assert.match(workspace, /return track\?\.id === savedId \? track : null/u);
 });
 
 test("personal playlists can be deleted cleanly and tracks can be removed without touching the catalogue", async () => {
