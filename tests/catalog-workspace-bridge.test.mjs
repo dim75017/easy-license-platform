@@ -113,9 +113,9 @@ test("personal playlists can be deleted cleanly and tracks can be removed withou
     source("app/workspace-music.css"),
   ]);
 
-  assert.match(workspace, /const storedPlaylistsValue = window\.localStorage\.getItem\("symbiome-personal-playlists-v1"\)[\s\S]{0,1500}setPersonalPlaylists\(validPlaylists\)/u);
+  assert.match(workspace, /const storedPlaylistsValue = window\.localStorage\.getItem\("symbiome-personal-playlists-v1"\)[\s\S]{0,1500}replacePersonalPlaylists\(validPlaylists\)/u);
   assert.doesNotMatch(workspace, /if \(validPlaylists\.length\) setPersonalPlaylists/u);
-  assert.match(workspace, /async function deletePersonalPlaylist\(playlist: PersonalPlaylist\)[\s\S]{0,720}personalPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)[\s\S]{0,520}writePersonalPlaylistSelectionToLocation\(null, "replace"\)/u);
+  assert.match(workspace, /async function deletePersonalPlaylist\(playlist: PersonalPlaylist\)[\s\S]{0,720}currentPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)[\s\S]{0,520}writePersonalPlaylistSelectionToLocation\(null, "replace"\)/u);
   assert.match(workspace, /currentPlaylist\.imageKey && !nextPlaylists\.some[\s\S]{0,180}deletePersonalPlaylistImage\(currentPlaylist\.imageKey\)/u);
   assert.match(images, /export async function deletePersonalPlaylistImage\(key: string\)[\s\S]{0,420}store\.delete\(key\)/u);
   assert.match(workspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)/u);
@@ -123,7 +123,11 @@ test("personal playlists can be deleted cleanly and tracks can be removed withou
   assert.match(workspace, /className="music-personal-playlist-delete"[\s\S]{0,180}Delete playlist \$\{playlist\.name\}/u);
   assert.match(workspace, /function PersonalPlaylistContextMenu[\s\S]{0,3000}role="menu"[\s\S]{0,500}>Delete playlist<\/span>/u);
   assert.match(workspace, /function PlaylistDeleteDialog[\s\S]{0,1600}aria-labelledby="music-playlist-delete-title"[\s\S]{0,900}The tracks remain available in the Symbiome catalogue/u);
+  assert.match(workspace, /async function updatePersonalPlaylistImage\(playlist: PersonalPlaylist, image: Blob, selectionToken: symbol\)[\s\S]{0,320}personalPlaylistImageUpdateQueue\.get\(playlist\.id\)[\s\S]{0,1000}savePersonalPlaylistImage\(imageKey, image\)[\s\S]{0,1400}window\.localStorage\.setItem\("symbiome-personal-playlists-v1", JSON\.stringify\(nextPlaylists\)\)[\s\S]{0,520}rememberPersonalPlaylistImage\(imageKey, image\)[\s\S]{0,180}replacePersonalPlaylists\(nextPlaylists\)/u);
+  assert.match(workspace, /function PersonalPlaylistImagePicker[\s\S]{0,2200}className="music-playlist-detail-image-picker"[\s\S]{0,320}busy \? "Updating…" : actionLabel/u);
+  assert.match(workspace, /const cachedImageUrl = imageKey \? personalPlaylistImageUrlCache\.get\(imageKey\) \?\? null : null[\s\S]{0,120}return cachedImageUrl \?\?/u);
   assert.match(css, /\.music-personal-playlist-card-shell > \.workspace-playlist,\s*\.music-symbiome-playlists > \.music-secondary-playlists > \.workspace-playlist\s*\{[^}]*aspect-ratio:\s*4 \/ 3;/su);
+  assert.match(css, /\.music-playlist-detail-image-picker::before\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*translate3d\(-101%, 0, 0\)/su);
 });
 
 test("Discover requests distinct releases and deep links can resolve a track outside page one", async () => {

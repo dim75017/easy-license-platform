@@ -1913,6 +1913,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistLibraryBlock, /id="music-playlist-detail-hero"[\s\S]{0,180}tabIndex=\{-1\}/);
   assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePlaylist\.title\}<\/h2>[\s\S]{0,100}<p>\{activePlaylist\.description\}<\/p>/);
   assert.match(playlistLibraryBlock, /activePersonalPlaylist \? \([\s\S]{0,260}className="music-playlist-detail-hero is-personal"[\s\S]{0,220}<PersonalPlaylistArtwork playlist=\{activePersonalPlaylist\} className="music-playlist-detail-photo" eager/);
+  assert.match(playlistLibraryBlock, /<PersonalPlaylistImagePicker playlist=\{activePersonalPlaylist\} onChange=\{onChangePersonalImage\} \/>[\s\S]{0,220}className="music-playlist-detail-delete"/);
   assert.match(playlistLibraryBlock, /<h2 id="music-playlist-detail-title">\{activePersonalPlaylist\.name\}<\/h2>[\s\S]{0,140}activePersonalPlaylist\.description && <p>\{activePersonalPlaylist\.description\}<\/p>/);
   assert.match(playlistLibraryBlock, /personalPlaylistLoadState === "loading"[\s\S]{0,220}Loading saved tracks…[\s\S]{0,260}personalPlaylistLoadState === "error"[\s\S]{0,360}Retry playlist/);
   assert.match(playlistLibraryBlock, /className="music-playlist-detail-back"[\s\S]{0,80}onClick=\{onBack\}/);
@@ -2070,10 +2071,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /return \[\{ id: record\.id, name: record\.name\.trim\(\)\.slice\(0, 48\), description, imageKey, trackIds:/, "legacy name-only playlists should migrate with empty optional fields");
   assert.match(musicWorkspace, /record\.trackIds\.filter\(isStoredTrackId\)/);
   assert.match(musicWorkspace, /const storedPlaylistsValue = window\.localStorage\.getItem\("symbiome-personal-playlists-v1"\)[\s\S]{0,180}storedPlaylistsValue === null \? null : JSON\.parse\(storedPlaylistsValue\)/);
-  assert.match(musicWorkspace, /if \(Array\.isArray\(storedPlaylists\)\)[\s\S]{0,1300}setPersonalPlaylists\(validPlaylists\)/, "an explicitly empty saved list must remain empty after F5");
+  assert.match(musicWorkspace, /if \(Array\.isArray\(storedPlaylists\)\)[\s\S]{0,1300}replacePersonalPlaylists\(validPlaylists\)/, "an explicitly empty saved list must remain empty after F5");
   assert.doesNotMatch(musicWorkspace, /if \(validPlaylists\.length\) setPersonalPlaylists/, "deleting the last playlist must not resurrect the default playlist");
   assert.match(musicWorkspace, /storedDownloads\.filter\(isStoredTrackId\)/);
-  assert.match(musicWorkspace, /setPersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
+  assert.match(musicWorkspace, /updatePersonalPlaylists\(\(current\) => current\.map\([\s\S]{0,360}trackIds: removing \? playlist\.trackIds\.filter\(\(id\) => id !== track\.id\) : \[\.\.\.playlist\.trackIds, track\.id\]/);
   assert.match(musicWorkspace, /async function createPersonalPlaylist\(draft: PersonalPlaylistDraft\)[\s\S]{0,420}personalPlaylistImageKey\(id\)[\s\S]{0,120}savePersonalPlaylistImage\(imageKey, draft\.image\)[\s\S]{0,360}description: draft\.description,[\s\S]{0,80}imageKey,[\s\S]{0,80}trackIds: track \? \[track\.id\] : \[\]/);
   const playlistComposerBlock = musicWorkspace.match(/function PlaylistComposerDialog[\s\S]*?(?=\nfunction DiscoveryFacet)/);
   assert.ok(playlistComposerBlock, "the playlist creator should remain a dedicated component");
@@ -2092,7 +2093,23 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistComposerBlock[0], /className="music-personal-playlist-default-art" aria-hidden="true"><SymbiomeMark \/>/);
   assert.match(musicWorkspace, /const personalPlaylistImageUrlCache = new Map<string, string>\(\)[\s\S]{0,1100}cachedPersonalPlaylistImageUrl[\s\S]{0,900}personalPlaylistImageUrlCache\.set\(imageKey, objectUrl\)/);
   assert.match(musicWorkspace, /function usePersonalPlaylistImageUrl[\s\S]{0,900}cachedPersonalPlaylistImageUrl\(imageKey\)[\s\S]{0,360}setLoadedImage\(\{ key: imageKey, url \}\)/);
+  assert.match(musicWorkspace, /const cachedImageUrl = imageKey \? personalPlaylistImageUrlCache\.get\(imageKey\) \?\? null : null;[\s\S]{0,120}return cachedImageUrl \?\? \(loadedImage\?\.key === imageKey \? loadedImage\.url : null\)/, "replacing a blob under the same key should redraw from the latest object URL");
   assert.match(musicWorkspace, /function PersonalPlaylistArtwork[\s\S]{0,680}usePersonalPlaylistImageUrl\(playlist\.imageKey\)[\s\S]{0,360}music-personal-playlist-default-art[\s\S]{0,120}<SymbiomeMark \/>/);
+  const detailImagePicker = musicWorkspace.match(/function PersonalPlaylistImagePicker[\s\S]*?(?=\nfunction PersonalPlaylistCard)/);
+  assert.ok(detailImagePicker, "personal playlist details should expose a dedicated artwork picker");
+  assert.match(detailImagePicker[0], /const actionLabel = playlist\.imageKey \? "Change image" : "Add image"/);
+  assert.match(detailImagePicker[0], /const selectionToken = Symbol\(playlist\.id\)[\s\S]{0,140}personalPlaylistImageSelectionTokenCache\.set\(playlist\.id, selectionToken\)[\s\S]{0,140}preparePersonalPlaylistImage\(file\)[\s\S]{0,180}await onChange\(playlist, preparedImage, selectionToken\)/);
+  assert.match(detailImagePicker[0], /type="file"[\s\S]{0,120}accept="image\/jpeg,image\/png,image\/webp"[\s\S]{0,220}onChange=\{\(event\) => void handleChange\(event\)\}/);
+  assert.match(detailImagePicker[0], /className="music-playlist-detail-image-picker"[\s\S]{0,180}onClick=\{\(\) => inputRef\.current\?\.click\(\)\}[\s\S]{0,180}aria-label=\{`\$\{actionLabel\} for \$\{playlist\.name\}`\}/);
+  assert.match(detailImagePicker[0], /busy \? "Updating…" : actionLabel[\s\S]{0,180}role="alert"/);
+  assert.match(detailImagePicker[0], /finally \{[\s\S]{0,100}setBusy\(false\);[\s\S]{0,80}input\.value = ""/);
+  assert.match(musicWorkspace, /async function updatePersonalPlaylistImage\(playlist: PersonalPlaylist, image: Blob, selectionToken: symbol\)[\s\S]{0,620}currentPlaylist\.imageKey \?\? personalPlaylistImageKey\(currentPlaylist\.id\)[\s\S]{0,520}savePersonalPlaylistImage\(imageKey, image\)[\s\S]{0,2000}rememberPersonalPlaylistImage\(imageKey, image\)[\s\S]{0,120}replacePersonalPlaylists\(nextPlaylists\)/);
+  assert.match(musicWorkspace, /const previousUpdate = personalPlaylistImageUpdateQueue\.get\(playlist\.id\) \?\? Promise\.resolve\(\)[\s\S]{0,180}previousUpdate\.catch\(\(\) => undefined\)\.then[\s\S]{0,220}personalPlaylistImageSelectionTokenCache\.get\(playlist\.id\) !== selectionToken/, "artwork writes should be serialized and reject stale selections across picker remounts");
+  assert.match(musicWorkspace, /await savePersonalPlaylistImage\(imageKey, image\)[\s\S]{0,180}personalPlaylistImageSelectionTokenCache\.get\(playlist\.id\) !== selectionToken[\s\S]{0,360}savePersonalPlaylistImage\(imageKey, previousImage\)[\s\S]{0,160}deletePersonalPlaylistImage\(imageKey\)/, "a stale write should restore the prior image or remove a newly orphaned blob");
+  assert.match(musicWorkspace, /const personalPlaylistsRef = useRef\(personalPlaylists\)[\s\S]{0,520}personalPlaylistsRef\.current = nextPlaylists/, "playlist mutations should keep an immediately current snapshot for asynchronous artwork updates");
+  assert.match(musicWorkspace, /async function updatePersonalPlaylistImage[\s\S]{0,1800}const latestPlaylists = personalPlaylistsRef\.current[\s\S]{0,220}if \(!latestPlaylist\)[\s\S]{0,220}deletePersonalPlaylistImage\(imageKey\)/, "an artwork update must not resurrect a playlist deleted while the image was saved");
+  assert.match(musicWorkspace, /if \(latestPlaylist\.imageKey !== imageKey\)[\s\S]{0,260}localStorage\.setItem\("symbiome-personal-playlists-v1"[\s\S]{0,260}deletePersonalPlaylistImage\(imageKey\)[\s\S]{0,160}throw new Error\("The playlist image could not be saved on this device\."\)/, "adding first artwork must fail visibly and clean up if its metadata cannot persist");
+  assert.match(musicWorkspace, /personalPlaylistImageRequestTokenCache\.get\(imageKey\) !== requestToken[\s\S]{0,160}personalPlaylistImageUrlCache\.get\(imageKey\) \?\? null/, "a stale IndexedDB read must not overwrite a newly selected image");
   const personalPlaylistCard = musicWorkspace.match(/function PersonalPlaylistCard[\s\S]*?(?=\nfunction PersonalPlaylistContextMenu)/);
   assert.ok(personalPlaylistCard, "personal playlists should use a two-control card shell");
   assert.match(personalPlaylistCard[0], /<article[\s\S]{0,120}className="music-personal-playlist-card-shell"[\s\S]{0,220}onContextMenu=\{\(event\) => \{[\s\S]{0,100}event\.preventDefault\(\)[\s\S]{0,160}onOpenMenu\(playlist, event\.clientX, event\.clientY, event\.currentTarget\)/);
@@ -2118,16 +2135,17 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(personalPlaylistImages, /const attempts = \[[\s\S]{0,120}\{ width: 640, quality: \.8 \}[\s\S]{0,120}\{ width: 480, quality: \.64 \}/);
   assert.match(personalPlaylistImages, /indexedDB\.open\(PERSONAL_PLAYLIST_DB_NAME, PERSONAL_PLAYLIST_DB_VERSION\)[\s\S]{0,220}createObjectStore\(PERSONAL_PLAYLIST_IMAGE_STORE\)/);
   assert.match(personalPlaylistImages, /export async function deletePersonalPlaylistImage\(key: string\)[\s\S]{0,220}transactionComplete\(database, "readwrite", \(store\) => store\.delete\(key\)\)/);
-  assert.match(musicWorkspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)[\s\S]{0,420}setPersonalPlaylists\(nextPlaylists\)/);
+  assert.match(musicWorkspace, /function removeTrackFromPersonalPlaylist\(track: WorkspaceTrack, playlistId: string\)[\s\S]{0,520}trackIds: playlist\.trackIds\.filter\(\(id\) => id !== track\.id\)[\s\S]{0,420}replacePersonalPlaylists\(nextPlaylists\)/);
   const deletePersonalPlaylistBlock = musicWorkspace.match(
     /async function deletePersonalPlaylist\(playlist: PersonalPlaylist\)[\s\S]*?(?=\n  async function createPersonalPlaylist)/,
   );
   assert.ok(deletePersonalPlaylistBlock, "personal playlist deletion should be implemented");
-  assert.match(deletePersonalPlaylistBlock[0], /personalPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)/);
+  assert.match(deletePersonalPlaylistBlock[0], /currentPlaylists\.filter\(\(item\) => item\.id !== playlist\.id\)/);
   assert.match(deletePersonalPlaylistBlock[0], /writePersonalPlaylistSelectionToLocation\(null, "replace"\)/);
   assert.match(deletePersonalPlaylistBlock[0], /deletePersonalPlaylistImage\(currentPlaylist\.imageKey\)/);
   assert.match(musicWorkspace, /const downloadUrl = track\.previewDownloadUrl === undefined \? track\.previewUrl : track\.previewDownloadUrl[\s\S]{0,240}fetch\(downloadUrl\)[\s\S]{0,650}anchor\.download = `\$\{track\.artist\} - \$\{track\.title\}\.mp3`[\s\S]{0,360}setDownloadedTrackIds/);
   assert.match(musicWorkspace, /view === "playlists" && \([\s\S]{0,180}<PlaylistLibrary[\s\S]{0,180}activePlaylist=\{activePlaylist\}[\s\S]{0,100}activePersonalPlaylist=\{activePersonalPlaylist\}[\s\S]{0,900}personalTrackList=\{activePersonalPlaylist && activePersonalPlaylistTracks\.length \? renderTrackTable\(activePersonalPlaylistTracks, `\$\{activePersonalPlaylist\.name\} tracks`, activePersonalPlaylist\) : null\}[\s\S]{0,240}trackList=\{activePlaylist && catalogViewIsCurrent \? renderTrackTable\(visibleTracks, `\$\{activePlaylist\.title\} tracks`\) : null\}/);
+  assert.match(musicWorkspace, /<PlaylistLibrary[\s\S]{0,420}onChangePersonalImage=\{updatePersonalPlaylistImage\}/);
   assert.match(musicWorkspace, /view === "downloads" && <DownloadsLibrary tracks=\{downloadedTracks\} savedCount=\{downloadedTrackIds\.size\} \/>/);
   assert.match(musicWorkspace, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"/);
   assert.match(musicWorkspace, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"/);
@@ -2196,6 +2214,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v25Start > v24Start, "the selected editorial navigation icons should follow the playlist composer styles");
   const v26Start = musicWorkspaceCss.indexOf("/* V26");
   assert.ok(v26Start > v25Start, "playlist deletion and exact card framing should follow the selected navigation icons");
+  const v28Start = musicWorkspaceCss.indexOf("/* V28");
+  assert.ok(v28Start > v26Start, "detail artwork editing should follow the personal playlist deletion controls");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
   const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
@@ -2203,7 +2223,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const musicWorkspaceV23 = musicWorkspaceCss.slice(v23Start, v24Start);
   const musicWorkspaceV24 = musicWorkspaceCss.slice(v24Start, v25Start);
   const musicWorkspaceV25 = musicWorkspaceCss.slice(v25Start, v26Start);
-  const musicWorkspaceV26 = musicWorkspaceCss.slice(v26Start);
+  const musicWorkspaceV26 = musicWorkspaceCss.slice(v26Start, v28Start);
+  const musicWorkspaceV28 = musicWorkspaceCss.slice(v28Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -2361,6 +2382,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV26, /\.music-personal-playlist-context-menu\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*150;[^}]*width:\s*min\(230px, calc\(100vw - 24px\)\)/s);
   assert.match(musicWorkspaceV26, /\.music-playlist-delete-dialog\s*\{[^}]*width:\s*min\(520px, calc\(100vw - 28px\)\);[^}]*border-radius:\s*22px/s);
   assert.match(musicWorkspaceV26, /@media \(forced-colors:\s*active\)[\s\S]{0,420}\.music-playlist-delete-dialog footer > button\s*\{\s*border:\s*1px solid ButtonText;/s);
+  assert.match(musicWorkspaceV28, /personal playlist artwork stays editable from its detail page/);
+  assert.match(musicWorkspaceV28, /\.music-playlist-detail-image-control\s*\{[^}]*position:\s*absolute;[^}]*top:\s*30px;[^}]*right:\s*86px/s);
+  assert.match(musicWorkspaceV28, /\.music-playlist-detail-image-picker::before\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*transform:\s*translate3d\(-101%, 0, 0\)/s);
+  assert.match(musicWorkspaceV28, /\.music-playlist-detail-image-picker:focus-visible\s*\{[^}]*outline:\s*3px solid #fff9f1/s);
+  assert.match(musicWorkspaceV28, /@media \(max-width:\s*600px\)[\s\S]{0,180}\.music-playlist-detail-image-control\s*\{[^}]*top:\s*20px;[^}]*right:\s*76px/s);
+  assert.match(musicWorkspaceV28, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]{0,180}\.music-playlist-detail-image-picker::before\s*\{\s*transition:\s*none;/s);
+  assert.match(musicWorkspaceV28, /@media \(forced-colors:\s*active\)[\s\S]{0,180}\.music-playlist-detail-image-error\s*\{\s*border:\s*1px solid ButtonText;/s);
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
