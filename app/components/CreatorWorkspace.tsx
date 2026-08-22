@@ -32,7 +32,7 @@ import "../workspace-music.css";
 type WorkspaceRole = "guest" | "creator" | "business";
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences" | "license-song" | "custom-song";
 type FacetKind = "genre" | "mood" | "theme" | "artist";
-type TrackMenuMode = "actions" | "playlists";
+type TrackMenuMode = "actions" | "playlists" | "share";
 type TrackMenuPlacement = "auto" | "above";
 type CatalogLoadState = "loading" | "live" | "fallback";
 type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "downloads" | "license" | "custom";
@@ -195,6 +195,7 @@ type PersonalPlaylistMenuState = {
 
 const defaultPersonalPlaylist: PersonalPlaylist = { id: "my-playlist", name: "My playlist", description: "", imageKey: null, trackIds: [] };
 const trackControlSelector = "button, a, input, select, textarea, [role='menu'], [role='dialog']";
+const trackPopoverFocusableSelector = "button:not([disabled]), a[href], input:not([disabled])";
 const catalogFetchCredentials: RequestCredentials = catalogApiOrigin ? "omit" : "same-origin";
 const CATALOG_PAGE_SIZE = 40;
 const RECENT_RELEASE_LIMIT = 8;
@@ -538,10 +539,12 @@ function TrackActionPopover({
   onClose,
   onToggleLike,
   onShowPlaylists,
+  onShowShare,
   onAddToPlaylist,
   onOpenPlaylistCreator,
   onDownload,
-  onShare,
+  shareUrl,
+  onCopyShareLink,
   onLicense,
   removeFromPlaylistName,
   onRemoveFromPlaylist,
@@ -554,10 +557,12 @@ function TrackActionPopover({
   onClose: (restoreFocus?: boolean) => void;
   onToggleLike: () => void;
   onShowPlaylists: () => void;
+  onShowShare: () => void;
   onAddToPlaylist: (playlistId: string) => void;
   onOpenPlaylistCreator: () => void;
   onDownload: () => void;
-  onShare: () => void;
+  shareUrl: string | null;
+  onCopyShareLink: (shareUrl: string) => Promise<boolean>;
   onLicense?: () => void;
   removeFromPlaylistName: string | null;
   onRemoveFromPlaylist: () => void;
@@ -565,7 +570,9 @@ function TrackActionPopover({
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: state.x, y: state.y });
+  const [copiedShareUrl, setCopiedShareUrl] = useState<string | null>(null);
   const maxHeight = state.placement === "above" ? Math.max(0, state.y - 12) : undefined;
+  const shareTargets = shareUrl ? createTrackShareTargets(track, shareUrl) : [];
 
   useEffect(() => {
     const popover = popoverRef.current;
@@ -578,7 +585,7 @@ function TrackActionPopover({
       : state.y + rect.height > window.innerHeight - gutter ? state.y - rect.height : state.y;
     const nextY = Math.max(gutter, Math.min(preferredY, window.innerHeight - rect.height - gutter));
     setPosition({ x: nextX, y: nextY });
-    popover.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus();
+    popover.querySelector<HTMLElement>(trackPopoverFocusableSelector)?.focus();
   }, [state.mode, state.placement, state.x, state.y]);
 
   useEffect(() => {
@@ -600,45 +607,45 @@ function TrackActionPopover({
   }, [onClose]);
 
   function handleMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
-    const buttons = [...(popoverRef.current?.querySelectorAll<HTMLButtonElement>('button:not([disabled])') ?? [])];
-    const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const controls = [...(popoverRef.current?.querySelectorAll<HTMLElement>(trackPopoverFocusableSelector) ?? [])];
+    const currentIndex = controls.indexOf(document.activeElement as HTMLElement);
     if (event.key === "Escape") {
       event.preventDefault();
       onClose(true);
       return;
     }
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) || buttons.length === 0) return;
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) || controls.length === 0) return;
     event.preventDefault();
-    if (event.key === "Home") buttons[0]?.focus();
-    else if (event.key === "End") buttons.at(-1)?.focus();
+    if (event.key === "Home") controls[0]?.focus();
+    else if (event.key === "End") controls.at(-1)?.focus();
     else {
       const direction = event.key === "ArrowDown" ? 1 : -1;
-      buttons[(currentIndex + direction + buttons.length) % buttons.length]?.focus();
+      controls[(currentIndex + direction + controls.length) % controls.length]?.focus();
     }
   }
 
   return (
     <div
       id="music-track-context-menu"
-      className="music-track-context-menu"
+      className={`music-track-context-menu${state.mode === "share" ? " is-share" : ""}`}
       role={state.mode === "actions" ? "menu" : "dialog"}
-      aria-label={state.mode === "actions" ? `Actions for ${track.title}` : `Add ${track.title} to a playlist`}
+      aria-label={state.mode === "actions" ? `Actions for ${track.title}` : state.mode === "playlists" ? `Add ${track.title} to a playlist` : `Share ${track.title}`}
       style={{ left: position.x, top: position.y, maxHeight }}
       ref={popoverRef}
       onKeyDown={handleMenuKeyDown}
     >
-      <header><strong>{state.mode === "actions" ? track.title : "Add to playlist"}</strong><small>{state.mode === "actions" ? track.artist : track.title}</small></header>
+      <header><strong>{state.mode === "actions" ? track.title : state.mode === "playlists" ? "Add to playlist" : "Share track"}</strong><small>{state.mode === "actions" ? track.artist : state.mode === "playlists" ? track.title : `${track.title} · ${track.artist}`}</small></header>
       {state.mode === "actions" ? (
         <div className="music-track-context-options">
           {removeFromPlaylistName && <button className="is-destructive" role="menuitem" type="button" onClick={() => { onRemoveFromPlaylist(); onClose(true); }}><TrackActionIcon kind="delete" /><span>Remove from {removeFromPlaylistName}</span></button>}
           <button role="menuitemcheckbox" aria-checked={liked} type="button" onClick={() => { onToggleLike(); onClose(true); }}><TrackActionIcon kind="like" active={liked} /><span>{liked ? "Remove from liked tracks" : "Like track"}</span></button>
           <button role="menuitem" type="button" onClick={onShowPlaylists}><TrackActionIcon kind="playlist" /><span>Add to playlist</span></button>
           <button role="menuitem" type="button" disabled={!canDownload} title={canDownload ? undefined : "Listening copy unavailable"} onClick={() => { onDownload(); onClose(true); }}><TrackActionIcon kind="download" /><span>{canDownload ? "Download listening copy" : "Download unavailable"}</span></button>
-          <button role="menuitem" type="button" onClick={() => { onShare(); onClose(true); }}><TrackActionIcon kind="share" /><span>Copy track link</span></button>
+          <button role="menuitem" type="button" onClick={onShowShare}><TrackActionIcon kind="share" /><span>Share track</span></button>
           {onLicense && <button role="menuitem" type="button" onClick={() => { onLicense(); onClose(false); }}><TrackActionIcon kind="license" /><span>License this song</span></button>}
         </div>
-      ) : (
+      ) : state.mode === "playlists" ? (
         <>
           <div className="music-track-context-options music-track-playlist-options">
             {personalPlaylists.map((playlist) => {
@@ -650,6 +657,42 @@ function TrackActionPopover({
             <button type="button" onClick={onOpenPlaylistCreator}>Create a new playlist</button>
           </div>
         </>
+      ) : (
+        <div className="music-track-share">
+          <div className="music-track-share-platforms" role="group" aria-label="Sharing platforms">
+            {shareTargets.map((target) => (
+              <a
+                href={target.href}
+                target={target.external ? "_blank" : undefined}
+                rel={target.external ? "noopener noreferrer" : undefined}
+                aria-label={`Share ${track.title} via ${target.label}`}
+                onClick={() => onClose(true)}
+                key={target.id}
+              >
+                <span className={`music-track-share-mark is-${target.id}`} aria-hidden="true">{target.mark}</span>
+                <span>{target.label}</span>
+              </a>
+            ))}
+          </div>
+          <div className="music-track-share-link">
+            <span>Track link</span>
+            <div>
+              <input readOnly value={shareUrl ?? ""} aria-label={`Share link for ${track.title}`} onFocus={(event) => event.currentTarget.select()} />
+              <button
+                className="music-track-share-copy"
+                type="button"
+                data-copied={copiedShareUrl === shareUrl ? "true" : "false"}
+                aria-live="polite"
+                onClick={async () => {
+                  if (!shareUrl) return;
+                  setCopiedShareUrl(await onCopyShareLink(shareUrl) ? shareUrl : null);
+                }}
+              >
+                {copiedShareUrl === shareUrl ? "Copied" : "Copy link"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -667,13 +710,29 @@ function isTrackControl(target: EventTarget | null) {
 }
 
 function createTrackShareUrl(trackId: string) {
-  const appPath = window.location.pathname.replace(/\/app\/?$/u, "/app") || "/app";
+  const pathname = window.location.pathname;
+  const appPath = /\/app(?:\/(?:guest|business))?\/?$/u.test(pathname)
+    ? pathname.replace(/\/app(?:\/(?:guest|business))?\/?$/u, "/app/guest")
+    : "/app/guest";
   const url = new URL(appPath, window.location.origin);
+  url.searchParams.set("view", "music");
   url.searchParams.set("track", trackId);
   return url.toString();
 }
 
+function createTrackShareTargets(track: WorkspaceTrack, shareUrl: string) {
+  const message = `Listen to ${track.title} by ${track.artist} on Symbiome`;
+  return [
+    { id: "whatsapp", label: "WhatsApp", mark: "W", href: `https://wa.me/?text=${encodeURIComponent(`${message} ${shareUrl}`)}`, external: true },
+    { id: "facebook", label: "Facebook", mark: "f", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, external: true },
+    { id: "x", label: "X", mark: "X", href: `https://x.com/intent/post?text=${encodeURIComponent(message)}&url=${encodeURIComponent(shareUrl)}`, external: true },
+    { id: "linkedin", label: "LinkedIn", mark: "in", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, external: true },
+    { id: "email", label: "Email", mark: "@", href: `mailto:?subject=${encodeURIComponent(message)}&body=${encodeURIComponent(`${message}\n\n${shareUrl}`)}`, external: false },
+  ] as const;
+}
+
 function copyTextFallback(value: string) {
+  const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const textarea = document.createElement("textarea");
   textarea.value = value;
   textarea.readOnly = true;
@@ -691,6 +750,7 @@ function copyTextFallback(value: string) {
     return false;
   } finally {
     textarea.remove();
+    previousActiveElement?.focus({ preventScroll: true });
   }
 }
 
@@ -2007,11 +2067,20 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     setTrackMenu({ trackId: track.id, x, y, mode, placement, personalPlaylistId });
   }
 
-  function openPlaylistChooser(track: WorkspaceTrack, opener: HTMLButtonElement) {
+  function openAnchoredTrackDialog(track: WorkspaceTrack, opener: HTMLButtonElement, mode: "playlists" | "share") {
     const rect = opener.getBoundingClientRect();
     const fixedPlayer = opener.closest(".workspace-audio-player");
     const anchorY = fixedPlayer ? fixedPlayer.getBoundingClientRect().top - 12 : rect.bottom + 8;
-    openTrackMenu(track, rect.right - 240, anchorY, "playlists", opener, null, fixedPlayer ? "above" : "auto");
+    const popoverWidth = mode === "share" ? 360 : 242;
+    openTrackMenu(track, rect.right - popoverWidth, anchorY, mode, opener, null, fixedPlayer ? "above" : "auto");
+  }
+
+  function openPlaylistChooser(track: WorkspaceTrack, opener: HTMLButtonElement) {
+    openAnchoredTrackDialog(track, opener, "playlists");
+  }
+
+  function openShareChooser(track: WorkspaceTrack, opener: HTMLButtonElement) {
+    openAnchoredTrackDialog(track, opener, "share");
   }
 
   function openPersonalPlaylistMenu(playlist: PersonalPlaylist, x: number, y: number, opener: HTMLElement) {
@@ -2191,8 +2260,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     }
   }
 
-  async function shareTrack(track: WorkspaceTrack) {
-    const shareUrl = createTrackShareUrl(track.id);
+  async function copyTrackShareLink(track: WorkspaceTrack, shareUrl: string) {
     let copied = false;
     try {
       if (navigator.clipboard?.writeText) {
@@ -2204,11 +2272,11 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     if (!copied) copied = copyTextFallback(shareUrl);
     if (copied) {
       setActionStatus(`Link to ${track.title} copied.`);
-      return;
+      return true;
     }
 
-    window.prompt("Copy this track link", shareUrl);
-    setActionStatus(`The link to ${track.title} is ready to copy.`);
+    setActionStatus(`Select the link to ${track.title}, then copy it.`);
+    return false;
   }
 
   function renderTrackTable(source: readonly WorkspaceTrack[], label: string, personalPlaylist: PersonalPlaylist | null = null): ReactNode {
@@ -2275,7 +2343,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
                 <button className={liked.has(track.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(track.id)} aria-label={`${liked.has(track.id) ? "Unlike" : "Like"} ${track.title}`} aria-pressed={liked.has(track.id)}><TrackActionIcon kind="like" active={liked.has(track.id)} /></button>
                 <button type="button" onClick={(event) => openPlaylistChooser(track, event.currentTarget)} aria-label={`Add ${track.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === track.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
                 <button className={downloadedTrackIds.has(track.id) ? "is-downloaded" : ""} type="button" disabled={track.previewDownloadUrl === null} title={track.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(track)} aria-label={track.previewDownloadUrl === null ? `Licensed download unavailable for ${track.title}` : `Download preview of ${track.title}${downloadedTrackIds.has(track.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
-                <button type="button" onClick={() => void shareTrack(track)} aria-label={`Copy link to ${track.title}`}><TrackActionIcon kind="share" /></button>
+                <button type="button" onClick={(event) => openShareChooser(track, event.currentTarget)} aria-label={`Share ${track.title}`} aria-haspopup="dialog" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === track.id && trackMenu.mode === "share"}><TrackActionIcon kind="share" /></button>
                 {personalPlaylist && <button className="music-track-remove-from-playlist" type="button" onClick={() => removeTrackFromPersonalPlaylist(track, personalPlaylist.id)} aria-label={`Remove ${track.title} from ${personalPlaylist.name}`} title="Remove from playlist"><TrackActionIcon kind="delete" /></button>}
               </div>
               {hasError && <p className="music-track-preview-error" role="status">Playback unavailable.{track.spotifyUrl && <> <a href={track.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></>}</p>}
@@ -2414,7 +2482,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
                         <span className="music-recent-play"><PlaybackGlyph playing={isPlaying} /></span>
                       </button>
                       <div className="music-recent-copy"><strong>{track.release?.title ?? track.title}</strong><span>{track.artist}</span><small>{releaseMeta(track)}</small></div>
-                      <button className="music-recent-share" type="button" onClick={() => void shareTrack(track)} aria-label={`Copy link to ${track.title}`}><TrackActionIcon kind="share" /></button>
+                      <button className="music-recent-share" type="button" onClick={(event) => openShareChooser(track, event.currentTarget)} aria-label={`Share ${track.title}`} aria-haspopup="dialog" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === track.id && trackMenu.mode === "share"}><TrackActionIcon kind="share" /></button>
                     </article>
                   );
                 })}
@@ -2575,7 +2643,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
             <button className={liked.has(selectedTrack.id) ? "is-liked" : ""} type="button" onClick={() => toggleLiked(selectedTrack.id)} aria-label={`${liked.has(selectedTrack.id) ? "Unlike" : "Like"} ${selectedTrack.title}`} aria-pressed={liked.has(selectedTrack.id)}><TrackActionIcon kind="like" active={liked.has(selectedTrack.id)} /></button>
             <button type="button" onClick={(event) => openPlaylistChooser(selectedTrack, event.currentTarget)} aria-label={`Add ${selectedTrack.title} to a playlist`} aria-haspopup="menu" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === selectedTrack.id && trackMenu.mode === "playlists"}><TrackActionIcon kind="playlist" /></button>
             <button className={downloadedTrackIds.has(selectedTrack.id) ? "is-downloaded" : ""} type="button" disabled={selectedTrack.previewDownloadUrl === null} title={selectedTrack.previewDownloadUrl === null ? "Licensed download unavailable" : undefined} onClick={() => void downloadTrackPreview(selectedTrack)} aria-label={selectedTrack.previewDownloadUrl === null ? `Licensed download unavailable for ${selectedTrack.title}` : `Download preview of ${selectedTrack.title}${downloadedTrackIds.has(selectedTrack.id) ? " again" : ""}`}><TrackActionIcon kind="download" /></button>
-            <button type="button" onClick={() => void shareTrack(selectedTrack)} aria-label={`Copy link to ${selectedTrack.title}`}><TrackActionIcon kind="share" /></button>
+            <button type="button" onClick={(event) => openShareChooser(selectedTrack, event.currentTarget)} aria-label={`Share ${selectedTrack.title}`} aria-haspopup="dialog" aria-controls="music-track-context-menu" aria-expanded={trackMenu?.trackId === selectedTrack.id && trackMenu.mode === "share"}><TrackActionIcon kind="share" /></button>
           </div>
           {preview.errorTrackId === selectedTrack.id && <p className="workspace-player-error" role="status">Playback unavailable.{selectedTrack.spotifyUrl && <> <a href={selectedTrack.spotifyUrl} target="_blank" rel="noreferrer">Listen on Spotify</a></>}</p>}
         </section>
@@ -2590,13 +2658,15 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
           onClose={closeTrackMenu}
           onToggleLike={() => toggleLiked(menuTrack.id)}
           onShowPlaylists={() => setTrackMenu((current) => current ? { ...current, mode: "playlists" } : current)}
+          onShowShare={() => setTrackMenu((current) => current ? { ...current, mode: "share" } : current)}
           onAddToPlaylist={(playlistId) => addTrackToPlaylist(menuTrack, playlistId)}
           onOpenPlaylistCreator={() => {
             setPlaylistComposerTrackId(menuTrack.id);
             closeTrackMenu(false);
           }}
           onDownload={() => void downloadTrackPreview(menuTrack)}
-          onShare={() => void shareTrack(menuTrack)}
+          shareUrl={trackMenu.mode === "share" ? createTrackShareUrl(menuTrack.id) : null}
+          onCopyShareLink={(shareUrl) => copyTrackShareLink(menuTrack, shareUrl)}
           onLicense={isBusinessWorkspace ? () => openBusinessLicenseRequest(menuTrack) : undefined}
           removeFromPlaylistName={menuTrackPersonalPlaylist?.name ?? null}
           onRemoveFromPlaylist={() => {
