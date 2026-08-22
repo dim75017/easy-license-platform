@@ -12,6 +12,7 @@ const files = {
   asset: "app/api/catalog/ingest/asset/route.ts",
   pipelineAsset: "app/api/catalog/pipeline/assets/route.ts",
   pipelineCoverThumbnail: "app/api/catalog/pipeline/releases/[releaseId]/thumbnail/route.ts",
+  coverThumbnailBackfill: "catalog-audit/backfill_cover_thumbnails.py",
   promote: "app/api/catalog/pipeline/promote/route.ts",
   list: "app/api/catalog/tracks/route.ts",
   stream: "app/api/catalog/tracks/[trackId]/stream/route.ts",
@@ -313,16 +314,28 @@ test("published covers use lightweight variants, bounded caching and ETag revali
   assert.match(publicRead, /Access-Control-Expose-Headers[\s\S]{0,160}X-Cover-Variant/u);
 });
 
-test("the pipeline stores only content-addressed WebP thumbnails for current published covers", async () => {
-  const thumbnail = await source("pipelineCoverThumbnail");
+test("the pipeline stores only content-addressed WebP thumbnails for ready or published covers", async () => {
+  const [thumbnail, backfill] = await Promise.all([
+    source("pipelineCoverThumbnail"),
+    source("coverThumbnailBackfill"),
+  ]);
   assert.match(thumbnail, /await requireCatalogPipeline\(request\)/u);
   assert.match(thumbnail, /MAX_COVER_THUMBNAIL_BYTES = 512 \* 1024/u);
-  assert.match(thumbnail, /release\?\.status !== "published" \|\| !release\.cover_storage_key/u);
+  assert.match(thumbnail, /!\["ready", "published"\]\.includes\(release\.status\)/u);
   assert.match(thumbnail, /coverSourceSha256\(releaseId, release\.cover_storage_key\)/u);
   assert.match(thumbnail, /coverThumbnailStorageKey\(releaseId, release\.cover_storage_key\)/u);
+  assert.match(thumbnail, /bucket\.head\(release\.cover_storage_key\)/u);
+  assert.match(thumbnail, /sourceCover\.customMetadata\?\.sha256 !== sourceSha256/u);
+  assert.match(thumbnail, /request\.headers\.get\("x-source-sha256"\)/u);
+  assert.match(thumbnail, /expectedSourceSha256 !== sourceSha256/u);
+  assert.match(thumbnail, /sha256Pattern\.test\(existing\.customMetadata\?\.sha256 \?\? ""\)/u);
   assert.match(thumbnail, /contentType: "image\/webp"/u);
   assert.match(thumbnail, /stored_cover_thumbnail_integrity_mismatch/u);
   assert.doesNotMatch(thumbnail, /bucket\.delete|\.delete\(storageKey\)/u);
+  assert.match(backfill, /source_sha256 = sha256_file\(source\)/u);
+  assert.match(backfill, /"X-Source-Sha256": source_sha256/u);
+  assert.match(backfill, /"-filter_threads",\s*"1",\s*"-filter_complex_threads",\s*"1"/u);
+  assert.match(backfill, /subprocess\.run\([\s\S]{0,420}timeout=180/u);
 });
 
 test("owner-direct promotion requires an explicit fail-closed missing-artwork opt-in", async () => {

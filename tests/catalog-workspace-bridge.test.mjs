@@ -154,7 +154,8 @@ test("Discover requests distinct releases and deep links can resolve a track out
     "a temporary deep-link request failure must remain retryable",
   );
   assert.match(resolver, /setCatalogRequestFailed\(true\)/u);
-  assert.match(workspace, /\}, \[catalogLoadState, catalogRetryNonce\]\);/u);
+  assert.match(resolver, /currentView !== requestedView[\s\S]{0,140}activeViewRef\.current !== requestedView[\s\S]{0,140}currentParams\.get\("track"\)\?\.trim\(\) !== trackId/u);
+  assert.match(workspace, /\}, \[allowedViews, catalogLoadState, catalogRetryNonce, defaultView, isBusinessWorkspace, view\]\);/u);
 });
 
 test("catalog response mapper exposes only safe routes plus release and pagination metadata", async () => {

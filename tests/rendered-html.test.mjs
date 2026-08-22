@@ -1402,12 +1402,13 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(workspace, /import \{ WorkspaceProfileSwitcher \} from "\.\/WorkspaceProfileSwitcher"/);
   assert.doesNotMatch(workspace, /music-app-sidebar-bottom/, "the profile control should no longer live at the bottom of the sidebar");
   assert.equal((workspace.match(/<WorkspaceProfileSwitcher/g) ?? []).length, 1, "the Creator workspace should expose one profile control");
-  assert.match(workspace, /<WorkspaceProfileSwitcher\s+activeRole="creator"\s+compact[\s\S]{0,220}activeLibraryView=\{view === "channels" \|\| view === "licences" \? view : undefined\}[\s\S]{0,120}onOpenLibraryView=\{navigateToView\}/);
+  assert.match(workspace, /<WorkspaceProfileSwitcher\s+activeRole=\{workspaceRole\}\s+compact[\s\S]{0,300}activeLibraryView=\{view === "channels" \|\| view === "licences" \|\| view === "license-song" \|\| view === "custom-song" \? view : undefined\}[\s\S]{0,120}onOpenLibraryView=\{navigateToView\}/);
   assert.match(switcher, /type WorkspaceRole = "creator" \| "business" \| "admin"/);
-  for (const [role, href] of [["Creator", "/app"], ["Business", "/business"], ["Admin", "/admin"]]) {
+  for (const [role, href] of [["Creator", "/app"], ["Business", "/app/business?view=music"], ["Admin", "/admin"]]) {
+    const escapedHref = href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     assert.match(
       switcher,
-      new RegExp(`href="${href}" role="menuitem"[\\s\\S]{0,260}<strong>${role}</strong>`),
+      new RegExp(`href="${escapedHref}" role="menuitem"[\\s\\S]{0,260}<strong>${role}</strong>`),
       `${role} should remain available from the profile menu`,
     );
   }
@@ -1418,6 +1419,8 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(switcher, /<span className="music-profile-menu-label">ACCOUNT &amp; HELP<\/span>/);
   assert.match(switcher, /href="\/app\?view=licences" role="menuitem"[\s\S]{0,260}<strong>Licences<\/strong>/);
   assert.match(switcher, /href="\/app\?view=channels" role="menuitem"[\s\S]{0,260}<strong>Channels<\/strong>/);
+  assert.match(switcher, /activeRole === "business"[\s\S]{0,260}href="\/app\/business\?view=license-song"[\s\S]{0,260}<strong>License a song<\/strong>/);
+  assert.match(switcher, /href="\/app\/business\?view=custom-song"[\s\S]{0,260}<strong>Request custom song<\/strong>/);
   assert.match(switcher, /href="\/help" role="menuitem"[\s\S]{0,180}<strong>Help centre<\/strong>/);
   assert.match(switcher, /handleLibraryMenuClick[\s\S]{0,520}event\.metaKey[\s\S]{0,180}event\.preventDefault\(\)[\s\S]{0,120}onOpenLibraryView\(nextView\)/);
   assert.match(switcher, /shouldRestoreFocus[\s\S]{0,180}requestAnimationFrame\(\(\) => buttonRef\.current\?\.focus\(\)\)/);
@@ -1446,6 +1449,56 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;[^}]*bottom:\s*auto;[^}]*max-height:\s*calc\(100vh - 102px\);/s);
   assert.match(workspaceCss, /@media \(max-width: 860px\)[\s\S]{0,220}\.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
   assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,300}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;[^}]*max-height:\s*calc\(100vh - 84px\);/s);
+});
+
+test("opens the Business profile on its own library and keeps complete licensing briefs inside Symbiome", async () => {
+  const [page, workspace, form, switcher, css] = await Promise.all([
+    source("app/app/business/page.tsx"),
+    source("app/components/CreatorWorkspace.tsx"),
+    source("app/components/BusinessWorkspaceRequest.tsx"),
+    source("app/components/WorkspaceProfileSwitcher.tsx"),
+    source("app/workspace-music.css"),
+  ]);
+
+  assert.match(page, /<CreatorWorkspace workspaceRole="business" \/>/);
+  assert.match(page, /title: "Business music library"/);
+  assert.match(switcher, /href="\/app\/business\?view=music" role="menuitem"/);
+  assert.match(workspace, /const defaultView: LibraryView = workspaceRole === "business" \? "music" : "discover"/);
+  assert.match(workspace, /const businessLibraryViewIds: readonly LibraryView\[\] = \["music", "playlists", "liked", "license-song", "custom-song"\]/);
+  assert.match(workspace, /label: "START A PROJECT"[\s\S]{0,360}label: "License a song"[\s\S]{0,260}label: "Custom song"/);
+  assert.match(workspace, /<BusinessLibraryIntro onLicense=\{\(\) => openBusinessLicenseRequest\(null\)\} onCustom=\{\(\) => navigateToView\("custom-song"\)\} \/>/);
+  assert.match(workspace, /<BusinessWorkspaceRequest kind="license" selectedTrack=\{selectedBusinessLicenseTrack\} onBrowseLibrary=\{showMusic\} \/>/);
+  assert.match(workspace, /<BusinessWorkspaceRequest kind="custom" onBrowseLibrary=\{showMusic\} \/>/);
+  assert.match(workspace, /function openBusinessLicenseRequest\(track: WorkspaceTrack \| null\)[\s\S]{0,420}writeBusinessLicenseSelectionToLocation\(track\?\.id \?\? null, historyMode\)/);
+  assert.match(workspace, /isBusinessWorkspace && !personalPlaylist && <button className="music-track-license"[\s\S]{0,420}openBusinessLicenseRequest\(track\)[\s\S]{0,240}<TrackActionIcon kind="license" \/>/);
+
+  for (const field of ["name", "email", "company", "project_name", "usage", "territory", "rights_term", "budget", "timeline", "notes"]) {
+    assert.match(form, new RegExp(`name="${field}"`), `the Business brief should collect ${field}`);
+  }
+  assert.match(form, /selectedTrack && \([\s\S]{0,500}name="track" value=\{`\$\{selectedTrack\.title\} — \$\{selectedTrack\.artist\}`\}[\s\S]{0,180}name="track_id" value=\{selectedTrack\.id\}/);
+  assert.match(form, /kind === "license" && !selectedTrack && <label className="is-full"><span>Track title and artist<\/span><input name="track"/);
+  assert.match(form, /\["Catalog track ID", value\(form, "track_id"\)\]/);
+  assert.match(form, /kind === "custom" && <label className="is-full"><span>Creative direction<\/span><textarea name="creative_direction"/);
+  assert.match(form, /kind === "custom" && <label className="is-full"><span>Deliverables<\/span><input name="deliverables"/);
+  assert.match(form, /Launch \/ delivery deadline <small>Optional<\/small>[\s\S]{0,100}<input name="timeline" type="date" \/>/);
+  assert.match(form, /type: "sync" as const[\s\S]{0,260}project: buildProjectBrief\(kind, form\)[\s\S]{0,140}budget: value\(form, "budget"\)[\s\S]{0,100}timeline: value\(form, "timeline"\)/);
+  assert.match(form, /fetch\("\/api\/leads", \{[\s\S]{0,120}method: "POST"[\s\S]{0,180}JSON\.stringify\(payload\)/);
+  assert.match(form, /headingRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(form, /ref=\{headingRef\} tabIndex=\{-1\}/);
+  assert.match(form, /window\.sessionStorage\.setItem\(draftStorageKey\(kind\), JSON\.stringify\(draft\)\)/);
+  assert.match(form, /document\.activeElement && form\.contains\(document\.activeElement\)[\s\S]{0,120}restoreBusinessRequestDraft\(kind, form, Boolean\(selectedTrackId\)\)/);
+  assert.match(form, /onInput=\{\(event\) => saveBusinessRequestDraft\(kind, event\.currentTarget, Boolean\(selectedTrack\)\)\}/);
+  assert.match(form, /clearBusinessRequestDraft\(kind\)[\s\S]{0,180}setState\("sent"\)/);
+  assert.match(workspace, /function scrollWorkspaceToTop\(\)[\s\S]{0,120}window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
+  assert.match(workspace, /function openBusinessLicenseRequest[\s\S]{0,520}scrollWorkspaceToTop\(\)/);
+  assert.match(css, /V27: the Business profile keeps the catalogue and adds two complete in-product brief paths/);
+  assert.match(css, /\.business-workspace-cta::before\s*\{[^}]*background:\s*var\(--business-cta-fill\);[^}]*translate3d\(-102%, 0, 0\)/s);
+  assert.match(css, /\.business-selected-track\s*\{[^}]*grid-column:\s*1 \/ -1/s);
+  assert.match(css, /\.business-library-intro > div:first-child > span\s*\{[^}]*color:\s*#ffb29c/s);
+  assert.match(css, /\.business-selected-track > span\s*\{[^}]*color:\s*#9d3a25/s);
+  assert.match(css, /\.business-music-app \.music-track-table-head,[\s\S]{0,180}224px/s);
+  assert.match(css, /\.business-request-footer p\s*\{[^}]*rgba\(41, 40, 50, \.72\);[^}]*font-size:\s*12px/s);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]{0,900}\.business-request-section\s*\{\s*grid-template-columns:\s*1fr/s);
 });
 
 test("keeps the Business profile switcher persistent and the Admin profile in the topbar", async () => {
@@ -1778,24 +1831,31 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /V8: the sticky header lockup keeps one height through the desktop scroll threshold\.[\s\S]{0,220}@media \(min-width:\s*801px\)[\s\S]{0,160}\.page-scrolled \.public-shell \.site-header \.site-header-inner\s*\{[^}]*min-height:\s*90px;/s);
   const stableHeaderRule = symbioseBrandCss.slice(symbioseBrandCss.indexOf("/* V8:"));
   assert.doesNotMatch(stableHeaderRule, /lofi-girl-wordmark|font-size|--lofi-wordmark-height|transform|scale/, "scroll stability should not resize the wordmark itself");
-  assert.match(musicWorkspace, /useState<LibraryView>\("discover"\)/);
-  assert.match(musicWorkspace, /const libraryViewIds: readonly LibraryView\[\] = \["discover", "music", "playlists", "liked", "downloads", "channels", "licences"\]/);
+  assert.match(musicWorkspace, /const defaultView: LibraryView = workspaceRole === "business" \? "music" : "discover"/);
+  assert.match(musicWorkspace, /useState<LibraryView>\(defaultView\)/);
+  assert.match(musicWorkspace, /const creatorLibraryViewIds: readonly LibraryView\[\] = \["discover", "music", "playlists", "liked", "downloads", "channels", "licences"\]/);
+  assert.match(musicWorkspace, /const libraryViewIds: readonly LibraryView\[\] = \[\.\.\.creatorLibraryViewIds, "license-song", "custom-song"\]/);
   assert.match(musicWorkspace, /function isLibraryView\(value: string \| null\): value is LibraryView[\s\S]{0,160}libraryViewIds\.includes\(value as LibraryView\)/);
-  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(\): LibraryView[\s\S]{0,180}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,200}isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"[\s\S]{0,120}params\.get\("myPlaylist"\)[\s\S]{0,60}return "playlists"[\s\S]{0,160}params\.get\("view"\)[\s\S]{0,160}return "discover"/);
+  assert.match(musicWorkspace, /function readLibraryViewFromLocation\(fallbackView: LibraryView = "discover", allowedViews: readonly LibraryView\[\] = libraryViewIds\): LibraryView[\s\S]{0,260}requestedView === "license-song" \|\| requestedView === "custom-song"[\s\S]{0,180}allowedViews\.includes\(requestedView\)[\s\S]{0,120}params\.get\("track"\)\?\.trim\(\)[\s\S]{0,100}return "music"[\s\S]{0,220}isCatalogPlaylistId\(requestedPlaylist\)[\s\S]{0,60}return "playlists"[\s\S]{0,160}params\.get\("myPlaylist"\)[\s\S]{0,80}return "playlists"/);
   assert.match(musicWorkspace, /const requestedPersonalPlaylist = params\.get\("myPlaylist"\)\?\.trim\(\) \?\? ""/);
   assert.match(musicWorkspace, /isStoredTrackId\(requestedPersonalPlaylist\)[\s\S]{0,160}personalPlaylist: requestedPersonalPlaylist/);
-  assert.match(musicWorkspace, /function writeLibraryViewToLocation\(view: LibraryView, mode: "push" \| "replace"\)[\s\S]{0,180}url\.searchParams\.set\("view", view\)[\s\S]{0,120}view !== "music"[\s\S]{0,80}url\.searchParams\.delete\("track"\)/);
+  assert.match(musicWorkspace, /function writeLibraryViewToLocation\([\s\S]{0,180}preserveTrack = view === "music" \|\| view === "license-song"[\s\S]{0,180}url\.searchParams\.set\("view", view\)[\s\S]{0,100}if \(!preserveTrack\)[\s\S]{0,100}url\.searchParams\.delete\("track"\)/);
+  assert.match(musicWorkspace, /function writeBusinessLicenseSelectionToLocation\(trackId: string \| null[\s\S]{0,360}url\.searchParams\.set\("view", "license-song"\)[\s\S]{0,220}url\.searchParams\.set\("track", trackId\)/);
   assert.match(musicWorkspace, /if \(view !== "playlists"\) \{[\s\S]{0,100}url\.searchParams\.delete\("playlist"\)[\s\S]{0,100}url\.searchParams\.delete\("myPlaylist"\)/);
   assert.match(musicWorkspace, /function writePlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,180}url\.searchParams\.set\("playlist", playlist\)/);
   assert.match(musicWorkspace, /function writePersonalPlaylistSelectionToLocation[\s\S]{0,180}url\.searchParams\.set\("view", "playlists"\)[\s\S]{0,240}url\.searchParams\.set\("myPlaylist", playlist\)/);
   assert.match(musicWorkspace, /mode === "push"[\s\S]{0,100}window\.history\.pushState[\s\S]{0,100}window\.history\.replaceState/);
   assert.match(musicWorkspace, /syncViewFromLocation\(\)[\s\S]{0,180}window\.addEventListener\("popstate", handlePopState\)[\s\S]{0,120}window\.removeEventListener\("popstate", handlePopState\)/);
-  assert.match(musicWorkspace, /function navigateToView\(nextView: LibraryView\)[\s\S]{0,420}setView\(nextView\)[\s\S]{0,100}writeLibraryViewToLocation\(nextView, historyMode\)/);
+  const navigateToViewBlock = musicWorkspace.match(/function navigateToView\(nextView: LibraryView\)([\s\S]*?)\r?\n  \}\r?\n\r?\n  function showMusic/);
+  assert.ok(navigateToViewBlock, "the workspace should keep a canonical view navigation helper");
+  assert.match(navigateToViewBlock[1], /setBusinessLicenseTrackId\(isStoredTrackId\(requestedTrackId\) \? requestedTrackId : null\)/);
+  assert.match(navigateToViewBlock[1], /setBusinessLicenseTrackId\(null\)/);
+  assert.match(navigateToViewBlock[1], /leavesBusinessLicense[\s\S]{0,900}setView\(nextView\)[\s\S]{0,220}writeLibraryViewToLocation\(nextView, historyMode, preserveTrack\)/);
   assert.doesNotMatch(musicWorkspace, /ProductNavigation|music-product-nav/);
   assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/, "Discover should open directly without the retired tuning setup");
 
-  const navBlock = musicWorkspace.match(/const navGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const viewLabels/);
+  const navBlock = musicWorkspace.match(/const creatorNavGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const businessNavGroups/);
   assert.ok(navBlock, "the connected workspace should keep one canonical grouped navigation");
   const workspaceNavLabels = [...navBlock[1].matchAll(/\{\s*id:\s*"[^"]+",\s*label:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads"]);
@@ -1806,10 +1866,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /kind === "playlists"[\s\S]{0,220}<rect x="4" y="4\.5" width="14" height="12" rx="2\.5"[\s\S]{0,180}m9\.5 8\.2 4\.2 2\.4-4\.2 2\.4V8\.2Z/);
   assert.match(musicWorkspace, /kind === "downloads"[\s\S]{0,180}<path d="M12 4v10"[\s\S]{0,160}M5 17\.5v1A1\.5 1\.5 0 0 0 6\.5 20h11/);
   assert.match(musicWorkspace, /<i aria-hidden="true"><WorkspaceNavIcon kind=\{item\.icon\} \/><\/i>/);
-  assert.match(musicWorkspace, /aria-label="Creator music navigation"/);
+  assert.match(musicWorkspace, /aria-label=\{`\$\{isBusinessWorkspace \? "Business" : "Creator"\} music navigation`\}/);
   assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
   assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 5, "Discover, Music, Playlists, Liked tracks and Downloads should share one full-width canvas");
-  assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked" \|\| view === "downloads";/);
+  assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked" \|\| view === "downloads" \|\| view === "license-song" \|\| view === "custom-song";/);
   assert.match(musicWorkspace, /<header className=\{`music-app-topbar\$\{usesWideCanvas \? " is-wide" : ""\}`\}>/);
   const musicTopbar = musicWorkspace.match(/<header className=\{`music-app-topbar[\s\S]*?<\/header>/);
   assert.ok(musicTopbar, "the connected workspace should keep one top bar");
@@ -1839,7 +1899,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(playlistLibraryBlock, /\{catalogueStatus\}[\s\S]{0,80}\{trackList\}[\s\S]{0,80}\{cataloguePager\}/);
   assert.match(playlistLibraryBlock, /className="music-personal-playlists" aria-labelledby="personal-playlists-title"[\s\S]{0,220}<h2 id="personal-playlists-title">My playlists<\/h2>[\s\S]{0,220}onClick=\{onCreatePlaylist\}>Create playlist/);
   assert.match(playlistLibraryBlock, /className="music-symbiome-playlists" aria-labelledby="symbiome-playlists-title"[\s\S]{0,220}<h2 id="symbiome-playlists-title">Symbiome playlists<\/h2>/);
-  assert.match(playlistLibraryBlock, /personalPlaylists\.map\(\(playlist\) => <PersonalPlaylistCard playlist=\{playlist\} onOpen=\{onOpenPersonal\}/);
+  assert.match(playlistLibraryBlock, /personalPlaylists\.map\(\(playlist, index\) => <PersonalPlaylistCard playlist=\{playlist\} onOpen=\{onOpenPersonal\}[\s\S]{0,180}priority=\{index < 3\}/);
   assert.doesNotMatch(playlistLibraryBlock, /open\.spotify\.com|Spotify/);
   for (const secondaryView of ["ChannelsView", "LicencesView"]) {
     assert.match(musicWorkspace, new RegExp(`function ${secondaryView}[\\s\\S]{0,180}className="music-secondary-view"`));
@@ -1911,7 +1971,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /onKeyDown=\{\(event\) => \{[\s\S]{0,160}event\.target !== event\.currentTarget[\s\S]{0,260}event\.key === "ContextMenu" \|\| \(event\.shiftKey && event\.key === "F10"\)[\s\S]{0,420}event\.key !== "Enter" && event\.key !== " "[\s\S]{0,120}togglePreview\(track\)/);
   const rowActions = musicWorkspace.match(/<div className="music-track-actions">([\s\S]*?)<\/div>/);
   assert.ok(rowActions, "every music row should expose its primary actions and the personal-playlist removal when applicable");
-  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 5, "track rows should expose Like, Add, Download, Share and a conditional playlist removal");
+  assert.equal((rowActions[1].match(/<button\b/g) ?? []).length, 6, "track rows should expose the standard actions, a Business licence action and conditional playlist removal");
+  assert.match(rowActions[1], /isBusinessWorkspace && !personalPlaylist && <button className="music-track-license"[\s\S]{0,360}openBusinessLicenseRequest\(track\)[\s\S]{0,220}<TrackActionIcon kind="license" \/>/);
   assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
   assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
   assert.match(rowActions[1], /disabled=\{track\.previewDownloadUrl === null\}[\s\S]{0,260}onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,420}Licensed download unavailable for \$\{track\.title\}[\s\S]{0,260}<TrackActionIcon kind="download"/);
@@ -1920,14 +1981,15 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
   const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
   assert.ok(fixedPlayerActions, "the fixed player should mirror the four primary actions");
-  assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 4, "the fixed player should expose Like, Add, Download and Share");
+  assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 5, "the fixed player should expose the standard actions plus the conditional Business licence action");
+  assert.match(fixedPlayerActions[1], /isBusinessWorkspace && <button[\s\S]{0,180}openBusinessLicenseRequest\(selectedTrack\)[\s\S]{0,160}<TrackActionIcon kind="license" \/>/);
   assert.match(fixedPlayerActions[1], /shareTrack\(selectedTrack\)[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
   assert.doesNotMatch(musicWorkspace, /More options for|music-track-more|>\s*(?:â€¢â€¢â€¢|•••)\s*<\/button>/, "the obsolete More action should not return");
   const actionIcon = musicWorkspace.match(/function TrackActionIcon\([\s\S]*?\n\}/);
   assert.ok(actionIcon, "the actions should share one icon component");
-  assert.match(actionIcon[0], /kind: "like" \| "playlist" \| "download" \| "share" \| "delete"/);
+  assert.match(actionIcon[0], /kind: "like" \| "playlist" \| "download" \| "share" \| "delete" \| "license"/);
   assert.match(actionIcon[0], /<svg viewBox="0 0 24 24"[\s\S]{0,160}stroke="currentColor"/);
-  for (const kind of ["like", "playlist", "download", "share", "delete"]) {
+  for (const kind of ["like", "playlist", "download", "share", "delete", "license"]) {
     assert.match(actionIcon[0], new RegExp(`kind === "${kind}"`), `${kind} should have an SVG glyph`);
   }
 
@@ -1936,12 +1998,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /id="music-track-context-menu"\s*className="music-track-context-menu"\s*role=\{state\.mode === "actions" \? "menu" : "dialog"\}\s*aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : `Add \$\{track\.title\} to a playlist`\}/);
   const contextActions = musicWorkspace.match(/state\.mode === "actions" \? \(\s*<div className="music-track-context-options">([\s\S]*?)<\/div>\s*\) : \(/);
   assert.ok(contextActions, "the track context menu should expose one primary action group");
-  assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 5, "the context menu should expose the four primary actions plus conditional removal from the open playlist");
+  assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 6, "the context menu should expose the primary actions plus conditional removal and Business licensing");
   assert.match(contextActions[1], /removeFromPlaylistName && <button className="is-destructive"[\s\S]{0,220}<TrackActionIcon kind="delete" \/>[\s\S]{0,100}Remove from \{removeFromPlaylistName\}/);
   assert.match(contextActions[1], /role="menuitemcheckbox" aria-checked=\{liked\}/);
   assert.match(contextActions[1], /<TrackActionIcon kind="playlist" \/>[\s\S]{0,80}Add to playlist/);
   assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,140}Download listening copy[\s\S]{0,80}Download unavailable/);
   assert.match(contextActions[1], /<TrackActionIcon kind="share" \/>[\s\S]{0,80}Copy track link/);
+  assert.match(contextActions[1], /onLicense && <button[\s\S]{0,180}<TrackActionIcon kind="license" \/>[\s\S]{0,80}License this song/);
   assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,200}window\.location\.pathname\.replace\(\/\\\/app\\\/\?\$\/u, "\/app"\)[\s\S]{0,120}new URL\(appPath, window\.location\.origin\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
   assert.match(musicWorkspace, /navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,180}window\.prompt\("Copy this track link", shareUrl\)/);
   assert.match(musicWorkspace, /aria-pressed=\{containsTrack\}[\s\S]{0,260}Remove from playlist/);

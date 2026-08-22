@@ -4,6 +4,7 @@ import io
 import json
 import math
 from pathlib import Path
+import sqlite3
 import struct
 import tempfile
 import unittest
@@ -286,10 +287,41 @@ class StateTests(unittest.TestCase):
                         "source_mime_type",
                         "source_format",
                         "source_stream_copy_eligible",
+                        "release_id",
+                        "cover_thumbnail_uploaded",
                     }.issubset(columns)
                 )
             finally:
                 connection.close()
+
+    def test_thumbnail_migration_keeps_historical_publications_unverified(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state_path = Path(temporary) / "pipeline.sqlite3"
+            legacy = sqlite3.connect(state_path)
+            try:
+                legacy.execute(
+                    "CREATE TABLE pipeline_items ("
+                    "candidate_id TEXT PRIMARY KEY, status TEXT NOT NULL, updated_at TEXT NOT NULL)"
+                )
+                legacy.execute(
+                    "INSERT INTO pipeline_items (candidate_id, status, updated_at) VALUES (?, ?, ?)",
+                    ("legacy-published", "published", "2026-08-22T00:00:00Z"),
+                )
+                legacy.commit()
+            finally:
+                legacy.close()
+
+            connection = process.open_pipeline_state(state_path)
+            try:
+                migrated = connection.execute(
+                    "SELECT status, cover_thumbnail_uploaded FROM pipeline_items "
+                    "WHERE candidate_id = ?",
+                    ("legacy-published",),
+                ).fetchone()
+            finally:
+                connection.close()
+
+        self.assertEqual(tuple(migrated), ("published", 0))
 
     def test_promotion_success_accepts_the_backend_response_contract(self):
         self.assertTrue(
@@ -329,6 +361,7 @@ class StateTests(unittest.TestCase):
                     metadata_uploaded=1,
                     master_uploaded=1,
                     cover_uploaded=1,
+                    cover_thumbnail_uploaded=1,
                 )
                 same = process.ensure_state_row(connection, exact_record(), "batch:test", True, True)
                 self.assertEqual(same["status"], "published")
@@ -337,6 +370,8 @@ class StateTests(unittest.TestCase):
                 self.assertEqual(reset["metadata_uploaded"], 0)
                 self.assertEqual(reset["master_uploaded"], 0)
                 self.assertEqual(reset["cover_uploaded"], 0)
+                self.assertEqual(reset["cover_thumbnail_uploaded"], 0)
+                self.assertIsNone(reset["release_id"])
                 self.assertEqual(reset["human_made_cleared_ack"], 0)
             finally:
                 connection.close()
@@ -353,7 +388,12 @@ class StateTests(unittest.TestCase):
                     True,
                     True,
                 )
-                process.update_state(connection, row["candidate_id"], status="published")
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="published",
+                    cover_thumbnail_uploaded=1,
+                )
                 downloader = mock.Mock()
                 api = mock.Mock()
                 outcome = process.process_record(
@@ -377,6 +417,53 @@ class StateTests(unittest.TestCase):
         self.assertEqual(outcome, "already_published")
         downloader.download.assert_not_called()
         api.ingest_metadata.assert_not_called()
+
+    def test_legacy_published_checkpoint_is_left_to_the_bounded_backfill(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="published",
+                    track_id=12,
+                    cover_uploaded=1,
+                    cover_thumbnail_uploaded=0,
+                    release_id=None,
+                )
+                downloader = mock.Mock()
+                api = mock.Mock()
+                outcome = process.process_record(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    downloader,
+                    api,
+                    Path("ffmpeg"),
+                    rights_cleared=True,
+                    human_made_cleared=True,
+                    verification_mode="catalog_owner_direct",
+                    owner_evidence={
+                        "ownerAttestationSha256": "1" * 64,
+                        "catalogueScopeSha256": "2" * 64,
+                        "selectionSha256": "3" * 64,
+                    },
+                )
+            finally:
+                connection.close()
+
+        self.assertEqual(outcome, "already_published")
+        downloader.download.assert_not_called()
+        api.upload_asset.assert_not_called()
+        api.upload_release_thumbnail.assert_not_called()
 
     def test_cover_only_resume_uploads_provided_artwork_before_promotion(self):
         record = direct_record()
@@ -406,7 +493,21 @@ class StateTests(unittest.TestCase):
                 downloader = mock.Mock()
                 api = mock.Mock()
                 calls: list[str] = []
-                api.upload_asset.side_effect = lambda *_args, **_kwargs: calls.append("upload")
+                api.upload_asset.side_effect = lambda *_args, **_kwargs: (
+                    calls.append("cover_artwork")
+                    or {
+                        "asset": {
+                            "status": "available",
+                            "kind": "cover_artwork",
+                            "trackId": 12,
+                            "releaseId": 13,
+                            "sha256": "b" * 64,
+                        }
+                    }
+                )
+                api.upload_release_thumbnail.side_effect = (
+                    lambda *_args, **_kwargs: calls.append("cover_thumbnail") or {"stored": True}
+                )
 
                 def promote(**_kwargs):
                     calls.append("promote")
@@ -420,32 +521,40 @@ class StateTests(unittest.TestCase):
                     "b" * 64,
                     123,
                 )
-                outcome = process.process_record(
-                    connection,
-                    record,
-                    process.DIRECT_BATCH_KEY,
-                    downloader,
-                    api,
-                    Path("ffmpeg"),
-                    rights_cleared=True,
-                    human_made_cleared=True,
-                    verification_mode="catalog_owner_direct",
-                    owner_evidence={
-                        "ownerAttestationSha256": "1" * 64,
-                        "catalogueScopeSha256": "2" * 64,
-                        "selectionSha256": "3" * 64,
-                    },
-                    cover_cache=cover_cache,
-                )
+                thumbnail_bytes = b"RIFF" + (8).to_bytes(4, "little") + b"WEBPVP8 "
+
+                def thumbnail(_ffmpeg, _source, destination):
+                    destination.write_bytes(thumbnail_bytes)
+                    return hashlib.sha256(thumbnail_bytes).hexdigest(), len(thumbnail_bytes)
+
+                with mock.patch.object(process, "build_cover_thumbnail", side_effect=thumbnail):
+                    outcome = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        cover_cache=cover_cache,
+                    )
                 completed = connection.execute(
-                    "SELECT status, cover_uploaded FROM pipeline_items WHERE candidate_id = ?",
+                    "SELECT status, cover_uploaded, cover_thumbnail_uploaded, release_id "
+                    "FROM pipeline_items WHERE candidate_id = ?",
                     (row["candidate_id"],),
                 ).fetchone()
             finally:
                 connection.close()
         self.assertEqual(outcome, "published")
-        self.assertEqual((completed["status"], completed["cover_uploaded"]), ("published", 1))
-        self.assertEqual(calls, ["upload", "promote"])
+        self.assertEqual(tuple(completed), ("published", 1, 1, 13))
+        self.assertEqual(calls, ["cover_artwork", "cover_thumbnail", "promote"])
         downloader.download.assert_not_called()
         api.ingest_metadata.assert_not_called()
         api.ingest_source_master.assert_not_called()
@@ -455,6 +564,238 @@ class StateTests(unittest.TestCase):
             Path("ffmpeg"),
         )
         self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "cover_artwork")
+        thumbnail_call = api.upload_release_thumbnail.call_args
+        self.assertEqual(thumbnail_call.kwargs["release_id"], 13)
+        self.assertEqual(
+            thumbnail_call.kwargs["sha256"],
+            hashlib.sha256(thumbnail_bytes).hexdigest(),
+        )
+
+    def test_thumbnail_failure_keeps_cover_checkpoint_open_and_blocks_promotion(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="assets_uploaded",
+                    ingest_id=11,
+                    track_id=12,
+                    source_sha256="a" * 64,
+                    source_mime_type="audio/wav",
+                    source_format="wav",
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    peaks_uploaded=1,
+                )
+                downloader = mock.Mock()
+                api = mock.Mock()
+                api.upload_asset.return_value = {
+                    "asset": {
+                        "status": "available",
+                        "kind": "cover_artwork",
+                        "trackId": 12,
+                        "releaseId": 13,
+                        "sha256": "b" * 64,
+                    }
+                }
+                api.upload_release_thumbnail.side_effect = process.PipelineError(
+                    "cover_thumbnail_upload_failed"
+                )
+                cover_cache = mock.Mock()
+                cover_cache.prepare.return_value = (
+                    Path("cover.jpg"),
+                    "image/jpeg",
+                    "b" * 64,
+                    123,
+                )
+                with (
+                    mock.patch.object(
+                        process,
+                        "build_cover_thumbnail",
+                        return_value=("c" * 64, 20),
+                    ),
+                    self.assertRaisesRegex(
+                        process.PipelineError,
+                        "cover_thumbnail_upload_failed",
+                    ),
+                ):
+                    process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        cover_cache=cover_cache,
+                    )
+                failed = connection.execute(
+                    "SELECT status, cover_uploaded, cover_thumbnail_uploaded, release_id "
+                    "FROM pipeline_items WHERE candidate_id = ?",
+                    (row["candidate_id"],),
+                ).fetchone()
+
+                api.upload_release_thumbnail.side_effect = None
+                api.upload_release_thumbnail.return_value = {"stored": True}
+                api.promote.return_value = {"trackStatus": "published"}
+                with mock.patch.object(
+                    process,
+                    "build_cover_thumbnail",
+                    return_value=("c" * 64, 20),
+                ):
+                    repaired = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        cover_cache=cover_cache,
+                    )
+                completed = connection.execute(
+                    "SELECT status, cover_uploaded, cover_thumbnail_uploaded, release_id "
+                    "FROM pipeline_items WHERE candidate_id = ?",
+                    (row["candidate_id"],),
+                ).fetchone()
+            finally:
+                connection.close()
+
+        self.assertEqual(tuple(failed), ("failed", 1, 0, 13))
+        self.assertEqual(repaired, "published")
+        self.assertEqual(tuple(completed), ("published", 1, 1, 13))
+        api.upload_asset.assert_called_once()
+        self.assertEqual(api.upload_release_thumbnail.call_count, 2)
+        api.promote.assert_called_once()
+
+    def test_published_checkpoint_repairs_only_missing_cover_thumbnail(self):
+        record = direct_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            connection = process.open_pipeline_state(Path(temporary) / "pipeline.sqlite3")
+            try:
+                row = process.ensure_state_row(
+                    connection,
+                    record,
+                    process.DIRECT_BATCH_KEY,
+                    True,
+                    True,
+                )
+                process.update_state(
+                    connection,
+                    row["candidate_id"],
+                    status="published",
+                    ingest_id=11,
+                    track_id=12,
+                    release_id=13,
+                    source_sha256="a" * 64,
+                    source_mime_type="audio/wav",
+                    source_format="wav",
+                    measured_duration_ms=120_000,
+                    metadata_uploaded=1,
+                    master_uploaded=1,
+                    streaming_uploaded=1,
+                    peaks_uploaded=1,
+                    cover_uploaded=1,
+                    cover_thumbnail_uploaded=0,
+                    cover_sha256="b" * 64,
+                    cover_byte_size=123,
+                    cover_content_type="image/jpeg",
+                )
+                downloader = mock.Mock()
+                api = mock.Mock()
+                api.upload_release_thumbnail.return_value = {"stored": True}
+                cover_cache = mock.Mock()
+                cover_cache.prepare.return_value = (
+                    Path("cover.jpg"),
+                    "image/jpeg",
+                    "b" * 64,
+                    123,
+                )
+                thumbnail_bytes = b"RIFF" + (8).to_bytes(4, "little") + b"WEBPVP8 "
+
+                def thumbnail(_ffmpeg, _source, destination):
+                    destination.write_bytes(thumbnail_bytes)
+                    return hashlib.sha256(thumbnail_bytes).hexdigest(), len(thumbnail_bytes)
+
+                with mock.patch.object(process, "build_cover_thumbnail", side_effect=thumbnail) as builder:
+                    outcome = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        cover_cache=cover_cache,
+                    )
+                    completed = connection.execute(
+                        "SELECT status, cover_thumbnail_uploaded FROM pipeline_items "
+                        "WHERE candidate_id = ?",
+                        (row["candidate_id"],),
+                    ).fetchone()
+                    second = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                        cover_cache=cover_cache,
+                    )
+            finally:
+                connection.close()
+
+        self.assertEqual(outcome, "published")
+        self.assertEqual(tuple(completed), ("published", 1))
+        self.assertEqual(second, "already_published")
+        builder.assert_called_once()
+        cover_cache.prepare.assert_called_once()
+        api.upload_release_thumbnail.assert_called_once()
+        downloader.download.assert_not_called()
+        api.ingest_metadata.assert_not_called()
+        api.ingest_source_master.assert_not_called()
+        api.upload_asset.assert_not_called()
+        api.promote.assert_not_called()
 
     def test_owner_direct_without_cover_promotes_without_image_work(self):
         record = direct_record()
@@ -557,6 +898,7 @@ class StateTests(unittest.TestCase):
                     master_uploaded=1,
                     streaming_uploaded=1,
                     cover_uploaded=1,
+                    cover_thumbnail_uploaded=1,
                 )
                 downloader = mock.Mock()
 
@@ -716,28 +1058,45 @@ class StateTests(unittest.TestCase):
                 downloader.download.side_effect = download
                 api = mock.Mock()
                 api.promote.return_value = {"trackStatus": "published"}
-                outcome = process.process_record(
-                    connection,
-                    record,
-                    process.DIRECT_BATCH_KEY,
-                    downloader,
-                    api,
-                    Path("ffmpeg"),
-                    rights_cleared=True,
-                    human_made_cleared=True,
-                    verification_mode="catalog_owner_direct",
-                    owner_evidence={
-                        "ownerAttestationSha256": "1" * 64,
-                        "catalogueScopeSha256": "2" * 64,
-                        "selectionSha256": "3" * 64,
-                    },
-                )
+                cover_sha256 = hashlib.sha256(cover_bytes).hexdigest()
+                api.upload_asset.return_value = {
+                    "asset": {
+                        "status": "available",
+                        "kind": "cover_artwork",
+                        "trackId": 12,
+                        "releaseId": 13,
+                        "sha256": cover_sha256,
+                    }
+                }
+                api.upload_release_thumbnail.return_value = {"stored": True}
+                with mock.patch.object(
+                    process,
+                    "build_cover_thumbnail",
+                    return_value=("c" * 64, 20),
+                ):
+                    outcome = process.process_record(
+                        connection,
+                        record,
+                        process.DIRECT_BATCH_KEY,
+                        downloader,
+                        api,
+                        Path("ffmpeg"),
+                        rights_cleared=True,
+                        human_made_cleared=True,
+                        verification_mode="catalog_owner_direct",
+                        owner_evidence={
+                            "ownerAttestationSha256": "1" * 64,
+                            "catalogueScopeSha256": "2" * 64,
+                            "selectionSha256": "3" * 64,
+                        },
+                    )
             finally:
                 connection.close()
         self.assertEqual(outcome, "published")
         downloader.download.assert_called_once()
         api.upload_asset.assert_called_once()
         self.assertEqual(api.upload_asset.call_args.kwargs["kind"], "cover_artwork")
+        api.upload_release_thumbnail.assert_called_once()
         api.promote.assert_called_once()
 
 
@@ -1048,6 +1407,33 @@ class AudioTests(unittest.TestCase):
         self.assertEqual(command[command.index("-threads") + 1], "1")
         self.assertIn("crop=3000:3000", command[command.index("-vf") + 1])
 
+    def test_cover_thumbnail_is_bounded_webp_and_single_threaded(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "cover.jpg"
+            destination = directory / "cover.webp"
+            source.write_bytes(b"source")
+            thumbnail = b"RIFF" + (8).to_bytes(4, "little") + b"WEBPVP8 "
+
+            def run(command, **_kwargs):
+                destination.write_bytes(thumbnail)
+                return process.subprocess.CompletedProcess(command, 0, b"", b"")
+
+            with mock.patch.object(process.subprocess, "run", side_effect=run) as runner:
+                digest, size = process.build_cover_thumbnail(
+                    Path("ffmpeg"), source, destination
+                )
+            command = runner.call_args.args[0]
+
+        self.assertEqual(digest, hashlib.sha256(thumbnail).hexdigest())
+        self.assertEqual(size, len(thumbnail))
+        self.assert_ffmpeg_command_is_single_threaded(command)
+        self.assertEqual(
+            command[command.index("-vf") + 1],
+            "scale=512:512:flags=lanczos",
+        )
+        self.assertIn("libwebp", command)
+
     def test_cover_cache_downloads_and_validates_a_shared_release_cover_once(self):
         cover_bytes = (
             b"\x89PNG\r\n\x1a\n"
@@ -1113,6 +1499,44 @@ class DriveDownloadTests(unittest.TestCase):
 
 
 class ApiTests(unittest.TestCase):
+    def test_thumbnail_upload_uses_webp_checksum_and_release_route(self):
+        requests = []
+
+        def opener(request, timeout):
+            requests.append((request, timeout))
+            return FakeResponse(b'{"stored":true,"idempotent":false}', status=201)
+
+        client = process.CatalogApiClient(
+            "https://catalog.example.test",
+            "pipeline-secret",
+            "sites-secret",
+            opener=opener,
+            sleeper=lambda _delay: None,
+        )
+        payload = b"RIFF" + (8).to_bytes(4, "little") + b"WEBPVP8 "
+        with tempfile.TemporaryDirectory() as temporary:
+            thumbnail = Path(temporary) / "cover.webp"
+            thumbnail.write_bytes(payload)
+            digest = hashlib.sha256(payload).hexdigest()
+            response = client.upload_release_thumbnail(
+                thumbnail,
+                release_id=13,
+                sha256=digest,
+                source_sha256="b" * 64,
+            )
+
+        request, _timeout = requests[0]
+        headers = {key.lower(): value for key, value in request.header_items()}
+        self.assertTrue(response["stored"])
+        self.assertEqual(request.method, "PUT")
+        self.assertTrue(request.full_url.endswith("/api/catalog/pipeline/releases/13/thumbnail"))
+        self.assertEqual(request.data, payload)
+        self.assertEqual(headers["content-type"], "image/webp")
+        self.assertEqual(headers["x-content-sha256"], digest)
+        self.assertEqual(headers["x-source-sha256"], "b" * 64)
+        self.assertEqual(headers["authorization"], "Bearer pipeline-secret")
+        self.assertEqual(headers["oai-sites-authorization"], "Bearer sites-secret")
+
     def test_asset_upload_uses_bounded_bytes_and_both_bearer_headers(self):
         requests = []
 

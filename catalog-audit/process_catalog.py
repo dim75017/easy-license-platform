@@ -60,6 +60,8 @@ MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024
 MAX_DERIVED_ASSET_BYTES = 20 * 1024 * 1024
 MAX_COVER_SOURCE_BYTES = 100 * 1024 * 1024
 MAX_COVER_CACHE_BYTES = 512 * 1024 * 1024
+COVER_THUMBNAIL_SIZE = 512
+MAX_COVER_THUMBNAIL_BYTES = 512 * 1024
 COVER_OUTPUT_SIZE = 3_000
 MIN_TEMP_FREE_BYTES = 3 * 1024 * 1024 * 1024
 MAX_EXACT_DURATION_DELTA_SECONDS = 2.0
@@ -345,6 +347,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
           attempts INTEGER NOT NULL DEFAULT 0,
           ingest_id INTEGER,
           track_id INTEGER,
+          release_id INTEGER,
           source_sha256 TEXT,
           source_byte_size INTEGER,
           source_mime_type TEXT,
@@ -364,6 +367,7 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
           streaming_uploaded INTEGER NOT NULL DEFAULT 0,
           peaks_uploaded INTEGER NOT NULL DEFAULT 0,
           cover_uploaded INTEGER NOT NULL DEFAULT 0,
+          cover_thumbnail_uploaded INTEGER NOT NULL DEFAULT 0,
           rights_cleared_ack INTEGER NOT NULL DEFAULT 0,
           human_made_cleared_ack INTEGER NOT NULL DEFAULT 0,
           last_error_code TEXT,
@@ -385,6 +389,8 @@ def open_pipeline_state(path: Path) -> sqlite3.Connection:
         "source_stream_copy_eligible": "INTEGER NOT NULL DEFAULT 0",
         "master_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "cover_uploaded": "INTEGER NOT NULL DEFAULT 0",
+        "release_id": "INTEGER",
+        "cover_thumbnail_uploaded": "INTEGER NOT NULL DEFAULT 0",
         "rights_cleared_ack": "INTEGER NOT NULL DEFAULT 0",
         "human_made_cleared_ack": "INTEGER NOT NULL DEFAULT 0",
     }
@@ -400,6 +406,7 @@ STATE_COLUMNS = {
     "attempts",
     "ingest_id",
     "track_id",
+    "release_id",
     "source_sha256",
     "source_byte_size",
     "source_mime_type",
@@ -419,6 +426,7 @@ STATE_COLUMNS = {
     "streaming_uploaded",
     "peaks_uploaded",
     "cover_uploaded",
+    "cover_thumbnail_uploaded",
     "last_error_code",
 }
 
@@ -465,7 +473,7 @@ def ensure_state_row(
             """
             UPDATE pipeline_items
             SET manifest_fingerprint=?, batch_key=?, status='planned', attempts=0,
-                ingest_id=NULL, track_id=NULL, source_sha256=NULL,
+                ingest_id=NULL, track_id=NULL, release_id=NULL, source_sha256=NULL,
                 source_byte_size=NULL, source_mime_type=NULL, source_format=NULL,
                 source_stream_copy_eligible=0,
                 measured_duration_ms=NULL, streaming_sha256=NULL,
@@ -473,7 +481,7 @@ def ensure_state_row(
                 peaks_sha256=NULL, peaks_byte_size=NULL,
                 cover_sha256=NULL, cover_byte_size=NULL, cover_content_type=NULL,
                 metadata_uploaded=0, master_uploaded=0, streaming_uploaded=0,
-                peaks_uploaded=0, cover_uploaded=0,
+                peaks_uploaded=0, cover_uploaded=0, cover_thumbnail_uploaded=0,
                 rights_cleared_ack=?, human_made_cleared_ack=?,
                 last_error_code=NULL, updated_at=?
             WHERE candidate_id=?
@@ -765,6 +773,66 @@ def prepare_cover_artwork(
     return optimized, content_type, width, height
 
 
+def build_cover_thumbnail(executable: Path, source: Path, destination: Path) -> tuple[str, int]:
+    """Create the lightweight WebP served by catalogue cards."""
+
+    command = [
+        str(executable),
+        "-hide_banner",
+        "-nostdin",
+        "-loglevel",
+        "error",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
+        "-threads",
+        "1",
+        "-y",
+        "-i",
+        str(source),
+        "-vf",
+        f"scale={COVER_THUMBNAIL_SIZE}:{COVER_THUMBNAIL_SIZE}:flags=lanczos",
+        "-frames:v",
+        "1",
+        "-an",
+        "-sn",
+        "-dn",
+        "-map_metadata",
+        "-1",
+        "-c:v",
+        "libwebp",
+        "-quality",
+        "74",
+        "-compression_level",
+        "4",
+        "-threads",
+        "1",
+        str(destination),
+    ]
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            timeout=300,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PipelineError("cover_thumbnail_generation_failed") from error
+    if result.returncode != 0 or not destination.is_file():
+        raise PipelineError("cover_thumbnail_generation_failed")
+    payload = destination.read_bytes()
+    if (
+        len(payload) < 16
+        or len(payload) > MAX_COVER_THUMBNAIL_BYTES
+        or payload[:4] != b"RIFF"
+        or payload[8:12] != b"WEBP"
+    ):
+        raise PipelineError("cover_thumbnail_output_invalid")
+    return hashlib.sha256(payload).hexdigest(), len(payload)
+
+
 class CoverArtifactCache:
     """Bounded, process-local cache for release artwork.
 
@@ -975,6 +1043,8 @@ def validate_ffmpeg(executable: Path) -> None:
     encoders = (result.stdout + result.stderr).decode("utf-8", errors="ignore")
     if result.returncode != 0 or "libmp3lame" not in encoders:
         raise PipelineError("ffmpeg_libmp3lame_missing")
+    if "libwebp" not in encoders:
+        raise PipelineError("ffmpeg_libwebp_missing")
 
 
 def transcode_mp3(executable: Path, source: Path, destination: Path) -> None:
@@ -1566,6 +1636,48 @@ class CatalogApiClient:
 
         return self._request_json(request_factory)
 
+    def upload_release_thumbnail(
+        self,
+        path: Path,
+        *,
+        release_id: int,
+        sha256: str,
+        source_sha256: str,
+    ) -> dict[str, Any]:
+        if release_id < 1:
+            raise PipelineError("release_id_invalid")
+        size = path.stat().st_size
+        if size < 1 or size > MAX_COVER_THUMBNAIL_BYTES:
+            raise PipelineError("cover_thumbnail_size_invalid")
+        if SHA256_PATTERN.fullmatch(sha256) is None:
+            raise PipelineError("cover_thumbnail_sha256_invalid")
+        if SHA256_PATTERN.fullmatch(source_sha256) is None:
+            raise PipelineError("cover_thumbnail_source_sha256_invalid")
+        body = path.read_bytes()
+        if len(body) != size:
+            raise PipelineError("cover_thumbnail_read_failed")
+        if body[:4] != b"RIFF" or body[8:12] != b"WEBP":
+            raise PipelineError("cover_thumbnail_output_invalid")
+        if hashlib.sha256(body).hexdigest() != sha256:
+            raise PipelineError("cover_thumbnail_checksum_mismatch")
+        url = f"{self.base_url}/api/catalog/pipeline/releases/{release_id}/thumbnail"
+
+        def request_factory() -> urllib.request.Request:
+            headers = self._headers("image/webp")
+            headers.update(
+                {
+                    "Content-Length": str(size),
+                    "X-Content-Sha256": sha256,
+                    "X-Source-Sha256": source_sha256,
+                }
+            )
+            return urllib.request.Request(url, data=body, headers=headers, method="PUT")
+
+        response = self._request_json(request_factory)
+        if response.get("stored") is not True:
+            raise PipelineError("cover_thumbnail_upload_invalid")
+        return response
+
     def promote(
         self,
         *,
@@ -1787,14 +1899,25 @@ def process_record(
         human_made_cleared,
     )
     candidate_id = record["candidate_id"]
-    if row["status"] == "published":
+    was_published = row["status"] == "published"
+    if was_published and (
+        not cover_required
+        or row["cover_thumbnail_uploaded"]
+        or positive_integer(row["release_id"]) is None
+    ):
+        # Historical checkpoints predate thumbnail state.  The bounded public
+        # backfill owns those rows; do not reopen thousands of published Drive
+        # sources without a release-bound checkpoint.
         return "already_published"
     if (
         row["metadata_uploaded"]
         and row["master_uploaded"]
         and row["streaming_uploaded"]
         and row["peaks_uploaded"]
-        and (not cover_required or row["cover_uploaded"])
+        and (
+            not cover_required
+            or (row["cover_uploaded"] and row["cover_thumbnail_uploaded"])
+        )
     ):
         return try_promote(
             connection,
@@ -1830,6 +1953,7 @@ def process_record(
             peaks_path = directory / "peaks.json"
             cover_source_path = directory / "cover-source.bin"
             optimized_cover_path = directory / "cover.jpg"
+            cover_thumbnail_path = directory / "cover-thumbnail.webp"
 
             checkpoint_sha256 = str(row["source_sha256"] or "").strip().lower()
             source_sha256 = checkpoint_sha256 if SHA256_PATTERN.fullmatch(checkpoint_sha256) else ""
@@ -2049,7 +2173,8 @@ def process_record(
                     allow_missing_cover=True,
                 )
 
-            if not row["cover_uploaded"]:
+            if not row["cover_uploaded"] or not row["cover_thumbnail_uploaded"]:
+                checkpoint_cover_sha256 = str(row["cover_sha256"] or "").strip().lower()
                 if cover_cache is not None:
                     cover_path, cover_type, cover_sha256, cover_size = cover_cache.prepare(
                         cover["file_id"],
@@ -2070,6 +2195,11 @@ def process_record(
                         optimized_cover_path,
                     )
                     cover_sha256, cover_size = sha256_file(cover_path)
+                if row["cover_uploaded"]:
+                    if SHA256_PATTERN.fullmatch(checkpoint_cover_sha256) is None:
+                        raise PipelineError("cover_checkpoint_incomplete")
+                    if cover_sha256 != checkpoint_cover_sha256:
+                        raise PipelineError("cover_checkpoint_mismatch")
                 row = update_state(
                     connection,
                     candidate_id,
@@ -2077,27 +2207,67 @@ def process_record(
                     cover_byte_size=cover_size,
                     cover_content_type=cover_type,
                 )
-                api.upload_asset(
-                    cover_path,
-                    track_id=int(row["track_id"]),
-                    batch_key=batch_key,
-                    source_key=candidate_id,
-                    kind="cover_artwork",
-                    content_type=cover_type,
-                    sha256=cover_sha256,
-                    duration_ms=None,
-                )
+                release_id = positive_integer(row["release_id"])
+                if not row["cover_uploaded"] or release_id is None:
+                    cover_response = api.upload_asset(
+                        cover_path,
+                        track_id=int(row["track_id"]),
+                        batch_key=batch_key,
+                        source_key=candidate_id,
+                        kind="cover_artwork",
+                        content_type=cover_type,
+                        sha256=cover_sha256,
+                        duration_ms=None,
+                    )
+                    cover_asset = cover_response.get("asset")
+                    if (
+                        not isinstance(cover_asset, Mapping)
+                        or cover_asset.get("status") != "available"
+                        or cover_asset.get("kind") != "cover_artwork"
+                        or positive_integer(cover_asset.get("trackId")) != int(row["track_id"])
+                        or str(cover_asset.get("sha256") or "").strip().lower() != cover_sha256
+                    ):
+                        raise PipelineError("cover_asset_response_invalid")
+                    release_id = (
+                        positive_integer(cover_asset.get("releaseId"))
+                    )
+                if release_id is None:
+                    raise PipelineError("cover_asset_response_invalid")
+                if not row["cover_uploaded"] or positive_integer(row["release_id"]) is None:
+                    row = update_state(
+                        connection,
+                        candidate_id,
+                        release_id=release_id,
+                        cover_uploaded=1,
+                        status="published" if was_published else "assets_uploaded",
+                    )
+                if not row["cover_thumbnail_uploaded"]:
+                    thumbnail_sha256, _thumbnail_size = build_cover_thumbnail(
+                        ffmpeg,
+                        cover_path,
+                        cover_thumbnail_path,
+                    )
+                    api.upload_release_thumbnail(
+                        cover_thumbnail_path,
+                        release_id=release_id,
+                        sha256=thumbnail_sha256,
+                        source_sha256=cover_sha256,
+                    )
                 row = update_state(
                     connection,
                     candidate_id,
+                    release_id=release_id,
                     cover_uploaded=1,
-                    status="assets_uploaded",
+                    cover_thumbnail_uploaded=1,
+                    status="published" if was_published else "assets_uploaded",
                 )
+                if was_published:
+                    return "published"
     except PipelineError as error:
         update_state(
             connection,
             candidate_id,
-            status="failed",
+            status="published" if was_published else "failed",
             last_error_code=error.code,
         )
         raise
@@ -2105,7 +2275,7 @@ def process_record(
         update_state(
             connection,
             candidate_id,
-            status="failed",
+            status="published" if was_published else "failed",
             last_error_code="unexpected_processing_failure",
         )
         raise PipelineError("unexpected_processing_failure") from error

@@ -66,6 +66,7 @@ def main() -> int:
                 if not downloaded:
                     counts["existing"] += 1
                     continue
+                source_sha256 = sha256_file(source)
                 encode_thumbnail(ffmpeg, source, thumbnail)
                 upload_thumbnail(
                     base_url,
@@ -73,6 +74,7 @@ def main() -> int:
                     pipeline_token,
                     sites_authorization,
                     thumbnail,
+                    source_sha256,
                     arguments.timeout,
                 )
                 counts["created"] += 1
@@ -228,6 +230,10 @@ def encode_thumbnail(ffmpeg: Path, source: Path, destination: Path) -> None:
         "error",
         "-threads",
         "1",
+        "-filter_threads",
+        "1",
+        "-filter_complex_threads",
+        "1",
         "-i",
         str(source),
         "-vf",
@@ -252,6 +258,7 @@ def encode_thumbnail(ffmpeg: Path, source: Path, destination: Path) -> None:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         creationflags=0x08000000 if os.name == "nt" else 0,
+        timeout=180,
     )
     if completed.returncode != 0 or not destination.is_file():
         raise BackfillError("cover_thumbnail_encode_failed")
@@ -271,6 +278,7 @@ def upload_thumbnail(
     pipeline_token: str,
     sites_authorization: str | None,
     thumbnail: Path,
+    source_sha256: str,
     timeout: float,
 ) -> None:
     payload = thumbnail.read_bytes()
@@ -279,6 +287,7 @@ def upload_thumbnail(
         "Authorization": f"Bearer {pipeline_token}",
         "Content-Type": "image/webp",
         "X-Content-Sha256": hashlib.sha256(payload).hexdigest(),
+        "X-Source-Sha256": source_sha256,
         "User-Agent": "SymbiomeCoverThumbnailBackfill/1.0",
     }
     if sites_authorization:
@@ -292,6 +301,14 @@ def upload_thumbnail(
     response = json.loads(request_bytes(request, timeout, 1024 * 1024).decode("utf-8"))
     if not isinstance(response, dict) or response.get("stored") is not True:
         raise BackfillError("cover_thumbnail_upload_invalid")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        while chunk := source.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def request_bytes(request: urllib.request.Request, timeout: float, limit: int) -> bytes:
