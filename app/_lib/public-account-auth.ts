@@ -16,3 +16,7 @@ export function publicAccountSignOutHref(
   const returnTo = `${accountReturnTo[mode]}${plan ? `${separator}plan=${plan}` : ""}`;
   return `${secureSiteOrigin}/signout-with-chatgpt?return_to=${encodeURIComponent(returnTo)}`;
 }
+
+export function publicGuestViewHref(): string {
+  return `${secureSiteOrigin}/signout-with-chatgpt?return_to=${encodeURIComponent("/app/guest")}`;
+}

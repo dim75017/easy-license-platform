@@ -203,7 +203,6 @@ function AccountSetupFlow({
               </p>
               <AccountSignInMethods
                 actionHref={publicAccountSignOutHref(mode, plan)}
-                actionLabel={mode === "login" ? "Open secure login" : "Open secure account creation"}
               />
               <Link className="account-secondary-link" href="/app">
                 Browse music first
@@ -222,12 +221,7 @@ function AccountSetupFlow({
               </p>
               <AccountSignInMethods
                 actionHref={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
-                actionLabel="Continue securely"
               />
-              <div className="account-trust-note">
-                <span aria-hidden="true">✓</span>
-                <p>Your password stays with the sign-in method you choose. Symbiome receives only the identity needed to protect your workspace.</p>
-              </div>
               <p className="account-legal-copy">
                 By continuing, you acknowledge our <Link href="/legal">Legal information</Link>
                 {" "}and <Link href="/privacy">Privacy Policy</Link>.
@@ -366,10 +360,8 @@ function AccountSetupFlow({
 
 function AccountSignInMethods({
   actionHref,
-  actionLabel,
 }: {
   actionHref: string;
-  actionLabel: string;
 }) {
   return (
     <div className="account-auth-choice">
@@ -377,18 +369,21 @@ function AccountSignInMethods({
       <ul className="account-auth-methods" aria-label="Available secure sign-in methods">
         {accountSignInMethods.map((method) => (
           <li key={method.id}>
-            <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
-              {method.mark}
-            </span>
-            <strong>{method.label}</strong>
+            <a
+              data-auth-method={method.id}
+              href={actionHref}
+              aria-label={`Open secure sign-in — ${method.label} is available there`}
+            >
+              <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
+                {method.mark}
+              </span>
+              <strong>{method.label}</strong>
+            </a>
           </li>
         ))}
       </ul>
-      <a className="button button-primary button-full cta-swipe" href={actionHref}>
-        {actionLabel}
-      </a>
       <p className="account-auth-method-note">
-        Use the same sign-in method each time to return to the same workspace.
+        Each option opens the secure sign-in screen. Choose your preferred method there.
       </p>
     </div>
   );
