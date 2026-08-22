@@ -3468,7 +3468,7 @@
   pointer-events: none;
 }
 
-.public-shell .creator-editorial-showcase .creator-editorial-wave:focus-within {
+.public-shell .creator-editorial-showcase .creator-editorial-wave:has(> input:focus-visible) {
   border-radius: 5px;
   outline: 3px solid var(--public-player-accent);
   outline-offset: 2px;
