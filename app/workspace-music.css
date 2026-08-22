@@ -1166,7 +1166,7 @@ article.music-track-row[role="listitem"] {
   opacity: 0;
 }
 
-.music-player-wave:focus-within {
+.music-player-wave:has(> .music-player-seek:focus-visible) {
   border-radius: 5px;
   outline: 3px solid var(--wm-clay);
   outline-offset: 3px;
@@ -1504,7 +1504,7 @@ article.music-track-row[role="listitem"] {
 
 @media (forced-colors: active) {
   .music-player-transport button,
-  .music-player-wave:focus-within {
+  .music-player-wave:has(> .music-player-seek:focus-visible) {
     border-color: ButtonText;
     outline-color: Highlight;
   }

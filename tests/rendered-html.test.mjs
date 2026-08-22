@@ -526,6 +526,8 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.equal((publicWave[0].match(/<canvas\b/g) ?? []).length, 1, "the public waveform should render one responsive canvas");
   assert.doesNotMatch(publicWave[0], /Array\.from\(\{\s*length:|<i\b/, "public waveform bars should be painted rather than mounted as DOM nodes");
   assert.match(publicWave[0], /<input[\s\S]{0,80}type="range"[\s\S]{0,160}max=\{active && canSeek \? duration : 1\}[\s\S]{0,220}onChange=\{\(event\) => onSeek\(Number\(event\.currentTarget\.value\)\)\}[\s\S]{0,140}disabled=\{!active \|\| !canSeek\}/);
+  assert.match(offerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-wave:has\(> input:focus-visible\)\s*\{[^}]*outline:\s*3px solid var\(--public-player-accent\)/s);
+  assert.doesNotMatch(offerCss, /\.public-shell \.creator-editorial-showcase \.creator-editorial-wave:focus-within\s*\{/, "pointer scrubbing must not draw the public player's orange keyboard focus frame");
   assert.match(showcase, /<TrackWave[\s\S]{0,260}progress=\{isActive \? preview\.progress : 0\}[\s\S]{0,180}onSeek=\{preview\.seekTo\}/);
   assert.match(showcase, /isActive && preview\.canSeek \? formatPlaybackTime\(preview\.duration\) : track\.duration/);
   assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|PlatformLogo|open\.spotify\.com|Open on Spotify/);
@@ -2261,7 +2263,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV13, /\.music-player-seek\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*appearance:\s*none;[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*-webkit-appearance:\s*none;[^}]*background:\s*transparent;[^}]*opacity:\s*0/s);
   assert.match(musicWorkspaceV13, /\.music-player-seek:disabled\s*\{[^}]*cursor:\s*default;[^}]*opacity:\s*0;[^}]*pointer-events:\s*none/s, "disabled seek ranges must remain fully invisible behind idle waveforms");
   assert.doesNotMatch(musicWorkspaceV13, /\.music-player-seek:disabled\s*\{[^}]*opacity:\s*(?!0(?:[;}]))(?:\.\d+|1)/s, "disabled seek ranges must never reveal their native horizontal track");
-  assert.match(musicWorkspaceV13, /\.music-player-wave:focus-within\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
+  assert.match(musicWorkspaceV13, /\.music-player-wave:has\(> \.music-player-seek:focus-visible\)\s*\{[^}]*outline:\s*3px solid var\(--wm-clay\);[^}]*outline-offset:\s*3px/s);
+  assert.doesNotMatch(musicWorkspaceV13, /\.music-player-wave:focus-within\s*\{/, "pointer scrubbing must not draw the library player's orange keyboard focus frame");
   assert.match(musicWorkspaceV13, /\.workspace-audio-player\s*\{[^}]*min-height:\s*76px;[^}]*grid-template-columns:\s*minmax\(190px, 240px\) 40px minmax\(300px, 1fr\) auto;[^}]*padding:\s*8px 24px/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-main\s*\{[^}]*grid-template-columns:\s*48px minmax\(110px, 1fr\)/s);
   assert.match(musicWorkspaceV13, /\.workspace-player-timeline\s*\{[^}]*grid-template-columns:\s*34px minmax\(160px, 1fr\) 34px minmax\(104px, 132px\);[^}]*gap:\s*9px/s);
@@ -2279,6 +2282,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const v13CompactStart = musicWorkspaceV13.indexOf("@media (max-width: 760px)");
   const v13PhoneStart = musicWorkspaceV13.indexOf("@media (max-width: 480px)");
   const v13ForcedColoursStart = musicWorkspaceV13.indexOf("@media (forced-colors: active)");
+  assert.match(musicWorkspaceV13.slice(v13ForcedColoursStart), /\.music-player-wave:has\(> \.music-player-seek:focus-visible\)\s*\{[^}]*outline-color:\s*Highlight/s);
   assert.ok(v13TabletStart >= 0 && v13TopbarStart > v13TabletStart && v13PlayerStackStart > v13TopbarStart && v13MediumStart > v13PlayerStackStart && v13CompactStart > v13MediumStart && v13PhoneStart > v13CompactStart && v13ForcedColoursStart > v13PhoneStart);
   const v13TabletCss = musicWorkspaceV13.slice(v13TabletStart, v13TopbarStart);
   const v13TopbarCss = musicWorkspaceV13.slice(v13TopbarStart, v13PlayerStackStart);
