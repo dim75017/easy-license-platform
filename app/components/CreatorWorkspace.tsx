@@ -33,6 +33,7 @@ type WorkspaceRole = "guest" | "creator" | "business";
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences" | "license-song" | "custom-song";
 type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
+type TrackMenuPlacement = "auto" | "above";
 type CatalogLoadState = "loading" | "live" | "fallback";
 type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "downloads" | "license" | "custom";
 
@@ -182,6 +183,7 @@ type TrackMenuState = {
   x: number;
   y: number;
   mode: TrackMenuMode;
+  placement: TrackMenuPlacement;
   personalPlaylistId: string | null;
 };
 
@@ -563,6 +565,7 @@ function TrackActionPopover({
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: state.x, y: state.y });
+  const maxHeight = state.placement === "above" ? Math.max(0, state.y - 12) : undefined;
 
   useEffect(() => {
     const popover = popoverRef.current;
@@ -570,11 +573,13 @@ function TrackActionPopover({
     const rect = popover.getBoundingClientRect();
     const gutter = 12;
     const nextX = Math.max(gutter, Math.min(state.x, window.innerWidth - rect.width - gutter));
-    const preferredY = state.y + rect.height > window.innerHeight - gutter ? state.y - rect.height : state.y;
+    const preferredY = state.placement === "above"
+      ? state.y - rect.height
+      : state.y + rect.height > window.innerHeight - gutter ? state.y - rect.height : state.y;
     const nextY = Math.max(gutter, Math.min(preferredY, window.innerHeight - rect.height - gutter));
     setPosition({ x: nextX, y: nextY });
     popover.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus();
-  }, [state.mode, state.x, state.y]);
+  }, [state.mode, state.placement, state.x, state.y]);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -619,7 +624,7 @@ function TrackActionPopover({
       className="music-track-context-menu"
       role={state.mode === "actions" ? "menu" : "dialog"}
       aria-label={state.mode === "actions" ? `Actions for ${track.title}` : `Add ${track.title} to a playlist`}
-      style={{ left: position.x, top: position.y }}
+      style={{ left: position.x, top: position.y, maxHeight }}
       ref={popoverRef}
       onKeyDown={handleMenuKeyDown}
     >
@@ -1996,14 +2001,17 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     mode: TrackMenuMode,
     opener: HTMLElement | null = null,
     personalPlaylistId: string | null = null,
+    placement: TrackMenuPlacement = "auto",
   ) {
     trackMenuOpenerRef.current = opener;
-    setTrackMenu({ trackId: track.id, x, y, mode, personalPlaylistId });
+    setTrackMenu({ trackId: track.id, x, y, mode, placement, personalPlaylistId });
   }
 
   function openPlaylistChooser(track: WorkspaceTrack, opener: HTMLButtonElement) {
     const rect = opener.getBoundingClientRect();
-    openTrackMenu(track, rect.right - 240, rect.bottom + 8, "playlists", opener);
+    const fixedPlayer = opener.closest(".workspace-audio-player");
+    const anchorY = fixedPlayer ? fixedPlayer.getBoundingClientRect().top - 12 : rect.bottom + 8;
+    openTrackMenu(track, rect.right - 240, anchorY, "playlists", opener, null, fixedPlayer ? "above" : "auto");
   }
 
   function openPersonalPlaylistMenu(playlist: PersonalPlaylist, x: number, y: number, opener: HTMLElement) {

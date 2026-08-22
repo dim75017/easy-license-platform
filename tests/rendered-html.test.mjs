@@ -2002,6 +2002,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(rowActions[1], /onClick=\{\(\) => void shareTrack\(track\)\}[\s\S]{0,100}aria-label=\{`Copy link to \$\{track\.title\}`\}>\s*<TrackActionIcon kind="share" \/>/);
   assert.match(rowActions[1], /personalPlaylist && <button className="music-track-remove-from-playlist"[\s\S]{0,220}removeTrackFromPersonalPlaylist\(track, personalPlaylist\.id\)[\s\S]{0,180}<TrackActionIcon kind="delete" \/>/);
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
+  assert.match(musicWorkspace, /function openPlaylistChooser\(track: WorkspaceTrack, opener: HTMLButtonElement\) \{[\s\S]{0,180}opener\.closest\("\.workspace-audio-player"\)[\s\S]{0,180}fixedPlayer\.getBoundingClientRect\(\)\.top - 12 : rect\.bottom \+ 8[\s\S]{0,220}fixedPlayer \? "above" : "auto"/, "the fixed player's playlist chooser should sit above the whole player while row menus keep their automatic placement");
+  assert.match(musicWorkspace, /state\.placement === "above"[\s\S]{0,80}\? state\.y - rect\.height[\s\S]{0,180}state\.y \+ rect\.height > window\.innerHeight - gutter/);
+  assert.match(musicWorkspace, /const maxHeight = state\.placement === "above" \? Math\.max\(0, state\.y - 12\) : undefined/, "the fixed-player chooser should fit within the space above the player on short viewports");
+  assert.match(musicWorkspace, /style=\{\{ left: position\.x, top: position\.y, maxHeight \}\}/, "the fixed-player chooser should scroll instead of covering the player");
   const fixedPlayerActions = musicWorkspace.match(/<div className="workspace-player-actions">([\s\S]*?)<\/div>/);
   assert.ok(fixedPlayerActions, "the fixed player should mirror the four primary actions");
   assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 5, "the fixed player should expose the standard actions plus the conditional Business licence action");
@@ -2036,7 +2040,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspace, /popover\.querySelector<HTMLButtonElement>\("button:not\(\[disabled\]\)"\)\?\.focus\(\)/);
   assert.match(musicWorkspace, /if \(event\.key === "Escape"\)[\s\S]{0,100}onClose\(true\)[\s\S]{0,180}\["ArrowDown", "ArrowUp", "Home", "End"\]/);
   assert.match(musicWorkspace, /document\.addEventListener\("pointerdown", handlePointerDown, true\)[\s\S]{0,180}window\.addEventListener\("scroll", handleViewportChange, true\)/);
-  assert.match(musicWorkspace, /const nextX = Math\.max\(gutter, Math\.min\(state\.x, window\.innerWidth - rect\.width - gutter\)\)[\s\S]{0,180}const nextY = Math\.max/);
+  assert.match(musicWorkspace, /const nextX = Math\.max\(gutter, Math\.min\(state\.x, window\.innerWidth - rect\.width - gutter\)\)[\s\S]{0,420}const nextY = Math\.max/);
   assert.match(musicWorkspace, /requestAnimationFrame\(\(\) => trackMenuOpenerRef\.current\?\.focus\(\)\)/);
 
   assert.match(musicWorkspace, /useTrackPreview\(\)/);
