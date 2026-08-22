@@ -1939,7 +1939,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   );
   assert.match(recentReleaseBlock, /<TrackCover src=\{track\.cover\} width=\{420\} height=\{420\} priority=\{index < 4\} fallbackClassName="music-recent-cover-placeholder" \/>/);
   assert.doesNotMatch(recentReleaseBlock, /setRecentCoverFailures|event\.currentTarget\.hidden/, "Recent releases should keep stable cards and use the local artwork fallback");
-  assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,140}shareTrack\(track\)[\s\S]{0,120}<TrackActionIcon kind="share" \/>/);
+  assert.match(musicWorkspace, /className="music-recent-share"[\s\S]{0,180}openShareChooser\(track, event\.currentTarget\)[\s\S]{0,240}aria-haspopup="dialog"[\s\S]{0,260}trackMenu\.mode === "share"[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
 
   assert.match(musicWorkspace, /placeholder="Search by track, artist, genre, mood or theme"/);
   assert.match(musicWorkspace, /type FacetKind = "genre" \| "mood" \| "theme" \| "artist"/);
@@ -1999,10 +1999,11 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(rowActions[1], /onClick=\{\(\) => toggleLiked\(track\.id\)\}[\s\S]{0,180}aria-pressed=\{liked\.has\(track\.id\)\}[\s\S]{0,100}<TrackActionIcon kind="like"/);
   assert.match(rowActions[1], /onClick=\{\(event\) => openPlaylistChooser\(track, event\.currentTarget\)\}[\s\S]{0,180}aria-haspopup="menu"[\s\S]{0,260}aria-expanded=\{trackMenu\?\.trackId === track\.id && trackMenu\.mode === "playlists"\}[\s\S]{0,80}<TrackActionIcon kind="playlist"/);
   assert.match(rowActions[1], /disabled=\{track\.previewDownloadUrl === null\}[\s\S]{0,260}onClick=\{\(\) => void downloadTrackPreview\(track\)\}[\s\S]{0,420}Licensed download unavailable for \$\{track\.title\}[\s\S]{0,260}<TrackActionIcon kind="download"/);
-  assert.match(rowActions[1], /onClick=\{\(\) => void shareTrack\(track\)\}[\s\S]{0,100}aria-label=\{`Copy link to \$\{track\.title\}`\}>\s*<TrackActionIcon kind="share" \/>/);
+  assert.match(rowActions[1], /onClick=\{\(event\) => openShareChooser\(track, event\.currentTarget\)\}[\s\S]{0,120}aria-label=\{`Share \$\{track\.title\}`\}[\s\S]{0,120}aria-haspopup="dialog"[\s\S]{0,260}trackMenu\.mode === "share"[\s\S]{0,80}<TrackActionIcon kind="share" \/>/);
   assert.match(rowActions[1], /personalPlaylist && <button className="music-track-remove-from-playlist"[\s\S]{0,220}removeTrackFromPersonalPlaylist\(track, personalPlaylist\.id\)[\s\S]{0,180}<TrackActionIcon kind="delete" \/>/);
   assert.doesNotMatch(rowActions[1], /downloadTrackPreview\(track\)[\s\S]{0,220}aria-pressed/, "Download is an action, not a pressed toggle");
-  assert.match(musicWorkspace, /function openPlaylistChooser\(track: WorkspaceTrack, opener: HTMLButtonElement\) \{[\s\S]{0,180}opener\.closest\("\.workspace-audio-player"\)[\s\S]{0,180}fixedPlayer\.getBoundingClientRect\(\)\.top - 12 : rect\.bottom \+ 8[\s\S]{0,220}fixedPlayer \? "above" : "auto"/, "the fixed player's playlist chooser should sit above the whole player while row menus keep their automatic placement");
+  assert.match(musicWorkspace, /function openAnchoredTrackDialog\(track: WorkspaceTrack, opener: HTMLButtonElement, mode: "playlists" \| "share"\) \{[\s\S]{0,180}opener\.closest\("\.workspace-audio-player"\)[\s\S]{0,180}fixedPlayer\.getBoundingClientRect\(\)\.top - 12 : rect\.bottom \+ 8[\s\S]{0,260}fixedPlayer \? "above" : "auto"/, "the fixed player's playlist and share dialogs should sit above the whole player while row popovers keep their automatic placement");
+  assert.match(musicWorkspace, /function openPlaylistChooser[\s\S]{0,120}openAnchoredTrackDialog\(track, opener, "playlists"\)[\s\S]{0,180}function openShareChooser[\s\S]{0,120}openAnchoredTrackDialog\(track, opener, "share"\)/);
   assert.match(musicWorkspace, /state\.placement === "above"[\s\S]{0,80}\? state\.y - rect\.height[\s\S]{0,180}state\.y \+ rect\.height > window\.innerHeight - gutter/);
   assert.match(musicWorkspace, /const maxHeight = state\.placement === "above" \? Math\.max\(0, state\.y - 12\) : undefined/, "the fixed-player chooser should fit within the space above the player on short viewports");
   assert.match(musicWorkspace, /style=\{\{ left: position\.x, top: position\.y, maxHeight \}\}/, "the fixed-player chooser should scroll instead of covering the player");
@@ -2010,7 +2011,7 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(fixedPlayerActions, "the fixed player should mirror the four primary actions");
   assert.equal((fixedPlayerActions[1].match(/<button\b/g) ?? []).length, 5, "the fixed player should expose the standard actions plus the conditional Business licence action");
   assert.match(fixedPlayerActions[1], /isBusinessWorkspace && <button[\s\S]{0,180}openBusinessLicenseRequest\(selectedTrack\)[\s\S]{0,160}<TrackActionIcon kind="license" \/>/);
-  assert.match(fixedPlayerActions[1], /shareTrack\(selectedTrack\)[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
+  assert.match(fixedPlayerActions[1], /openShareChooser\(selectedTrack, event\.currentTarget\)[\s\S]{0,160}aria-haspopup="dialog"[\s\S]{0,260}trackMenu\.mode === "share"[\s\S]{0,100}<TrackActionIcon kind="share" \/>/);
   assert.doesNotMatch(musicWorkspace, /More options for|music-track-more|>\s*(?:â€¢â€¢â€¢|•••)\s*<\/button>/, "the obsolete More action should not return");
   const actionIcon = musicWorkspace.match(/function TrackActionIcon\([\s\S]*?\n\}/);
   assert.ok(actionIcon, "the actions should share one icon component");
@@ -2022,22 +2023,29 @@ test("keeps the connected workspace readable and artist-led", async () => {
 
   assert.match(musicWorkspace, /const trackControlSelector = "button, a, input, select, textarea, \[role='menu'\], \[role='dialog'\]"/);
   assert.match(musicWorkspace, /onContextMenu=\{\(event\) => \{\s*if \(isTrackControl\(event\.target\)\) return;\s*event\.preventDefault\(\);\s*openTrackMenu\(track, event\.clientX, event\.clientY, "actions", event\.currentTarget, personalPlaylist\?\.id \?\? null\);/);
-  assert.match(musicWorkspace, /id="music-track-context-menu"\s*className="music-track-context-menu"\s*role=\{state\.mode === "actions" \? "menu" : "dialog"\}\s*aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : `Add \$\{track\.title\} to a playlist`\}/);
-  const contextActions = musicWorkspace.match(/state\.mode === "actions" \? \(\s*<div className="music-track-context-options">([\s\S]*?)<\/div>\s*\) : \(/);
+  assert.match(musicWorkspace, /id="music-track-context-menu"[\s\S]{0,160}className=\{`music-track-context-menu\$\{state\.mode === "share" \? " is-share" : ""\}`\}[\s\S]{0,160}role=\{state\.mode === "actions" \? "menu" : "dialog"\}/);
+  assert.match(musicWorkspace, /aria-label=\{state\.mode === "actions" \? `Actions for \$\{track\.title\}` : state\.mode === "playlists" \? `Add \$\{track\.title\} to a playlist` : `Share \$\{track\.title\}`\}/);
+  const contextActions = musicWorkspace.match(/state\.mode === "actions" \? \(\s*<div className="music-track-context-options">([\s\S]*?)<\/div>\s*\) : state\.mode === "playlists" \? \(/);
   assert.ok(contextActions, "the track context menu should expose one primary action group");
   assert.equal((contextActions[1].match(/<button\b/g) ?? []).length, 6, "the context menu should expose the primary actions plus conditional removal and Business licensing");
   assert.match(contextActions[1], /removeFromPlaylistName && <button className="is-destructive"[\s\S]{0,220}<TrackActionIcon kind="delete" \/>[\s\S]{0,100}Remove from \{removeFromPlaylistName\}/);
   assert.match(contextActions[1], /role="menuitemcheckbox" aria-checked=\{liked\}/);
   assert.match(contextActions[1], /<TrackActionIcon kind="playlist" \/>[\s\S]{0,80}Add to playlist/);
   assert.match(contextActions[1], /<TrackActionIcon kind="download" \/>[\s\S]{0,140}Download listening copy[\s\S]{0,80}Download unavailable/);
-  assert.match(contextActions[1], /<TrackActionIcon kind="share" \/>[\s\S]{0,80}Copy track link/);
+  assert.match(contextActions[1], /onClick=\{onShowShare\}[\s\S]{0,100}<TrackActionIcon kind="share" \/>[\s\S]{0,80}Share track/);
   assert.match(contextActions[1], /onLicense && <button[\s\S]{0,180}<TrackActionIcon kind="license" \/>[\s\S]{0,80}License this song/);
-  assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,200}window\.location\.pathname\.replace\(\/\\\/app\\\/\?\$\/u, "\/app"\)[\s\S]{0,120}new URL\(appPath, window\.location\.origin\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
-  assert.match(musicWorkspace, /navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,180}window\.prompt\("Copy this track link", shareUrl\)/);
+  assert.match(musicWorkspace, /function createTrackShareUrl\(trackId: string\)[\s\S]{0,160}const pathname = window\.location\.pathname[\s\S]{0,300}"\/app\/guest"[\s\S]{0,180}url\.searchParams\.set\("view", "music"\)[\s\S]{0,100}url\.searchParams\.set\("track", trackId\)/);
+  assert.match(musicWorkspace, /function createTrackShareTargets\(track: WorkspaceTrack, shareUrl: string\)[\s\S]{0,1100}https:\/\/wa\.me[\s\S]{0,260}facebook\.com\/sharer\/sharer\.php[\s\S]{0,260}x\.com\/intent\/post[\s\S]{0,260}linkedin\.com\/sharing\/share-offsite[\s\S]{0,260}mailto:/);
+  assert.match(musicWorkspace, /target=\{target\.external \? "_blank" : undefined\}[\s\S]{0,120}rel=\{target\.external \? "noopener noreferrer" : undefined\}/);
+  assert.match(musicWorkspace, /className="music-track-share-link"[\s\S]{0,220}<input readOnly value=\{shareUrl \?\? ""\}[\s\S]{0,180}event\.currentTarget\.select\(\)[\s\S]{0,700}Copy link/);
+  assert.match(musicWorkspace, /async function copyTrackShareLink\(track: WorkspaceTrack, shareUrl: string\)[\s\S]{0,260}navigator\.clipboard\?\.writeText[\s\S]{0,260}copyTextFallback\(shareUrl\)[\s\S]{0,220}return true[\s\S]{0,220}return false/);
+  assert.doesNotMatch(musicWorkspace, /window\.prompt\(/, "the visible share link should replace the blocking prompt fallback");
+  assert.match(musicWorkspace, /const previousActiveElement = document\.activeElement instanceof HTMLElement \? document\.activeElement : null[\s\S]{0,620}previousActiveElement\?\.focus\(\{ preventScroll: true \}\)/);
   assert.match(musicWorkspace, /aria-pressed=\{containsTrack\}[\s\S]{0,260}Remove from playlist/);
   assert.match(musicWorkspace, /className="music-track-new-playlist"[\s\S]{0,120}<button type="button" onClick=\{onOpenPlaylistCreator\}>Create a new playlist<\/button>/);
   assert.doesNotMatch(musicWorkspace.match(/function TrackActionPopover[\s\S]*?\n\}/)?.[0] ?? "", /placeholder="Playlist name"|Create & add<\/button>/, "the old inline name-only creator should stay removed");
-  assert.match(musicWorkspace, /popover\.querySelector<HTMLButtonElement>\("button:not\(\[disabled\]\)"\)\?\.focus\(\)/);
+  assert.match(musicWorkspace, /const trackPopoverFocusableSelector = "button:not\(\[disabled\]\), a\[href\], input:not\(\[disabled\]\)"/);
+  assert.match(musicWorkspace, /popover\.querySelector<HTMLElement>\(trackPopoverFocusableSelector\)\?\.focus\(\)/);
   assert.match(musicWorkspace, /if \(event\.key === "Escape"\)[\s\S]{0,100}onClose\(true\)[\s\S]{0,180}\["ArrowDown", "ArrowUp", "Home", "End"\]/);
   assert.match(musicWorkspace, /document\.addEventListener\("pointerdown", handlePointerDown, true\)[\s\S]{0,180}window\.addEventListener\("scroll", handleViewportChange, true\)/);
   assert.match(musicWorkspace, /const nextX = Math\.max\(gutter, Math\.min\(state\.x, window\.innerWidth - rect\.width - gutter\)\)[\s\S]{0,420}const nextY = Math\.max/);
@@ -2222,6 +2230,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.ok(v26Start > v25Start, "playlist deletion and exact card framing should follow the selected navigation icons");
   const v28Start = musicWorkspaceCss.indexOf("/* V28");
   assert.ok(v28Start > v26Start, "detail artwork editing should follow the personal playlist deletion controls");
+  const v29Start = musicWorkspaceCss.indexOf("/* V29");
+  assert.ok(v29Start > v28Start, "the track share chooser should follow the playlist artwork controls");
   const musicWorkspaceV12 = musicWorkspaceCss.slice(v12Start, v13Start);
   const musicWorkspaceV13 = musicWorkspaceCss.slice(v13Start, v14Start);
   const musicWorkspaceV14 = musicWorkspaceCss.slice(v14Start, v15Start);
@@ -2230,7 +2240,8 @@ test("keeps the connected workspace readable and artist-led", async () => {
   const musicWorkspaceV24 = musicWorkspaceCss.slice(v24Start, v25Start);
   const musicWorkspaceV25 = musicWorkspaceCss.slice(v25Start, v26Start);
   const musicWorkspaceV26 = musicWorkspaceCss.slice(v26Start, v28Start);
-  const musicWorkspaceV28 = musicWorkspaceCss.slice(v28Start);
+  const musicWorkspaceV28 = musicWorkspaceCss.slice(v28Start, v29Start);
+  const musicWorkspaceV29 = musicWorkspaceCss.slice(v29Start);
   assert.match(musicWorkspaceV12, /\.music-discovery-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(musicWorkspaceV12, /\.music-discovery-facet-head h3,[\s\S]{0,100}margin:\s*0;[^}]*font-family:\s*var\(--font-display\)/s);
   assert.match(musicWorkspaceV12, /\.music-track-table\[role="list"\]\s*\{/);
@@ -2397,6 +2408,13 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(musicWorkspaceV28, /@media \(max-width:\s*600px\)[\s\S]{0,180}\.music-playlist-detail-image-control\s*\{[^}]*top:\s*20px;[^}]*right:\s*76px/s);
   assert.match(musicWorkspaceV28, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]{0,180}\.music-playlist-detail-image-picker::before\s*\{\s*transition:\s*none;/s);
   assert.match(musicWorkspaceV28, /@media \(forced-colors:\s*active\)[\s\S]{0,180}\.music-playlist-detail-image-error\s*\{\s*border:\s*1px solid ButtonText;/s);
+  assert.match(musicWorkspaceV29, /compact platform chooser and a copyable public link/);
+  assert.match(musicWorkspaceV29, /\.music-track-context-menu\.is-share\s*\{[^}]*width:\s*min\(360px, calc\(100vw - 24px\)\)/s);
+  assert.match(musicWorkspaceV29, /\.music-track-share-platforms\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
+  assert.match(musicWorkspaceV29, /\.music-track-share-copy::before\s*\{[^}]*background:\s*var\(--wm-clay\);[^}]*transform:\s*translate3d\(-101%, 0, 0\)/s);
+  assert.match(musicWorkspaceV29, /@media \(max-width:\s*420px\)[\s\S]{0,160}\.music-track-share-link > div\s*\{\s*grid-template-columns:\s*1fr/s);
+  assert.match(musicWorkspaceV29, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]{0,160}\.music-track-share-platforms > a\s*\{\s*transform:\s*none;[^}]*\}[\s\S]{0,160}\.music-track-share-copy::before\s*\{\s*transition:\s*none;/s);
+  assert.match(musicWorkspaceV29, /@media \(forced-colors:\s*active\)[\s\S]{0,220}\.music-track-share-copy\s*\{\s*border:\s*1px solid ButtonText;/s);
 
   assert.match(musicWorkspaceCss, /\.workspace-audio-player\s*\{[^}]*position:\s*fixed/s);
   assert.match(musicWorkspaceCss, /\.creator-music-app/);
