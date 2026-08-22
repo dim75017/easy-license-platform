@@ -202,14 +202,19 @@ const VISIBLE_COVER_PRELOAD_LIMIT = 8;
 
 const personalPlaylistImageUrlCache = new Map<string, string>();
 const personalPlaylistImagePromiseCache = new Map<string, Promise<string | null>>();
+const personalPlaylistImageRequestTokenCache = new Map<string, symbol>();
+const personalPlaylistImageSelectionTokenCache = new Map<string, symbol>();
+const personalPlaylistImageUpdateQueue = new Map<string, Promise<void>>();
 const warmedPlaylistArtwork = new Set<string>();
 
 function rememberPersonalPlaylistImage(imageKey: string, image: Blob) {
   try {
+    const nextUrl = URL.createObjectURL(image);
     const previousUrl = personalPlaylistImageUrlCache.get(imageKey);
-    if (previousUrl) URL.revokeObjectURL(previousUrl);
-    personalPlaylistImageUrlCache.set(imageKey, URL.createObjectURL(image));
+    personalPlaylistImageUrlCache.set(imageKey, nextUrl);
     personalPlaylistImagePromiseCache.delete(imageKey);
+    personalPlaylistImageRequestTokenCache.delete(imageKey);
+    if (previousUrl) URL.revokeObjectURL(previousUrl);
   } catch {
     // The persisted image remains available through IndexedDB on the next render.
   }
@@ -220,15 +225,25 @@ function cachedPersonalPlaylistImageUrl(imageKey: string): Promise<string | null
   if (cached) return Promise.resolve(cached);
   const pending = personalPlaylistImagePromiseCache.get(imageKey);
   if (pending) return pending;
+  const requestToken = Symbol(imageKey);
+  personalPlaylistImageRequestTokenCache.set(imageKey, requestToken);
   const request = loadPersonalPlaylistImage(imageKey)
     .then((image) => {
+      if (personalPlaylistImageRequestTokenCache.get(imageKey) !== requestToken) {
+        return personalPlaylistImageUrlCache.get(imageKey) ?? null;
+      }
       if (!image) return null;
       const objectUrl = URL.createObjectURL(image);
       personalPlaylistImageUrlCache.set(imageKey, objectUrl);
       return objectUrl;
     })
     .catch(() => null)
-    .finally(() => personalPlaylistImagePromiseCache.delete(imageKey));
+    .finally(() => {
+      if (personalPlaylistImageRequestTokenCache.get(imageKey) === requestToken) {
+        personalPlaylistImageRequestTokenCache.delete(imageKey);
+        personalPlaylistImagePromiseCache.delete(imageKey);
+      }
+    });
   personalPlaylistImagePromiseCache.set(imageKey, request);
   return request;
 }
@@ -238,6 +253,7 @@ function forgetCachedPersonalPlaylistImage(imageKey: string) {
   if (objectUrl) URL.revokeObjectURL(objectUrl);
   personalPlaylistImageUrlCache.delete(imageKey);
   personalPlaylistImagePromiseCache.delete(imageKey);
+  personalPlaylistImageRequestTokenCache.delete(imageKey);
 }
 
 function warmPlaylistArtwork(source: string) {
@@ -792,7 +808,8 @@ function usePersonalPlaylistImageUrl(imageKey: string | null): string | null {
     };
   }, [imageKey]);
 
-  return loadedImage?.key === imageKey ? loadedImage.url : null;
+  const cachedImageUrl = imageKey ? personalPlaylistImageUrlCache.get(imageKey) ?? null : null;
+  return cachedImageUrl ?? (loadedImage?.key === imageKey ? loadedImage.url : null);
 }
 
 function useBlobPreviewUrl(image: Blob | null): string | null {
@@ -826,6 +843,66 @@ function PersonalPlaylistArtwork({
   const imageUrl = usePersonalPlaylistImageUrl(playlist.imageKey);
   if (imageUrl) return <img className={className} src={imageUrl} alt="" width={640} height={480} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" />;
   return <span className={`${className} music-personal-playlist-default-art`} aria-hidden="true"><SymbiomeMark /></span>;
+}
+
+function PersonalPlaylistImagePicker({
+  playlist,
+  onChange,
+}: {
+  playlist: PersonalPlaylist;
+  onChange: (playlist: PersonalPlaylist, image: Blob, selectionToken: symbol) => Promise<void>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const actionLabel = playlist.imageKey ? "Change image" : "Add image";
+
+  async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0] ?? null;
+    setError("");
+    if (!file) return;
+    const selectionToken = Symbol(playlist.id);
+    personalPlaylistImageSelectionTokenCache.set(playlist.id, selectionToken);
+    setBusy(true);
+    try {
+      const preparedImage = await preparePersonalPlaylistImage(file);
+      if (personalPlaylistImageSelectionTokenCache.get(playlist.id) !== selectionToken) return;
+      await onChange(playlist, preparedImage, selectionToken);
+    } catch (caught) {
+      if (personalPlaylistImageSelectionTokenCache.get(playlist.id) === selectionToken) {
+        setError(caught instanceof Error ? caught.message : "This image could not be saved.");
+      }
+    } finally {
+      setBusy(false);
+      input.value = "";
+    }
+  }
+
+  return (
+    <div className="music-playlist-detail-image-control">
+      <input
+        className="music-playlist-detail-image-input"
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(event) => void handleChange(event)}
+        disabled={busy}
+      />
+      <button
+        className="music-playlist-detail-image-picker"
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        aria-label={`${actionLabel} for ${playlist.name}`}
+      >
+        <span>{busy ? "Updating…" : actionLabel}</span>
+      </button>
+      {error && <span className="music-playlist-detail-image-error" role="alert">{error}</span>}
+    </div>
+  );
 }
 
 function PersonalPlaylistCard({
@@ -1188,6 +1265,16 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
   const [liked, setLiked] = useState<Set<string>>(() => new Set());
   const [likedReady, setLikedReady] = useState(false);
   const [personalPlaylists, setPersonalPlaylists] = useState<PersonalPlaylist[]>(() => [defaultPersonalPlaylist]);
+  const personalPlaylistsRef = useRef(personalPlaylists);
+  const replacePersonalPlaylists = useCallback((nextPlaylists: PersonalPlaylist[]) => {
+    personalPlaylistsRef.current = nextPlaylists;
+    setPersonalPlaylists(nextPlaylists);
+  }, []);
+  const updatePersonalPlaylists = useCallback((update: (current: PersonalPlaylist[]) => PersonalPlaylist[]) => {
+    const nextPlaylists = update(personalPlaylistsRef.current);
+    personalPlaylistsRef.current = nextPlaylists;
+    setPersonalPlaylists(nextPlaylists);
+  }, []);
   const [downloadedTrackIds, setDownloadedTrackIds] = useState<Set<string>>(() => new Set());
   const [libraryActionsReady, setLibraryActionsReady] = useState(false);
   const [trackMenu, setTrackMenu] = useState<TrackMenuState | null>(null);
@@ -1549,7 +1636,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
           const imageKey = isPersonalPlaylistImageKey(record.imageKey) ? record.imageKey : null;
           return [{ id: record.id, name: record.name.trim().slice(0, 48), description, imageKey, trackIds: [...new Set(record.trackIds.filter(isStoredTrackId))] }];
         });
-        setPersonalPlaylists(validPlaylists);
+        replacePersonalPlaylists(validPlaylists);
       }
     } catch { /* Ignore only the malformed personal-playlists key. */ }
     try {
@@ -1558,7 +1645,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     } catch { /* Ignore only the malformed downloads key. */ }
     setLikedReady(true);
     setLibraryActionsReady(true);
-  }, []);
+  }, [replacePersonalPlaylists]);
 
   useEffect(() => {
     if (!likedReady) return;
@@ -1930,16 +2017,17 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
   }
 
   function addTrackToPlaylist(track: WorkspaceTrack, playlistId: string) {
-    const target = personalPlaylists.find((playlist) => playlist.id === playlistId);
+    const target = personalPlaylistsRef.current.find((playlist) => playlist.id === playlistId);
     const removing = target?.trackIds.includes(track.id) ?? false;
-    setPersonalPlaylists((current) => current.map((playlist) => playlist.id !== playlistId ? playlist : { ...playlist, trackIds: removing ? playlist.trackIds.filter((id) => id !== track.id) : [...playlist.trackIds, track.id] }));
+    updatePersonalPlaylists((current) => current.map((playlist) => playlist.id !== playlistId ? playlist : { ...playlist, trackIds: removing ? playlist.trackIds.filter((id) => id !== track.id) : [...playlist.trackIds, track.id] }));
     setActionStatus(removing ? `${track.title} removed from ${target?.name ?? "playlist"}.` : `${track.title} added to ${target?.name ?? "playlist"}.`);
   }
 
   function removeTrackFromPersonalPlaylist(track: WorkspaceTrack, playlistId: string) {
-    const target = personalPlaylists.find((playlist) => playlist.id === playlistId);
+    const currentPlaylists = personalPlaylistsRef.current;
+    const target = currentPlaylists.find((playlist) => playlist.id === playlistId);
     if (!target?.trackIds.includes(track.id)) return;
-    const nextPlaylists = personalPlaylists.map((playlist) => playlist.id !== playlistId
+    const nextPlaylists = currentPlaylists.map((playlist) => playlist.id !== playlistId
       ? playlist
       : { ...playlist, trackIds: playlist.trackIds.filter((id) => id !== track.id) });
     try {
@@ -1948,20 +2036,22 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
       setActionStatus(`${track.title} could not be removed from ${target.name}.`);
       return;
     }
-    setPersonalPlaylists(nextPlaylists);
+    replacePersonalPlaylists(nextPlaylists);
     if (highlightedTrackId === track.id) setHighlightedTrackId(null);
     setActionStatus(`${track.title} removed from ${target.name}.`);
   }
 
   async function deletePersonalPlaylist(playlist: PersonalPlaylist) {
-    const currentPlaylist = personalPlaylists.find((item) => item.id === playlist.id);
+    const currentPlaylists = personalPlaylistsRef.current;
+    const currentPlaylist = currentPlaylists.find((item) => item.id === playlist.id);
     if (!currentPlaylist) {
       setPlaylistPendingDeletion(null);
       return;
     }
-    const nextPlaylists = personalPlaylists.filter((item) => item.id !== playlist.id);
+    const nextPlaylists = currentPlaylists.filter((item) => item.id !== playlist.id);
     window.localStorage.setItem("symbiome-personal-playlists-v1", JSON.stringify(nextPlaylists));
-    setPersonalPlaylists(nextPlaylists);
+    personalPlaylistImageSelectionTokenCache.delete(playlist.id);
+    replacePersonalPlaylists(nextPlaylists);
     setPlaylistPendingDeletion(null);
     closePersonalPlaylistMenu(false);
     if (activePersonalPlaylistId === playlist.id) {
@@ -1973,6 +2063,66 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
     if (currentPlaylist.imageKey && !nextPlaylists.some((item) => item.imageKey === currentPlaylist.imageKey)) {
       forgetCachedPersonalPlaylistImage(currentPlaylist.imageKey);
       try { await deletePersonalPlaylistImage(currentPlaylist.imageKey); } catch { /* Metadata deletion stays authoritative if local image cleanup is unavailable. */ }
+    }
+  }
+
+  async function updatePersonalPlaylistImage(playlist: PersonalPlaylist, image: Blob, selectionToken: symbol) {
+    const previousUpdate = personalPlaylistImageUpdateQueue.get(playlist.id) ?? Promise.resolve();
+    const queuedUpdate = previousUpdate.catch(() => undefined).then(async () => {
+      if (personalPlaylistImageSelectionTokenCache.get(playlist.id) !== selectionToken) return;
+      const currentPlaylist = personalPlaylistsRef.current.find((item) => item.id === playlist.id);
+      if (!currentPlaylist) throw new Error("This playlist is no longer available.");
+      const imageKey = currentPlaylist.imageKey ?? personalPlaylistImageKey(currentPlaylist.id);
+      let previousImage: Blob | null = null;
+      if (currentPlaylist.imageKey) {
+        try {
+          previousImage = await loadPersonalPlaylistImage(imageKey);
+        } catch {
+          throw new Error("The current playlist image could not be read safely.");
+        }
+        if (personalPlaylistImageSelectionTokenCache.get(playlist.id) !== selectionToken) return;
+      }
+      await savePersonalPlaylistImage(imageKey, image);
+      if (personalPlaylistImageSelectionTokenCache.get(playlist.id) !== selectionToken) {
+        try {
+          if (personalPlaylistsRef.current.some((item) => item.id === playlist.id) && previousImage) {
+            await savePersonalPlaylistImage(imageKey, previousImage);
+          } else {
+            await deletePersonalPlaylistImage(imageKey);
+          }
+        } catch {
+          throw new Error("The previous playlist image could not be restored.");
+        }
+        return;
+      }
+      const latestPlaylists = personalPlaylistsRef.current;
+      const latestPlaylist = latestPlaylists.find((item) => item.id === playlist.id);
+      if (!latestPlaylist) {
+        forgetCachedPersonalPlaylistImage(imageKey);
+        try { await deletePersonalPlaylistImage(imageKey); } catch { /* The deleted playlist remains authoritative. */ }
+        throw new Error("This playlist is no longer available.");
+      }
+      const nextPlaylists = latestPlaylists.map((item) => item.id === latestPlaylist.id ? { ...item, imageKey } : item);
+      if (latestPlaylist.imageKey !== imageKey) {
+        try {
+          window.localStorage.setItem("symbiome-personal-playlists-v1", JSON.stringify(nextPlaylists));
+        } catch {
+          forgetCachedPersonalPlaylistImage(imageKey);
+          try { await deletePersonalPlaylistImage(imageKey); } catch { /* Do not hide the metadata persistence failure. */ }
+          throw new Error("The playlist image could not be saved on this device.");
+        }
+      }
+      rememberPersonalPlaylistImage(imageKey, image);
+      replacePersonalPlaylists(nextPlaylists);
+      setActionStatus(`${latestPlaylist.name} artwork updated.`);
+    });
+    personalPlaylistImageUpdateQueue.set(playlist.id, queuedUpdate);
+    try {
+      await queuedUpdate;
+    } finally {
+      if (personalPlaylistImageUpdateQueue.get(playlist.id) === queuedUpdate) {
+        personalPlaylistImageUpdateQueue.delete(playlist.id);
+      }
     }
   }
 
@@ -1996,7 +2146,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
       imageKey,
       trackIds: track ? [track.id] : [],
     };
-    setPersonalPlaylists((current) => [...current, playlist]);
+    updatePersonalPlaylists((current) => [...current, playlist]);
     setPlaylistComposerTrackId(undefined);
     setActionStatus(track
       ? `${draft.name} created with ${track.title}.`
@@ -2358,6 +2508,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
             catalogueStatus={playlistCatalogueStatus}
             onCreatePlaylist={() => setPlaylistComposerTrackId(null)}
             onBack={closePlaylist}
+            onChangePersonalImage={updatePersonalPlaylistImage}
             onOpen={openPlaylist}
             onOpenPersonal={openPersonalPlaylist}
             onDeletePersonal={requestPersonalPlaylistDeletion}
@@ -2484,6 +2635,7 @@ function PlaylistLibrary({
   catalogueStatus,
   onCreatePlaylist,
   onBack,
+  onChangePersonalImage,
   onOpen,
   onOpenPersonal,
   onDeletePersonal,
@@ -2501,6 +2653,7 @@ function PlaylistLibrary({
   catalogueStatus: ReactNode;
   onCreatePlaylist: () => void;
   onBack: () => void;
+  onChangePersonalImage: (playlist: PersonalPlaylist, image: Blob, selectionToken: symbol) => Promise<void>;
   onOpen: (playlist: LofiGirlPlaylist) => void;
   onOpenPersonal: (playlist: PersonalPlaylist) => void;
   onDeletePersonal: (playlist: PersonalPlaylist) => void;
@@ -2556,6 +2709,7 @@ function PlaylistLibrary({
             <PersonalPlaylistArtwork playlist={activePersonalPlaylist} className="music-playlist-detail-photo" eager />
             <span className="music-playlist-detail-shade" aria-hidden="true" />
             <button className="music-playlist-detail-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> All playlists</button>
+            <PersonalPlaylistImagePicker playlist={activePersonalPlaylist} onChange={onChangePersonalImage} />
             <button className="music-playlist-detail-delete" type="button" onClick={() => onDeletePersonal(activePersonalPlaylist)} aria-label={`Delete playlist ${activePersonalPlaylist.name}`} title="Delete playlist"><TrackActionIcon kind="delete" /></button>
             <div className="music-playlist-detail-copy">
               <span className="music-playlist-detail-kicker">MY PLAYLIST</span>
