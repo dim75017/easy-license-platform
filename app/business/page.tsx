@@ -4,8 +4,6 @@ import { CatalogueFacts } from "../components/CatalogueFacts";
 import { LeadForm } from "../components/LeadForm";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { PublicShell } from "../components/PublicShell";
-import { WorkspaceProfileSwitcher } from "../components/WorkspaceProfileSwitcher";
-import "../workspace-music.css";
 
 export const metadata: Metadata = {
   title: "For Businesses",
@@ -121,9 +119,6 @@ export default function BusinessPage() {
           </div>
         </section>
       </div>
-      <aside className="business-profile-access" aria-label="Account and workspace views">
-        <WorkspaceProfileSwitcher activeRole="business" />
-      </aside>
     </PublicShell>
   );
 }

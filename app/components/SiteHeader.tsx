@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { publicAccountSignOutHref } from "../_lib/public-account-auth";
 import { Brand } from "./Brand";
+import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -26,6 +27,13 @@ export function SiteHeader() {
     if (href === "/business") return isBusinessSurface;
     if (href === "/pricing") return pathname === "/pricing";
     return pathname === href;
+  };
+
+  const navigateFromHeader = (href: string) => {
+    setOpen(false);
+    if (href !== pathname) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
   };
 
   return (
@@ -50,7 +58,8 @@ export function SiteHeader() {
                 className={isActive(item.href) ? "is-active" : ""}
                 href={item.href}
                 key={`${item.href}-${item.label}`}
-                onClick={() => setOpen(false)}
+                onClick={() => navigateFromHeader(item.href)}
+                scroll
               >
                 <span className="nav-index">0{index + 1}</span>
                 {item.label}
@@ -60,6 +69,9 @@ export function SiteHeader() {
           <div className="site-header-actions">
             <a className="header-login" href={publicAccountSignOutHref("login")} onClick={() => setOpen(false)}>Log in</a>
             <a className="button button-small button-primary cta-swipe" href={publicAccountSignOutHref("create")} onClick={() => setOpen(false)}>Create account</a>
+            <div className="public-profile-access">
+              <WorkspaceProfileSwitcher activeRole={null} compact />
+            </div>
           </div>
         </div>
       </div>

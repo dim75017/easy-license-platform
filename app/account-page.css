@@ -159,6 +159,9 @@
 
 .account-auth-methods li {
   min-width: 0;
+}
+
+.account-auth-methods a {
   min-height: 52px;
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
@@ -168,6 +171,21 @@
   border-radius: 16px;
   padding: 9px 13px;
   background: rgba(255, 249, 241, .62);
+  color: var(--symbiose-night);
+  text-decoration: none;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.account-auth-methods a:hover {
+  border-color: rgba(224, 99, 67, .62);
+  background: var(--symbiose-paper);
+  transform: translateY(-1px);
+}
+
+.account-auth-methods a:focus-visible {
+  border-color: var(--symbiose-warm);
+  outline: 3px solid rgba(224, 99, 67, .28);
+  outline-offset: 2px;
 }
 
 .account-auth-methods strong {
@@ -197,8 +215,6 @@
 .account-auth-method-mark.is-microsoft { color: #1769aa; }
 .account-auth-method-mark.is-email { color: var(--symbiose-warm); }
 
-.account-auth-choice > .button { width: 100%; min-height: 56px; margin-top: 2px; }
-
 .account-auth-method-note {
   margin: -3px 0 0 !important;
   color: rgba(41, 40, 50, .7) !important;
@@ -220,16 +236,6 @@
   cursor: pointer;
 }
 
-.account-trust-note {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 12px;
-  align-items: center;
-  border-top: 1px solid rgba(41, 40, 50, .13);
-  padding-top: 20px;
-}
-
-.account-trust-note > span,
 .account-complete-mark {
   display: grid;
   width: 36px;
@@ -241,7 +247,6 @@
   font-weight: 800;
 }
 
-.account-trust-note p { margin: 0; color: rgba(41, 40, 50, .68); font-size: 14px; line-height: 1.4; }
 .account-legal-copy { font-size: 13px !important; }
 .account-legal-copy a,
 .account-checks a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
@@ -352,14 +357,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .account-loader { animation: none; }
+  .account-auth-methods a { transition: none; }
 }
 
 @media (forced-colors: active) {
   .account-intro,
-  .account-auth-methods li,
+  .account-auth-methods a,
   .account-plan-grid > label,
-  .account-trust-note > span,
   .account-complete-mark { forced-color-adjust: auto; }
-  .account-auth-methods li { border-color: ButtonText; }
+  .account-auth-methods a { border-color: ButtonText; }
   .account-plan-grid > label.is-selected { outline: 2px solid Highlight; }
 }

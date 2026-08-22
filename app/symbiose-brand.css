@@ -703,3 +703,218 @@ body {
     min-height: 90px;
   }
 }
+
+/* V33: the public header exposes the same account/view switcher as the workspaces. */
+.public-profile-access {
+  --wm-clay: var(--symbiose-warm);
+  --wm-ink: var(--symbiose-night);
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.public-profile-access .music-profile-switcher.is-compact {
+  display: block;
+}
+
+.public-profile-access button.music-app-account {
+  display: grid;
+  width: 44px;
+  min-height: 44px;
+  grid-template-columns: 1fr;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(41, 40, 50, .2);
+  border-radius: 50%;
+  padding: 0;
+  background: var(--symbiose-night);
+  color: var(--symbiose-paper);
+  cursor: pointer;
+}
+
+.public-profile-access button.music-app-account::before,
+.public-profile-access button.music-app-account > i {
+  display: none;
+}
+
+.public-profile-access button.music-app-account > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(224, 99, 67, .2);
+  color: var(--symbiose-warm);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.public-profile-access .music-profile-menu {
+  position: absolute;
+  z-index: 160;
+  top: calc(100% + 10px);
+  right: 0;
+  bottom: auto;
+  left: auto;
+  display: grid;
+  width: 254px;
+  max-height: calc(100vh - 108px);
+  gap: 4px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 249, 241, .14);
+  border-radius: 16px;
+  padding: 10px;
+  background: #23222b;
+  box-shadow: 0 24px 60px rgba(12, 12, 18, .34);
+  color: var(--symbiose-paper);
+}
+
+.public-profile-access .music-profile-menu-label {
+  padding: 5px 8px 7px;
+  color: rgba(255, 249, 241, .46);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.public-profile-access .music-profile-menu-account {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 3px;
+  border-radius: 11px;
+  padding: 8px;
+  background: rgba(255, 249, 241, .06);
+}
+
+.public-profile-access .music-profile-menu-account > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--symbiose-warm);
+  color: var(--symbiose-paper);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.public-profile-access .music-profile-menu-account > div,
+.public-profile-access .music-profile-menu > a > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.public-profile-access .music-profile-menu-account strong,
+.public-profile-access .music-profile-menu > a strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-profile-access .music-profile-menu-account small,
+.public-profile-access .music-profile-menu > a small {
+  overflow: hidden;
+  color: rgba(255, 249, 241, .48);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-profile-access .music-profile-menu > a {
+  display: grid;
+  min-height: 52px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border-radius: 10px;
+  padding: 7px 9px;
+  color: rgba(255, 249, 241, .76);
+  text-decoration: none;
+  transition: background-color 220ms ease, color 220ms ease, transform 220ms ease;
+}
+
+.public-profile-access .music-profile-menu > a > i {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 249, 241, .08);
+  font-size: 14px;
+  font-style: normal;
+}
+
+.public-profile-access .music-profile-menu > a.is-active {
+  background: rgba(224, 99, 67, .18);
+  color: var(--symbiose-paper);
+}
+
+.public-profile-access .music-profile-menu > a.is-active > i {
+  background: var(--symbiose-warm);
+}
+
+.public-profile-access .music-profile-menu-divider {
+  height: 1px;
+  margin: 4px 5px;
+  background: rgba(255, 249, 241, .1);
+}
+
+.public-profile-access .music-profile-menu > a.music-profile-session-action {
+  min-height: 40px;
+  grid-template-columns: 1fr;
+  color: var(--symbiose-paper);
+  font-weight: 760;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-profile-access .music-profile-menu > a:hover {
+    background: var(--symbiose-warm);
+    color: var(--symbiose-paper);
+    transform: translateX(2px);
+  }
+}
+
+.public-profile-access button.music-app-account:focus-visible,
+.public-profile-access .music-profile-menu > a:focus-visible {
+  outline: 3px solid var(--symbiose-warm);
+  outline-offset: 3px;
+}
+
+@media (max-width: 980px) {
+  .public-shell .site-header .site-navigation-shell .site-header-actions {
+    grid-template-columns: 1fr 1.35fr 48px;
+  }
+
+  .public-profile-access .music-profile-menu {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+    left: auto;
+    width: min(254px, calc(100vw - 32px));
+    max-height: calc(100vh - 92px);
+  }
+}
+
+@media (max-width: 420px) {
+  .public-shell .site-header .site-navigation-shell .site-header-actions {
+    grid-template-columns: 1fr 1.35fr 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-profile-access .music-profile-menu > a {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .public-profile-access button.music-app-account,
+  .public-profile-access .music-profile-menu,
+  .public-profile-access .music-profile-menu > a {
+    border: 1px solid ButtonText;
+  }
+}

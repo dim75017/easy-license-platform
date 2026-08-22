@@ -9,6 +9,9 @@ export function MotionLayer() {
 
   useLayoutEffect(() => {
     const root = document.documentElement;
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
     const shell = progressRef.current?.closest<HTMLElement>(".public-shell");
     const revealRoot = shell?.querySelector<HTMLElement>(":scope > main") ?? document.body;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");

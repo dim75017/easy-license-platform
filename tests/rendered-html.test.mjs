@@ -340,7 +340,8 @@ test("defines every public and connected product surface", async () => {
   assert.equal([...businessFaq.matchAll(/<summary/g)].length, 5);
   assert.match(businessFaq, /href="\/help#business-licensing"/);
   assert.match(businessFaq, /<p>[^<]+<\/p><\/details>/);
-  assert.match(businessFaq, /<\/section>\s*<\/div>\s*<aside className="business-profile-access"[\s\S]{0,180}<WorkspaceProfileSwitcher activeRole="business" \/>[\s\S]{0,80}<\/aside>\s*<\/PublicShell>/);
+  assert.match(businessFaq, /<\/section>\s*<\/div>\s*<\/PublicShell>/);
+  assert.doesNotMatch(business, /business-profile-access/, "the public Business page should use the shared top-right profile control only");
   assert.match(pricing, /FOR CREATORS/i);
   assert.match(pricing, /FOR BUSINESSES/i);
   assert.match(pricing, /<PricingCards expanded \/>/i);
@@ -911,6 +912,13 @@ test("ships progressive, accessible motion without an animation dependency", asy
   assert.match(motion, /import \{ useLayoutEffect, useRef \} from "react"/);
   assert.match(motion, /usePathname/);
   assert.match(motion, /useLayoutEffect\(\(\) => \{[\s\S]*?\}, \[pathname\]\);/);
+  const routeScrollReset = motion.indexOf('window.scrollTo({ top: 0, left: 0, behavior: "auto" });');
+  const revealObserverStart = motion.lastIndexOf("startObserver();");
+  assert.notEqual(routeScrollReset, -1, "public route changes should reset scroll explicitly");
+  assert.ok(routeScrollReset < revealObserverStart, "scroll must reset before reveal observers start");
+  assert.match(motion, /if \(!window\.location\.hash\)\s*\{\s*window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\);\s*\}/);
+  assert.match(css, /html\s*\{[^}]*scroll-behavior:\s*auto;/s);
+  assert.doesNotMatch(css, /html\s*\{[^}]*scroll-behavior:\s*smooth;/s);
   assert.match(motion, /typeof window\.IntersectionObserver !== "function"[\s\S]{0,100}disableRevealMotion\(\)/);
   assert.match(motion, /new window\.MutationObserver/);
   assert.match(motion, /addedNode\.querySelectorAll<HTMLElement>\("\[data-reveal\]"\)/);
@@ -1288,9 +1296,9 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   for (const method of ["Google", "Apple", "Microsoft", "Email"]) {
     assert.match(setup, new RegExp(`id: "${method.toLowerCase()}"[\\s\\S]{0,80}label: "${method}"`));
   }
-  assert.match(setup, /<AccountSignInMethods[\s\S]{0,220}actionLabel="Continue securely"/);
+  assert.equal((setup.match(/<AccountSignInMethods/g) ?? []).length, 2);
   assert.match(setup, /Available sign-in methods/);
-  assert.match(setup, /Use the same sign-in method each time to return to the same workspace/);
+  assert.match(setup, /Each option opens the secure sign-in screen\. Choose your preferred method there\./);
   assert.doesNotMatch(setup, /Log in with ChatGPT|Continue with ChatGPT|Sign in with ChatGPT/);
   assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
   assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
@@ -1306,7 +1314,7 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.doesNotMatch(setup, /useEffect\(\(\) => \{[\s\S]{0,200}setState\("checking"\)/, "the keyed flow should initialise loading without a synchronous effect state change");
   assert.match(setup, /mode === "login" \? "Welcome back\." : "Create your account\."/);
   assert.match(setup, /Choose Google, Apple, Microsoft or email on the secure sign-in screen/);
-  assert.match(setup, /Your password stays with the sign-in method you choose/);
+  assert.doesNotMatch(setup, /Your password stays with the sign-in method you choose|account-trust-note/);
   assert.match(setup, /fetch\("\/api\/account\/profile"/);
   assert.match(setup, /method:\s*"POST"/);
   assert.match(setup, /type="radio"[\s\S]*value="creator"/);
@@ -1315,12 +1323,11 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /No payment is taken today/);
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
   assert.match(setup, /<ul className="account-auth-methods" aria-label="Available secure sign-in methods">/);
-  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>/);
-  assert.match(setup, /className="button button-primary button-full cta-swipe" href=\{actionHref\}/);
+  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>[\s\S]{0,220}<a[\s\S]{0,160}data-auth-method=\{method\.id\}[\s\S]{0,160}href=\{actionHref\}/);
   assert.match(setup, /actionHref=\{publicAccountSignOutHref\(mode, plan\)\}/);
   const providerList = setup.match(/<ul className="account-auth-methods"[\s\S]*?<\/ul>/u)?.[0] ?? "";
   assert.ok(providerList, "the sign-in method list should be rendered");
-  assert.doesNotMatch(providerList, /<(?:a|button)\b/u, "provider names must not masquerade as direct provider buttons");
+  assert.match(providerList, /<a[\s\S]{0,220}href=\{actionHref\}[\s\S]{0,260}aria-label=\{`Open secure sign-in — \$\{method\.label\} is available there`\}/u, "every displayed method should open the real secure sign-in screen without pretending to preselect a provider");
   assert.equal((setup.match(/\/signin-with-chatgpt\?return_to=/gu) ?? []).length, 1, "the flow should keep one neutral secure sign-in gateway");
   assert.match(setup, /className="account-secondary-link" href="\/app"[\s\S]{0,80}Browse music first/);
   assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
@@ -1348,15 +1355,15 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
 
   assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
   assert.match(css, /\.account-auth-methods\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[^}]*gap:\s*10px/s);
-  assert.match(css, /\.account-auth-methods li\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
+  assert.match(css, /\.account-auth-methods a\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
   assert.match(css, /\.account-auth-choice-label\s*\{[^}]*rgba\(41, 40, 50, \.74\)/s);
   assert.match(css, /\.account-auth-method-note\s*\{[^}]*rgba\(41, 40, 50, \.7\)/s);
-  assert.match(css, /\.account-auth-choice > \.button\s*\{[^}]*min-height:\s*56px/s);
+  assert.match(css, /\.account-auth-methods a:focus-visible\s*\{[^}]*outline:\s*3px solid/s);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-auth-methods\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods li\s*\{\s*border-color:\s*ButtonText;/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods a\s*\{\s*border-color:\s*ButtonText;/);
 });
 
 test("public account entry points clear the Sites session before showing login or creation", async () => {
@@ -1375,8 +1382,10 @@ test("public account entry points clear the Sites session before showing login o
   assert.match(accountAuth, /const separator = mode === "login" \? "&" : "\?"/);
   assert.match(accountAuth, /const returnTo = `\$\{accountReturnTo\[mode\]\}\$\{plan \? `\$\{separator\}plan=\$\{plan\}` : ""\}`/);
   assert.match(accountAuth, /\/signout-with-chatgpt\?return_to=\$\{encodeURIComponent\(returnTo\)\}/);
+  assert.match(accountAuth, /publicGuestViewHref[\s\S]{0,180}encodeURIComponent\("\/app\/guest"\)/);
   assert.match(header, /<a className="header-login" href=\{publicAccountSignOutHref\("login"\)\}/);
   assert.match(header, /<a className="button button-small button-primary cta-swipe" href=\{publicAccountSignOutHref\("create"\)\}/);
+  assert.match(header, /<div className="public-profile-access">[\s\S]{0,120}<WorkspaceProfileSwitcher activeRole=\{null\} compact \/>/);
   assert.match(footer, /<a href=\{publicAccountSignOutHref\("login"\)\}>Log in<\/a>/);
   assert.match(footer, /<a href=\{publicAccountSignOutHref\("create"\)\}>Create account<\/a>/);
   assert.match(pricing, /<a className="button button-primary button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "creator"\)\}>License my channel<\/a>/);
@@ -1392,18 +1401,25 @@ test("public account entry points clear the Sites session before showing login o
 });
 
 test("offers an accessible server-backed profile switcher across workspace views", async () => {
-  const [switcher, workspace, workspaceCss, profileRoute] = await Promise.all([
+  const [switcher, workspace, workspaceCss, publicCss, profileRoute, guestPage] = await Promise.all([
     source("app/components/WorkspaceProfileSwitcher.tsx"),
     source("app/components/CreatorWorkspace.tsx"),
     source("app/workspace-music.css"),
+    source("app/symbiose-brand.css"),
     source("app/api/account/profile/route.ts"),
+    source("app/app/guest/page.tsx"),
   ]);
 
   assert.match(workspace, /import \{ WorkspaceProfileSwitcher \} from "\.\/WorkspaceProfileSwitcher"/);
   assert.doesNotMatch(workspace, /music-app-sidebar-bottom/, "the profile control should no longer live at the bottom of the sidebar");
   assert.equal((workspace.match(/<WorkspaceProfileSwitcher/g) ?? []).length, 1, "the Creator workspace should expose one profile control");
   assert.match(workspace, /<WorkspaceProfileSwitcher\s+activeRole=\{workspaceRole\}\s+compact[\s\S]{0,300}activeLibraryView=\{view === "channels" \|\| view === "licences" \|\| view === "license-song" \|\| view === "custom-song" \? view : undefined\}[\s\S]{0,120}onOpenLibraryView=\{navigateToView\}/);
-  assert.match(switcher, /type WorkspaceRole = "creator" \| "business" \| "admin"/);
+  assert.match(switcher, /type WorkspaceRole = "guest" \| "creator" \| "business" \| "admin"/);
+  assert.match(workspace, /type WorkspaceRole = "guest" \| "creator" \| "business"/);
+  assert.match(switcher, /href=\{guestViewHref\} role="menuitem"[\s\S]{0,260}<strong>No account<\/strong>/);
+  assert.match(switcher, /aria-current=\{activeRole === "guest" \? "page" : undefined\}/);
+  assert.match(guestPage, /<CreatorWorkspace workspaceRole="guest" \/>/);
+  assert.match(guestPage, /title: "Browse music without an account"/);
   for (const [role, href] of [["Creator", "/app"], ["Business", "/app/business?view=music"], ["Admin", "/admin"]]) {
     const escapedHref = href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     assert.match(
@@ -1449,6 +1465,8 @@ test("offers an accessible server-backed profile switcher across workspace views
   assert.match(workspaceCss, /\.creator-music-app \.music-app-topbar > \.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;[^}]*bottom:\s*auto;[^}]*max-height:\s*calc\(100vh - 102px\);/s);
   assert.match(workspaceCss, /@media \(max-width: 860px\)[\s\S]{0,220}\.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
   assert.match(workspaceCss, /@media \(max-width: 480px\)[\s\S]{0,300}\.music-profile-switcher\.is-compact \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*right:\s*12px;[^}]*left:\s*12px;[^}]*max-height:\s*calc\(100vh - 84px\);/s);
+  assert.match(publicCss, /\.public-profile-access \.music-profile-switcher\.is-compact\s*\{\s*display:\s*block;/);
+  assert.match(publicCss, /\.public-profile-access \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;/s);
 });
 
 test("opens the Business profile on its own library and keeps complete licensing briefs inside Symbiome", async () => {
@@ -1501,19 +1519,18 @@ test("opens the Business profile on its own library and keeps complete licensing
   assert.match(css, /@media \(max-width: 760px\)[\s\S]{0,900}\.business-request-section\s*\{\s*grid-template-columns:\s*1fr/s);
 });
 
-test("keeps the Business profile switcher persistent and the Admin profile in the topbar", async () => {
-  const [business, offerCss, workspaceV2] = await Promise.all([
+test("keeps the public profile in the header and the Admin profile in the topbar", async () => {
+  const [business, header, publicCss, workspaceV2] = await Promise.all([
     source("app/business/page.tsx"),
-    source("app/offer-pages.css"),
+    source("app/components/SiteHeader.tsx"),
+    source("app/symbiose-brand.css"),
     source("app/workspace-v2.css"),
   ]);
 
-  assert.match(business, /import \{ WorkspaceProfileSwitcher \} from "\.\.\/components\/WorkspaceProfileSwitcher"/);
-  assert.match(business, /import "\.\.\/workspace-music\.css"/);
-  assert.match(business, /<aside className="business-profile-access" aria-label="Account and workspace views">[\s\S]{0,120}<WorkspaceProfileSwitcher activeRole="business" \/>/);
-  assert.match(offerCss, /\.public-shell \.business-profile-access\s*\{[^}]*position:\s*fixed;[^}]*bottom:\s*max\(18px, env\(safe-area-inset-bottom\)\);[^}]*left:\s*18px;[^}]*width:\s*248px;/s);
-  assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,520}\.public-shell \.business-profile-access button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
-  assert.match(offerCss, /@media \(max-width: 900px\)[\s\S]{0,1100}\.public-shell \.business-profile-access \.music-profile-menu\s*\{[^}]*position:\s*fixed;[^}]*left:\s*16px;[^}]*width:\s*min\(242px, calc\(100vw - 32px\)\);/s);
+  assert.doesNotMatch(business, /business-profile-access|WorkspaceProfileSwitcher/);
+  assert.match(header, /Create account<\/a>[\s\S]{0,180}<div className="public-profile-access">[\s\S]{0,120}<WorkspaceProfileSwitcher activeRole=\{null\} compact \/>/);
+  assert.match(publicCss, /\.public-profile-access button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*border-radius:\s*50%;/s);
+  assert.match(publicCss, /\.public-profile-access \.music-profile-menu\s*\{[^}]*top:\s*calc\(100% \+ 10px\);[^}]*right:\s*0;/s);
   assert.match(workspaceV2, /\.admin-shell \.dashboard-topbar\s*\{\s*z-index:\s*100;/);
   assert.match(workspaceV2, /\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact\s*\{[^}]*display:\s*block;/s);
   assert.match(workspaceV2, /\.admin-shell \.dashboard-top-actions > \.music-profile-switcher\.is-compact button\.music-app-account\s*\{[^}]*width:\s*44px;[^}]*min-height:\s*44px;[^}]*border-radius:\s*50%;/s);
@@ -1829,7 +1846,10 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.match(symbioseBrandCss, /V5: the public header stays full-width and sticky in every scroll state\.[\s\S]{0,300}\.public-shell \.site-header\s*\{[^}]*position:\s*sticky;[^}]*top:\s*0;/s);
   assert.match(symbioseBrandCss, /@media \(min-width:\s*761px\)[\s\S]{0,180}\.public-shell \.site-header \.site-header-inner\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin-inline:\s*0;[^}]*padding-inline:\s*clamp\(28px, 4vw, 76px\)/s);
   assert.match(symbioseBrandCss, /V8: the sticky header lockup keeps one height through the desktop scroll threshold\.[\s\S]{0,220}@media \(min-width:\s*801px\)[\s\S]{0,160}\.page-scrolled \.public-shell \.site-header \.site-header-inner\s*\{[^}]*min-height:\s*90px;/s);
-  const stableHeaderRule = symbioseBrandCss.slice(symbioseBrandCss.indexOf("/* V8:"));
+  const stableHeaderRule = symbioseBrandCss.slice(
+    symbioseBrandCss.indexOf("/* V8:"),
+    symbioseBrandCss.indexOf("/* V33:"),
+  );
   assert.doesNotMatch(stableHeaderRule, /lofi-girl-wordmark|font-size|--lofi-wordmark-height|transform|scale/, "scroll stability should not resize the wordmark itself");
   assert.match(musicWorkspace, /const defaultView: LibraryView = workspaceRole === "business" \? "music" : "discover"/);
   assert.match(musicWorkspace, /useState<LibraryView>\(defaultView\)/);

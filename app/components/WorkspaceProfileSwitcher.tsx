@@ -8,9 +8,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { publicAccountSignOutHref } from "../_lib/public-account-auth";
+import { publicAccountSignOutHref, publicGuestViewHref } from "../_lib/public-account-auth";
 
-type WorkspaceRole = "creator" | "business" | "admin";
+type WorkspaceRole = "guest" | "creator" | "business" | "admin";
 type ProfileLibraryView = "channels" | "licences" | "license-song" | "custom-song";
 type ProfileState = "loading" | "guest" | "authenticated";
 
@@ -23,14 +23,15 @@ type WorkspaceProfile = {
 
 const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
 const signOutHref = publicAccountSignOutHref("login");
+const guestViewHref = publicGuestViewHref();
 
 export function WorkspaceProfileSwitcher({
-  activeRole = "creator",
+  activeRole,
   compact = false,
   activeLibraryView,
   onOpenLibraryView,
 }: {
-  activeRole?: WorkspaceRole;
+  activeRole?: WorkspaceRole | null;
   compact?: boolean;
   activeLibraryView?: ProfileLibraryView;
   onOpenLibraryView?: (view: ProfileLibraryView) => void;
@@ -184,6 +185,9 @@ export function WorkspaceProfileSwitcher({
             <div><strong>{displayName}</strong><small>{profile?.email || accountLabel}</small></div>
           </div>
           <span className="music-profile-menu-label">CHOOSE A VIEW</span>
+          <a className={activeRole === "guest" ? "is-active" : ""} href={guestViewHref} role="menuitem" aria-current={activeRole === "guest" ? "page" : undefined} onClick={closeMenu}>
+            <i aria-hidden="true">○</i><span><strong>No account</strong><small>Public library as a guest</small></span>
+          </a>
           <Link className={activeRole === "creator" ? "is-active" : ""} href="/app" role="menuitem" aria-current={activeRole === "creator" ? "page" : undefined} onClick={closeMenu}>
             <i aria-hidden="true">♫</i><span><strong>Creator</strong><small>Music library and licences</small></span>
           </Link>

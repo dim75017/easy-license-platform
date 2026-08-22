@@ -29,7 +29,7 @@ import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
 import { BusinessWorkspaceRequest } from "./BusinessWorkspaceRequest";
 import "../workspace-music.css";
 
-type WorkspaceRole = "creator" | "business";
+type WorkspaceRole = "guest" | "creator" | "business";
 type LibraryView = "discover" | "music" | "playlists" | "liked" | "downloads" | "channels" | "licences" | "license-song" | "custom-song";
 type FacetKind = "genre" | "mood" | "theme" | "artist";
 type TrackMenuMode = "actions" | "playlists";
