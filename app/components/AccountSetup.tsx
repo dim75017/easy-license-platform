@@ -208,7 +208,6 @@ function AccountSetupFlow({
               </p>
               <AccountSignInMethods
                 actionHref={publicAccountSignOutHref(mode, plan)}
-                mode={mode}
               />
               <Link className="account-secondary-link" href="/app/guest">
                 Browse music first
@@ -227,7 +226,6 @@ function AccountSetupFlow({
               </p>
               <AccountSignInMethods
                 actionHref={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
-                mode={mode}
               />
               <p className="account-legal-copy">
                 By continuing, you acknowledge our <Link href="/legal">Legal information</Link>
@@ -370,31 +368,34 @@ function AccountSetupFlow({
 
 function AccountSignInMethods({
   actionHref,
-  mode,
 }: {
   actionHref: string;
-  mode: "login" | "create";
 }) {
   return (
     <div className="account-auth-choice">
-      <span className="account-auth-choice-label">Secure account methods</span>
-      <ul className="account-auth-methods" aria-label="Identity methods handled by the secure account screen">
+      <span className="account-auth-choice-label">Available on the secure account screen</span>
+      <ul className="account-auth-methods" aria-label="Open the secure screen to choose an account method">
         {accountSignInMethods.map((method) => (
           <li key={method.id}>
-            <span data-auth-method={method.id}>
+            <a
+              className="account-auth-method"
+              data-auth-method={method.id}
+              href={actionHref}
+              aria-label={`Open the secure account screen to choose ${method.label}`}
+            >
               <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
                 {method.mark}
               </span>
-              <strong>{method.label}</strong>
-            </span>
+              <span className="account-auth-method-copy">
+                <strong>{method.label}</strong>
+                <small>Choose on secure screen</small>
+              </span>
+            </a>
           </li>
         ))}
       </ul>
-      <a className="button button-primary button-full cta-swipe account-auth-continue" href={actionHref}>
-        {mode === "login" ? "Continue to log in" : "Continue to create account"}
-      </a>
       <p className="account-auth-method-note">
-        The secure identity screen shows the methods available for your account and returns you to Symbiome.
+        All four choices open the same secure identity screen. Select your provider there, then return to Symbiome.
       </p>
     </div>
   );
