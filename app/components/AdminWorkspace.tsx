@@ -176,7 +176,7 @@ function AdminAccessState({ state, onRetry }: { state: AdminState; onRetry: () =
       <p>{content.copy}</p>
       <div>
         {state === "demo" && <a className="button button-primary cta-swipe" href={secureAdminUrl}>Open secure Admin</a>}
-        {state === "signed-out" && <a className="button button-primary cta-swipe" href={adminSignInHref}>Choose a sign-in method</a>}
+        {state === "signed-out" && <a className="button button-primary cta-swipe" href={adminSignInHref}>Continue to secure sign-in</a>}
         {state === "error" && <button className="button button-primary cta-swipe" type="button" onClick={onRetry}>Retry analytics</button>}
         {(state === "forbidden" || state === "unconfigured") && <Link className="button button-ghost" href="/app">Return to Creator view</Link>}
       </div>
