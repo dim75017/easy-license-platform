@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminWorkspace } from "../components/AdminWorkspace";
+import { requireSymbiomeAdmin } from "../chatgpt-auth";
 
 export const metadata: Metadata = {
   title: "Admin analytics",
@@ -7,4 +8,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AdminPage() { return <AdminWorkspace />; }
+export default async function AdminPage() {
+  if (process.env.BUILD_TARGET !== "pages") {
+    await requireSymbiomeAdmin("/admin");
+  }
+  return <AdminWorkspace />;
+}

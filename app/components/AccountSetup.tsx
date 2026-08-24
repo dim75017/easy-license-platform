@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { publicAccountSignOutHref } from "../_lib/public-account-auth";
+import { CatalogueMetric } from "./CatalogueMetric";
 
 type Plan = "creator" | "pro";
 type Platform =
@@ -106,6 +107,10 @@ function AccountSetupFlow({
           setPlatform(payload.profile.platform);
           setMarketingOptIn(payload.profile.marketingOptIn);
           setAcceptPolicies(true);
+          if (mode === "login") {
+            window.location.replace("/app");
+            return;
+          }
           setState("complete");
           return;
         }
@@ -118,7 +123,7 @@ function AccountSetupFlow({
         }
       });
     return () => controller.abort();
-  }, [resumeAuthentication]);
+  }, [mode, resumeAuthentication]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -176,7 +181,7 @@ function AccountSetupFlow({
           <li><span>03</span><strong>Music workspace</strong></li>
         </ol>
         <div className="account-proof">
-          <span>10,000+ human-made tracks</span>
+          <span><CatalogueMetric metric="tracks" /> published tracks</span>
           <span>0 generative AI music</span>
         </div>
       </section>
@@ -203,8 +208,9 @@ function AccountSetupFlow({
               </p>
               <AccountSignInMethods
                 actionHref={publicAccountSignOutHref(mode, plan)}
+                mode={mode}
               />
-              <Link className="account-secondary-link" href="/app">
+              <Link className="account-secondary-link" href="/app/guest">
                 Browse music first
               </Link>
             </div>
@@ -216,16 +222,20 @@ function AccountSetupFlow({
               <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
                 {mode === "login"
-                  ? "Choose Google, Apple, Microsoft or email on the secure sign-in screen to return to your workspace."
-                  : "Choose Google, Apple, Microsoft or email on the secure sign-in screen to create your workspace."}
+                  ? "Continue through the secure identity screen, then return directly to your music workspace."
+                  : "Continue through the secure identity screen, then finish your Symbiome profile."}
               </p>
               <AccountSignInMethods
                 actionHref={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
+                mode={mode}
               />
               <p className="account-legal-copy">
                 By continuing, you acknowledge our <Link href="/legal">Legal information</Link>
                 {" "}and <Link href="/privacy">Privacy Policy</Link>.
               </p>
+              <Link className="account-secondary-link" href="/app/guest">
+                Browse music first
+              </Link>
             </div>
           )}
 
@@ -273,8 +283,8 @@ function AccountSetupFlow({
                       checked={plan === "creator"}
                       onChange={() => setPlan("creator")}
                     />
-                    <span><strong>Creator</strong><small>One channel per platform</small></span>
-                    <b>€6.67<small>/mo</small></b>
+                    <span><strong>Creator</strong><small>Personal workspace preference</small></span>
+                    <b>Beta<small>no payment</small></b>
                   </label>
                   <label className={plan === "pro" ? "is-selected" : ""}>
                     <input
@@ -284,11 +294,11 @@ function AccountSetupFlow({
                       checked={plan === "pro"}
                       onChange={() => setPlan("pro")}
                     />
-                    <span><strong>Pro</strong><small>Teams and multiple channels</small></span>
-                    <b>€16.67<small>/mo</small></b>
+                    <span><strong>Pro</strong><small>Team workspace preference</small></span>
+                    <b>Beta<small>no payment</small></b>
                   </label>
                 </div>
-                <p className="account-plan-note">Plan preference only. No payment is taken today.</p>
+                <p className="account-plan-note">Plan preference only. No payment, subscription or licence is created.</p>
               </fieldset>
 
               <label className="account-platform-field">
@@ -360,30 +370,31 @@ function AccountSetupFlow({
 
 function AccountSignInMethods({
   actionHref,
+  mode,
 }: {
   actionHref: string;
+  mode: "login" | "create";
 }) {
   return (
     <div className="account-auth-choice">
-      <span className="account-auth-choice-label">Available sign-in methods</span>
-      <ul className="account-auth-methods" aria-label="Available secure sign-in methods">
+      <span className="account-auth-choice-label">Secure account methods</span>
+      <ul className="account-auth-methods" aria-label="Identity methods handled by the secure account screen">
         {accountSignInMethods.map((method) => (
           <li key={method.id}>
-            <a
-              data-auth-method={method.id}
-              href={actionHref}
-              aria-label={`Open secure sign-in — ${method.label} is available there`}
-            >
+            <span data-auth-method={method.id}>
               <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
                 {method.mark}
               </span>
               <strong>{method.label}</strong>
-            </a>
+            </span>
           </li>
         ))}
       </ul>
+      <a className="button button-primary button-full cta-swipe account-auth-continue" href={actionHref}>
+        {mode === "login" ? "Continue to log in" : "Continue to create account"}
+      </a>
       <p className="account-auth-method-note">
-        Each option opens the secure sign-in screen. Choose your preferred method there.
+        The secure identity screen shows the methods available for your account and returns you to Symbiome.
       </p>
     </div>
   );

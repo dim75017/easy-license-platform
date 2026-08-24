@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { CatalogueFacts } from "../components/CatalogueFacts";
 import { LeadForm } from "../components/LeadForm";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { PublicShell } from "../components/PublicShell";
 
-export const metadata: Metadata = {
-  title: "For Businesses",
-  description: "Human-made music licensing and original composition for commercial projects, with music for physical spaces coming soon.",
-};
+export const metadata = pageMetadata("For Businesses", "Human-made music licensing and original composition for commercial projects, with music for physical spaces coming soon.", "/business");
 
 export default function BusinessPage() {
   return (

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import { Suspense } from "react";
 import { BusinessLeadForm } from "../components/BusinessLeadForm";
 import { LeadForm } from "../components/LeadForm";
@@ -6,10 +6,7 @@ import { PricingCards } from "../components/PricingCards";
 import { PublicShell } from "../components/PublicShell";
 import "../pricing-v39.css";
 
-export const metadata: Metadata = {
-  title: "Pricing",
-  description: "Simple creator subscriptions and custom business music quotes from Symbiome.",
-};
+export const metadata = pageMetadata("Pricing", "Planned creator account routes and project-based business music requests from Symbiome.", "/pricing");
 
 export default function PricingPage() {
   return (
@@ -18,8 +15,8 @@ export default function PricingPage() {
         <section className="pricing-v39-hero">
           <div className="page-hero-copy centered">
             <span className="pricing-v39-kicker">SYMBIOME PRICING</span>
-            <h1>Simple pricing for<br />creators and businesses.</h1>
-            <p>Choose a fixed creator subscription or tell us what your commercial project needs for a custom quote.</p>
+            <h1>Planned creator pricing.<br />Live business requests.</h1>
+            <p>Create a beta account to prepare your workspace, or send the details of a commercial project for a custom quote. Creator checkout is not active yet.</p>
           </div>
         </section>
 

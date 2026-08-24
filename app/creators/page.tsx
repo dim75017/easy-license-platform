@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { CatalogueFacts } from "../components/CatalogueFacts";
 import { CreatorTrackShowcase } from "../components/CreatorTrackShowcase";
@@ -6,10 +6,7 @@ import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { creatorPlatforms, PlatformLogo } from "../components/PlatformLogo";
 import { PublicShell } from "../components/PublicShell";
 
-export const metadata: Metadata = {
-  title: "For Creators",
-  description: "Professionally curated, human-made music for YouTube, livestreams, podcasts and social content.",
-};
+export const metadata = pageMetadata("For Creators", "Professionally curated, human-made music for YouTube, livestreams, podcasts and social content.", "/creators");
 
 const creatorUses = [
   { title: "YouTube", copy: "Use eligible tracks in videos, essays, tutorials, reviews, vlogs, Shorts and monetised uploads on your own channel.", image: "/images/unsplash/creator-youtube-card.webp", alt: "Creator holding a movie clapper in a video studio", width: 1200, height: 800 },
@@ -26,7 +23,7 @@ export default function CreatorsPage() {
           <div className="offer-hero-copy" data-reveal="left">
             <p className="offer-kicker offer-lofi-signature"><span>SYMBIOME / CREATORS</span><span className="offer-powered-lockup"><span className="offer-powered-label">Powered by</span><LofiGirlWordmark /></span></p>
             <h1 data-reveal="hero-title">Music that fits<br /><em>the way you publish.</em></h1>
-            <p>Find instrumental music for the edit, the stream or the opening of a new episode. Symbiome is built around your own YouTube, Twitch, podcast and social channels, with the relevant licence record kept alongside every download.</p>
+            <p>Find instrumental music for the edit, the stream or the opening of a new episode. The beta lets you explore and organise the catalogue while creator subscriptions and licence records are prepared.</p>
             <div className="offer-actions">
               <Link className="offer-button offer-button-light cta-swipe" href="/catalog">Explore the music</Link>
               <a className="offer-inline-link offer-inline-light cta-swipe" href="#creator-plans">Discover pricing</a>
@@ -66,7 +63,7 @@ export default function CreatorsPage() {
             <div className="offer-section-head" data-reveal="up">
               <p className="offer-kicker"><span>03</span> Your channels</p>
               <h2 id="creator-platforms-title">Music for every channel you publish on.</h2>
-              <p>Connect your own channels and manage every covered profile in one place.</p>
+              <p>The planned creator service will connect your own channels and manage covered profiles in one place. Channel connections are not active in the beta.</p>
             </div>
             <div className="creator-platform-grid" data-reveal="group">
               {creatorPlatforms.map((name) => <span className="creator-platform-logo" key={name} role="img" aria-label={name} title={name}><PlatformLogo platform={name} bare onDark /></span>)}
@@ -85,9 +82,9 @@ export default function CreatorsPage() {
 
         <section className="offer-flow creator-flow" aria-labelledby="creator-flow-title">
           <div className="offer-section-head" data-reveal="group">
-            <p className="offer-kicker"><span>05</span> How creator licensing works</p>
-            <h2 id="creator-flow-title">Simple from account setup<br />to a licensed upload.</h2>
-            <p>A simple three-step process: connect your channels, choose eligible music and keep every licence record in one place.</p>
+            <p className="offer-kicker"><span>05</span> Planned creator licensing</p>
+            <h2 id="creator-flow-title">The path from account setup<br />to a licensed upload.</h2>
+            <p>This is the planned three-step service. The current beta creates a workspace and supports catalogue discovery, but does not activate coverage.</p>
           </div>
           <div className="offer-flow-grid" data-reveal="group">
             <article><span>01</span><h3>Connect your channels</h3><p>Add the supported YouTube, Twitch, podcast or social channels covered by your licence.</p></article>

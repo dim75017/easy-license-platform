@@ -27,6 +27,7 @@ import { trackMatchesMood } from "../lib/catalog-moods";
 import { isCatalogPlaylistId, type CatalogPlaylistId } from "../lib/catalog-playlists";
 import { WorkspaceProfileSwitcher } from "./WorkspaceProfileSwitcher";
 import { BusinessWorkspaceRequest } from "./BusinessWorkspaceRequest";
+import { CatalogueMetric } from "./CatalogueMetric";
 import "../workspace-music.css";
 
 type WorkspaceRole = "guest" | "creator" | "business";
@@ -39,6 +40,7 @@ type WorkspaceNavigationIcon = "discover" | "music" | "playlists" | "liked" | "d
 
 const creatorLibraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked", "downloads", "channels", "licences"];
 const businessLibraryViewIds: readonly LibraryView[] = ["music", "playlists", "liked", "license-song", "custom-song"];
+const guestLibraryViewIds: readonly LibraryView[] = ["discover", "music", "playlists", "liked"];
 const libraryViewIds: readonly LibraryView[] = [...creatorLibraryViewIds, "license-song", "custom-song"];
 
 function isLibraryView(value: string | null): value is LibraryView {
@@ -363,6 +365,18 @@ const creatorNavGroups: ReadonlyArray<WorkspaceNavGroup> = [
     items: [
       { id: "liked", label: "Liked tracks", icon: "liked" },
       { id: "downloads", label: "Downloads", icon: "downloads" },
+    ],
+  },
+];
+
+const guestNavGroups: ReadonlyArray<WorkspaceNavGroup> = [
+  {
+    label: "BROWSE MUSIC",
+    items: [
+      { id: "discover", label: "Discover", icon: "discover" },
+      { id: "music", label: "Music", icon: "music" },
+      { id: "playlists", label: "Playlists", icon: "playlists" },
+      { id: "liked", label: "Liked tracks", icon: "liked" },
     ],
   },
 ];
@@ -1317,9 +1331,18 @@ function BusinessLibraryIntro({ onLicense, onCustom }: { onLicense: () => void; 
 
 export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?: WorkspaceRole }) {
   const defaultView: LibraryView = workspaceRole === "business" ? "music" : "discover";
-  const allowedViews = workspaceRole === "business" ? businessLibraryViewIds : creatorLibraryViewIds;
-  const activeNavGroups = workspaceRole === "business" ? businessNavGroups : creatorNavGroups;
+  const allowedViews = workspaceRole === "business"
+    ? businessLibraryViewIds
+    : workspaceRole === "guest"
+      ? guestLibraryViewIds
+      : creatorLibraryViewIds;
+  const activeNavGroups = workspaceRole === "business"
+    ? businessNavGroups
+    : workspaceRole === "guest"
+      ? guestNavGroups
+      : creatorNavGroups;
   const isBusinessWorkspace = workspaceRole === "business";
+  const isGuestWorkspace = workspaceRole === "guest";
   const [view, setView] = useState<LibraryView>(defaultView);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All genres");
@@ -2472,11 +2495,11 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
   const usesWideCanvas = view === "discover" || view === "music" || view === "playlists" || view === "liked" || view === "downloads" || view === "license-song" || view === "custom-song";
 
   return (
-    <div className={`creator-music-app${isBusinessWorkspace ? " business-music-app" : ""}`}>
+    <div className={`creator-music-app${isBusinessWorkspace ? " business-music-app" : ""}${isGuestWorkspace ? " guest-music-app" : ""}`}>
       <aside className="music-app-sidebar">
-        <div className="music-app-brand"><Brand compact /><span>{isBusinessWorkspace ? "Business" : "Creator"}</span></div>
+        <div className="music-app-brand"><Brand compact /><span>{isBusinessWorkspace ? "Business" : isGuestWorkspace ? "Guest" : "Creator"}</span></div>
 
-        <nav className="music-app-nav" aria-label={`${isBusinessWorkspace ? "Business" : "Creator"} music navigation`}>
+        <nav className="music-app-nav" aria-label={`${isBusinessWorkspace ? "Business" : isGuestWorkspace ? "Guest" : "Creator"} music navigation`}>
           {activeNavGroups.map((group) => (
             <div className="music-app-nav-section" key={group.label}>
               <span className="music-app-nav-label">{group.label}</span>
@@ -2516,7 +2539,7 @@ export function CreatorWorkspace({ workspaceRole = "creator" }: { workspaceRole?
           <div className="music-library-view music-workspace-view">
             <section className="music-discovery-intro">
               <div><p>HUMAN-MADE MUSIC</p><h2>Start with a direction.<br />Find the right track.</h2><span>Browse the catalogue through real genres, moods, themes and artists.</span></div>
-              <div className="music-catalogue-proof"><strong>10,000+</strong><span>tracks in the full catalogue</span><i>0 AI-generated</i></div>
+              <div className="music-catalogue-proof"><strong><CatalogueMetric metric="tracks" /></strong><span>published tracks ready to listen</span><i>0 AI-generated</i></div>
             </section>
 
             <section className="music-recent-releases" aria-labelledby="recent-releases-title">
@@ -2931,9 +2954,9 @@ function DownloadsLibrary({ loadState, loadedCount, onRetry, savedCount, trackLi
 }
 
 function ChannelsView() {
-  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Channels</h2><p>Creator plans cover the channels and profiles connected to your account.</p></header><section className="music-account-card"><span className="music-account-platform">▶</span><div><strong>Demo Creator Channel</strong><small>YouTube · Connected to Creator plan</small></div><span className="music-account-status">● Connected</span><button type="button">Manage</button></section></div>;
+  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Channels</h2><p>Creator plans will keep the channels and profiles connected to your account in one place.</p></header><div className="music-empty-library"><strong>No channels connected yet.</strong><p>Channel connections will appear here when creator subscriptions are enabled.</p></div></div>;
 }
 
 function LicencesView() {
-  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Licences</h2><p>Keep each track, channel and proof of licence in one place.</p></header><section className="music-account-card"><span className="music-account-platform">◇</span><div><strong>Symbiome · Creator</strong><small>SY-DEMO-2026-0001 · Active since 03 Aug 2026</small></div><span className="music-account-status">● Active</span><button type="button">View licence</button></section></div>;
+  return <div className="music-secondary-view"><header><span>ACCOUNT</span><h2>Licences</h2><p>Each confirmed licence and its exact scope will be kept here.</p></header><div className="music-empty-library"><strong>No licences issued yet.</strong><p>Saving, previewing or downloading a listening copy does not create a licence.</p></div></div>;
 }

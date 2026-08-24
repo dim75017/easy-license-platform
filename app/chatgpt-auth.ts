@@ -46,6 +46,42 @@ export async function requireChatGPTUser(
   redirect(chatGPTSignInPath(returnTo));
 }
 
+export async function requireCompletedSymbiomeProfile(
+  returnTo: string,
+): Promise<ChatGPTUser> {
+  const user = await requireChatGPTUser(returnTo);
+  const { accountDatabase } = await import("../db/account-runtime");
+  const database = await accountDatabase();
+  const profile = await database
+    .prepare(
+      `SELECT onboarding_completed_at, policies_acknowledged_at
+       FROM user_profiles
+       WHERE external_user_id = ?1
+       LIMIT 1`,
+    )
+    .bind(user.userId)
+    .first<{
+      onboarding_completed_at: string | null;
+      policies_acknowledged_at: string | null;
+    }>();
+
+  if (!profile?.onboarding_completed_at || !profile.policies_acknowledged_at) {
+    redirect("/create-account?auth=resume");
+  }
+  return user;
+}
+
+export async function requireSymbiomeAdmin(
+  returnTo: string,
+): Promise<ChatGPTUser> {
+  const user = await requireChatGPTUser(returnTo);
+  const { catalogAdminEmails } = await import("../db/catalog-runtime");
+  if (!catalogAdminEmails().has(user.email)) {
+    redirect("/app");
+  }
+  return user;
+}
+
 export function chatGPTSignInPath(returnTo: string): string {
   const safeReturnTo = safeRelativeReturnPath(returnTo);
   return `${SIGN_IN_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;

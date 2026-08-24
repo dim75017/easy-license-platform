@@ -173,7 +173,11 @@ function profileInput(payload: unknown):
 
 function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin) return false;
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite !== "same-origin" && fetchSite !== "same-site") {
+    return false;
+  }
   try {
     return new URL(origin).origin === new URL(request.url).origin;
   } catch {
