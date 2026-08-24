@@ -214,7 +214,7 @@ def load_exact_manifest(path: Path) -> list[dict[str, Any]]:
 
 
 def load_direct_manifest(path: Path) -> list[dict[str, Any]]:
-    """Load only deterministic Sheet-to-Drive rows for owner-authoritative processing."""
+    """Load deterministic owner rows in the wrapper's resumable priority order."""
 
     assert_private_artifact_path(path, "direct_manifest")
     if not path.is_file():
@@ -241,7 +241,7 @@ def load_direct_manifest(path: Path) -> list[dict[str, Any]]:
             candidate_ids.add(candidate_id)
             audio_ids.add(audio_id)
             records.append(record)
-    return sorted(records, key=lambda item: item["candidate_id"])
+    return records
 
 
 def validate_direct_record(value: object) -> None:

@@ -240,6 +240,25 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(len(loaded), 1)
         self.assertIsNone(loaded[0]["cover"])
 
+    def test_owner_direct_loader_preserves_wrapper_priority_order(self):
+        first = direct_record()
+        first["candidate_id"] = "c" * 28
+        first["audio"]["file_id"] = "1" + "C" * 20
+        second = direct_record()
+        second["candidate_id"] = "b" * 28
+        second["audio"]["file_id"] = "1" + "B" * 20
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "direct.jsonl"
+            path.write_text(
+                json.dumps(first) + "\n" + json.dumps(second) + "\n",
+                encoding="utf-8",
+            )
+            loaded = process.load_direct_manifest(path)
+        self.assertEqual(
+            [record["candidate_id"] for record in loaded],
+            [first["candidate_id"], second["candidate_id"]],
+        )
+
     def test_owner_direct_accepts_only_strictly_pinned_mp3_sources(self):
         record = direct_mp3_record()
         process.validate_direct_record(record)
