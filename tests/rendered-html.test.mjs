@@ -1303,8 +1303,8 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
     assert.match(setup, new RegExp(`id: "${method.toLowerCase()}"[\\s\\S]{0,80}label: "${method}"`));
   }
   assert.equal((setup.match(/<AccountSignInMethods/g) ?? []).length, 2);
-  assert.match(setup, /Secure account methods/);
-  assert.match(setup, /The secure identity screen shows the methods available for your account and returns you to Symbiome\./);
+  assert.match(setup, /Available on the secure account screen/);
+  assert.match(setup, /All four choices open the same secure identity screen\. Select your provider there, then return to Symbiome\./);
   assert.doesNotMatch(setup, /Log in with ChatGPT|Continue with ChatGPT|Sign in with ChatGPT/);
   assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
   assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
@@ -1328,13 +1328,16 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
   assert.match(setup, /No payment, subscription or licence is created/);
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
-  assert.match(setup, /<ul className="account-auth-methods" aria-label="Identity methods handled by the secure account screen">/);
-  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>[\s\S]{0,220}<span data-auth-method=\{method\.id\}>/);
+  assert.match(setup, /<ul className="account-auth-methods" aria-label="Open the secure screen to choose an account method">/);
+  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,320}<li key=\{method\.id\}>[\s\S]{0,320}<a[\s\S]{0,220}data-auth-method=\{method\.id\}[\s\S]{0,160}href=\{actionHref\}/);
+  assert.match(setup, /aria-label=\{`Open the secure account screen to choose \$\{method\.label\}`\}/);
+  assert.match(setup, /<strong>\{method\.label\}<\/strong>[\s\S]{0,100}<small>Choose on secure screen<\/small>/);
+  assert.doesNotMatch(setup, /Log in with[^<]*\{method\.label\}|Continue with[^<]*\{method\.label\}/, "provider tiles must not claim a direct OAuth handoff");
   assert.match(setup, /actionHref=\{publicAccountSignOutHref\(mode, plan\)\}/);
   const providerList = setup.match(/<ul className="account-auth-methods"[\s\S]*?<\/ul>/u)?.[0] ?? "";
   assert.ok(providerList, "the sign-in method list should be rendered");
-  assert.doesNotMatch(providerList, /<a\b|href=\{actionHref\}/u, "provider badges must not pretend to be separate OAuth integrations");
-  assert.match(setup, /className="button button-primary button-full cta-swipe account-auth-continue" href=\{actionHref\}/u, "one real gateway should own authentication");
+  assert.match(providerList, /<a[\s\S]*href=\{actionHref\}/u, "every visible provider choice should open the real secure gateway");
+  assert.doesNotMatch(setup, /account-auth-continue/u, "there should be no separate CTA competing with the four working choices");
   assert.equal((setup.match(/\/signin-with-chatgpt\?return_to=/gu) ?? []).length, 1, "the flow should keep one neutral secure sign-in gateway");
   assert.match(setup, /className="account-secondary-link" href="\/app\/guest"[\s\S]{0,80}Browse music first/);
   assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
@@ -1364,15 +1367,16 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
 
   assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
   assert.match(css, /\.account-auth-methods\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[^}]*gap:\s*10px/s);
-  assert.match(css, /\.account-auth-methods li > span\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
+  assert.match(css, /\.account-auth-methods li > a\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px[^}]*cursor:\s*pointer/s);
+  assert.match(css, /\.account-auth-methods li > a::before\s*\{[^}]*background:\s*var\(--symbiose-warm\)[^}]*transform:\s*scaleX\(0\)/s);
+  assert.match(css, /\.account-auth-methods li > a:hover::before,[\s\S]*\.account-auth-methods li > a:focus-visible::before\s*\{[^}]*transform:\s*scaleX\(1\)/s);
   assert.match(css, /\.account-auth-choice-label\s*\{[^}]*rgba\(41, 40, 50, \.74\)/s);
   assert.match(css, /\.account-auth-method-note\s*\{[^}]*rgba\(41, 40, 50, \.7\)/s);
-  assert.match(css, /\.account-auth-continue\s*\{[^}]*min-height:\s*56px/s);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-auth-methods\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods li > span\s*\{\s*border-color:\s*ButtonText;/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods li > a\s*\{\s*border-color:\s*ButtonText;/);
 });
 
 test("public account entry points clear the Sites session before showing login or creation", async () => {
