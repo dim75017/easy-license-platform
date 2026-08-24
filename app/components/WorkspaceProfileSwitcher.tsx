@@ -208,7 +208,7 @@ export function WorkspaceProfileSwitcher({
                 <i aria-hidden="true">♫</i><span><strong>Request custom song</strong><small>Original music brief</small></span>
               </Link>
             </>
-          ) : (
+          ) : activeRole === "creator" ? (
             <>
               <Link className={activeLibraryView === "licences" ? "is-active" : ""} href="/app?view=licences" role="menuitem" aria-current={activeLibraryView === "licences" ? "page" : undefined} onClick={(event) => handleLibraryMenuClick(event, "licences")}>
                 <i aria-hidden="true">◇</i><span><strong>Licences</strong><small>Usage rights and coverage</small></span>
@@ -217,7 +217,7 @@ export function WorkspaceProfileSwitcher({
                 <i aria-hidden="true">◉</i><span><strong>Channels</strong><small>Connected creator accounts</small></span>
               </Link>
             </>
-          )}
+          ) : null}
           <Link href="/help" role="menuitem" onClick={closeMenu}>
             <i aria-hidden="true">?</i><span><strong>Help centre</strong><small>Guides, licensing and support</small></span>
           </Link>

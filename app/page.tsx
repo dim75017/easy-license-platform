@@ -1,8 +1,15 @@
 import Link from "next/link";
+import { pageMetadata } from "./_lib/seo";
 import { ArtistMarquee } from "./components/ArtistMarquee";
 import { CatalogueFacts } from "./components/CatalogueFacts";
 import { LofiGirlWordmark } from "./components/LofiGirlWordmark";
 import { PublicShell } from "./components/PublicShell";
+
+export const metadata = pageMetadata(
+  "Symbiome — Human-made music for creators and businesses",
+  "Explore a live catalogue of human-made instrumental music for videos, streams and commercial projects.",
+  "/",
+);
 
 const useCollections = [
   {
@@ -128,7 +135,7 @@ export default function Home() {
             <p className="home26-eyebrow home26-lofi-signature">Symbiome · Powered by<LofiGirlWordmark /></p>
             <h1 data-reveal="hero-title">Human-made music for videos, streams and commercial projects.</h1>
             <p className="home26-hero-lede">
-              Browse more than 10,000 instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
+              Browse a growing catalogue of instrumental and background tracks created by real artists, with no generative AI. Find a sound that fits the story, the stream or the project you are building.
             </p>
             <div className="home26-actions">
               <Link className="home26-button home26-button-primary cta-swipe" href="/catalog">Browse music</Link>
@@ -147,8 +154,8 @@ export default function Home() {
             </figure>
             <div className="home26-audience-copy" data-reveal="right">
               <p className="home26-eyebrow">For content creators</p>
-              <h2 id="home26-creators-title">A simple music licence for the channels you own.</h2>
-              <p>Use high-quality instrumental music in your YouTube videos, livestreams, social content and podcasts. Browse by mood or project, download the right track, and keep the channels covered by your plan together in one account.</p>
+              <h2 id="home26-creators-title">A creator licence designed around the channels you own.</h2>
+              <p>During the beta, browse high-quality instrumental music by mood or project, save the right tracks and organise your workspace. Channel coverage, paid plans and licensed downloads will activate only when checkout and the final creator terms are live.</p>
               <ul className="home26-audience-points" aria-label="Creator uses">
                 <li>YouTube videos and Shorts</li>
                 <li>Twitch and livestreams</li>
@@ -183,7 +190,7 @@ export default function Home() {
           <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
             <p className="home26-eyebrow">A diverse catalogue</p>
             <h2 id="home26-collections-title">Find the perfect music<br />for any situation.</h2>
-            <p>Explore more than 10,000 instrumental tracks across lofi hip-hop, ambient, jazz, piano, electronic, cinematic and more. Start with a project collection below, browse by mood, or explore playlists prepared for common creative needs.</p>
+            <p>Explore the live instrumental catalogue across lofi hip-hop, ambient, jazz, piano, electronic, cinematic and more. Start with a project collection below, browse by mood, or explore playlists prepared for common creative needs.</p>
           </div>
           <div className="home26-collection-grid" data-reveal="group">
             {useCollections.map((collection) => (
@@ -199,14 +206,14 @@ export default function Home() {
             ))}
           </div>
           <div className="home26-catalogue-action" data-reveal="group">
-            <Link className="home26-button home26-button-primary cta-swipe" href="/app">Explore the full music library</Link>
+            <Link className="home26-button home26-button-primary cta-swipe" href="/app/guest">Explore the full music library</Link>
           </div>
         </section>
 
         <section className="home26-section home26-artists" id="artists" aria-labelledby="home26-artists-title">
           <div className="home26-section-heading home26-section-heading-wide" data-reveal="group">
             <p className="home26-eyebrow">The people behind the music</p>
-            <h2 id="home26-artists-title">More than 1,000 artists contribute to the catalogue.</h2>
+            <h2 id="home26-artists-title">Artists from around the world contribute to the catalogue.</h2>
             <p>Every track is written and produced by artists. Generative AI music is not accepted, artists remain clearly credited, and licensing income is paid directly and fairly.</p>
           </div>
           <ArtistMarquee artists={artists} />
@@ -215,15 +222,15 @@ export default function Home() {
         <section className="home26-plan-preview" aria-labelledby="home26-plan-preview-title">
           <div className="home26-plan-preview-inner">
             <div className="home26-plan-preview-copy" data-reveal="group">
-              <p className="home26-eyebrow">Plans and licensing</p>
-              <h2 id="home26-plan-preview-title">Fixed plans for creators. Custom quotes for businesses.</h2>
-              <p>Choose a simple subscription for the channels you own, or tell us what your commercial project needs. If you are not sure yet, you can start with the music and decide later.</p>
+              <p className="home26-eyebrow">Beta accounts and licensing requests</p>
+              <h2 id="home26-plan-preview-title">Creator plans in preparation. Business briefs open now.</h2>
+              <p>Create a beta workspace without payment, or tell us what your commercial project needs. Browsing, saving or creating an account does not grant music rights.</p>
             </div>
 
             <div className="home26-plan-board" data-reveal="group">
               <Link className="home26-plan-row home26-plan-card-creator" href="/pricing#creator-pricing-title">
                 <span className="home26-plan-name"><strong>Creator</strong><span>For your own content</span></span>
-                <span className="home26-plan-price"><strong>€6.67</strong><span>/ month · billed yearly</span></span>
+                <span className="home26-plan-price"><strong>€6.67</strong><span>/ month · planned yearly price</span></span>
                 <ul className="home26-plan-features">
                   <li>One channel per supported platform</li>
                   <li>Videos, streams, podcasts and social content</li>
@@ -234,7 +241,7 @@ export default function Home() {
 
               <Link className="home26-plan-row home26-plan-card-pro" href="/pricing#creator-pricing-title">
                 <span className="home26-plan-name"><strong>Pro</strong><span>For multi-channel creators</span></span>
-                <span className="home26-plan-price"><strong>€16.67</strong><span>/ month · billed yearly</span></span>
+                <span className="home26-plan-price"><strong>€16.67</strong><span>/ month · planned yearly price</span></span>
                 <ul className="home26-plan-features">
                   <li>Up to three channels per platform</li>
                   <li>Multi-channel and team workspace</li>

@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 import { PublicShell } from "../components/PublicShell";
 
-export const metadata: Metadata = {
-  title: "Help Center",
-  description: "Clear answers about the Symbiome music catalogue, creator plans and business licensing.",
-};
+export const metadata = pageMetadata("Help Center", "Clear answers about the live Symbiome catalogue, beta accounts and business licensing.", "/help");
 
 type Faq = {
   question: string;
@@ -70,7 +67,7 @@ const categories: HelpCategory[] = [
       },
       {
         question: "Can I use the music in monetised content?",
-        answer: <>The current Creator plans are designed for eligible monetised videos and livestreams on the channels covered by your plan. A track still needs to be eligible for that use.</>,
+        answer: <>The planned Creator plans are designed for eligible monetised videos and livestreams on covered channels. This coverage is not active in the beta, and each track will still need to be eligible for that use.</>,
       },
       {
         question: "Which creator platforms are supported?",
@@ -136,7 +133,7 @@ const categories: HelpCategory[] = [
       },
       {
         question: "Who makes the music?",
-        answer: <>More than 1,000 artists are represented across the catalogue. Artist names remain attached to their work so you can see who made the track you are considering.</>,
+        answer: <>Artists from around the world are represented across the live catalogue. Artist names remain attached to their work so you can see who made the track you are considering.</>,
       },
       {
         question: "How are artists paid when their music is licensed?",
@@ -151,8 +148,8 @@ const categories: HelpCategory[] = [
         answer: <>Not necessarily. Track eligibility and rights can vary by plan and intended use. A track must be shown as eligible for your creator route or included in a confirmed business agreement before it is used.</>,
       },
       {
-        question: "Why do some previews open a Spotify player?",
-        answer: <>Spotify is used only for a small number of legacy track previews that do not yet have an internal listening copy. Playlists and every available catalogue track otherwise open and play directly inside Symbiome.</>,
+        question: "Why do some tracks link to Spotify?",
+        answer: <>Spotify is an optional external fallback when an internal listening copy is unavailable. The current Symbiome application does not embed a Spotify player.</>,
       },
     ],
   },
@@ -160,28 +157,28 @@ const categories: HelpCategory[] = [
     id: "account-billing-support",
     number: "05",
     label: "Account & support",
-    title: "Plans, accounts and the public preview.",
-    introduction: "Current pricing, what the demo can do and where to go when your question is more specific.",
+    title: "Plans, accounts and your data.",
+    introduction: "What the live beta does today and where to go when your question is more specific.",
     questions: [
       {
-        question: "How much do the Creator plans cost?",
-        answer: <>Creator is currently presented at €7.99 per month or €79.99 billed yearly, equivalent to €6.67 per month. Pro is presented at €19.99 per month or €199.99 billed yearly, equivalent to €16.67 per month. See <Link href="/pricing">Pricing</Link> for the current presentation.</>,
+        question: "Are Creator plans available to buy?",
+        answer: <>Not in the current beta. The <Link href="/pricing">Pricing page</Link> presents the planned Creator and Pro routes, but account setup records a plan preference only. It does not take payment or activate coverage.</>,
       },
       {
-        question: "How does yearly billing work?",
-        answer: <>The yearly option shows its monthly equivalent for comparison, but the displayed annual amount is billed as one yearly payment. Monthly billing shows the price charged each month.</>,
+        question: "Can I create an account now?",
+        answer: <>Yes. The live site uses a secure identity screen, then stores the Symbiome profile choices you submit. If you already have a completed profile, logging in returns you directly to the music workspace.</>,
       },
       {
-        question: "Can I create a paid account or purchase a licence in this preview?",
-        answer: <>Not yet. The public website currently demonstrates the music library, account workspace and licensing routes. Authentication, checkout, production downloads and licence issuance are not active on this GitHub Pages preview.</>,
+        question: "Can I purchase a licence in this beta?",
+        answer: <>Not through automatic checkout. You can browse, save, download a compressed listening copy and send a business request, but none of those actions grants a licence. A separately approved agreement and any required payment govern actual use.</>,
       },
       {
-        question: "Does the public business form send my information?",
-        answer: <>No. On this public prototype, submitting a business or early-access form displays a confirmation locally, but no information is sent or stored.</>,
+        question: "Does the business form send my information?",
+        answer: <>Yes on the live Sites version. The details are transmitted to Symbiome and stored so the team can review and answer the request. The separate static GitHub mirror remains non-submitting when its demo mode is active. See <Link href="/privacy">Privacy</Link>.</>,
       },
       {
         question: "What is saved in my browser?",
-        answer: <>The current workspace stores one local preference so the introductory library setup does not reopen every time. Symbiome does not include advertising or analytics cookies in this prototype. External services and the hosting provider may apply their own policies; see <Link href="/cookies">Cookies</Link> and <Link href="/privacy">Privacy</Link>.</>,
+        answer: <>Likes, personal playlists and listening-copy download history are stored in local storage; personal playlist artwork is stored in IndexedDB; unfinished business briefs use session storage. This device-level state is not part of your online profile. See <Link href="/cookies">Cookies and browser storage</Link>.</>,
       },
       {
         question: "Where can I ask a question that is not answered here?",
@@ -199,7 +196,7 @@ export default function HelpCenterPage() {
           <div className="support-hero-inner" data-reveal="group">
             <p className="support-kicker">Symbiome support</p>
             <h1 id="help-title">Clear answers,<br />before you publish.</h1>
-            <p className="support-lead">Find out how the catalogue, creator plans and business licensing routes work, including what is available in the current public preview.</p>
+            <p className="support-lead">Find out how the live catalogue, beta accounts and business licensing routes work today.</p>
             <div className="support-actions">
               <Link className="support-button cta-swipe" href="/catalog">Browse music</Link>
               <Link className="support-button support-button-secondary cta-swipe" href="/pricing">View pricing</Link>

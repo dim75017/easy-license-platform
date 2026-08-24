@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
+import { CatalogueMetric } from "../components/CatalogueMetric";
 import { LeadForm } from "../components/LeadForm";
 import { PublicShell } from "../components/PublicShell";
 
-export const metadata: Metadata = {
-  title: "Music for Retail — Coming soon",
-  description: "Human-made music for cafés, hotels, retail stores and workspaces. Simple monthly access, curated for real spaces.",
-};
+export const metadata = pageMetadata("Music for Retail — Coming soon", "Human-made music for cafés, hotels, retail stores and workspaces, with early access for the first pilot.", "/retail");
 
 export default function RetailPage() {
   return (
@@ -54,7 +52,7 @@ export default function RetailPage() {
 
         <section className="retail-v2-artists">
           <div data-reveal="left"><p className="retail-v2-kicker"><span>03</span> A better kind of background music</p><h2>Human-made music belongs in human spaces.</h2></div>
-          <div className="retail-v2-artist-copy" data-reveal="right"><p>Every track begins with a real artist, never a prompt. Our model is designed so the people who make the music are credited and paid directly when their work is used.</p><div><span>0</span><p><strong>AI-generated tracks</strong><small>Only music made by people.</small></p></div><div><span>10,000+</span><p><strong>Premium tracks</strong><small>Curated for feeling, not filler.</small></p></div></div>
+          <div className="retail-v2-artist-copy" data-reveal="right"><p>Every track begins with a real artist, never a prompt. Our model is designed so the people who make the music are credited and paid directly when their work is used.</p><div><span>0</span><p><strong>AI-generated tracks</strong><small>Only music made by people.</small></p></div><div><span><CatalogueMetric metric="tracks" /></span><p><strong>Published tracks</strong><small>Live catalogue count, curated for feeling.</small></p></div></div>
         </section>
 
         <section className="retail-v2-access" id="retail-access">

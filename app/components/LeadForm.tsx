@@ -220,7 +220,7 @@ export function LeadForm({ type, initialBusinessNeed = "existing_track" }: { typ
       <p className="form-privacy">
         {isStaticDemo
           ? "Public prototype: no information is sent or stored."
-          : "No spam. Your information is only used to review this request."}
+          : <>Symbiome stores these details to review and answer your request. Read the <a href="/privacy">Privacy notice</a>.</>}
       </p>
     </form>
   );

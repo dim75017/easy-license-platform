@@ -38,7 +38,7 @@ export function EditorialInfoPage({
   title: ReactNode;
   lead: string;
   actions?: EditorialAction[];
-  highlights?: Array<{ value: string; label: string }>;
+  highlights?: Array<{ value: ReactNode; label: string }>;
   sections: EditorialSection[];
 }) {
   return (

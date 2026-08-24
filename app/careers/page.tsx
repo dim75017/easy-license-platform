@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
-export const metadata: Metadata = {
-  title: "Careers",
-  description: "Learn about the work and values behind Symbiome and check the current status of open roles.",
-};
+export const metadata = pageMetadata("Careers", "Learn about the work and values behind Symbiome and check the current status of open roles.", "/careers");
 
 export default function CareersPage() {
   return (

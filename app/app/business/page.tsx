@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { CreatorWorkspace } from "../../components/CreatorWorkspace";
+import { requireCompletedSymbiomeProfile } from "../../chatgpt-auth";
 
 export const metadata: Metadata = { title: "Business music library", robots: { index: false, follow: false } };
 
-export default function BusinessAppPage() {
+export default async function BusinessAppPage() {
+  if (process.env.BUILD_TARGET !== "pages") {
+    await requireCompletedSymbiomeProfile("/app/business?view=music");
+  }
   return <CreatorWorkspace workspaceRole="business" />;
 }

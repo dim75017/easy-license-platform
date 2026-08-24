@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
 import { CatalogueFacts } from "../components/CatalogueFacts";
@@ -8,10 +8,7 @@ import { PublicShell } from "../components/PublicShell";
 import { getPlaylistAccent, lofiGirlPlaylists } from "../data/catalog";
 import { catalogueMoodFilters } from "../lib/catalog-moods";
 
-export const metadata: Metadata = {
-  title: "Music library",
-  description: "Browse professionally curated, human-made music for videos, streams, podcasts and commercial productions.",
-};
+export const metadata = pageMetadata("Music library", "Browse professionally curated, human-made music for videos, streams, podcasts and commercial productions.", "/catalog");
 
 export default function CataloguePage() {
   const featuredMoods = catalogueMoodFilters.slice(0, 10);
@@ -23,7 +20,7 @@ export default function CataloguePage() {
           <div data-reveal="left">
             <h1>A real music<br />library for creators.</h1>
             <p>Listen, save your direction, then license the music that fits your video, stream, podcast or project. Every track is made by a real artist.</p>
-            <Link className="music-v26-button music-v26-button-light cta-swipe" href="/app">Open the library</Link>
+            <Link className="music-v26-button music-v26-button-light cta-swipe" href="/app/guest">Open the library</Link>
           </div>
         </section>
 
@@ -40,7 +37,7 @@ export default function CataloguePage() {
               return <Link
                 aria-label={`Open ${playlist.title} in the Symbiome library`}
                 className="music-playlist-card"
-                href={`/app?view=playlists&playlist=${encodeURIComponent(playlist.id)}`}
+                href={`/app/guest?view=playlists&playlist=${encodeURIComponent(playlist.id)}`}
                 key={playlist.id}
                 style={{ "--playlist-accent": accent.color, "--playlist-accent-ink": accent.ink } as CSSProperties}
               >
@@ -59,7 +56,7 @@ export default function CataloguePage() {
               </Link>;
             })}
           </div>
-          <Link className="music-playlists-all cta-swipe" href="/app?view=playlists">Explore all playlists</Link>
+          <Link className="music-playlists-all cta-swipe" href="/app/guest?view=playlists">Explore all playlists</Link>
         </section>
 
         <section className="catalogue-moods" aria-labelledby="music-moods-title">
@@ -73,7 +70,7 @@ export default function CataloguePage() {
           <ul className="catalogue-moods-grid" data-reveal="group">
             {featuredMoods.map((mood, index) => (
               <li key={mood}>
-                <Link className="catalogue-mood-card" href={`/app?view=music&mood=${encodeURIComponent(mood)}`}>
+                <Link className="catalogue-mood-card" href={`/app/guest?view=music&mood=${encodeURIComponent(mood)}`}>
                   <span className="catalogue-mood-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <strong>{mood}</strong>
                   <span className="catalogue-mood-action">Browse tracks</span>

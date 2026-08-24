@@ -259,7 +259,7 @@ export function BusinessWorkspaceRequest({
           </div>
 
           <footer className="business-request-footer">
-            <p>{isStaticDemo ? "Public prototype: no information is sent or stored." : "Your information is only used to review this request."}</p>
+            <p>{isStaticDemo ? "Public prototype: no information is sent or stored." : <>Symbiome stores these details to review and answer your request. Read the <a href="/privacy">Privacy notice</a>.</>}</p>
             <button className="business-workspace-cta" type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending…" : copy.submit}</button>
           </footer>
           {state === "error" && <p className="business-request-error" role="alert">{message}</p>}

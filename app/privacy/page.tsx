@@ -1,82 +1,80 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
-export const metadata: Metadata = {
-  title: "Privacy",
-  description: "How Symbiome account setup, request forms and connected services handle personal information.",
-};
+export const metadata = pageMetadata("Privacy", "How the live Symbiome beta handles account, request and browser-stored information.", "/privacy");
 
 export default function PrivacyPage() {
   return (
     <EditorialInfoPage
       eyebrow="Privacy"
-      title={<>Clear information about<br />the data behind a request.</>}
-      lead="Symbiome should collect only the information needed to answer a creator support question, review a business brief or manage early access. This page describes the current public version and identifies the details still required before production launch."
+      title={<>What Symbiome collects,<br />and why.</>}
+      lead="Symbiome is a live public beta. Account profiles and submitted business requests are processed by the hosted service; personal playlists and unfinished drafts can also be stored locally on your device."
       actions={[
         { label: "Read about browser storage", href: "/cookies" },
         { label: <><LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</>, ariaLabel: "Lofi Girl privacy policy", href: "https://www.lofigirl.com/privacy", external: true, secondary: true },
       ]}
       sections={[
         {
-          id: "current-public-site",
-          eyebrow: "Current public version",
-          title: "The GitHub Pages form does not send or store submissions.",
+          id: "information-collected",
+          eyebrow: "Information collected",
+          title: "Accounts and requests use only the details needed for the feature.",
           content: (
             <>
-              <p>The current public Symbiome site is a static GitHub Pages version. Its business and early-access forms display the interface, but the submitted information is not transmitted or stored by Symbiome in that public version.</p>
-              <p>This behaviour is stated beside the form when the static version is running. A production version with live request handling will require a complete privacy notice before collection begins.</p>
+              <p>When you create a live Symbiome account, the secure identity service provides an account identifier, email address and display name. Symbiome stores those details with your optional company, plan preference, primary publishing platform, marketing choice and setup timestamps.</p>
+              <p>When you send a licensing, custom-music or retail request, the live service stores the details you submit, such as your name, work email, company, project, intended use, rights scope, timing, budget and notes. Please do not include passwords, payment-card details or other sensitive information in a brief.</p>
             </>
           ),
         },
         {
-          id: "account-information",
-          eyebrow: "Account setup",
-          title: "Your workspace is tied to a secure identity.",
+          id: "why-and-how",
+          eyebrow: "Purpose and legal basis",
+          title: "Each use has a defined purpose and legal basis.",
           content: (
             <>
-              <p>On the secure Symbiome app, account setup uses the identity supplied by the hosting sign-in service. Symbiome stores the resulting account identifier, email address, display name, optional company, chosen plan preference, primary publishing platform and consent choices.</p>
-              <p>Symbiome does not receive or store your sign-in password. Plan selection during setup records a preference only; it does not create a paid subscription or take payment.</p>
-            </>
-          ),
-        },
-        {
-          id: "production-requests",
-          eyebrow: "Production request forms",
-          title: "What a live brief may need to collect.",
-          content: (
-            <>
-              <p>When live request handling is enabled, a business licensing or early-access request may include the information a visitor enters into the form.</p>
               <ul className="support-list">
-                <li><strong>Identity and contact</strong><span>Name, work email and company, channel or venue.</span></li>
-                <li><strong>Project context</strong><span>The requested service, project description, intended use, timing and indicative budget.</span></li>
-                <li><strong>Physical-space interest</strong><span>The type of venue or multi-location group interested in the planned service.</span></li>
+                <li><strong>Account access</strong><span>Authenticate you, create or update your profile and return you to the correct workspace as part of the service you request.</span></li>
+                <li><strong>Business requests</strong><span>Take pre-contractual steps at your request, clarify the scope, prepare a response and maintain the related conversation.</span></li>
+                <li><strong>Product updates</strong><span>Send occasional catalogue or product news only with your consent, which you may withdraw at any time.</span></li>
+                <li><strong>Service protection</strong><span>Rely on legitimate interests to operate and secure the hosted service and investigate misuse or technical faults.</span></li>
               </ul>
-              <p>The information should be used to review the request, clarify the licence or creative route, respond to the sender and maintain the records required for that conversation.</p>
+              <p>Plan selection during account setup records a preference only. It does not take payment, activate a subscription or issue a licence.</p>
             </>
           ),
         },
         {
-          id: "services-and-storage",
-          eyebrow: "Services and storage",
-          title: "Some features involve services outside the page itself.",
+          id: "device-storage",
+          eyebrow: "Your device",
+          title: "Some library activity stays in this browser.",
           content: (
             <>
-              <p>The music catalogue can load embedded Spotify players after a visitor chooses to play a track. Spotify operates that player under its own policies. The connected creator workspace also stores one local browser preference so the introductory music setup is not shown repeatedly on the same device.</p>
-              <p>No advertising analytics integration or first-party advertising cookie has been identified in the current Symbiome public code. Read the <Link href="/cookies">Cookies page</Link> for the browser-storage detail.</p>
+              <p>Liked-track IDs, personal playlists, listening-copy download history and personal playlist artwork are stored locally in your browser. Unfinished business-request drafts are stored for the browser session. They are not part of your online Symbiome profile and do not follow you to another device.</p>
+              <p>You can remove individual playlists and tracks in the workspace or clear the site data in your browser. The <Link href="/cookies">Cookies and browser storage page</Link> lists the exact storage used.</p>
             </>
           ),
         },
         {
-          id: "rights-and-details",
+          id: "hosting-retention",
+          eyebrow: "Hosting and retention",
+          title: "The live service uses a defined retention period and named technical providers.",
+          content: (
+            <>
+              <p>OpenAI provides the Codex Sites hosting and secure identity layer. Cloudflare provides the connected D1 database and R2 storage used by the service. These providers process data only to deliver and secure the relevant infrastructure; transfers outside the European Economic Area must use the safeguards applicable to the provider, such as standard contractual clauses.</p>
+              <p>Account and request records are retained for up to three years after your last interaction or the end of the related relationship, then deleted or anonymised unless a longer legal retention duty applies. Marketing consent is kept only while it remains valid. Authorised operating-team members may access submitted information only to answer a request, support an account or operate the service.</p>
+              <p>Please do not submit sensitive personal data. The separate static GitHub mirror does not submit account or request data when its demo mode is active.</p>
+            </>
+          ),
+        },
+        {
+          id: "rights-contact",
           eyebrow: "Your rights",
-          title: "Your rights will remain part of the production policy.",
+          title: "You can ask about, correct or delete your information.",
           content: (
             <>
-              <p>Depending on applicable law, people may have rights to access, correct, delete, restrict or object to the processing of their personal information. A production privacy policy must identify the verified data controller, lawful bases, service providers, international transfers, retention periods and the route for exercising those rights.</p>
-              <p>The verified data controller, service-provider details, international transfers, retention periods and a dedicated privacy-contact route must be completed before the service accepts payments or issues licences. For the separate <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website and its associated domains, consult the <a href="https://www.lofigirl.com/privacy" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> privacy policy</a>.</p>
-              <p className="support-notice">Last updated: 13 August 2026. This page should be reviewed before payments, licences or any material change in account processing.</p>
+              <p>Depending on applicable law, you may have rights to access, correct, delete, restrict, object to or receive a copy of your personal information, and to withdraw a marketing consent.</p>
+              <p>Until the current Symbiome operator details are formally confirmed on the <Link href="/legal">Legal information page</Link>, send privacy requests to <a href="mailto:contact@lofigirl.com">contact@lofigirl.com</a> or use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact form</a>, and identify the request as concerning Symbiome. You may also lodge a complaint with the French CNIL.</p>
+              <p className="support-notice">Last updated: 24 August 2026. This notice describes the current live public beta.</p>
             </>
           ),
         },

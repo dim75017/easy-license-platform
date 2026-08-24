@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
+import { CatalogueMetric } from "../components/CatalogueMetric";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
-export const metadata: Metadata = {
-  title: "Press",
-  description: "Key facts, positioning and official contact routes for press enquiries about Symbiome.",
-};
+export const metadata = pageMetadata("Press", "Key facts, positioning and official contact routes for press enquiries about Symbiome.", "/press");
 
 export default function PressPage() {
   return (
@@ -18,8 +16,8 @@ export default function PressPage() {
         { label: <>Visit <LofiGirlWordmark className="lofi-girl-wordmark-inline" /></>, ariaLabel: "Visit Lofi Girl", href: "https://www.lofigirl.com/", external: true, secondary: true },
       ]}
       highlights={[
-        { value: "10,000+", label: "instrumental and background tracks" },
-        { value: "1,000+", label: "artists represented worldwide" },
+        { value: <CatalogueMetric metric="tracks" />, label: "published tracks ready to listen" },
+        { value: <CatalogueMetric metric="artists" />, label: "artists in the live catalogue" },
         { value: "0", label: "AI-generated tracks accepted" },
       ]}
       sections={[

@@ -1,71 +1,80 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
-export const metadata: Metadata = {
-  title: "Legal Information",
-  description: "Plain-language legal information about browsing Symbiome, requesting music rights and using licensed music.",
-};
+export const metadata = pageMetadata("Legal information and beta terms", "Terms for browsing the Symbiome public beta, downloading listening copies and sending music requests.", "/legal");
 
 export default function LegalPage() {
   return (
     <EditorialInfoPage
       eyebrow="Legal information"
-      title={<>The terms behind the service,<br />in plain language.</>}
-      lead="Browsing music, saving a shortlist or sending a brief does not grant permission to use a track. Rights begin only through the licence or agreement that applies to the approved use."
+      title={<>The rules of the public beta,<br />in plain language.</>}
+      lead="Browsing, saving, previewing, downloading a listening copy or sending a brief does not grant permission to publish or commercially use a track."
       actions={[
         { label: "Read licensing answers", href: "/help#business-licensing" },
-        { label: "View pricing routes", href: "/pricing", secondary: true },
+        { label: "Send a business request", href: "/pricing#business-request", secondary: true },
       ]}
       sections={[
         {
           id: "service-status",
-          eyebrow: "The service",
-          title: "What the public site does and does not do.",
+          eyebrow: "Public beta",
+          title: "What the live service does today.",
           content: (
             <>
-              <p>Symbiome presents a human-made music catalogue and the available licensing routes for creators and businesses. The public pages help visitors explore music, compare creator plans and prepare a commercial request.</p>
-              <p>A track preview, catalogue page, playlist, shortlist, account screen, price display or submitted request is not itself a licence. Music may only be used after the applicable licence conditions have been accepted and any required payment, scope approval or agreement has been completed.</p>
+              <p>Symbiome provides a public human-made music catalogue, a secure account profile, browser-local likes and playlists, compressed listening copies and forms for licensing, custom-music and retail enquiries.</p>
+              <p>Account setup records a plan preference only. Checkout, paid subscriptions, automatic master delivery and automatic licence issuance are not enabled in the current beta.</p>
             </>
           ),
         },
         {
-          id: "licensing",
-          eyebrow: "Licensing",
-          title: "The approved agreement controls the use.",
+          id: "listening-copies",
+          eyebrow: "Listening copies",
+          title: "Downloaded previews are for private evaluation only.",
+          content: (
+            <>
+              <p>A compressed listening copy may be used privately to evaluate, shortlist or discuss a track. It may not be published, synchronised to content, publicly performed, redistributed, resold, registered in Content ID or used to train or improve a generative model.</p>
+              <p>A WAV master or broader usage permission is supplied only under a separately confirmed written licence or agreement.</p>
+            </>
+          ),
+        },
+        {
+          id: "requests-and-licensing",
+          eyebrow: "Requests and licensing",
+          title: "A submitted request starts a conversation, not a licence.",
           content: (
             <>
               <ul className="support-list">
-                <li><strong>Creator use</strong><span>Coverage depends on the active plan, eligible tracks, supported platforms, connected channels and the creator licence terms in force at the time.</span></li>
-                <li><strong>Commercial Sync</strong><span>Rights are defined for the specific media, territories, duration, campaign or production described in the approved scope.</span></li>
-                <li><strong>Custom Commission</strong><span>Creative deliverables, revisions, rights, exclusivity, timing and price must be confirmed in the project agreement.</span></li>
-                <li><strong>Physical spaces</strong><span>Music for Retail is marked as coming soon. Joining an early-access list does not create a music licence.</span></li>
+                <li><strong>Creator route</strong><span>Any future coverage depends on an active plan, eligible tracks, connected channels and the final creator terms.</span></li>
+                <li><strong>Commercial Sync</strong><span>Media, territories, duration, campaign and price must be confirmed for the specific project.</span></li>
+                <li><strong>Custom Commission</strong><span>Deliverables, revisions, rights, exclusivity, timing and price must be agreed in writing.</span></li>
+                <li><strong>Physical spaces</strong><span>Music for Retail remains an early-access route; submitting interest does not create a licence.</span></li>
               </ul>
-              <p>If a summary on the website conflicts with an executed licence or project agreement, the executed document governs the licensed use.</p>
+              <p>If a website summary conflicts with an executed licence or project agreement, the executed document governs.</p>
             </>
           ),
         },
         {
-          id: "intellectual-property",
-          eyebrow: "Intellectual property",
-          title: "The music and creative work remain protected.",
+          id: "acceptable-use",
+          eyebrow: "Accounts and catalogue",
+          title: "Use the service normally and respect the catalogue.",
           content: (
             <>
+              <p>Provide accurate account and request information, keep access to your identity method secure and do not attempt to bypass technical limits, extract the catalogue in bulk or interfere with other visitors.</p>
               <p>Music, recordings, artist names, artwork, photographs, written copy, product design and brand elements remain the property of their respective rights holders. Access to the site does not transfer ownership.</p>
-              <p>Content may not be copied, redistributed, resold, falsely credited, used to train or improve a generative model, or used outside the permission granted by the relevant licence or rights holder.</p>
             </>
           ),
         },
         {
           id: "operator-information",
           eyebrow: "Publisher details",
-          title: "Final operator details will accompany the commercial service.",
+          title: "Commercial operator details are still to be completed.",
           content: (
             <>
-              <p>Symbiome is currently presented as a pre-launch service. The legal identity of the operator, registered address, company registration details and publication director will be published here before Symbiome issues licences or accepts payments.</p>
-              <p>Until that commercial launch, general legal enquiries can use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact form</a>. The current <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website terms are available on its <a href="https://www.lofigirl.com/terms" target="_blank" rel="noreferrer">official legal page</a>.</p>
-              <p>For information about personal data and browser storage, read the <Link href="/privacy">Privacy page</Link> and <Link href="/cookies">Cookies page</Link>.</p>
+              <p>The verified legal identity, registered address, company-registration details, publication director, dedicated rights contact and complete commercial terms for the Symbiome operator are not yet published. For that reason, the beta does not accept payment or issue automatic licences.</p>
+              <p>Until those details are completed, general or rights-related enquiries can use the <a href="https://www.lofigirl.com/contact" target="_blank" rel="noreferrer">official <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> contact form</a>. The current <LofiGirlWordmark className="lofi-girl-wordmark-inline" /> website terms are available on its <a href="https://www.lofigirl.com/terms" target="_blank" rel="noreferrer">official legal page</a>.</p>
+              <p>For personal data and browser storage, read the <Link href="/privacy">Privacy notice</Link> and <Link href="/cookies">Cookies and browser storage page</Link>.</p>
+              <p className="support-notice">Effective: 24 August 2026 · Public beta terms.</p>
             </>
           ),
         },

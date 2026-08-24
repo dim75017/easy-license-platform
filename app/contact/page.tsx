@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "../_lib/seo";
 import Link from "next/link";
 import { EditorialInfoPage } from "../components/EditorialInfoPage";
 import { LofiGirlWordmark } from "../components/LofiGirlWordmark";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Find the right Symbiome contact route for creator support, commercial music licensing, original commissions, press and general questions.",
-};
+export const metadata = pageMetadata("Contact", "Find the right Symbiome route for creator support, commercial music licensing, original commissions, press and general questions.", "/contact");
 
 export default function ContactPage() {
   return (
@@ -43,7 +40,7 @@ export default function ContactPage() {
               <ul className="support-list">
                 <li><strong><Link href="/pricing?business_need=existing_track#business-request">License an existing track</Link></strong><span>For campaigns, films, series, games, branded content, events and other defined commercial uses.</span></li>
                 <li><strong><Link href="/pricing?business_need=custom_music#business-request">Commission original music</Link></strong><span>For a project that needs music composed and produced from its own creative brief.</span></li>
-                <li><strong><Link href="/pricing?business_need=physical_places#business-request">Music for physical places</Link></strong><span>The service is coming soon. The current page lets you preview the early-access route before submissions open.</span></li>
+                <li><strong><Link href="/pricing?business_need=physical_places#business-request">Music for physical places</Link></strong><span>The service is coming soon. The current form accepts early-access interest for the first pilot.</span></li>
               </ul>
             </>
           ),

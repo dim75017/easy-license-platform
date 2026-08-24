@@ -161,7 +161,7 @@
   min-width: 0;
 }
 
-.account-auth-methods a {
+.account-auth-methods li > span {
   min-height: 52px;
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
@@ -172,21 +172,9 @@
   padding: 9px 13px;
   background: rgba(255, 249, 241, .62);
   color: var(--symbiose-night);
-  text-decoration: none;
-  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
 }
 
-.account-auth-methods a:hover {
-  border-color: rgba(224, 99, 67, .62);
-  background: var(--symbiose-paper);
-  transform: translateY(-1px);
-}
-
-.account-auth-methods a:focus-visible {
-  border-color: var(--symbiose-warm);
-  outline: 3px solid rgba(224, 99, 67, .28);
-  outline-offset: 2px;
-}
+.account-auth-continue { min-height: 56px; }
 
 .account-auth-methods strong {
   overflow: hidden;
@@ -357,14 +345,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .account-loader { animation: none; }
-  .account-auth-methods a { transition: none; }
+  .account-auth-continue { transition: none; }
 }
 
 @media (forced-colors: active) {
   .account-intro,
-  .account-auth-methods a,
+  .account-auth-methods li > span,
   .account-plan-grid > label,
   .account-complete-mark { forced-color-adjust: auto; }
-  .account-auth-methods a { border-color: ButtonText; }
+  .account-auth-methods li > span { border-color: ButtonText; }
   .account-plan-grid > label.is-selected { outline: 2px solid Highlight; }
 }

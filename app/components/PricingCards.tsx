@@ -10,7 +10,8 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
 
   return (
     <div className="pricing-block">
-      <div className="billing-toggle" data-period={annual ? "yearly" : "monthly"} role="group" aria-label="Billing frequency">
+      <p className="pricing-beta-notice"><strong>Planned pricing</strong> — beta accounts are free to create. No payment, subscription or licence is activated yet.</p>
+      <div className="billing-toggle" data-period={annual ? "yearly" : "monthly"} role="group" aria-label="Planned billing frequency">
         <button type="button" aria-pressed={!annual} onClick={() => setAnnual(false)}>Monthly</button>
         <button type="button" aria-pressed={annual} onClick={() => setAnnual(true)}>Yearly</button>
       </div>
@@ -32,8 +33,8 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <li><i>✓</i> Content ID support workflow</li>
             {expanded && <li><i>✓</i> New eligible releases added regularly</li>}
           </ul>
-          <a className="button button-primary button-full cta-swipe" href={publicAccountSignOutHref("create", "creator")}>License my channel</a>
-          <p className="fine-print">For individual creators publishing their own content.</p>
+          <a className="button button-primary button-full cta-swipe" href={publicAccountSignOutHref("create", "creator")}>Create a beta account</a>
+          <p className="fine-print">Planned for individual creators publishing their own content. Account setup records a preference only.</p>
         </article>
 
         <article className="price-card price-card-featured">
@@ -54,8 +55,8 @@ export function PricingCards({ expanded = false }: { expanded?: boolean }) {
             <li><i>✓</i> Priority Content ID support</li>
             {expanded && <li><i>✓</i> Centralised downloads and licences</li>}
           </ul>
-          <a className="button button-light button-full cta-swipe" href={publicAccountSignOutHref("create", "pro")}>License my channels</a>
-          <p className="fine-print">For creator teams and multi-channel publishers. Commercial campaigns use Symbiome for Business.</p>
+          <a className="button button-light button-full cta-swipe" href={publicAccountSignOutHref("create", "pro")}>Create a beta account</a>
+          <p className="fine-print">Planned for creator teams and multi-channel publishers. Commercial campaigns use Symbiome for Business.</p>
         </article>
 
       </div>

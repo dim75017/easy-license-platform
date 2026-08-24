@@ -24,7 +24,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
 
   assert.match(page, /Human-made music for videos, streams and commercial projects\./i);
   assert.match(page, /className="home26-eyebrow home26-lofi-signature"[\s\S]{0,140}<LofiGirlWordmark \/>/i);
-  assert.match(page, /Browse more than 10,000 instrumental and background tracks created by real artists/i);
+  assert.match(page, /Browse a growing catalogue of instrumental and background tracks created by real artists/i);
   assert.doesNotMatch(page, /home26-hero-credit|A catalogue made by artists, for the people making the work/i);
   assert.doesNotMatch(page, /Music team[\s\S]*professional review and detailed tagging/i);
   assert.doesNotMatch(page, /Listen to the catalogue before choosing a licence|Open the music library/i);
@@ -44,7 +44,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
     assert.match(page, new RegExp(`slug: "${useRoute}"`), useRoute);
   }
   assert.doesNotMatch(page, /home26-offers|home26-pricing|home26-how-grid/i);
-  assert.match(page, /home26-audience-creators[\s\S]*A simple music licence for the channels you own[\s\S]*href="\/creators"/i);
+  assert.match(page, /home26-audience-creators[\s\S]*A creator licence designed around the channels you own[\s\S]*coverage, paid plans and licensed downloads will activate only when checkout[\s\S]*href="\/creators"/i);
   assert.match(page, /home26-audience-business[\s\S]*License an existing track or commission original music[\s\S]*href="\/business"/i);
   assert.doesNotMatch(page, /home26-hero-note|No AI-generated music · Artists credited and paid directly/i);
   const businessRouteStart = page.indexOf('className="home26-section home26-audience home26-audience-business"');
@@ -58,11 +58,11 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(businessRoute, /home26-audience-media" aria-hidden="true"[\s\S]{0,180}alt=""/);
   assert.doesNotMatch(businessRoute, /home26-audience-media" data-reveal="scale"/);
   assert.match(page, /Find the perfect music<br \/>for any situation/i);
-  assert.match(page, /<Link className="home26-button home26-button-primary cta-swipe" href="\/app">Explore the full music library<\/Link>/i);
+  assert.match(page, /<Link className="home26-button home26-button-primary cta-swipe" href="\/app\/guest">Explore the full music library<\/Link>/i);
   assert.match(page, /creator-video-editor-WsJBwU9psWI\.webp/i);
   assert.match(page, /business-headphones-books-T3mKJXfdims\.webp/i);
   assert.doesNotMatch(page, /business-headphones-B88PgQXS4qg\.jpg/i);
-  assert.match(page, /More than 1,000 artists contribute to the catalogue/i);
+  assert.match(page, /Artists from around the world contribute to the catalogue/i);
   assert.match(page, /Laffey/i);
   assert.match(page, /Hoogway/i);
   assert.doesNotMatch(page, /The Deli/i);
@@ -120,12 +120,11 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(faqRoute, /<summary>\{item\.question\}<span aria-hidden="true">\+<\/span><\/summary>/);
   assert.match(faqRoute, /<p>\{item\.answer\}<\/p>/);
   assert.match(page, /<CatalogueFacts \/>/);
-  assert.match(catalogueFacts, /10,000\+[\s\S]*instrumental and background tracks/i);
+  assert.match(catalogueFacts, /CatalogueMetric metric="tracks"[\s\S]*published tracks ready to listen/i);
   assert.match(catalogueFacts, /0[\s\S]*AI-generated tracks accepted/i);
-  assert.match(catalogueFacts, /1,000\+[\s\S]*artists represented worldwide/i);
-  assert.match(catalogueFacts, /featuredGenreLabel[\s\S]*music genres across our featured playlists/i);
-  assert.match(catalogueFacts, /new Set\(lofiGirlPlaylists\.map\(\(playlist\) => playlist\.genre\)\)\.size/i);
-  assert.match(catalogueFacts, /featuredGenreCount >= 10 \? "10\+" : String\(featuredGenreCount\)/i);
+  assert.match(catalogueFacts, /CatalogueMetric metric="artists"[\s\S]*artists in the live catalogue/i);
+  assert.match(catalogueFacts, /CatalogueMetric metric="genres"[\s\S]*genres in the live catalogue/i);
+  assert.doesNotMatch(catalogueFacts, /10,000|1,000|featuredGenreLabel/i);
   assert.doesNotMatch(page, /Genre families/i);
   assert.doesNotMatch(page, /Curated to belong|Two offers|Not an upload dump|Selected by professionals\.\s*Created by people/i);
   assert.match(layout, /Symbiome — High-quality instrumental music for creators and businesses/);
@@ -182,7 +181,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /import \{ CatalogueFacts \} from "\.\.\/components\/CatalogueFacts"/);
   assert.equal((cataloguePage.match(/<CatalogueFacts \/>/g) ?? []).length, 1, "Music should render the shared catalogue facts once");
   assert.match(cataloguePage, /className="music-library-hero"[\s\S]*?<\/section>\s*<CatalogueFacts \/>\s*<section className="music-playlists"/);
-  assert.match(cataloguePage, /<Link className="music-v26-button music-v26-button-light cta-swipe" href="\/app">Open the library<\/Link>/);
+  assert.match(cataloguePage, /<Link className="music-v26-button music-v26-button-light cta-swipe" href="\/app\/guest">Open the library<\/Link>/);
   assert.doesNotMatch(cataloguePage, /href="#music-library">Open the library/);
   assert.match(cataloguePage, /lofiGirlPlaylists/);
   assert.match(cataloguePage, /Explore all playlists/);
@@ -197,7 +196,7 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /className="music-v26-section-head music-library-editorial-heading"[\s\S]{0,500}Search by mood,<br \/>style or use\./);
   assert.match(cataloguePage, /<Suspense fallback=\{<CreatorTrackShowcase \/>\}>[\s\S]{0,120}<FilteredCreatorTrackShowcase \/>/);
   assert.doesNotMatch(cataloguePage, /CatalogueExplorer|catalogue-v26-search-row|Search the catalogue/i);
-  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/app\?view=music&mood=\$\{encodeURIComponent\(mood\)\}`\}/);
+  assert.match(cataloguePage, /className="catalogue-mood-card" href=\{`\/app\/guest\?view=music&mood=\$\{encodeURIComponent\(mood\)\}`\}/);
   assert.match(page, /href=\{`\/catalog\?use=\$\{collection\.slug\}#music-library`\}/);
   assert.match(catalogueCss, /V44: the full library uses the same warm editorial model as the Creator sampler\.[\s\S]{0,900}\.music-library-editorial-heading\s*\{[\s\S]{0,260}grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, \.64fr\)/);
   assert.match(catalogueCss, /\.music-library-editorial\s*\{[^}]*background:\s*var\(--music-paper\);[^}]*color:\s*var\(--music-night\)/s);
@@ -232,8 +231,8 @@ test("contains the complete Symbiome music licensing homepage", async () => {
   assert.match(cataloguePage, /const accent = getPlaylistAccent\(playlist\)/);
   assert.match(cataloguePage, /--playlist-accent":\s*accent\.color,\s*"--playlist-accent-ink":\s*accent\.ink/);
   assert.match(cataloguePage, /aria-label=\{`Open \$\{playlist\.title\} in the Symbiome library`\}/);
-  assert.match(cataloguePage, /href=\{`\/app\?view=playlists&playlist=\$\{encodeURIComponent\(playlist\.id\)\}`\}/);
-  assert.match(cataloguePage, /className="music-playlists-all cta-swipe" href="\/app\?view=playlists">Explore all playlists<\/Link>/);
+  assert.match(cataloguePage, /href=\{`\/app\/guest\?view=playlists&playlist=\$\{encodeURIComponent\(playlist\.id\)\}`\}/);
+  assert.match(cataloguePage, /className="music-playlists-all cta-swipe" href="\/app\/guest\?view=playlists">Explore all playlists<\/Link>/);
   assert.doesNotMatch(cataloguePage, /open\.spotify\.com\/(?:playlist|user)|playlist on Spotify/);
   assert.doesNotMatch(cataloguePage, /<b>\s*Open on Spotify\s*<\/b>/);
   assert.match(catalogueCss, /\.music-playlist-card::before\s*\{[^}]*width:\s*14px;[^}]*background:\s*var\(--playlist-accent\)/s);
@@ -271,7 +270,7 @@ test("defines every public and connected product surface", async () => {
     ["app/creators/page.tsx", /Music that fits/i],
     ["app/business/page.tsx", /Music with the rights/i],
     ["app/catalog/page.tsx", /A real music/i],
-    ["app/pricing/page.tsx", /Simple pricing for/i],
+    ["app/pricing/page.tsx", /Planned creator pricing/i],
     ["app/sync/page.tsx", /One brief/i],
     ["app/retail/page.tsx", /Good music\.<br \/>One less thing/i],
     ["app/app/page.tsx", /CreatorWorkspace/],
@@ -354,8 +353,9 @@ test("defines every public and connected product surface", async () => {
   assert.match(pricingCards, /aria-pressed=\{!annual\} onClick=\{\(\) => setAnnual\(false\)\}>Monthly<\/button>/);
   assert.match(pricingCards, /aria-pressed=\{annual\} onClick=\{\(\) => setAnnual\(true\)\}>Yearly<\/button>/);
   assert.equal((pricingCards.match(/className="price" aria-live="polite" aria-atomic="true"/g) ?? []).length, 2, "both changing prices should be announced without interrupting the user");
-  assert.match(pricingCards, /For individual creators publishing their own content\./);
-  assert.match(pricingCards, /For creator teams and multi-channel publishers\. Commercial campaigns use Symbiome for Business\./);
+  assert.match(pricingCards, /Planned for individual creators publishing their own content\./);
+  assert.match(pricingCards, /Planned for creator teams and multi-channel publishers\./);
+  assert.match(pricingCards, /No payment, subscription or licence is activated yet\./);
   assert.equal([...pricing.matchAll(/<section/g)].length, 3, "Pricing should contain only its compact hero and two product routes");
   assert.doesNotMatch(pricing, /pricing-v39-platforms|pricing-v39-comparison|pricing-v39-faq|pricing-v39-cta|comparison-table|pricingFaq|const comparison|business-option-grid/i);
   assert.match(pricingCss, /\.pricing-v39 \.billing-toggle\s*\{[^}]*position:\s*relative;[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
@@ -449,12 +449,12 @@ test("ships a complete footer, detailed help and honest public information pages
     "What is Commercial Sync?",
     "When can I start using the music?",
     "Is AI-generated music accepted into the catalogue?",
-    "Can I create a paid account or purchase a licence in this preview?",
+    "Can I purchase a licence in this beta?",
   ]) {
     assert.match(help, new RegExp(question.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), question);
   }
-  assert.match(help, /Authentication, checkout, production downloads and licence issuance are not active on this GitHub Pages preview/i);
-  assert.match(help, /no information is sent or stored/i);
+  assert.match(help, /Yes on the live Sites version[\s\S]*transmitted to Symbiome and stored/i);
+  assert.match(help, /static GitHub mirror remains non-submitting/i);
 
   for (const page of [about, contact, press, careers, legal, privacy, cookies]) {
     assert.match(page, /<EditorialInfoPage/);
@@ -470,11 +470,15 @@ test("ships a complete footer, detailed help and honest public information pages
   assert.match(contact, /dedicated Symbiome support address is not published yet/i);
   assert.match(press, /No downloadable press kit or dedicated Symbiome press email is currently published/i);
   assert.match(careers, /No confirmed Symbiome openings are listed today/i);
-  assert.match(legal, /currently presented as a pre-launch service[\s\S]*legal identity of the operator[\s\S]*will be published here before Symbiome issues licences or accepts payments/i);
-  assert.match(privacy, /static GitHub Pages version[\s\S]*not transmitted or stored by Symbiome/i);
-  assert.match(privacy, /data controller, lawful bases, service providers, international transfers, retention periods/i);
-  assert.match(cookies, /does not include a first-party advertising or analytics cookie system/i);
-  assert.match(cookies, /one preference in the browser(?:&apos;|')s local storage[\s\S]*device-level interface preference rather than an advertising profile/i);
+  assert.match(legal, /verified legal identity[\s\S]*beta does not accept payment or issue automatic licences/i);
+  assert.match(privacy, /account profiles and submitted business requests are processed by the hosted service/i);
+  assert.match(privacy, /Account and request records are retained for up to three years/i);
+  assert.match(privacy, /OpenAI provides the Codex Sites hosting[\s\S]*Cloudflare provides the connected D1 database and R2 storage/i);
+  assert.match(privacy, /contact@lofigirl\.com[\s\S]*French CNIL/i);
+  assert.match(cookies, /does not currently use advertising or behavioural-analytics cookies/i);
+  for (const key of ["symbiome-liked-tracks", "symbiome-personal-playlists-v1", "symbiome-preview-downloads-v1", "symbiome-personal-library-v1", "symbiome-business-request-draft-v1:license"]) {
+    assert.match(cookies, new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), key);
+  }
 });
 
 test("plays the shared eight-track editorial sampler directly on Creators and Music", async () => {
@@ -531,7 +535,7 @@ test("plays the shared eight-track editorial sampler directly on Creators and Mu
   assert.match(showcase, /<TrackWave[\s\S]{0,260}progress=\{isActive \? preview\.progress : 0\}[\s\S]{0,180}onSeek=\{preview\.seekTo\}/);
   assert.match(showcase, /isActive && preview\.canSeek \? formatPlaybackTime\(preview\.duration\) : track\.duration/);
   assert.doesNotMatch(showcase, /<iframe|SpotifyPlayer|PlatformLogo|open\.spotify\.com|Open on Spotify/);
-  assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link cta-swipe" href="\/app"[\s\S]{0,100}Listen to the full library/);
+  assert.match(showcase, /className="creator-editorial-library-cta"[\s\S]{0,240}className="creator-editorial-library-link cta-swipe" href="\/app\/guest"[\s\S]{0,100}Listen to the full library/);
   assert.match(filteredShowcase, /useSearchParams\(\)/);
   assert.match(filteredShowcase, /track\.moods\.join\(" "\)/);
   assert.match(filteredShowcase, /trackMatchesMood\(track\.moods, mood\)/);
@@ -1299,8 +1303,8 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
     assert.match(setup, new RegExp(`id: "${method.toLowerCase()}"[\\s\\S]{0,80}label: "${method}"`));
   }
   assert.equal((setup.match(/<AccountSignInMethods/g) ?? []).length, 2);
-  assert.match(setup, /Available sign-in methods/);
-  assert.match(setup, /Each option opens the secure sign-in screen\. Choose your preferred method there\./);
+  assert.match(setup, /Secure account methods/);
+  assert.match(setup, /The secure identity screen shows the methods available for your account and returns you to Symbiome\./);
   assert.doesNotMatch(setup, /Log in with ChatGPT|Continue with ChatGPT|Sign in with ChatGPT/);
   assert.match(setup, /\/signin-with-chatgpt\?return_to=/);
   assert.match(setup, /NEXT_PUBLIC_STATIC_DEMO === "true"/);
@@ -1315,23 +1319,24 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(setup, /if \(isStaticDemo \|\| !resumeAuthentication\) return;[\s\S]{0,160}fetch\("\/api\/account\/profile"/);
   assert.doesNotMatch(setup, /useEffect\(\(\) => \{[\s\S]{0,200}setState\("checking"\)/, "the keyed flow should initialise loading without a synchronous effect state change");
   assert.match(setup, /mode === "login" \? "Welcome back\." : "Create your account\."/);
-  assert.match(setup, /Choose Google, Apple, Microsoft or email on the secure sign-in screen/);
+  assert.match(setup, /Continue through the secure identity screen/);
   assert.doesNotMatch(setup, /Your password stays with the sign-in method you choose|account-trust-note/);
   assert.match(setup, /fetch\("\/api\/account\/profile"/);
   assert.match(setup, /method:\s*"POST"/);
   assert.match(setup, /type="radio"[\s\S]*value="creator"/);
   assert.match(setup, /type="radio"[\s\S]*value="pro"/);
   assert.match(setup, /type="checkbox"[\s\S]*acceptPolicies/);
-  assert.match(setup, /No payment is taken today/);
+  assert.match(setup, /No payment, subscription or licence is created/);
   assert.doesNotMatch(setup, /type="password"|localStorage|sessionStorage/);
-  assert.match(setup, /<ul className="account-auth-methods" aria-label="Available secure sign-in methods">/);
-  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>[\s\S]{0,220}<a[\s\S]{0,160}data-auth-method=\{method\.id\}[\s\S]{0,160}href=\{actionHref\}/);
+  assert.match(setup, /<ul className="account-auth-methods" aria-label="Identity methods handled by the secure account screen">/);
+  assert.match(setup, /accountSignInMethods\.map\(\(method\) => \([\s\S]{0,220}<li key=\{method\.id\}>[\s\S]{0,220}<span data-auth-method=\{method\.id\}>/);
   assert.match(setup, /actionHref=\{publicAccountSignOutHref\(mode, plan\)\}/);
   const providerList = setup.match(/<ul className="account-auth-methods"[\s\S]*?<\/ul>/u)?.[0] ?? "";
   assert.ok(providerList, "the sign-in method list should be rendered");
-  assert.match(providerList, /<a[\s\S]{0,220}href=\{actionHref\}[\s\S]{0,260}aria-label=\{`Open secure sign-in — \$\{method\.label\} is available there`\}/u, "every displayed method should open the real secure sign-in screen without pretending to preselect a provider");
+  assert.doesNotMatch(providerList, /<a\b|href=\{actionHref\}/u, "provider badges must not pretend to be separate OAuth integrations");
+  assert.match(setup, /className="button button-primary button-full cta-swipe account-auth-continue" href=\{actionHref\}/u, "one real gateway should own authentication");
   assert.equal((setup.match(/\/signin-with-chatgpt\?return_to=/gu) ?? []).length, 1, "the flow should keep one neutral secure sign-in gateway");
-  assert.match(setup, /className="account-secondary-link" href="\/app"[\s\S]{0,80}Browse music first/);
+  assert.match(setup, /className="account-secondary-link" href="\/app\/guest"[\s\S]{0,80}Browse music first/);
   assert.doesNotMatch(setup, /className="account-secondary-link" href="\/catalog"[\s\S]{0,80}Browse music first/);
   assert.equal((pricing.match(/href=\{publicAccountSignOutHref\("create", "(?:creator|pro)"\)\}/g) ?? []).length, 2);
   assert.match(layout, /import "\.\/account-page\.css"/);
@@ -1343,6 +1348,8 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
   assert.match(route, /await sitesIdentityFromHeaders\(request\.headers\)/);
   assert.match(route, /ON CONFLICT\(external_user_id\) DO UPDATE SET/);
   assert.match(route, /if \(!isSameOrigin\(request\)\)/);
+  assert.match(route, /if \(!origin\) return false/);
+  assert.match(route, /fetchSite !== "same-origin" && fetchSite !== "same-site"/);
   assert.match(route, /policies_acknowledgement_required/);
   assert.doesNotMatch(route, /source\.userId|source\.email|source\.plan === "admin"/);
   assert.doesNotMatch(route, /resumeAuthentication|searchParams\.get\("auth"\)/);
@@ -1357,15 +1364,15 @@ test("account creation is a secure, persistent and static-demo-safe onboarding",
 
   assert.match(css, /\.account-page\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.92fr\) minmax\(520px, 1\.08fr\)/s);
   assert.match(css, /\.account-auth-methods\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[^}]*gap:\s*10px/s);
-  assert.match(css, /\.account-auth-methods a\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
+  assert.match(css, /\.account-auth-methods li > span\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*16px/s);
   assert.match(css, /\.account-auth-choice-label\s*\{[^}]*rgba\(41, 40, 50, \.74\)/s);
   assert.match(css, /\.account-auth-method-note\s*\{[^}]*rgba\(41, 40, 50, \.7\)/s);
-  assert.match(css, /\.account-auth-methods a:focus-visible\s*\{[^}]*outline:\s*3px solid/s);
+  assert.match(css, /\.account-auth-continue\s*\{[^}]*min-height:\s*56px/s);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*\.account-page\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-fields,[\s\S]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.account-auth-methods\s*\{\s*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods a\s*\{\s*border-color:\s*ButtonText;/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.account-auth-methods li > span\s*\{\s*border-color:\s*ButtonText;/);
 });
 
 test("public account entry points clear the Sites session before showing login or creation", async () => {
@@ -1390,8 +1397,8 @@ test("public account entry points clear the Sites session before showing login o
   assert.match(header, /<div className="public-profile-access">[\s\S]{0,120}<WorkspaceProfileSwitcher activeRole=\{null\} compact \/>/);
   assert.match(footer, /<a href=\{publicAccountSignOutHref\("login"\)\}>Log in<\/a>/);
   assert.match(footer, /<a href=\{publicAccountSignOutHref\("create"\)\}>Create account<\/a>/);
-  assert.match(pricing, /<a className="button button-primary button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "creator"\)\}>License my channel<\/a>/);
-  assert.match(pricing, /<a className="button button-light button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "pro"\)\}>License my channels<\/a>/);
+  assert.match(pricing, /<a className="button button-primary button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "creator"\)\}>Create a beta account<\/a>/);
+  assert.match(pricing, /<a className="button button-light button-full cta-swipe" href=\{publicAccountSignOutHref\("create", "pro"\)\}>Create a beta account<\/a>/);
   assert.match(switcher, /const signOutHref = publicAccountSignOutHref\("login"\)/);
   assert.match(switcher, /profileState === "authenticated" \? \([\s\S]{0,180}<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem">Log out<\/a>/);
   assert.match(switcher, /<a className="music-profile-session-action" href=\{signOutHref\} role="menuitem" onClick=\{closeMenu\}>Log in<\/a>/);
@@ -1698,7 +1705,7 @@ test("gives every public call to action one accessible colour-swipe interaction"
   for (const [, , body] of publicCtaBodies) assert.doesNotMatch(body, /[↗→↓]/, "CTA labels should not contain decorative arrows");
   assert.doesNotMatch(publicCtaSource, /(?:Browse collection|View (?:Creator|Pro|Business) details|Open on Spotify|Browse tracks|Explore Commercial Sync|Join early access|Spotify)[^<\n]*[↗→↓]/, "public linked surfaces should not retain decorative arrows");
 
-  assert.match(trackShowcase, /className="creator-editorial-library-link cta-swipe" href="\/app"/);
+  assert.match(trackShowcase, /className="creator-editorial-library-link cta-swipe" href="\/app\/guest"/);
   assert.doesNotMatch(trackShowcase, /className="creator-editorial-(?:side|wave)[^"]*\bcta-swipe\b/, "track playback controls should remain independent from marketing CTA motion");
   assert.doesNotMatch(railControls, /cta-swipe/, "carousel controls are not marketing CTA buttons");
 });
@@ -1877,18 +1884,23 @@ test("keeps the connected workspace readable and artist-led", async () => {
   assert.doesNotMatch(musicWorkspace, /\b(?:Studio|Sound effects|Voices|Adapt)\b/);
   assert.doesNotMatch(musicWorkspace, /Tune the library|easy-license-library-tuned|music-setup/, "Discover should open directly without the retired tuning setup");
 
-  const navBlock = musicWorkspace.match(/const creatorNavGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const businessNavGroups/);
+  const navBlock = musicWorkspace.match(/const creatorNavGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const guestNavGroups/);
   assert.ok(navBlock, "the connected workspace should keep one canonical grouped navigation");
   const workspaceNavLabels = [...navBlock[1].matchAll(/\{\s*id:\s*"[^"]+",\s*label:\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(workspaceNavLabels, ["Discover", "Music", "Playlists", "Liked tracks", "Downloads"]);
   assert.match(navBlock[1], /label:\s*"DISCOVER MUSIC"/);
   assert.match(navBlock[1], /label:\s*"YOUR LIBRARY"/);
+  const guestNavBlock = musicWorkspace.match(/const guestNavGroups:[\s\S]*?=\s*\[([\s\S]*?)\];\s*\n\s*const businessNavGroups/);
+  assert.ok(guestNavBlock, "the guest workspace should keep a separate public navigation");
+  const guestNavLabels = [...guestNavBlock[1].matchAll(/\{\s*id:\s*"[^"]+",\s*label:\s*"([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(guestNavLabels, ["Discover", "Music", "Playlists", "Liked tracks"]);
+  assert.doesNotMatch(guestNavBlock[1], /Downloads|Channels|Licences/);
   assert.doesNotMatch(navBlock[1], /icon:\s*"(?:◎|♫|▦|♡|↓)"/, "navigation should use the selected editorial SVG system instead of text glyphs");
   assert.match(musicWorkspace, /function WorkspaceNavIcon\(\{ kind \}: \{ kind: WorkspaceNavigationIcon \}\)[\s\S]{0,360}kind === "discover"[\s\S]{0,180}M12 3\.5 14\.1 9\.9 20\.5 12l-6\.4 2\.1L12 20\.5/);
   assert.match(musicWorkspace, /kind === "playlists"[\s\S]{0,220}<rect x="4" y="4\.5" width="14" height="12" rx="2\.5"[\s\S]{0,180}m9\.5 8\.2 4\.2 2\.4-4\.2 2\.4V8\.2Z/);
   assert.match(musicWorkspace, /kind === "downloads"[\s\S]{0,180}<path d="M12 4v10"[\s\S]{0,160}M5 17\.5v1A1\.5 1\.5 0 0 0 6\.5 20h11/);
   assert.match(musicWorkspace, /<i aria-hidden="true"><WorkspaceNavIcon kind=\{item\.icon\} \/><\/i>/);
-  assert.match(musicWorkspace, /aria-label=\{`\$\{isBusinessWorkspace \? "Business" : "Creator"\} music navigation`\}/);
+  assert.match(musicWorkspace, /aria-label=\{`\$\{isBusinessWorkspace \? "Business" : isGuestWorkspace \? "Guest" : "Creator"\} music navigation`\}/);
   assert.match(musicWorkspace, /aria-current=\{view === item\.id \? "page" : undefined\}/);
   assert.equal((musicWorkspace.match(/music-workspace-view/g) ?? []).length, 5, "Discover, Music, Playlists, Liked tracks and Downloads should share one full-width canvas");
   assert.match(musicWorkspace, /const usesWideCanvas = view === "discover" \|\| view === "music" \|\| view === "playlists" \|\| view === "liked" \|\| view === "downloads" \|\| view === "license-song" \|\| view === "custom-song";/);
@@ -2553,4 +2565,48 @@ test("ships a public GitHub Pages mockup without collecting form data", async ()
   assert.match(leadForm, /Public prototype: no information is sent or stored\./);
   assert.match(leadForm, /nothing was sent or stored\./);
   assert.ok(leadForm.indexOf("if (isStaticDemo)") < leadForm.indexOf('fetch("/api/leads"'), "the static demo must stop before any network request");
+});
+
+test("publishes live catalogue facts, canonical SEO and protected account workspaces", async () => {
+  const [factsRoute, metric, facts, seo, robots, sitemap, layout, auth, creatorPage, businessPage, adminPage, workspace] = await Promise.all([
+    source("app/api/catalog/facts/route.ts"),
+    source("app/components/CatalogueMetric.tsx"),
+    source("app/components/CatalogueFacts.tsx"),
+    source("app/_lib/seo.ts"),
+    source("app/robots.ts"),
+    source("app/sitemap.ts"),
+    source("app/layout.tsx"),
+    source("app/chatgpt-auth.ts"),
+    source("app/app/page.tsx"),
+    source("app/app/business/page.tsx"),
+    source("app/admin/page.tsx"),
+    source("app/components/CreatorWorkspace.tsx"),
+  ]);
+
+  assert.match(factsRoute, /COUNT\(DISTINCT t\.id\) AS track_count/);
+  assert.match(factsRoute, /COUNT\(DISTINCT t\.primary_artist_id\) AS artist_count/);
+  assert.match(factsRoute, /COUNT\(DISTINCT t\.release_id\) AS release_count/);
+  assert.match(factsRoute, /playable\.kind = 'streaming_copy'[\s\S]*playable\.status = 'available'/);
+  assert.match(factsRoute, /t\.status = 'published'[\s\S]*t\.rights_status = 'cleared'[\s\S]*r\.status = 'published'/);
+  assert.match(factsRoute, /public, max-age=60, s-maxage=300, stale-while-revalidate=600/);
+  assert.match(metric, /fetch\(url,[\s\S]*credentials: catalogApiOrigin \? "omit" : "same-origin"/);
+  assert.match(metric, /Number\.isSafeInteger\(source\[key\]\)/);
+  assert.doesNotMatch(facts, /10,000|1,000/);
+
+  assert.match(seo, /SITE_ORIGIN = "https:\/\/easy-license\.dsomoguy\.chatgpt\.site"/);
+  assert.match(seo, /alternates: \{ canonical: path \}/);
+  assert.match(layout, /metadataBase: new URL\(SITE_ORIGIN\)/);
+  assert.doesNotMatch(layout, /dim75017\.github\.io/);
+  assert.match(robots, /disallow:[\s\S]*"\/api\/"[\s\S]*"\/admin"[\s\S]*"\/app"[\s\S]*"\/create-account"/);
+  assert.match(sitemap, /"\/catalog"[\s\S]*"\/privacy"[\s\S]*"\/cookies"/);
+  assert.doesNotMatch(sitemap, /"\/app"|"\/admin"|"\/create-account"/);
+
+  assert.match(auth, /export async function requireCompletedSymbiomeProfile[\s\S]*requireChatGPTUser\(returnTo\)[\s\S]*FROM user_profiles[\s\S]*onboarding_completed_at[\s\S]*policies_acknowledged_at[\s\S]*redirect\("\/create-account\?auth=resume"\)/);
+  assert.match(auth, /export async function requireSymbiomeAdmin[\s\S]*catalogAdminEmails[\s\S]*redirect\("\/app"\)/);
+  assert.match(creatorPage, /process\.env\.BUILD_TARGET !== "pages"[\s\S]*requireCompletedSymbiomeProfile\("\/app"\)/);
+  assert.match(businessPage, /process\.env\.BUILD_TARGET !== "pages"[\s\S]*requireCompletedSymbiomeProfile\("\/app\/business\?view=music"\)/);
+  assert.match(adminPage, /process\.env\.BUILD_TARGET !== "pages"[\s\S]*requireSymbiomeAdmin\("\/admin"\)/);
+  assert.doesNotMatch(workspace, /Demo Creator Channel|SY-DEMO|Active since/);
+  assert.match(workspace, /No channels connected yet/);
+  assert.match(workspace, /No licences issued yet/);
 });
