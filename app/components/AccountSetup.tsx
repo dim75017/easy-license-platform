@@ -27,13 +27,6 @@ type Profile = {
 type Identity = { email: string; displayName: string };
 type LoadState = "checking" | "signed-out" | "ready" | "complete" | "demo";
 
-const accountSignInMethods = [
-  { id: "google", label: "Google", mark: "G" },
-  { id: "apple", label: "Apple", mark: "A" },
-  { id: "microsoft", label: "Microsoft", mark: "M" },
-  { id: "email", label: "Email", mark: "@" },
-] as const;
-
 const isStaticDemo = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
 
 export function AccountSetup() {
@@ -203,10 +196,10 @@ function AccountSetupFlow({
               <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
               <p>
                 {mode === "login"
-                  ? "Secure login is available on the live Symbiome app. Choose Google, Apple, Microsoft or email there."
-                  : "Secure account creation is available on the live Symbiome app. Choose Google, Apple, Microsoft or email there."}
+                  ? "Secure login is available on the live Symbiome app."
+                  : "Secure account creation is available on the live Symbiome app."}
               </p>
-              <AccountSignInMethods
+              <SecureAccountSignIn
                 actionHref={publicAccountSignOutHref(mode, plan)}
               />
               <Link className="account-secondary-link" href="/app/guest">
@@ -224,7 +217,7 @@ function AccountSetupFlow({
                   ? "Continue through the secure identity screen, then return directly to your music workspace."
                   : "Continue through the secure identity screen, then finish your Symbiome profile."}
               </p>
-              <AccountSignInMethods
+              <SecureAccountSignIn
                 actionHref={`/signin-with-chatgpt?return_to=${encodeURIComponent(signInReturnTo)}`}
               />
               <p className="account-legal-copy">
@@ -366,36 +359,19 @@ function AccountSetupFlow({
   );
 }
 
-function AccountSignInMethods({
+function SecureAccountSignIn({
   actionHref,
 }: {
   actionHref: string;
 }) {
   return (
     <div className="account-auth-choice">
-      <span className="account-auth-choice-label">Available on the secure account screen</span>
-      <ul className="account-auth-methods" aria-label="Open the secure screen to choose an account method">
-        {accountSignInMethods.map((method) => (
-          <li key={method.id}>
-            <a
-              className="account-auth-method"
-              data-auth-method={method.id}
-              href={actionHref}
-              aria-label={`Open the secure account screen to choose ${method.label}`}
-            >
-              <span className={`account-auth-method-mark is-${method.id}`} aria-hidden="true">
-                {method.mark}
-              </span>
-              <span className="account-auth-method-copy">
-                <strong>{method.label}</strong>
-                <small>Choose on secure screen</small>
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <a className="button button-primary button-full cta-swipe" href={actionHref}>
+        Continue to secure sign-in
+      </a>
       <p className="account-auth-method-note">
-        All four choices open the same secure identity screen. Select your provider there, then return to Symbiome.
+        This opens Symbiome&apos;s current account gateway. Direct Google, Apple,
+        Microsoft and email sign-in is not connected yet.
       </p>
     </div>
   );
