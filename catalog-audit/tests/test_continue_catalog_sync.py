@@ -851,6 +851,51 @@ class SelectionTests(unittest.TestCase):
             )
         self.assertEqual([record["candidate_id"] for record in selected], [fresh["candidate_id"]])
 
+    def test_owner_direct_selection_prioritizes_fresh_rows_then_rotates_retries(self):
+        failed_many = exact_record("b" * 28)
+        fresh_first = exact_record("c" * 28)
+        failed_newer = exact_record("d" * 28)
+        fresh_second = exact_record("e" * 28)
+        failed_older = exact_record("f" * 28)
+        records = [failed_many, fresh_first, failed_newer, fresh_second, failed_older]
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "pipeline.sqlite3"
+            connection = sync.process.open_pipeline_state(state_path)
+            rows = (
+                (failed_many, 4, "2026-01-01T00:00:00+00:00"),
+                (failed_newer, 1, "2026-03-01T00:00:00+00:00"),
+                (failed_older, 1, "2026-02-01T00:00:00+00:00"),
+            )
+            for record, attempts, updated_at in rows:
+                connection.execute(
+                    """INSERT INTO pipeline_items (
+                    candidate_id, manifest_fingerprint, batch_key, status,
+                    attempts, created_at, updated_at
+                    ) VALUES (?, ?, 'owner-direct', 'failed', ?, ?, ?)""",
+                    (
+                        record["candidate_id"],
+                        sync.process.canonical_fingerprint(record),
+                        attempts,
+                        updated_at,
+                        updated_at,
+                    ),
+                )
+            connection.commit()
+            connection.close()
+
+            selected = sync.select_unpublished_direct_records(records, state_path)
+
+        self.assertEqual(
+            [record["candidate_id"] for record in selected],
+            [
+                fresh_first["candidate_id"],
+                fresh_second["candidate_id"],
+                failed_older["candidate_id"],
+                failed_newer["candidate_id"],
+                failed_many["candidate_id"],
+            ],
+        )
+
     def test_publication_skips_only_identical_completed_fingerprint(self):
         record = exact_record()
         with tempfile.TemporaryDirectory() as directory:

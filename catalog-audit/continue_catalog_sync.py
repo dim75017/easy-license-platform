@@ -1175,17 +1175,37 @@ def select_unpublished_direct_records(
     records: Sequence[Mapping[str, Any]],
     pipeline_state: Path,
 ) -> list[dict[str, Any]]:
-    """Skip only owner-source rows with an identical published base fingerprint."""
+    """Skip identical publications and process fresh owner rows before retries."""
 
     published = completed_pipeline_fingerprints(pipeline_state)
-    selected: list[dict[str, Any]] = []
-    for record in records:
+    pipeline_rows = publication_pipeline_rows(pipeline_state)
+    fresh: list[tuple[int, dict[str, Any]]] = []
+    retry: list[tuple[int, str, int, dict[str, Any]]] = []
+    for index, record in enumerate(records):
         candidate_id = str(record.get("candidate_id") or "")
         fingerprint = process.canonical_fingerprint(record)
         if published.get(candidate_id) == fingerprint:
             continue
-        selected.append(dict(record))
-    return selected
+        copied = dict(record)
+        state = pipeline_rows.get(candidate_id)
+        if (
+            state is None
+            or state.get("status") == "published"
+            or state.get("manifestFingerprint") != fingerprint
+        ):
+            fresh.append((index, copied))
+            continue
+        retry.append(
+            (
+                int(state.get("attempts") or 0),
+                str(state.get("updatedAt") or ""),
+                index,
+                copied,
+            )
+        )
+    ordered = [record for _index, record in fresh]
+    ordered.extend(record for _attempts, _updated_at, _index, record in sorted(retry))
+    return ordered
 
 
 def publication_pipeline_rows(path: Path) -> dict[str, dict[str, Any]]:
